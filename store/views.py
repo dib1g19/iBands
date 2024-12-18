@@ -36,8 +36,8 @@ def clear_cart_items(request):
 
 def index(request):
     products = store_models.Product.objects.filter(status="Published")
-    categories = store_models.Category.objects.all()
-    
+    categories = store_models.Category.objects.filter(parent__isnull=True).order_by("id")
+
     context = {
         "products": products,
         "categories": categories,
@@ -92,6 +92,8 @@ def category(request, id):
     category = store_models.Category.objects.get(id=id)
     products_list = store_models.Product.objects.filter(status="Published", category=category)
 
+    subcategories = store_models.Category.objects.filter(parent=category)
+
     query = request.GET.get("q")
     if query:
         products_list = products_list.filter(name__icontains=query)
@@ -102,6 +104,7 @@ def category(request, id):
         "products": products,
         "products_list": products_list,
         "category": category,
+        "subcategories": subcategories,
     }
     return render(request, "store/category.html", context)
 

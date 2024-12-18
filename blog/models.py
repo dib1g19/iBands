@@ -12,6 +12,7 @@ STATUS_CHOICES = [
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=150, unique=True, blank=True)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subcategories')
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -19,6 +20,8 @@ class Category(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
+        if self.parent:
+            return f"{self.parent.name} -> {self.name}"
         return self.name
 
 class Blog(models.Model):

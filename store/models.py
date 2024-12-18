@@ -54,7 +54,14 @@ RATING = (
 )
 
 class Category(models.Model):
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=255)
+    parent = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        related_name='subcategories', 
+        blank=True, 
+        null=True
+    )
     image = models.ImageField(upload_to="images", default="category.jpg", null=True, blank=True)
     slug = models.SlugField(unique=True)
 

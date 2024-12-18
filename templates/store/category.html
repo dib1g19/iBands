@@ -6,6 +6,32 @@
 	<section class="middle">
 		<div class="container">
 			<h2 class="fw-bold mb-5">{{category.title}} (<span class="product_count">{{ products_list.count }}</span>)</h2>
+
+			<!-- Subcategories Section -->
+			{% if subcategories %}
+			<div class="mb-5">
+				<h3 class="fw-bold">Subcategories</h3>
+				<div class="row">
+					{% for sub in subcategories %}
+					<div class="col-lg-3 col-md-4 col-sm-6">
+						<div class="card mb-3">
+							<a href="{% url 'store:category' sub.id %}">
+								{% if sub.image %}
+								<img src="{{ sub.image.url }}" class="card-img-top" alt="{{ sub.title }}" />
+								{% else %}
+								<img src="{% static 'assets/img/headphones.png' %}" class="card-img-top" alt="{{ sub.title }}" />
+								{% endif %}
+							</a>
+							<div class="card-body text-center">
+								<h5 class="card-title">{{ sub.title }}</h5>
+							</div>
+						</div>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+			{% endif %}
+			
 			<form class="mb-5 d-flex justify-content-between align-items-center gap-2">
 				<input type="text" class="form-control rounded" placeholder="Search Products..." name="q" id="">
 				<button type="submit" class="btn bg-primary text-white rounded "><i class="fas fa-search"></i></button>

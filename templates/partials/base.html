@@ -20,7 +20,8 @@
                     <nav id="navigation" class="navigation navigation-landscape">
                         <div class="nav-header">
                             <a class="nav-brand" href="{% url 'store:index' %}">
-                                <img style="width: 170px; object-fit: contain;" src="{% static 'assets/img/logo.png' %}" class="logo" alt="" />
+                                <img style="width: 170px; object-fit: contain;" src="{% static 'assets/img/logo.webp' %}" class="logo desktop-logo" alt="" />
+                                <img style="width: 120px; object-fit: contain;" src="{% static 'assets/img/white-logo.webp' %}" class="logo mobile-logo" alt="" />
                             </a>
                             <div class="nav-toggle"></div>
                             <div class="mobile_nav">
@@ -32,7 +33,7 @@
                                         <a href="#"><i class="fas fa-user"></i></a>
                                     </li>
                                     <li>
-                                        <a href="#"> <i class="fas fa-heart text-white"></i><span class="dn-counter">2</span> </a>
+                                        <a href="#"> <i class="fas fa-heart"></i><span class="dn-counter">2</span> </a>
                                     </li>
                                     <li>
                                         <a href="{% url 'store:cart' %}"> <i class="fas fa-shopping-basket"></i><span class="dn-counter total_cart_items">{{total_cart_items}}</span> </a>
@@ -152,7 +153,7 @@
                         <div class="row">
                             <div class="col-xl-4 col-lg-4 col-md-3 col-sm-12">
                                 <div class="footer_widget">
-                                    <img src="{% static 'assets/img/logo-light.png' %}" class="img-footer small mb-2" alt="" />
+                                    <img src="{% static 'assets/img/logo-footer.webp' %}" class="img-footer small mb-2" alt="" />
 
                                     <div class="address mt-3">ul. Kapitan Raicho 56<br />Plovdiv</div>
                                     <div class="address mt-3">+359 899 333043<br />support@ibands.eu</div>

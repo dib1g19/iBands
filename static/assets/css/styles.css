@@ -2797,6 +2797,9 @@ span.expiration {
 /*----------Dark Menu --------*/
 
 @media (min-width: 993px) {
+    .logo.mobile-logo {
+        display: none;
+    }
     .nav-menu.nav-menu-social>li.add-listing.bg-white {
         background: #ffffff !important;
     }
@@ -2943,6 +2946,9 @@ span.expiration {
 }
 
 @media (max-width: 992px) {
+    .logo.desktop-logo {
+        display: none;
+    }
     .navigation-portrait .nav-brand {
         margin-left: 25px;
     }

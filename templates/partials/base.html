@@ -27,13 +27,13 @@
                             <div class="mobile_nav">
                                 <ul>
                                     <li>
-                                        <a href="#"><i class="fas fa-search-alt"></i></a>
+                                        <a href="{% url 'store:shop' %}"><i class="fas fa-search text-black"></i></a>
                                     </li>
                                     <li>
-                                        <a href="#"><i class="fas fa-user"></i></a>
+                                        <a href="{% url 'customer:dashboard' %}"><i class="fas fa-user"></i></a>
                                     </li>
                                     <li>
-                                        <a href="#"> <i class="fas fa-heart"></i><span class="dn-counter">2</span> </a>
+                                        <a href="{% url 'customer:wishlist' %}"> <i class="fas fa-heart"></i><span class="dn-counter">2</span> </a>
                                     </li>
                                     <li>
                                         <a href="{% url 'store:cart' %}"> <i class="fas fa-shopping-basket"></i><span class="dn-counter total_cart_items">{{total_cart_items}}</span> </a>
@@ -57,7 +57,7 @@
                                             
                                     </ul>
                                 </li>
-                                <li>
+                                <!-- <li>
                                     <a href="javascript:void(0);">Vendor</a>
                                     <ul class="nav-dropdown nav-submenu">
                                         <li><a href="{% url 'vendor:dashboard' %}">Dashboard</a></li>
@@ -70,7 +70,7 @@
                                         <li><a href="{% url 'vendor:notis' %}">Notis</a></li>
                                         <li><a href="{% url 'vendor:profile' %}">Profile</a></li>
                                     </ul>
-                                </li>
+                                </li> -->
                                 <li>
                                     <a href="javascript:void(0);">Customer</a>
                                     <ul class="nav-dropdown nav-submenu">

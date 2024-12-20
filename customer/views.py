@@ -131,11 +131,6 @@ def address_detail(request, id):
         delivery_method = request.POST.get("delivery_method")
         city = request.POST.get("city")
         address_location = request.POST.get("address")
-
-        # if delivery_method not in ["econt", "speedy", "personal"]:
-        #     messages.error(request, "Invalid delivery method selected.")
-        #     return redirect("customer:address_detail", id=id)
-
         address.full_name = full_name
         address.mobile = mobile
         address.email = email
@@ -162,10 +157,6 @@ def address_create(request):
         delivery_method = request.POST.get("delivery_method")
         city = request.POST.get("city")
         address = request.POST.get("address")
-
-        # if delivery_method not in ["econt", "speedy", "personal"]:
-        #     messages.error(request, "Invalid delivery method selected.")
-        #     return redirect("customer:address_create")
 
         customer_models.Address.objects.create(
             user=request.user,

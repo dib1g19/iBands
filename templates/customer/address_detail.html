@@ -1,4 +1,7 @@
-{% extends 'partials/base.html' %} {% load static %} {% load humanize %} {% block content %}
+{% extends 'partials/base.html' %} 
+{% load static %}
+{% load humanize %} 
+{% block content %}
 
 <div class="gray py-3">
     <div class="container">
@@ -6,9 +9,9 @@
             <div class="colxl-12 col-lg-12 col-md-12">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="/">Home</a></li>
-                        <li class="breadcrumb-item"><a href="#">Customer</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Address Update</li>
+                        <li class="breadcrumb-item"><a href="/">Начало</a></li>
+                        <li class="breadcrumb-item"><a href="#">Профил</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Актуализиране на адрес</li>
                     </ol>
                 </nav>
             </div>
@@ -23,64 +26,64 @@
 
             <div class="col-12 col-md-12 col-lg-8 col-xl-8">
                 <div class="row mb-4">
-                    <h4 class="mb-0 mb-2 fw-bold">Update Address</h4>
+                    <h4 class="mb-0 mb-2 fw-bold">Актуализиране на адрес</h4>
                 </div>
 
                 <div class="col-xl-12">
                     <div class="row align-items-center">
                         <form class="row m-0" action="" method="POST">
                             {% csrf_token %}
-                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
-                                    <label class="small text-dark ft-medium">Full Name</label>
+                                    <label class="small text-dark ft-medium">Пълно име</label>
                                     <input type="text" name="full_name" class="form-control rounded" value="{{address.full_name}}" />
                                 </div>
                             </div>
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
-                                    <label class="small text-dark ft-medium">Email</label>
+                                    <label class="small text-dark ft-medium">Имейл</label>
                                     <input type="text" name="email" class="form-control rounded" value="{{address.email}}" />
                                 </div>
                             </div>
-                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
-                                    <label class="small text-dark ft-medium">Mobile</label>
+                                    <label class="small text-dark ft-medium">Мобилен телефон</label>
                                     <input type="text" name="mobile" class="form-control rounded" value="{{address.mobile}}" />
+                                </div>
+                            </div>
+
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
+                                <div class="form-group">
+                                    <label class="small text-dark ft-medium">Метод на доставка</label>
+                                    <select name="delivery_method" class="form-control rounded">
+                                        <option value="">Изберете метод на доставка</option>
+                                        <option value="econt" {% if address.delivery_method == 'econt' %}selected{% endif %}>Еконт</option>
+                                        <option value="speedy" {% if address.delivery_method == 'speedy' %}selected{% endif %}>Спиди</option>
+                                        <option value="personal" {% if address.delivery_method == 'personal' %}selected{% endif %}>Личен адрес</option>
+                                    </select>
                                 </div>
                             </div>
                             
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
-                                    <label class="small text-dark ft-medium">Address</label>
+                                    <label class="small text-dark ft-medium">Адрес</label>
                                     <input type="text" name="address" class="form-control rounded" value="{{address.address}}" />
                                 </div>
                             </div>
 
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
-                                    <label class="small text-dark ft-medium">City</label>
+                                    <label class="small text-dark ft-medium">Град</label>
                                     <input type="text" name="city" class="form-control rounded" value="{{address.city}}" />
-                                </div>
-                            </div>
-
-                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                                <div class="form-group">
-                                    <label class="small text-dark ft-medium">Delivery Method</label>
-                                    <select name="delivery_method" class="form-control rounded">
-                                        <option value="">Select delivery method</option>
-                                        <option value="econt" {% if address.delivery_method == 'econt' %}selected{% endif %}>Econt</option>
-                                        <option value="speedy" {% if address.delivery_method == 'speedy' %}selected{% endif %}>Speedy</option>
-                                        <option value="personal" {% if address.delivery_method == 'personal' %}selected{% endif %}>Personal</option>
-                                    </select>
                                 </div>
                             </div>
 
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                                 <div class="form-group">
                                     <a href="{% url 'customer:addresses' %}" class="btn bg-secondary text-white btn-sm rounded"> 
-                                        <i class="fas fa-arrow-left"></i> Go Back
+                                        <i class="fas fa-arrow-left"></i> Назад
                                     </a>
-                                    <button type="submit" class="btn bg-primary text-white btn-sm rounded">Save Changes 
+                                    <button type="submit" class="btn bg-primary text-white btn-sm rounded">Запази промените
                                         <i class="fas fa-save ms-2"></i>
                                     </button>
                                 </div>

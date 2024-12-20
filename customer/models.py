@@ -25,11 +25,10 @@ class Wishlist(models.Model):
         
 class Address(models.Model):
     DELIVERY_CHOICES = [
-        ('econt', 'Econt'),
-        ('speedy', 'Speedy'),
-        ('personal', 'Personal'),
+        ('econt', 'Еконт'),
+        ('speedy', 'Спиди'),
+        ('personal', 'Личен адрес'),
     ]
-
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     full_name = models.CharField(max_length=200, null=True, blank=True, default=None)
     mobile = models.CharField(max_length=50, null=True, blank=True, default=None)

@@ -293,11 +293,11 @@ def create_order(request):
                 shipping=i.shipping,
                 tax=tax_calculation(address.country, i.sub_total),
                 total=i.total,
-                initial_total=i.total,
-                vendor=i.product.vendor
+                initial_total=i.total
+                # vendor=i.product.vendor
             )
-
-            order.vendors.add(i.product.vendor)
+            # Make vendor to be not manditory for order create
+            # order.vendors.add(i.product.vendor)
         
     
     return redirect("store:checkout", order.order_id)

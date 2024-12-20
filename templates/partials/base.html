@@ -43,7 +43,7 @@
                         </div>
                         <div class="nav-menus-wrapper" style="transition-property: none">
                             <ul class="nav-menu">
-                                <li><a href="/">Home</a></li>
+                                <li><a href="/"><i class="fas fa-home"></i></a></li>
                                 <li>
                                     <a href="{% url 'store:shop' %}">Shop</a>
                                 </li>
@@ -71,7 +71,7 @@
                                         <li><a href="{% url 'vendor:profile' %}">Profile</a></li>
                                     </ul>
                                 </li> -->
-                                <li>
+                                <!-- <li>
                                     <a href="javascript:void(0);">Customer</a>
                                     <ul class="nav-dropdown nav-submenu">
                                         <li><a href="{% url 'customer:dashboard' %}">Dashboard</a></li>
@@ -81,20 +81,22 @@
                                         <li><a href="{% url 'customer:notis' %}">Notifications</a></li>
                                         <li><a href="{% url 'customer:profile' %}">Profile</a></li>
                                     </ul>
-                                </li>
+                                </li> -->
                                 <li>
-                                    <a href="javascript:void(0);">Pages</a>
+                                    <a href="javascript:void(0);">Помощ</a>
                                     <ul class="nav-dropdown nav-submenu">
-                                        <li><a href="{% url 'blog:blog_list' %}">Blog</a></li>
-                                        <li><a href="{% url 'store:about' %}">About Us</a></li>
-                                        <li><a href="{% url 'store:contact' %}">Contact</a></li>
-                                        <li><a href="{% url 'store:faqs' %}">FAQs</a></li>
-                                        <li><a href="{% url 'store:privacy_policy' %}">Privacy Policy</a></li>
-                                        <li><a href="{% url 'store:terms_conditions' %}">Terms and Conditions</a></li>
+                                        <!-- <li><a href="{% url 'blog:blog_list' %}"><i class="fas fa-blog me-1"></i> Blog</a></li> -->
+                                        <li><a href="{% url 'store:about' %}"><i class="fas fa-info-circle me-1"></i> За нас</a></li>                                       
+                                        <li><a href="{% url 'store:contact' %}"><i class="fas fa-phone-alt me-1"></i> Контакти</a></li>
+                                        <li><a href="{% url 'store:faqs' %}"><i class="fas fa-question-circle me-1"></i> Помощен център</a></li>
+                                        <li><a href="{% url 'store:privacy_policy' %}"><i class="fas fa-user-shield me-1"></i> Политика за поверителност</a></li>
+                                        <li><a href="{% url 'store:delivery' %}"><i class="fas fa-truck me-1"></i> Доставка</a></li>
+                                        <li><a href="{% url 'store:returns_and_exchanges' %}"><i class="fas fa-undo-alt me-1"></i> Замяна и връщане</a></li>
+                                        <li><a href="{% url 'store:terms_conditions' %}"><i class="fas fa-file-alt me-1"></i> Общи условия</a></li>
                                     </ul>
                                 </li>
                                 <li>
-                                    <a href="{% url 'store:order_tracker_page' %}">Track Order <i class="fas fa-truck ms-1"></i></a>
+                                    <a href="{% url 'store:order_tracker_page' %}">Проследи поръчка <i class="fas fa-truck ms-1"></i></a>
                                 </li>
                             </ul>
 

@@ -210,13 +210,13 @@ RECAPTCHA_PRIVATE_KEY = env("DJANGO_RECAPTCHA_PRIVATE_KEY")
 
 # Custom Admin Settings
 JAZZMIN_SETTINGS = {
-    "site_title": "FastCart Ecommerce",
-    "site_header": "FastCart Ecommerce",
-    "site_brand": "FastCart Ecommerce ",
+    "site_title": "iBands",
+    "site_header": "iBands",
+    "site_brand": "iBands",
     # "site_icon": "images/favicon.ico",
     # "site_logo": "images/logos/logo.jpg",
-    "welcome_sign": "Welcome To Desphixs",
-    "copyright": "Desphixs",
+    "welcome_sign": "Welcome To iBands",
+    "copyright": "iBands",
     "user_avatar": "images/photos/logo.jpg",
     "show_sidebar": True,
     "navigation_expanded": True,

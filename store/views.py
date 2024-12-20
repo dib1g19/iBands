@@ -715,3 +715,9 @@ def privacy_policy(request):
 
 def terms_conditions(request):
     return render(request, "pages/terms_conditions.html")
+
+def delivery(request):
+    return render(request, 'pages/delivery.html')
+
+def returns_and_exchanges(request):
+    return render(request, 'pages/returns_and_exchanges.html')

@@ -128,24 +128,24 @@ def address_detail(request, id):
         full_name = request.POST.get("full_name")
         mobile = request.POST.get("mobile")
         email = request.POST.get("email")
-        country = request.POST.get("country")
-        state = request.POST.get("state")
+        delivery_method = request.POST.get("delivery_method")
         city = request.POST.get("city")
         address_location = request.POST.get("address")
-        zip_code = request.POST.get("zip_code")
+
+        # if delivery_method not in ["econt", "speedy", "personal"]:
+        #     messages.error(request, "Invalid delivery method selected.")
+        #     return redirect("customer:address_detail", id=id)
 
         address.full_name = full_name
         address.mobile = mobile
         address.email = email
-        address.country = country
-        address.state = state
+        address.delivery_method = delivery_method
         address.city = city
         address.address = address_location
-        address.zip_code = zip_code
         address.save()
 
-        messages.success(request, "Address updated")
-        return redirect("customer:address_detail", address.id)
+        messages.success(request, "Address updated successfully!")
+        return redirect("customer:addresses")
     
     context = {
         "address": address,
@@ -159,25 +159,25 @@ def address_create(request):
         full_name = request.POST.get("full_name")
         mobile = request.POST.get("mobile")
         email = request.POST.get("email")
-        country = request.POST.get("country")
-        state = request.POST.get("state")
+        delivery_method = request.POST.get("delivery_method")
         city = request.POST.get("city")
         address = request.POST.get("address")
-        zip_code = request.POST.get("zip_code")
+
+        # if delivery_method not in ["econt", "speedy", "personal"]:
+        #     messages.error(request, "Invalid delivery method selected.")
+        #     return redirect("customer:address_create")
 
         customer_models.Address.objects.create(
             user=request.user,
             full_name=full_name,
             mobile=mobile,
             email=email,
-            country=country,
-            state=state,
+            delivery_method=delivery_method,
             city=city,
             address=address,
-            zip_code=zip_code,
         )
 
-        messages.success(request, "Address created")
+        messages.success(request, "Address created successfully!")
         return redirect("customer:addresses")
     
     return render(request, "customer/address_create.html")

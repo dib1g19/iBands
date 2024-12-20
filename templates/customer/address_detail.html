@@ -21,7 +21,6 @@
         <div class="row align-items-start justify-content-between">
             {% include 'customer/sidebar.html' %}
 
-
             <div class="col-12 col-md-12 col-lg-8 col-xl-8">
                 <div class="row mb-4">
                     <h4 class="mb-0 mb-2 fw-bold">Update Address</h4>
@@ -66,29 +65,24 @@
 
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
-                                    <label class="small text-dark ft-medium">State</label>
-                                    <input type="text" name="state" class="form-control rounded" value="{{address.state}}" />
-                                </div>
-                            </div>
-
-                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                                <div class="form-group">
-                                    <label class="small text-dark ft-medium">Country</label>
-                                    <input type="text" name="country" class="form-control rounded" value="{{address.country}}" />
-                                </div>
-                            </div>
-
-                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                                <div class="form-group">
-                                    <label class="small text-dark ft-medium">Zip Code</label>
-                                    <input type="text" name="zip_code" class="form-control rounded" value="{{address.zip_code}}" />
+                                    <label class="small text-dark ft-medium">Delivery Method</label>
+                                    <select name="delivery_method" class="form-control rounded">
+                                        <option value="">Select delivery method</option>
+                                        <option value="econt" {% if address.delivery_method == 'econt' %}selected{% endif %}>Econt</option>
+                                        <option value="speedy" {% if address.delivery_method == 'speedy' %}selected{% endif %}>Speedy</option>
+                                        <option value="personal" {% if address.delivery_method == 'personal' %}selected{% endif %}>Personal</option>
+                                    </select>
                                 </div>
                             </div>
 
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                                 <div class="form-group">
-                                    <a href="{% url 'customer:addresses' %}" class="btn bg-secondary text-white btn-sm rounded"> <i class="fas fa-arrow-left"></i> Go Back</a>
-                                    <button type="submit" class="btn bg-primary text-white btn-sm rounded">Save Changes <i class="fas fa-save ms-2"></i></button>
+                                    <a href="{% url 'customer:addresses' %}" class="btn bg-secondary text-white btn-sm rounded"> 
+                                        <i class="fas fa-arrow-left"></i> Go Back
+                                    </a>
+                                    <button type="submit" class="btn bg-primary text-white btn-sm rounded">Save Changes 
+                                        <i class="fas fa-save ms-2"></i>
+                                    </button>
                                 </div>
                             </div>
                         </form>

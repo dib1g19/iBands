@@ -21,7 +21,6 @@
         <div class="row align-items-start justify-content-between">
             {% include 'customer/sidebar.html' %}
 
-
             <div class="col-12 col-md-12 col-lg-8 col-xl-8">
                 <div class="mb-4 d-flex align-items-center justify-content-between">
                     <h4 class="mb-0 mb-2 fw-bold">Address</h4>
@@ -49,18 +48,13 @@
                                     <p class="mb-0"><span class="fw-bold">Full Name:</span> {{address.full_name}}</p>
                                     <p class="mb-0"><span class="fw-bold">Email:</span> {{address.email}}</p>
                                     <p class="mb-0"><span class="fw-bold">Mobile:</span> {{address.mobile}}</p>
-
                                     <p class="mb-0"><span class="fw-bold">Address:</span> {{address.address}}</p>
                                     <p class="mb-0"><span class="fw-bold">City:</span> {{address.city}}</p>
-                                    <p class="mb-0"><span class="fw-bold">State:</span> {{address.state}}</p>
-                                    <p class="mb-0"><span class="fw-bold">Country:</span> {{address.country}}</p>
+                                    <p class="mb-0"><span class="fw-bold">Delivery Method:</span> {{address.get_delivery_method_display}}</p>
                                 </div>
                             </div>
                         </div>
                     {% endfor %}
-                        
-
-                    
                 </div>
             </div>
         </div>

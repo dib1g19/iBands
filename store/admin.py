@@ -3,12 +3,15 @@ from store import models as store_models
 
 class GalleryInline(admin.TabularInline):
     model = store_models.Gallery
+    extra = 1
 
 class VariantInline(admin.TabularInline):
-    model = store_models.Variant
+    model = store_models.Product.variants.through
+    extra = 1
 
 class VariantItemInline(admin.TabularInline):
     model = store_models.VariantItem
+    extra = 1
 
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['title', 'image', 'parent']
@@ -23,10 +26,14 @@ class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 class VariantAdmin(admin.ModelAdmin):
-    list_display = ['product', 'name']
-    search_fields = ['product__name', 'name']
+    list_display = ['name', 'get_products']
+    search_fields = ['products__name', 'name']
     inlines = [VariantItemInline]
-    
+
+    def get_products(self, obj):
+        return ", ".join([product.name for product in obj.products.all()])
+    get_products.short_description = 'Products'
+
 class VariantItemAdmin(admin.ModelAdmin):
     list_display = ['variant', 'title', 'content']
     search_fields = ['variant__name', 'title']

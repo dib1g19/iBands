@@ -78,24 +78,19 @@ class Product(models.Model):
     name = models.CharField(max_length=100)
     image = models.FileField(upload_to="images", blank=True, null=True, default="product.jpg")
     description = CKEditor5Field('Text', config_name='extends')
-    
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
 
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True, verbose_name="Sale Price")
     regular_price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True, verbose_name="Regular Price")
-
     stock = models.PositiveIntegerField(default=0, null=True, blank=True)
     shipping = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True, verbose_name="Shipping Amount")
-    
     status = models.CharField(choices=STATUS, max_length=50, default="Published")
     featured = models.BooleanField(default=False, verbose_name="Marketplace Featured")
-    
     vendor = models.ForeignKey(user_models.User, on_delete=models.SET_NULL, null=True, blank=True)
-    
     sku = ShortUUIDField(unique=True, length=5, max_length=50, prefix="SKU", alphabet="1234567890")
     slug = models.SlugField(null=True, blank=True)
-    
     date = models.DateTimeField(default=timezone.now)
+    variants = models.ManyToManyField('Variant', blank=True, related_name='products')
 
     class Meta:
         ordering = ['-id']
@@ -103,35 +98,27 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
-    
+
     def average_rating(self):
         return Review.objects.filter(product=self).aggregate(avg_rating=models.Avg('rating'))['avg_rating']
-    
+
     def reviews(self):
         return Review.objects.filter(product=self)
 
     def gallery(self):
         return Gallery.objects.filter(product=self)
-  
-    def variants(self):
-        return Variant.objects.filter(product=self)
-
-    def vendor_orders(self):
-        return OrderItem.objects.filter(product=self, vendor=self.vendor)
 
     def save(self, *args, **kwargs):
-        if not self.slug :
+        if not self.slug:
             self.slug = slugify(self.name) + "-" + str(shortuuid.uuid().lower()[:2])
-            
-        super(Product, self).save(*args, **kwargs) 
+        super(Product, self).save(*args, **kwargs)
 
 class Variant(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=1000, verbose_name="Variant Name", null=True, blank=True)
 
     def items(self):
         return VariantItem.objects.filter(variant=self)
-    
+
     def __str__(self):
         return self.name
 
@@ -141,7 +128,7 @@ class VariantItem(models.Model):
     content = models.CharField(max_length=1000, verbose_name="Item Content", null=True, blank=True)
 
     def __str__(self):
-        return self.variant.name
+        return self.title
     
 class Gallery(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)

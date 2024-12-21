@@ -163,7 +163,7 @@
                             <table class="table">
                                 <tbody>
                                     {% for variant in product.variants.all %}
-                                        {% if variant.name == "Specifications" %}
+                                        {% if variant.name|slice:":14" == "Specifications" %}
                                             {% for s in variant.items.all %}
                                                 <tr>
                                                     <th class="ft-medium text-dark">{{s.title}}</th>

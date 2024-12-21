@@ -25,6 +25,21 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [GalleryInline, VariantInline]
     prepopulated_fields = {'slug': ('name',)}
 
+    actions = ['duplicate_product']
+
+    def duplicate_product(self, request, queryset):
+        for product in queryset:
+            new_product = store_models.Product.objects.get(pk=product.pk)
+            new_product.id = None
+            new_product.name = f"{product.name} (Copy)"
+            new_product.slug = None
+            new_product.sku = f"{product.sku} (Copy)"
+            new_product.save()
+
+        self.message_user(request, f"{queryset.count()} product(s) duplicated successfully.")
+
+    duplicate_product.short_description = "Duplicate product(s)"
+
 class VariantAdmin(admin.ModelAdmin):
     list_display = ['name', 'get_products']
     search_fields = ['products__name', 'name']

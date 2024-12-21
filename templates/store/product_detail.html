@@ -1,4 +1,8 @@
-{% extends 'partials/base.html' %} {% load static %} {% load humanize %} {% block content %}
+{% extends 'partials/base.html' %} 
+{% load static %}
+{% load humanize %} 
+{% block content %}
+
 <section class="middle">
     <div class="container">
         <div class="row">
@@ -41,21 +45,21 @@
                                 <i class="fas fa-star text-warning"></i>
                                 <i class="fas fa-star text-warning"></i>
                                 {% endif %}
-                                <span class="small ms-2">({{ product.reviews.all.count }} Reviews)</span>
+                                <span class="small ms-2">({{ product.reviews.all.count }} Мнения)</span>
                             </div>
                             <div class="elis_rty mt-3">
                                 <span class="ft-medium text-muted line-through fs-md me-3"> {% if product.regular_price %} ${{product.regular_price}} {% endif %} </span>
                                 <span class="ft-bold theme-cl fs-lg me-3">${{product.price}}</span>
-                                <span class="ft-regular text-light bg-success py-1 px-2 fs-sm"> {% if product.stock > 0 %} In Stock {% else %} Out Of Stock {% endif %} </span>
+                                <span class="ft-regular text-light bg-success py-1 px-2 fs-sm"> {% if product.stock > 0 %} В наличност {% else %} Няма наличност {% endif %} </span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="prt_03 mb-4">
+                    <!-- <div class="prt_03 mb-4">
                         <p>{{product.description|safe|truncatechars:200}}</p>
-                    </div>
+                    </div> -->
 
-                    <div class="mb-2">
+                    <!-- <div class="mb-2">
                         <p class="d-flex align-items-center text-dark ft-medium">Цвят:</p>
                         <div class="text-left">
                             {% for variant in product.variants.all %}
@@ -69,7 +73,7 @@
                                 {% endif %}
                             {% endfor %}
                         </div>
-                    </div>
+                    </div> -->
 
                     <div class="prt_04 mb-4">
                         <p class="d-flex align-items-center mb-0 text-dark ft-medium">Размер:</p>
@@ -97,7 +101,7 @@
                                 </select>
                             </div>
                             <div class="">
-                                <button type="button" class="btn btn-sm bg-primary text-white rounded add_to_cart" data-id="{{product.id}}">Add to cart <i class="fas fa-shopping-cart ms-2"></i></button>
+                                <button type="button" class="btn btn-sm bg-primary text-white rounded add_to_cart" data-id="{{product.id}}">Добави в количка <i class="fas fa-shopping-cart ms-2"></i></button>
                             </div>
                             <div class="">
                                 <button class="btn btn-sm bg-primary text-white rounded" data-toggle="button"><i class="fas fa-heart mr-2"></i></button>
@@ -107,7 +111,7 @@
 
                     <div class="prt_06">
                         <p class="mb-0 d-flex align-items-center">
-                            <span class="mr-4">Share:</span>
+                            <span class="mr-4">Сподели:</span>
                             <a class="d-inline-flex align-items-center justify-content-center p-3 gray circle fs-sm text-muted ms-2" href="#!">
                                 <i class="fab fa-twitter position-absolute"></i>
                             </a>
@@ -133,13 +137,13 @@
             <div class="col-xl-11 col-lg-12 col-md-12 col-sm-12">
                 <ul class="nav nav-tabs b-0 d-flex align-items-center justify-content-center simple_tab_links mb-4" id="myTab" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="description-tab" href="#description" data-toggle="tab" role="tab" aria-controls="description" aria-selected="true">Description</a>
+                        <a class="nav-link active" id="description-tab" href="#description" data-toggle="tab" role="tab" aria-controls="description" aria-selected="true">Описание</a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" href="#information" id="information-tab" data-toggle="tab" role="tab" aria-controls="information" aria-selected="false">Additional information</a>
+                        <a class="nav-link" href="#information" id="information-tab" data-toggle="tab" role="tab" aria-controls="information" aria-selected="false">Характеристики</a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link" href="#reviews" id="reviews-tab" data-toggle="tab" role="tab" aria-controls="reviews" aria-selected="false">Reviews</a>
+                        <a class="nav-link" href="#reviews" id="reviews-tab" data-toggle="tab" role="tab" aria-controls="reviews" aria-selected="false">Мнения</a>
                     </li>
                 </ul>
 
@@ -230,7 +234,7 @@
             <div class="row justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     <div class="sec_title position-relative text-center">
-                        <h3 class="ft-bold pt-3">Related Products</h3>
+                        <h3 class="ft-bold pt-3">Подобни продукти</h3>
                     </div>
                 </div>
             </div>
@@ -277,7 +281,7 @@
                                     <div class="elis_rty"><span class="ft-bold text-dark fs-sm">${{p.price}}</span></div>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
-                                        <button type="button" class="btn btn-sm bg-primary text-white rounded add_to_cart" data-id="{{p.id}}">Add to cart <i class="fas fa-shopping-cart ms-2"></i></button>
+                                        <button type="button" class="btn btn-sm bg-primary text-white rounded add_to_cart" data-id="{{p.id}}">Добави в количка <i class="fas fa-shopping-cart ms-2"></i></button>
                                         <input type="hidden" class="quantity" value="1" name="" id="">
                                         <a href="#" class="add_to_wishlist" data-product_id="{{p.id}}"><i class="fas fa-heart fs-4 text-black"></i></a>
                                 </div>

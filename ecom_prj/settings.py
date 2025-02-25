@@ -106,13 +106,46 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ecom_prj.wsgi.application'
 
+ENVIRONMENT = env("ENVIRONMENT", default="local")
+
+if ENVIRONMENT == "remote":
+    DATABASE_URL = env("PRODUCTION_DATABASE_URL")
+else:
+    DATABASE_URL = env("DEVELOPMENT_DATABASE_URL")
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=(ENVIRONMENT == "remote")
+    )
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(conn_max_age=600)
-}
+# DATABASES = {
+#     'default': dj_database_url.config(conn_max_age=600)
+# }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'ibands_local_db',
+#         'USER': 'ibands_user',
+#         'PASSWORD': 'your_password',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 
 # Password validation

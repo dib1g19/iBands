@@ -106,29 +106,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ecom_prj.wsgi.application'
 
-ENVIRONMENT = env("ENVIRONMENT", default="local")
+ENVIRONMENT = env("ENVIRONMENT", default="production")
 
-if ENVIRONMENT == "remote":
-    DATABASE_URL = env("PRODUCTION_DATABASE_URL")
-else:
+if ENVIRONMENT != "production":
     DATABASE_URL = env("DEVELOPMENT_DATABASE_URL")
 
 DATABASES = {
     'default': dj_database_url.config(
         default=DATABASE_URL,
         conn_max_age=600,
-        ssl_require=(ENVIRONMENT == "remote")
+        ssl_require=(ENVIRONMENT == "production")
     )
 }
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': dj_database_url.config(conn_max_age=600)
-# }
-
-
+#postgresql
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
@@ -140,6 +134,7 @@ DATABASES = {
 #     }
 # }
 
+#mysql
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',

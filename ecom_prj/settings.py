@@ -108,12 +108,9 @@ WSGI_APPLICATION = 'ecom_prj.wsgi.application'
 
 ENVIRONMENT = env("ENVIRONMENT", default="production")
 
-if ENVIRONMENT != "production":
-    DATABASE_URL = env("DEVELOPMENT_DATABASE_URL")
-
 DATABASES = {
     'default': dj_database_url.config(
-        default=DATABASE_URL,
+        default=env("DEVELOPMENT_DATABASE_URL") if ENVIRONMENT != "production" else env("DATABASE_URL"),
         conn_max_age=600,
         ssl_require=(ENVIRONMENT == "production")
     )

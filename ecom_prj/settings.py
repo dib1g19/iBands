@@ -31,12 +31,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-&)0dbnucsu)$f4pgxd0ombb4)b+oj2ci9mi=yno-veu%^doqh!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
-    "ibands.eu",
-    "www.ibands.eu",
+    "ibands.online",
+    "www.ibands.online",
     "ibands-production.up.railway.app",
 ]
 

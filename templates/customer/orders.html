@@ -72,7 +72,7 @@
                                                         <span class="text-dark medium">Размер: {{item.size}}</span>
                                                     {% endif %}
                                                 </p>
-                                                <h4 class="fs-sm ft-bold mb-0 lh-1">${{item.price}}</h4>
+                                                <h4 class="fs-sm ft-bold mb-0 lh-1">{{item.price}} лв.</h4>
                                             </div>
                                         </div>
                                     </div>
@@ -99,7 +99,7 @@
                                     <p class="m-0 p-0"><span class="text-muted medium">Платено с {{order.payment_method}}</span></p>
                                 </div>
                                 <div class="float-end">
-                                    <h5 class="mb-0 fs-sm ft-bold">Общо: ${{order.total|floatformat:2|intcomma}}</h5>
+                                    <h5 class="mb-0 fs-sm ft-bold">Общо: {{order.total|floatformat:2|intcomma}} лв.</h5>
                                 </div>
                             </div>
                         </div>

@@ -45,13 +45,13 @@
                                     <img src="{{item.product.image.url}}" alt="" style="width: 100px; height: 100px; object-fit: cover" />
                                     <div class="p-2">
                                         <h5>{{item.product.name}}</h5>
-                                        <p class="mb-0 mt-0">Price: ${{item.price}}</p>
+                                        <p class="mb-0 mt-0">Price: {{item.price}} лв.</p>
                                         <p class="mb-0 mt-0">Vendor: {{item.product.vendor.profile.full_name}}</p>
                                     </div>
                                 </div>
                                 <div class="col-lg-2">
                                     <p class="mb-1">Price</p>
-                                    <h4 class="fs-3">${{item.price}}</h4>
+                                    <h4 class="fs-3">{{item.price}} лв.</h4>
                                 </div>
 
                                 <div class="col-lg-2">
@@ -60,7 +60,7 @@
                                 </div>
                                 <div class="col-lg-2">
                                     <p class="mb-1">Price</p>
-                                    <h4 class="fs-3 mb-0">${{item.sub_total}}</h4>
+                                    <h4 class="fs-3 mb-0">{{item.sub_total}} лв.</h4>
                                 </div>
                                 <div class="col-lg-2">
                                     <a href="{% url 'store:cart' %}" class="btn bg-primary text-white btn-sm rounded"><i class="fas fa-edit"></i></a>
@@ -103,26 +103,26 @@
                     <div>
                         <div class="d-flex justify-content-between align-items-center">
                             <p class="fw-semibold fs-6">Sub-total</p>
-                            <p class="fs-6">${{order.sub_total}}</p>
+                            <p class="fs-6">{{order.sub_total}} лв.</p>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <p class="fw-semibold fs-6">Shipping</p>
-                            <p class="fs-6">${{order.shipping}}</p>
+                            <p class="fs-6">{{order.shipping}} лв.</p>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <p class="fw-semibold fs-6">Tax</p>
-                            <p class="fs-6">${{order.tax}}</p>
+                            <p class="fs-6">{{order.tax}} лв.</p>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center">
                             <p class="fw-semibold fs-6">Service Fee</p>
-                            <p class="fs-6">${{order.service_fee}}</p>
+                            <p class="fs-6">{{order.service_fee}} лв.</p>
                         </div>
                         
                         {% if order.saved %}
                             <div class="d-flex justify-content-between align-items-center">
                                 <p class="fw-semibold fs-6">Discount</p>
-                                <p class="fs-6">${{order.saved}}</p>
+                                <p class="fs-6">{{order.saved}} лв.</p>
                             </div>
                             
                             {% for coupon in order.coupons.all %}
@@ -132,7 +132,7 @@
 
                         <div class="d-flex justify-content-between align-items-center mt-3">
                             <p class="fw-bold text-dark fs-5">Total</p>
-                            <p class="fw-bold text-dark fs-5">${{order.total}}</p>
+                            <p class="fw-bold text-dark fs-5">{{order.total}} лв.</p>
                         </div>
                     </div>
                 </div>

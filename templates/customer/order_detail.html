@@ -56,7 +56,7 @@
                                                         <span class="text-dark medium">Размер: {{item.size}}</span>
                                                     {% endif %}
                                                 </p>
-                                                <h4 class="fs-sm ft-bold mb-0 lh-1">${{item.price}}</h4>
+                                                <h4 class="fs-sm ft-bold mb-0 lh-1">{{item.price}} лв.</h4>
                                             </div>
                                         </div>
                                     </div>
@@ -83,15 +83,15 @@
                     <h4 class="mt-5 mb-2 fw-bold">Резюме на поръчката</h4>
                     <div class="">
                         <h5 class="mb-2 fs-sm"><span class="fw-bold">Дата:</span> {{order.date}}</h5>
-                        <h5 class="mb-2 fs-sm"><span class="fw-bold">Междинна сума:</span> ${{order.sub_total|intcomma}}</h5>
-                        <h5 class="mb-2 fs-sm"><span class="fw-bold">Доставка:</span> ${{order.shipping|intcomma}}</h5>
-                        <h5 class="mb-2 fs-sm"><span class="fw-bold">Данъци:</span> ${{order.tax}}</h5>
+                        <h5 class="mb-2 fs-sm"><span class="fw-bold">Междинна сума:</span> {{order.sub_total|intcomma}} лв.</h5>
+                        <h5 class="mb-2 fs-sm"><span class="fw-bold">Доставка:</span> {{order.shipping|intcomma}} лв.</h5>
+                        <h5 class="mb-2 fs-sm"><span class="fw-bold">Данъци:</span> {{order.tax}} лв.</h5>
                         
                         {% if order.saved %}
-                        <h5 class="mb-2 fs-sm"><span class="fw-bold">Отстъпка:</span> -${{order.saved|intcomma}}</h5>
+                        <h5 class="mb-2 fs-sm"><span class="fw-bold">Отстъпка:</span> -{{order.saved|intcomma}} лв.</h5>
                         {% endif %}
                         
-                        <h5 class="mb-2 fs-sm"><span class="fw-bold">Общо:</span> ${{order.total|intcomma}}</h5>
+                        <h5 class="mb-2 fs-sm"><span class="fw-bold">Общо:</span> {{order.total|intcomma}} лв.</h5>
                     </div>
 
                     <h4 class="mt-5 mb-2 fw-bold">Информация за клиента</h4>

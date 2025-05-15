@@ -1,5 +1,6 @@
 from django.contrib import admin
 from store import models as store_models
+from store.models import Category
 
 class GalleryInline(admin.TabularInline):
     model = store_models.Gallery
@@ -19,13 +20,19 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'price', 'regular_price', 'stock', 'status', 'featured', 'vendor', 'date']
+    list_display = ['sku', 'name', 'slug', 'category', 'price', 'regular_price', 'stock', 'status', 'featured', 'date']
+    list_editable = ['name', 'slug', 'category']
     search_fields = ['name', 'category__title']
     list_filter = ['status', 'featured', 'category']
     inlines = [GalleryInline, VariantInline]
     prepopulated_fields = {'slug': ('name',)}
 
     actions = ['duplicate_product']
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "category":
+            kwargs["queryset"] = Category.objects.exclude(parent__isnull=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def duplicate_product(self, request, queryset):
         for product in queryset:

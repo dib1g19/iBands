@@ -19,7 +19,13 @@
 
             <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
                 <div class="prd_details">
-                    <div class="prt_01 mb-1"><span class="text-purple bg-light-purple rounded py-1">{{product.category.title}}</span></div>
+                    <div class="prt_01 mb-1">
+                        <span class="text-purple bg-light-purple rounded py-1">
+                          <a href="{% url 'store:category' product.category.parent.slug product.category.slug %}" class="text-purple">
+                            {{ product.category.title }}
+                          </a>
+                        </span>
+                    </div>
                     <div class="prt_02 mb-3">
                         <h2 class="ft-bold mb-1">{{product.name}}</h2>
                         <div class="text-left">
@@ -245,14 +251,14 @@
                     <div class="product_grid card b-0  rounded-3 shadow m-2 p-2">
                         <div class="card-body p-0">
                             <div class="shop_thumb position-relative">
-                                <a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail' p.slug %}"><img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{p.image.url}}" alt="..." /></a>
+                                <a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail' p.category.parent.slug p.category.slug p.slug %}"><img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{p.image.url}}" alt="..." /></a>
                             </div>
                         </div>
                         <div class="card-footer b-0 p-0 pt-2 bg-white d-flex align-items-start justify-content-between">
                             <div class="text-left">
                                 <div class="text-left">
-                                    <div class="elso_titl"><span class="small"><a href="{% url 'store:category' p.category.id %}">{{p.category.title}}</a></span></div>
-                                    <h5 class="fs-md mb-0 lh-1 mb-1"><a href="{% url 'store:product_detail' p.slug %}">{{p.name}}</a></h5>
+                                    <div class="elso_titl"><span class="small"><a href="{% url 'store:category' p.category.parent.slug p.category.slug %}">{{p.category.title}}</a></span></div>
+                                    <h5 class="fs-md mb-0 lh-1 mb-1"><a href="{% url 'store:product_detail' p.category.parent.slug p.category.slug p.slug %}">{{p.name}}</a></h5>
                                         <div class="star-rating align-items-center d-flex justify-content-left mb-2 p-0 mt-3">
                                         {% if not p.average_rating  %}
                                         <i class="fas fa-star text-warning"></i>

@@ -96,6 +96,7 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'store.context.default',
+                "store.context_processors.category_menu",
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',

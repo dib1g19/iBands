@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.db import models
@@ -21,7 +22,6 @@ from vendor import models as vendor_models
 from userauths import models as userauths_models
 from plugin.tax_calculation import tax_calculation
 from plugin.exchange_rate import convert_usd_to_inr, convert_usd_to_kobo, convert_usd_to_ngn, get_usd_to_ngn_rate
-
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
@@ -80,7 +80,7 @@ def shop(request):
         "products": products,
         "products_list": products_list,
         "categories": categories,
-         'colors': colors,
+        'colors': colors,
         'sizes': sizes,
         'item_display': item_display,
         'ratings': ratings,
@@ -88,10 +88,15 @@ def shop(request):
     }
     return render(request, "store/shop.html", context)
 
-def category(request, id):
-    category = store_models.Category.objects.get(id=id)
-    products_list = store_models.Product.objects.filter(status="Published", category=category)
 
+def category(request, slug, parent_slug=None):
+    if parent_slug:
+        parent = get_object_or_404(store_models.Category, slug=parent_slug)
+        category = get_object_or_404(store_models.Category, slug=slug, parent=parent)
+    else:
+        category = get_object_or_404(store_models.Category, slug=slug, parent=None)
+
+    products_list = store_models.Product.objects.filter(status="Published", category=category)
     subcategories = store_models.Category.objects.filter(parent=category)
 
     query = request.GET.get("q")
@@ -116,11 +121,24 @@ def vendors(request):
     }
     return render(request, "store/vendors.html", context)
 
-def product_detail(request, slug):
-    product = store_models.Product.objects.get(status="Published", slug=slug)
-    product_stock_range = range(1, product.stock + 1)
+def product_detail(request, parent_slug, category_slug, product_slug):
+    category = get_object_or_404(
+        store_models.Category,
+        slug=category_slug,
+        parent__slug=parent_slug
+    )
 
-    related_products = store_models.Product.objects.filter(category=product.category).exclude(id=product.id)
+    product = get_object_or_404(
+        store_models.Product,
+        slug=product_slug,
+        status="Published",
+        category=category
+    )
+
+    product_stock_range = range(1, product.stock + 1)
+    related_products = store_models.Product.objects.filter(
+        category=product.category
+    ).exclude(id=product.id)
 
     context = {
         "product": product,

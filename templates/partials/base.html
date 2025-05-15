@@ -50,11 +50,7 @@
                                  <li>
                                     <a href="javascript:void(0);">Category</a>
                                     <ul class="nav-dropdown nav-submenu">
-                                        
-                                        {% for c in category_ %}
-                                            <li><a href="{% url 'store:category' c.id %}">{{c.title}}</a></li>
-                                        {% endfor %}
-                                            
+                                        {% include "store/category_menu_recursive.html" with categories=root_categories %}                               
                                     </ul>
                                 </li>
                                 <!-- <li>

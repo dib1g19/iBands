@@ -1,0 +1,16 @@
+{% for category in categories %}
+    <li>
+        <a href="{% if category.parent %}
+                    {% url 'store:category' category.parent.slug category.slug %}
+                 {% else %}
+                    {% url 'store:category_root' category.slug %}
+                 {% endif %}">
+            {{ category.title }}
+        </a>
+        {% if category.subcategories.all %}
+            <ul class="nav-dropdown nav-submenu">
+                {% include "store/category_menu_recursive.html" with categories=category.subcategories.all %}
+            </ul>
+        {% endif %}
+    </li>
+{% endfor %}

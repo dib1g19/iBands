@@ -55,11 +55,13 @@ RATING = (
 
 class Category(models.Model):
     title = models.CharField(max_length=255)
+    sku = models.CharField(max_length=50, unique=True, null=True, verbose_name="SKU")
+
     parent = models.ForeignKey(
-        'self', 
-        on_delete=models.CASCADE, 
-        related_name='subcategories', 
-        blank=True, 
+        'self',
+        on_delete=models.CASCADE,
+        related_name='subcategories',
+        blank=True,
         null=True
     )
     image = models.ImageField(upload_to="images", default="category.jpg", null=True, blank=True)
@@ -67,10 +69,11 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = "Categories"
+        ordering = ['sku']
 
     def __str__(self):
-        return self.title
-    
+        return self.sku
+
     def products(self):
         return Product.objects.filter(category=self)
     
@@ -87,7 +90,7 @@ class Product(models.Model):
     status = models.CharField(choices=STATUS, max_length=50, default="Published")
     featured = models.BooleanField(default=False, verbose_name="Marketplace Featured")
     vendor = models.ForeignKey(user_models.User, on_delete=models.SET_NULL, null=True, blank=True)
-    sku = ShortUUIDField(unique=True, length=5, max_length=50, prefix="SKU", alphabet="1234567890")
+    sku = models.CharField(max_length=50, unique=True, verbose_name="SKU")
     slug = models.SlugField(null=True, blank=True)
     date = models.DateTimeField(default=timezone.now)
     variants = models.ManyToManyField('Variant', blank=True, related_name='products')

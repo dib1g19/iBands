@@ -85,7 +85,7 @@
                         <p class="d-flex align-items-center mb-0 text-dark ft-medium">Размер:</p>
                         <div class="text-left pb-0 pt-2">
                             {% for variant in product.variants.all %}
-                                {% if variant.name == "Size" %}
+                                {% if variant.name|slice:":4" == "Size" %}
                                     {% for s in variant.items.all %}
                                         <div class="form-check size-option form-option form-check-inline mb-2">
                                             <input class="form-check-input" value="{{s.title}}" type="radio" name="size" id="{{s.content}}"  />

@@ -15,13 +15,13 @@ class VariantItemInline(admin.TabularInline):
     extra = 1
 
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['title', 'image', 'parent']
-    list_editable = ['image']
+    list_display = ['title', 'sku', 'image', 'parent']
+    list_editable = ['sku', 'image']
     prepopulated_fields = {'slug': ('title',)}
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['sku', 'name', 'slug', 'category', 'price', 'regular_price', 'stock', 'status', 'featured', 'date']
-    list_editable = ['name', 'slug', 'category']
+    list_display = ['sku', 'name', 'image', 'category', 'price', 'regular_price', 'stock', 'status']
+    list_editable = ['name', 'image', 'category', 'price', 'regular_price']
     search_fields = ['name', 'category__title']
     list_filter = ['status', 'featured', 'category']
     inlines = [GalleryInline, VariantInline]

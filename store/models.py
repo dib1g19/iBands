@@ -77,6 +77,15 @@ class Category(models.Model):
     def products(self):
         return Product.objects.filter(category=self)
     
+    def save(self, *args, **kwargs):
+        if self.pk:
+            orig = Category.objects.get(pk=self.pk)
+            if orig.title != self.title:
+                self.slug = slugify(self.title)
+        else:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
 class Product(models.Model):
     name = models.CharField(max_length=100)
     image = models.FileField(upload_to="images", blank=True, null=True, default="product.jpg")
@@ -96,7 +105,7 @@ class Product(models.Model):
     variants = models.ManyToManyField('Variant', blank=True, related_name='products')
 
     class Meta:
-        ordering = ['-id']
+        ordering = ['sku']
         verbose_name_plural = "Products"
 
     def __str__(self):
@@ -112,9 +121,13 @@ class Product(models.Model):
         return Gallery.objects.filter(product=self)
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name) + "-" + str(shortuuid.uuid().lower()[:2])
-        super(Product, self).save(*args, **kwargs)
+        if self.pk:
+            orig = Product.objects.get(pk=self.pk)
+            if orig.name != self.name:
+                self.slug = slugify(self.name)
+        else:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
 class Variant(models.Model):
     name = models.CharField(max_length=1000, verbose_name="Variant Name", null=True, blank=True)

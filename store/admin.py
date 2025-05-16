@@ -1,6 +1,7 @@
 from django.contrib import admin
 from store import models as store_models
 from store.models import Category
+from store.admin_forms import DuplicateProductForm
 
 class GalleryInline(admin.TabularInline):
     model = store_models.Gallery
@@ -20,13 +21,14 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['sku', 'name', 'image', 'category', 'price', 'regular_price', 'stock', 'status']
-    list_editable = ['name', 'image', 'category', 'price', 'regular_price']
+    list_display = ['category', 'sku', 'name', 'image', 'price', 'regular_price', 'stock', 'status']
+    list_editable = ['sku', 'name', 'image', 'price', 'regular_price']
     search_fields = ['name', 'category__title']
     list_filter = ['status', 'featured', 'category']
     inlines = [GalleryInline, VariantInline]
     prepopulated_fields = {'slug': ('name',)}
 
+    action_form = DuplicateProductForm
     actions = ['duplicate_product']
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -35,17 +37,23 @@ class ProductAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def duplicate_product(self, request, queryset):
+        number = int(request.POST.get('number_of_copies', 1))
+        count = 0
+
         for product in queryset:
-            new_product = store_models.Product.objects.get(pk=product.pk)
-            new_product.id = None
-            new_product.name = f"{product.name} (Copy)"
-            new_product.slug = None
-            new_product.sku = f"{product.sku} (Copy)"
-            new_product.save()
+            for i in range(number):
+                new_product = store_models.Product.objects.get(pk=product.pk)
+                new_product.id = None
+                new_product.name = f"{product.name} (Copy {i+1})"
+                new_product.slug = None
+                new_product.sku = f"{product.sku}-copy-{i+1}-{count}"
+                new_product.save()
+                new_product.variants.set(product.variants.all())
+                count += 1
 
-        self.message_user(request, f"{queryset.count()} product(s) duplicated successfully.")
+        self.message_user(request, f"{count} product copies created successfully.")
 
-    duplicate_product.short_description = "Duplicate product(s)"
+    duplicate_product.short_description = "Duplicate selected products"
 
 class VariantAdmin(admin.ModelAdmin):
     list_display = ['name', 'get_products']

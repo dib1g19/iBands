@@ -8,9 +8,17 @@ https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
 """
 
 import os
-
 from django.core.wsgi import get_wsgi_application
+from environs import Env
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ecom_prj.settings.dev')
+env = Env()
+env.read_env()
 
+ENVIRONMENT = env("ENVIRONMENT", default="dev")
+
+if ENVIRONMENT == "prod":
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ecom_prj.settings.prod")
+else:
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ecom_prj.settings.dev")
+    
 application = get_wsgi_application()

@@ -53,7 +53,7 @@ class ProductAdmin(admin.ModelAdmin):
 
         self.message_user(request, f"{count} product copies created successfully.")
 
-    duplicate_product.short_description = "Duplicate selected products"
+    duplicate_product.short_description = "Duplicate selected Products"
 
 class VariantAdmin(admin.ModelAdmin):
     list_display = ['name', 'get_products']

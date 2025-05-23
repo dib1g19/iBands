@@ -1,5 +1,5 @@
 """
-WSGI config for ecom_prj project.
+WSGI config for ibands_site project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -17,8 +17,8 @@ env.read_env()
 ENVIRONMENT = env("ENVIRONMENT", default="dev")
 
 if ENVIRONMENT == "prod":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ecom_prj.settings.prod")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ibands_site.settings.prod")
 else:
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ecom_prj.settings.dev")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ibands_site.settings.dev")
     
 application = get_wsgi_application()

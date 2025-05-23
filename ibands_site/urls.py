@@ -1,5 +1,5 @@
 """
-URL configuration for ecom_prj project.
+URL configuration for ibands_site project. 
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/4.2/topics/http/urls/

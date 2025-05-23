@@ -9,7 +9,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # ✅ Media files are still stored on S3
 MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-DEFAULT_FILE_STORAGE = 'ecom_prj.storages.MediaStorage'
+DEFAULT_FILE_STORAGE = 'ibands_site.storages.MediaStorage'
 
 
 DATABASES = {

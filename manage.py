@@ -13,9 +13,9 @@ def main():
     ENVIRONMENT = env("ENVIRONMENT", default="dev")
 
     if ENVIRONMENT == "prod":
-        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ecom_prj.settings.prod")
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ibands_site.settings.prod")
     else:
-        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ecom_prj.settings.dev")
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ibands_site.settings.dev")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

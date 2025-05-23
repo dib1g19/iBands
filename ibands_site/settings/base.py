@@ -41,8 +41,8 @@ ALLOWED_HOSTS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1",
-    "https://ibands.eu",
-    "https://www.ibands.eu",
+    "https://ibands.online",
+    "https://www.ibands.online",
     "https://ibands-production.up.railway.app",
 ]
 

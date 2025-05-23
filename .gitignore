@@ -1,5 +1,6 @@
 /staticfiles/
 /media/
+*.dump
 .env
 .DS_Store
 __pycache__

@@ -37,6 +37,7 @@ ALLOWED_HOSTS = [
     "ibands.online",
     "www.ibands.online",
     "ibands-production.up.railway.app",
+    "ibands.onrender.com",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -44,6 +45,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://ibands.online",
     "https://www.ibands.online",
     "https://ibands-production.up.railway.app",
+    "https://ibands.onrender.com",
 ]
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'

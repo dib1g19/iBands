@@ -1,1 +1,1 @@
-web: gunicorn ecom_prj.wsgi --log-file -
+web: gunicorn ibands_site.wsgi --log-file -

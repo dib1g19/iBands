@@ -309,17 +309,15 @@ $(document).ready(function () {
                 button.html("<i class='fas fa-spinner fa-spin text-gray'></i>");
             },
             success: function (response) {
-                button.html("<i class='fas fa-heart text-danger'></i>");
-                console.log(response);
                 if (response.message === "User is not logged in") {
-                    button.html("<i class='fas fa-heart text-gray'></i>");
+                    button.html("<i class='fas fa-heart fs-5 text-gray'></i>");
 
                     Toast.fire({
                         icon: "warning",
                         title: response.message,
                     });
                 } else {
-                    button.html("<i class='fas fa-heart text-danger'></i>");
+                    button.html("<i class='fas fa-heart fs-5 text-danger'></i>");
                     Toast.fire({
                         icon: "success",
                         title: response.message,

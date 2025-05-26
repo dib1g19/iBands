@@ -35,7 +35,7 @@
                             <div class="product_grid card b-0  rounded-3 shadow m-2 p-2">
                                 <div class="card-body p-0">
                                     <div class="shop_thumb position-relative">
-                                        <a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail' w.product.slug %}">
+                                        <a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail' w.product.category.parent.slug w.product.category.slug w.product.slug %}">
                                             <img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{w.product.image.url}}" alt="..." />
                                         </a>
                                     </div>
@@ -43,9 +43,9 @@
                                 <div class="card-footer b-0 p-0 pt-2 bg-white d-flex align-items-start justify-content-between">
                                     <div class="text-left">
                                         <div class="text-left">
-                                            <div class="elso_titl"><span class="small"><a href="{% url 'store:category' w.product.category.id %}">{{w.product.category.title}}</a></span></div>
+                                            <div class="elso_titl"><span class="small"><a href="{% url 'store:category' w.product.category.parent.slug w.product.category.slug %}">{{w.product.category.title}}</a></span></div>
                                             <h5 class="fs-md mb-0 lh-1 mb-1">
-                                                <a href="{% url 'store:product_detail' w.product.slug %}">{{w.product.name}}</a>
+                                                <a href="{% url 'store:product_detail' w.product.category.parent.slug w.product.category.slug w.product.slug %}">{{w.product.name}}</a>
                                             </h5>
                                             <div class="star-rating align-items-center d-flex justify-content-left mb-2 p-0 mt-3">
                                                 {% if not w.product.average_rating %}

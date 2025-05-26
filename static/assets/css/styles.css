@@ -15,7 +15,7 @@
 	Fonts
 ------------------------------------ */
 
-@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 /*------------------------------------------------------------
 	Global Settings
 -------------------------------------------------------------*/
@@ -32,7 +32,7 @@ body {
     background: #ffffff;
     color: #707070;
     font-size: 14px;
-    font-family: 'Jost', sans-serif;
+    font-family: 'Roboto', sans-serif;
     margin: 0;
     overflow-x: hidden !important;
     font-weight: 400;
@@ -40,7 +40,7 @@ body {
 
 .snackbar-container p,
 .tooltip {
-    font-family: 'Jost', sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 14px !important;
     font-weight: 500 !important;
 }

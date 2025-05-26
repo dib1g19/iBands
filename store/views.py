@@ -189,7 +189,7 @@ def add_to_cart(request):
         cart.cart_id = cart_id
         cart.save()
 
-        message = "Item added to cart"
+        message = "Продуктаът е добавен в количката"
     else:
         # If the item exists in the cart, update the existing entry
         existing_cart_item.color = color
@@ -203,7 +203,7 @@ def add_to_cart(request):
         existing_cart_item.cart_id = cart_id
         existing_cart_item.save()
 
-        message = "Cart updated"
+        message = "Koличката е обновена"
 
     # Count the total number of items in the cart
     total_cart_items = store_models.Cart.objects.filter(cart_id=cart_id)

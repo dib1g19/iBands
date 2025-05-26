@@ -59,7 +59,7 @@ $(document).ready(function () {
                     icon: "success",
                     title: response.message,
                 });
-                button_el.html('Added To Cart <i class="fas fa-check-circle ms-2"></i>');
+                button_el.html('Добавено в количка <i class="fas fa-check-circle ms-2"></i>');
                 $(".total_cart_items").text(response.total_cart_items);
             },
             error: function (xhr, status, error) {

@@ -1922,11 +1922,26 @@ nav a:hover {
     padding: 12px 15px 12px 26px
 }
 
-.nav-menu>.active>a,
+@media (min-width: 993px) {
+    .nav-menu>.active>a,
+    .nav-menu>.focus>a,
+    .nav-menu>li:hover>a {
+    color: #cccccc !important;
+    transition: color 0.2s ease;
+  }
+}
+
+@media (max-width: 992px) {
+  .nav-menu>li:hover>a {
+    color: #5b1cee !important;
+    transition: color 0.2s ease;
+  }
+}
+/* .nav-menu>.active>a,
 .nav-menu>.focus>a,
 .nav-menu>li:hover>a {
-    color: #ffffff !important;
-}
+    color: #ffffff;
+} */
 
 .nav-menu>li>a>[class*=ion-],
 .nav-menu>li>a>i {

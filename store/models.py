@@ -91,7 +91,7 @@ class Product(models.Model):
     image = models.FileField(upload_to="images", blank=True, null=True, default="product.jpg")
     description = CKEditor5Field('Text', config_name='extends')
 
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True, verbose_name="Sale Price")
     regular_price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True, verbose_name="Regular Price")
     stock = models.PositiveIntegerField(default=0, null=True, blank=True)

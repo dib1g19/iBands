@@ -22,6 +22,8 @@ from vendor import models as vendor_models
 from userauths import models as userauths_models
 from plugin.tax_calculation import tax_calculation
 from plugin.exchange_rate import convert_usd_to_inr, convert_usd_to_kobo, convert_usd_to_ngn, get_usd_to_ngn_rate
+from itertools import chain
+from django.db.models import Q
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
@@ -45,16 +47,28 @@ def index(request):
     return render(request, "store/index.html", context)
 
 def shop(request):
-    products_list = store_models.Product.objects.filter(status="Published")
-    categories = store_models.Category.objects.all()
+    # Get all categories (both root and children)
+    categories = store_models.Category.objects.prefetch_related('subcategories').all()
+    # Store all selected category IDs (for filtering)
+    selected_ids = []
+    for c in categories:
+        children = c.subcategories.all()
+        all_products = list(chain.from_iterable(child.products.all() for child in children)) + list(c.products.all())
+        c.total_products = len(all_products)
+        selected_ids.append(c.id)
+        selected_ids.extend([child.id for child in children])
+
+    # Fetch products in selected categories
+    products_list = store_models.Product.objects.filter(status="Published", category__id__in=selected_ids)
     colors = store_models.VariantItem.objects.filter(variant__name='Color').values('title', 'content').distinct()
-    sizes = store_models.VariantItem.objects.filter(variant__name='Size').values('title', 'content').distinct()
+    sizes = store_models.VariantItem.objects.filter(
+        Q(variant__name__startswith='Size')
+    ).values('title', 'content').distinct()
     item_display = [
-        {"id": "1", "value": 1},
-        {"id": "2", "value": 2},
-        {"id": "3", "value": 3},
+        {"id": "12", "value": 12},
+        {"id": "20", "value": 20},
         {"id": "40", "value": 40},
-        {"id": "50", "value": 50},
+        {"id": "60", "value": 60},
         {"id": "100", "value": 100},
     ]
 
@@ -67,14 +81,11 @@ def shop(request):
     ]
 
     prices = [
-        {"id": "lowest", "value": "Highest to Lowest"},
-        {"id": "highest", "value": "Lowest to Highest"},
+        {"id": "lowest", "value": "Най-висока към най-ниска"},
+        {"id": "highest", "value": "Най-ниска към най-висока"},
     ]
 
-
-    print(sizes)
-
-    products = paginate_queryset(request, products_list, 10)
+    products = paginate_queryset(request, products_list, 20)
 
     context = {
         "products": products,
@@ -87,7 +98,6 @@ def shop(request):
         'prices': prices,
     }
     return render(request, "store/shop.html", context)
-
 
 def category(request, slug, parent_slug=None):
     if parent_slug:
@@ -650,13 +660,22 @@ def filter_products(request):
    
     # Apply category filtering
     if categories:
-        products = products.filter(category__id__in=categories)
+        all_category_ids = []
+        for cid in categories:
+            try:
+                cid_int = int(cid)
+                all_category_ids.append(cid_int)
+                category = store_models.Category.objects.get(id=cid_int)
+                sub_ids = category.subcategories.values_list('id', flat=True)
+                all_category_ids.extend(sub_ids)
+            except:
+                continue
+
+        products = products.filter(category__id__in=all_category_ids)
 
     # Apply rating filtering
     if rating:
         products = products.filter(reviews__rating__in=rating).distinct()
-
-    
 
     # Apply size filtering
     if sizes:

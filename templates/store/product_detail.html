@@ -272,7 +272,7 @@
     </section>
     
     <!-- Related Products Section -->
-    {% if related_products %}
+    {% if products %}
         <section class="middle pt-0">
             <div class="container">
                 <div class="row justify-content-center">
@@ -284,7 +284,7 @@
                 </div>
                 <!-- Product List -->
                 <div class="row align-items-center rows-products">
-                    {% for p in related_products %}
+                    {% for p in products %}
                         <div class="col-6 col-md-4 col-lg-3">
                             <div class="product_grid card b-0 rounded-3 shadow m-2 p-2">
                                 <!-- Product Image -->
@@ -320,6 +320,9 @@
                         </div>
                     {% endfor %}
                 </div>
+
+                {% include 'partials/_pagination.html' %}
+
             </div>
         </section>
     {% endif %}

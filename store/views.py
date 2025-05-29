@@ -37,7 +37,9 @@ def clear_cart_items(request):
     return
 
 def index(request):
-    products = store_models.Product.objects.filter(status="Published")
+    products_list = store_models.Product.objects.filter(status="Published")
+    products = paginate_queryset(request, products_list, 32)
+
     categories = store_models.Category.objects.filter(parent__isnull=True).order_by("id")
 
     context = {
@@ -60,10 +62,11 @@ def shop(request):
 
     # Fetch products in selected categories
     products_list = store_models.Product.objects.filter(status="Published", category__id__in=selected_ids)
+    products = paginate_queryset(request, products_list, 20)
+
     colors = store_models.VariantItem.objects.filter(variant__name='Color').values('title', 'content').distinct()
-    sizes = store_models.VariantItem.objects.filter(
-        Q(variant__name__startswith='Size')
-    ).values('title', 'content').distinct()
+    sizes = store_models.VariantItem.objects.filter(Q(variant__name__startswith='Size')).values('title', 'content').distinct()
+    
     item_display = [
         {"id": "12", "value": 12},
         {"id": "20", "value": 20},
@@ -85,8 +88,6 @@ def shop(request):
         {"id": "highest", "value": "Най-ниска към най-висока"},
     ]
 
-    products = paginate_queryset(request, products_list, 20)
-
     context = {
         "products": products,
         "products_list": products_list,
@@ -106,20 +107,23 @@ def category(request, slug, parent_slug=None):
     else:
         category = get_object_or_404(store_models.Category, slug=slug, parent=None)
 
-    products_list = store_models.Product.objects.filter(status="Published", category=category)
-    subcategories = store_models.Category.objects.filter(parent=category)
+    # Collect all relevant categories: this one + its subcategories
+    child_categories = store_models.Category.objects.filter(parent=category)
+    all_categories = [category] + list(child_categories)
+
+    # Get products in any of the categories
+    products_list = store_models.Product.objects.filter(status="Published", category__in=all_categories)
 
     query = request.GET.get("q")
     if query:
         products_list = products_list.filter(name__icontains=query)
 
-    products = paginate_queryset(request, products_list, 10)
+    products = paginate_queryset(request, products_list, 12)
 
     context = {
         "products": products,
-        "products_list": products_list,
         "category": category,
-        "subcategories": subcategories,
+        "subcategories": child_categories,
     }
     return render(request, "store/category.html", context)
 
@@ -146,14 +150,15 @@ def product_detail(request, parent_slug, category_slug, product_slug):
     )
 
     product_stock_range = range(1, product.stock + 1)
-    related_products = store_models.Product.objects.filter(
+    related_products_list = store_models.Product.objects.filter(
         category=product.category
     ).exclude(id=product.id)
+    related_products = paginate_queryset(request, related_products_list, 12)
 
     context = {
         "product": product,
         "product_stock_range": product_stock_range,
-        "related_products": related_products,
+        "products": related_products,
     }
     return render(request, "store/product_detail.html", context)
 
@@ -752,9 +757,6 @@ def privacy_policy(request):
 
 def terms_conditions(request):
     return render(request, "pages/terms_conditions.html")
-
-def delivery(request):
-    return render(request, 'pages/delivery.html')
 
 def returns_and_exchanges(request):
     return render(request, 'pages/returns_and_exchanges.html')

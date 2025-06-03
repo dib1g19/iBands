@@ -3,21 +3,8 @@
 {% load humanize %}
 
 {% block content %}
-    <!-- Breadcrumbs Section -->
-    <div class="gray py-3">
-        <div class="container">
-            <div class="row">
-                <div class="colxl-12 col-lg-12 col-md-12">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{% url 'store:index' %}">Начална Страница</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">За Нас</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </div>
+
+    {% include "partials/_breadcrumbs.html" %}
 
     <!-- About Company Section -->
     <section class="middle">
@@ -58,7 +45,6 @@
                         <p class="mb-4">iBands – повече от аксесоари. Стил, който работи за теб.</p>
                     </div>
                 </div>
-                
             </div>
         </div>
     </section>

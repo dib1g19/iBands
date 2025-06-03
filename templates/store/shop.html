@@ -3,23 +3,8 @@
 {% load humanize %}
 
 {% block content %}
-    <!-- Breadcrumbs Section -->
-	<div class="gray py-3">
-		<div class="container">
-			<div class="row">
-				<div class="col-xl-12 col-lg-12 col-md-12">
-					<nav aria-label="breadcrumb">
-						<ol class="breadcrumb">
-							<li class="breadcrumb-item"><a href="{% url 'store:index' %}">Начална Страница</a></li>
-							<li class="breadcrumb-item active" aria-current="page">Всички продукти</li>
-						</ol>
-					</nav>
-				</div>
-			</div>
-		</div>
-	</div>
+	{% include "partials/_breadcrumbs.html" %}
 	
-	<!-- Main Content Section -->
 	<section class="middle">
 		<div class="container">
 			<!-- Page Title & Search -->
@@ -28,8 +13,8 @@
 				<input type="text" class="form-control rounded search-filter" placeholder="Търси продукти..." name="search-filter" id="">
 				<button class="btn bg-primary text-white rounded "><i class="fas fa-search"></i></button>
 			</div>
-			<div class="row">
 
+			<div class="row">
 				<!-- Sidebar Filters -->
 				<div class="col-lg-3">
 					<!-- Category Filter -->
@@ -155,10 +140,9 @@
 					    {% endfor %}
 					</div>
 				</div>
-
-            {% include 'partials/_pagination.html' %}
-
 			</div>
+
+			{% include 'partials/_pagination.html' %}
 		</div>
 	</section>
 {% endblock content %}

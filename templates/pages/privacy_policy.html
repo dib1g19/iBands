@@ -3,32 +3,18 @@
 {% load humanize %} 
 
 {% block content %}
-    <!-- Breadcrumbs Section -->
-    <div class="gray py-3">
-        <div class="container">
-            <div class="row">
-                <div class="colxl-12 col-lg-12 col-md-12">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{% url 'store:index' %}">Начална Страница</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Политика за поверителност</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </div>
+
+    {% include "partials/_breadcrumbs.html" %}
 
     <section class="middle">
         <div class="container">
             <div class="row align-items-center justify-content-between">
-            
                 <div class="col-xl-11 col-lg-12 col-md-6 col-sm-12">
                     <div class="abt_caption">
                         <h2 class="ft-medium mb-4">Политика за поверителност</h2>
 
                         <h4>I. Въведение</h4>
-                        <p class="mb-4">Настоящата политика за поверителност има за цел да ви информира за начина, по който АЙБАНДС ЕООД, ЕИК 207241956, със седалище и адрес на управление: гр. Пловдив бул. Копривщица 22, събира, използва, съхранява и защитава вашите лични данни във връзка с използването на нашия онлайн магазин www.ibands.eu.</p>
+                        <p class="mb-4">Настоящата политика за поверителност има за цел да ви информира за начина, по който АЙБАНДС ЕООД, ЕИК 207241956, със седалище и адрес на управление: гр. Пловдив бул. Копривщица 22, събира, използва, съхранява и защитава вашите лични данни във връзка с използването на нашия онлайн магазин www.ibands.online.</p>
 
                         <h4>II. Какви лични данни събираме</h4>
                         <p class="mb-4">- Име и фамилия<br>
@@ -82,7 +68,6 @@
                         <p class="mb-4">АЙБАНДС ЕООД прилага подходящи технически и организационни мерки за защита на личните Ви данни срещу неоторизиран достъп, загуба, злоупотреба или разрушаване.</p>
                     </div>
                 </div>
-                
             </div>
         </div>
     </section>

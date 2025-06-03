@@ -3,21 +3,8 @@
 {% load humanize %}
 
 {% block content %}
-    <!-- Breadcrumbs Section -->
-    <div class="gray py-3">
-        <div class="container">
-            <div class="row">
-                <div class="colxl-12 col-lg-12 col-md-12">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{% url 'store:index' %}">Начална Страница</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Проследяване на поръчка</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </div>
+
+    {% include "partials/_breadcrumbs.html" %}
 
     <!-- Order Tracker Form Section -->
     <section class="middle" style="margin-bottom: 600px;">

@@ -3,25 +3,11 @@
 {% load humanize %}
 
 {% block content %}
-    <!-- Breadcrumbs Section -->
-    <div class="gray py-3">
-        <div class="container">
-            <div class="row">
-                <div class="colxl-12 col-lg-12 col-md-12">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{% url 'store:index' %}">Начална Страница</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Често задавани въпроси</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </div>
+
+    {% include "partials/_breadcrumbs.html" %}
 
     <section class="middle">
         <div class="container">
-        
             <div class="row justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     <div class="sec_title position-relative ">
@@ -44,7 +30,7 @@
                     </div>
                     
                     <div class="card-wrap-body mb-3">
-                        <h4 class="fw-bold mb-3 text-dark">Drop A Mail</h4>
+                        <h4 class="fw-bold mb-3 text-dark">Изпрати имейл</h4>
                         <p class="lh-1 text-dark"> support@ibands.online</p>
                         <p class="lh-1 text-dark"> order@ibands.online</p>
                     </div>
@@ -88,7 +74,6 @@
                         </div>
                     </form>
                 </div>
-                
             </div>
         </div>
     </section>

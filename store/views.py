@@ -8,13 +8,11 @@ from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives, send_mail
-
 from decimal import Decimal
 import requests
 import stripe
 from plugin.service_fee import calculate_service_fee
 import razorpay
-
 from plugin.paginate_queryset import paginate_queryset
 from store import models as store_models
 from customer import models as customer_models
@@ -66,6 +64,11 @@ def shop(request):
 
     colors = store_models.VariantItem.objects.filter(variant__name='Color').values('title', 'content').distinct()
     sizes = store_models.VariantItem.objects.filter(Q(variant__name__startswith='Size')).values('title', 'content').distinct()
+
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Магазин", "url": ""},
+    ]
     
     item_display = [
         {"id": "12", "value": 12},
@@ -97,6 +100,7 @@ def shop(request):
         'item_display': item_display,
         'ratings': ratings,
         'prices': prices,
+        "breadcrumbs": breadcrumbs,
     }
     return render(request, "store/shop.html", context)
 
@@ -105,13 +109,11 @@ def category(request, slug, parent_slug=None):
         parent = get_object_or_404(store_models.Category, slug=parent_slug)
         category = get_object_or_404(store_models.Category, slug=slug, parent=parent)
     else:
+        parent = None
         category = get_object_or_404(store_models.Category, slug=slug, parent=None)
 
-    # Collect all relevant categories: this one + its subcategories
     child_categories = store_models.Category.objects.filter(parent=category)
     all_categories = [category] + list(child_categories)
-
-    # Get products in any of the categories
     products_list = store_models.Product.objects.filter(status="Published", category__in=all_categories)
 
     query = request.GET.get("q")
@@ -120,10 +122,24 @@ def category(request, slug, parent_slug=None):
 
     products = paginate_queryset(request, products_list, 12)
 
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+    ]
+    if parent:
+        breadcrumbs.append({
+            "label": parent.title,
+            "url": reverse("store:category_root", args=[parent.slug])
+        })
+    breadcrumbs.append({
+        "label": category.title,
+        "url": ""
+    })
+
     context = {
         "products": products,
         "category": category,
         "subcategories": child_categories,
+        "breadcrumbs": breadcrumbs,
     }
     return render(request, "store/category.html", context)
 
@@ -155,10 +171,28 @@ def product_detail(request, parent_slug, category_slug, product_slug):
     ).exclude(id=product.id)
     related_products = paginate_queryset(request, related_products_list, 12)
 
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+    ]
+    if category.parent:
+        breadcrumbs.append({
+            "label": category.parent.title,
+            "url": reverse("store:category_root", args=[category.parent.slug]),
+        })
+    breadcrumbs.append({
+        "label": category.title,
+        "url": reverse("store:category", args=[category.parent.slug, category.slug]),
+    })
+    breadcrumbs.append({
+        "label": product.name,
+        "url": "",
+    })
+
     context = {
         "product": product,
         "product_stock_range": product_stock_range,
         "products": related_products,
+        "breadcrumbs": breadcrumbs,
     }
     return render(request, "store/product_detail.html", context)
 
@@ -169,7 +203,6 @@ def add_to_cart(request):
     color = request.GET.get("color")
     size = request.GET.get("size")
     cart_id = request.GET.get("cart_id")
-    
     request.session['cart_id'] = cart_id
 
     # Validate required fields
@@ -203,7 +236,6 @@ def add_to_cart(request):
         cart.user = request.user if request.user.is_authenticated else None
         cart.cart_id = cart_id
         cart.save()
-
         message = "Продуктаът е добавен в количката"
     else:
         # If the item exists in the cart, update the existing entry
@@ -217,7 +249,6 @@ def add_to_cart(request):
         existing_cart_item.user = request.user if request.user.is_authenticated else None
         existing_cart_item.cart_id = cart_id
         existing_cart_item.save()
-
         message = "Koличката е обновена"
 
     # Count the total number of items in the cart
@@ -247,7 +278,7 @@ def cart(request):
         addresses = None
 
     if not items:
-        messages.warning(request, "No item in cart")
+        messages.warning(request, "Количката е празна")
         return redirect("store:index")
 
     context = {
@@ -280,10 +311,12 @@ def delete_cart_item(request):
     cart_sub_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(sub_total = models.Sum("sub_total"))['sub_total']
 
     return JsonResponse({
-        "message": "Item deleted",
+        "message": "Продуктът е изтрит",
         "total_cart_items": total_cart_items.count(),
         "cart_sub_total": "{:,.2f}".format(cart_sub_total) if cart_sub_total else 0.00
     })
+
+from decimal import Decimal
 
 def create_order(request):
     if request.method == "POST":
@@ -302,7 +335,6 @@ def create_order(request):
         items = store_models.Cart.objects.filter(cart_id=cart_id)
         cart_sub_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(sub_total = models.Sum("sub_total"))['sub_total']
         cart_shipping_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(shipping = models.Sum("shipping"))['shipping']
-        
         order = store_models.Order()
         order.sub_total = cart_sub_total
         order.customer = request.user
@@ -368,7 +400,6 @@ def coupon_apply(request, order_id):
                 if coupon.vendor == item.product.vendor and coupon not in item.coupon.all():
                     item_discount = item.total * coupon.discount / 100  # Discount for this item
                     total_discount += item_discount
-
                     item.coupon.add(coupon) 
                     item.total -= item_discount
                     item.saved += item_discount
@@ -400,6 +431,14 @@ def checkout(request, order_id):
         })
     except:
         razorpay_order = None
+
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Магазин", "url": reverse("store:shop")},
+        {"label": "Количка", "url": reverse("store:cart")},
+        {"label": "Поръчка", "url": ""},
+    ]
+
     context = {
         "order": order,
         "amount_in_inr":amount_in_inr,
@@ -411,6 +450,7 @@ def checkout(request, order_id):
         "razorpay_key_id":settings.RAZORPAY_KEY_ID,
         "paystack_public_key":settings.PAYSTACK_PUBLIC_KEY,
         "flutterwave_public_key":settings.FLUTTERWAVE_PUBLIC_KEY,
+        "breadcrumbs": breadcrumbs,
     }
 
     return render(request, "store/checkout.html", context)
@@ -571,8 +611,6 @@ def razorpay_payment_verify(request, order_id):
 
             return redirect(f"/payment_status/{order.order_id}/?payment_status=paid")
 
-        
-
     return redirect(f"/payment_status/{order.order_id}/?payment_status=failed")
 
 def paystack_payment_verify(request, order_id):
@@ -584,7 +622,6 @@ def paystack_payment_verify(request, order_id):
             "Authorization": f"Bearer {settings.PAYSTACK_PRIVATE_KEY}",
             "Content-Type": "application/json"
         }
-
         # Verify the transaction
         response = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
         response_data = response.json()
@@ -662,7 +699,6 @@ def filter_products(request):
     print("search_filter =======", search_filter)
     print("display =======", display)
 
-   
     # Apply category filtering
     if categories:
         all_category_ids = []
@@ -703,7 +739,6 @@ def filter_products(request):
     if display:
         products = products.filter()[:int(display)]
 
-
     # Render the filtered products as HTML using render_to_string
     html = render_to_string('partials/_store.html', {'products': products})
 
@@ -714,7 +749,11 @@ def order_tracker_page(request):
         item_id = request.POST.get("item_id")
         return redirect("store:order_tracker_detail", item_id)
     
-    return render(request, "store/order_tracker_page.html")
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Проследяване на поръчка", "url": ""},
+    ]
+    return render(request, "store/order_tracker_page.html", {"breadcrumbs": breadcrumbs})
 
 def order_tracker_detail(request, item_id):
     try:
@@ -730,7 +769,11 @@ def order_tracker_detail(request, item_id):
     return render(request, "store/order_tracker.html", context)
 
 def about(request):
-    return render(request, "pages/about.html")
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "За Нас", "url": ""},
+    ]
+    return render(request, "pages/about.html", {"breadcrumbs": breadcrumbs})
 
 def contact(request):
     if request.method == "POST":
@@ -745,18 +788,40 @@ def contact(request):
             subject=subject,
             message=message,
         )
-        messages.success(request, "Message sent successfully")
+        messages.success(request, "Съобщението е изпратено успешно")
         return redirect("store:contact")
-    return render(request, "pages/contact.html")
+    
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Контакти", "url": ""},
+    ]
+    return render(request, "pages/contact.html", {"breadcrumbs": breadcrumbs})
 
 def faqs(request):
-    return render(request, "pages/faqs.html")
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Често задавани въпроси", "url": ""},
+    ]
+    return render(request, "pages/faqs.html", {"breadcrumbs": breadcrumbs})
 
 def privacy_policy(request):
-    return render(request, "pages/privacy_policy.html")
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Политика за поверителност", "url": ""},
+    ]
+    return render(request, "pages/privacy_policy.html", {"breadcrumbs": breadcrumbs})
 
 def terms_conditions(request):
-    return render(request, "pages/terms_conditions.html")
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Общи условия", "url": ""},
+    ]
+    return render(request, "pages/terms_conditions.html", {"breadcrumbs": breadcrumbs})
+
 
 def returns_and_exchanges(request):
-    return render(request, 'pages/returns_and_exchanges.html')
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Доставка и връшане", "url": ""},
+    ]
+    return render(request, 'pages/returns_and_exchanges.html', {"breadcrumbs": breadcrumbs})

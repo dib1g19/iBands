@@ -32,8 +32,7 @@
                                         <img src="{{item.product.image.url}}" alt="" style="width: 100px; height: 100px; object-fit: cover" />
                                         <div class="p-2">
                                             <h5>{{item.product.name}}</h5>
-                                            <p class="mb-0 mt-0">Price: {{item.price}} лв.</p>
-                                            <p class="mb-0 mt-0">Vendor: {{item.product.vendor.profile.full_name}}</p>
+                                            <p class="mb-0 mt-0">{{ item.product.category.title }}</p>
                                         </div>
                                     </div>
                                     <div class="col-lg-2">
@@ -131,6 +130,11 @@
                             <input type="text" class="form-control" name="coupon_code" placeholder="Coupon Code" />
                             <button type="submit"  class="btn bg-secondary text-white"><i class="fas fa-check-circle"></i></button>
                         </form>
+                    </div>
+
+                    <div class="shadow rounded p-3 mt-3">
+                        <h4 class="fw-bold">Плащане при доставка</h4>
+                        <button type="button" id="cod-payment" class="btn bg-primary rounded text-white w-100">Плати при доставка</button>
                     </div>
 
                     <!-- <div class="w-100 mt-3">
@@ -287,6 +291,45 @@
                 }
             });
             handler.openIframe();
+        }
+    </script>
+
+    <script>
+        // Helper to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+        var codButton = document.getElementById("cod-payment");
+        try {
+            codButton.addEventListener("click", function () {
+                codButton.innerHTML = "Обработка... <i class='fas fa-spinner fa-spin'></i>";
+                fetch("{% url 'store:cod_payment' order.order_id %}", {
+                    method: "POST",
+                    headers: {'X-CSRFToken': csrftoken}
+                })
+                .then(function (response) {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    }
+                })
+                .catch(function (error) {
+                    console.error("Error:", error);
+                });
+            });
+        } catch (error) {
+            console.log(error);
         }
     </script>
 {% endblock content %}

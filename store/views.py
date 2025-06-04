@@ -280,11 +280,18 @@ def cart(request):
     if not items:
         messages.warning(request, "Количката е празна")
         return redirect("store:index")
+    
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Магазин", "url": reverse("store:shop")},
+        {"label": "Количка", "url": ""},
+    ]
 
     context = {
         "items": items,
         "cart_sub_total": cart_sub_total,
         "addresses": addresses,
+        "breadcrumbs": breadcrumbs,
     }
     return render(request, "store/cart.html", context)
 
@@ -340,8 +347,8 @@ def create_order(request):
         order.customer = request.user
         order.address = address
         order.shipping = cart_shipping_total
-        order.tax = tax_calculation(address.country, cart_sub_total)
-        order.total = order.sub_total + order.shipping + Decimal(order.tax)
+        order.tax = Decimal('0.00')
+        order.total = order.sub_total + order.shipping
         order.service_fee = calculate_service_fee(order.total)
         order.total += order.service_fee
         order.save()
@@ -356,7 +363,7 @@ def create_order(request):
                 price=i.price,
                 sub_total=i.sub_total,
                 shipping=i.shipping,
-                tax=tax_calculation(address.country, i.sub_total),
+                tax=Decimal('0.00'),
                 total=i.total,
                 initial_total=i.total
                 # vendor=i.product.vendor
@@ -454,6 +461,22 @@ def checkout(request, order_id):
     }
 
     return render(request, "store/checkout.html", context)
+
+def cod_payment(request, order_id):
+    if request.method == "POST":
+        order = store_models.Order.objects.get(order_id=order_id)
+        order.payment_method = "Cash On Delivery"
+        order.payment_status = "Paid"
+        order.save()
+        # Send notifications to customer and vendors
+        customer_models.Notifications.objects.create(type="New Order", user=request.user)
+        for item in order.order_items():
+            vendor_models.Notifications.objects.create(type="New Order", user=item.vendor)
+        clear_cart_items(request)
+        from django.urls import reverse
+        return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=paid")
+    else:
+        return redirect("store:checkout", order_id)
 
 @csrf_exempt
 def stripe_payment(request, order_id):

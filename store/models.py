@@ -27,6 +27,7 @@ PAYMENT_METHOD = (
     ("Flutterwave", "Flutterwave"),
     ("Paystack", "Paystack"),
     ("RazorPay", "RazorPay"),
+    ("Cash on Delivery", "Cash On Delivery"),
 )
 
 ORDER_STATUS = (

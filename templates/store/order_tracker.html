@@ -1,4 +1,3 @@
-
 {% extends 'partials/base.html' %} 
 {% load static %} 
 {% load humanize %} 
@@ -34,10 +33,22 @@
                                     <div class="col-xl-6 col-lg-5 col-md-5 col-12">
                                         <div class="cart_single d-flex align-items-start mfliud-bot gap-3">
                                             <div class="cart_selected_single_thumb">
-                                                <a href="{% url 'store:product_detail' item.product.slug %}"><img src="{{item.product.image.url}}" width="75" class="img-fluid rounded" alt="" /></a>
+                                                {% if item.product.category and item.product.category.parent %}
+                                                    <a href="{% url 'store:product_detail' item.product.category.parent.slug item.product.category.slug item.product.slug %}">
+                                                        <img src="{{item.product.image.url}}" width="75" class="img-fluid rounded" alt="" />
+                                                    </a>
+                                                {% else %}
+                                                    <img src="{{item.product.image.url}}" width="75" class="img-fluid rounded" alt="" />
+                                                {% endif %}
                                             </div>
                                             <div class="cart_single_caption pl-3">
-                                                <h4 class="product_title fs-sm ft-medium mb-1 lh-1"> <a href="{% url 'store:product_detail' item.product.slug %}">{{item.product.name}}</a></h4>
+                                                <h4 class="product_title fs-sm ft-medium mb-1 lh-1">
+                                                    {% if item.product.category and item.product.category.parent %}
+                                                        <a href="{% url 'store:product_detail' item.product.category.parent.slug item.product.category.slug item.product.slug %}">{{ item.product.name }}</a>
+                                                    {% else %}
+                                                        {{ item.product.name }}
+                                                    {% endif %}
+                                                </h4>
                                                 <p class="mb-2">
                                                     <span class="text-dark medium">Vendor: {{item.product.vendor.profile.full_name}}</span> <br />
                                                     

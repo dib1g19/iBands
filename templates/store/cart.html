@@ -3,31 +3,14 @@
 {% load humanize %} 
 
 {% block content %}
-
     {% include "partials/_breadcrumbs.html" %}
-    
-    <div class="gray py-3">
-        <div class="container">
-            <div class="row">
-                <div class="colxl-12 col-lg-12 col-md-12">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="/">Home</a></li>
-                            <li class="breadcrumb-item"><a href="/shop.html">Shop</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Cart</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <section class="middle">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     <div class="sec_title position-relative text-center">
-                        <h3 class="ft-bold pt-3">Cart</h3>
+                        <h3 class="ft-bold pt-3">Количка</h3>
                     </div>
                 </div>
             </div>
@@ -36,7 +19,7 @@
                 {% csrf_token %}
                 <div class="row">
                     <div class="col-lg-9">
-                        <h4 class="fw-bold p-3">Cart items</h4>
+                        <h4 class="fw-bold p-3">Продукти в количката</h4>
                         <div style="overflow-y: scroll; max-height: 650px; overflow-x: hidden" class="p-3">
                             {% for item in items %}
                                 <div class="shadow rounded mb-3 item_div_{{item.id}}">
@@ -45,16 +28,15 @@
                                             <img src="{{item.product.image.url}}" alt="" style="width: 100px; height: 100px; object-fit: cover" />
                                             <div class="p-2">
                                                 <h5>{{item.product.name}}</h5>
-                                                <p class="mb-0 mt-0">Price: {{item.price|intcomma}} лв.</p>
-                                                <p class="mb-0 mt-0">Vendor: {{item.product.vendor.profile.full_name}}</p>
+                                                <p class="mb-0 mt-0">{{item.product.category.title}}</p>
                                             </div>
-                                        </div> 
+                                        </div>
                                         <div class="col-lg-2">
                                             <h4 class="fs-3">{{ item.price|intcomma }} лв.</h4>
                                         </div>
                                         <div class="col-lg-2 d-flex">
                                             <button type="button" class="btn bg-primary text-white btn-sm update_cart_qty" data-update_type="decrease" data-product_id="{{item.product.id}}" data-item_id="{{item.id}}">-</button>
-                                            <input type="number" readonly class="form-control form-sm item-qty-{{item.id}}" value="{{item.qty}}" name="" id="" />
+                                            <input type="number" readonly class="form-control form-sm item-qty-{{item.id}} text-center" value="{{item.qty}}" name="" id="" />
                                             <button type="button" class="btn bg-primary text-white btn-sm update_cart_qty" data-update_type="increase" data-product_id="{{item.product.id}}" data-item_id="{{item.id}}">+</button>
                                         </div>
                                         <div class="col-lg-2">
@@ -69,7 +51,7 @@
                         </div>
 
                         <div class="p-3">
-                        <h4 class="fw-bold mb-3">Shipping Detail</h4>
+                        <h4 class="fw-bold mb-3">Детайли за доставка</h4>
                             {% if request.user.is_authenticated %}
                                 
                                 {% if addresses %}
@@ -91,7 +73,7 @@
                                                         <p class="mb-0"><span class="fw-bold">State: </span> {{address.state}}</p>
                                                         <p class="mb-0"><span class="fw-bold">Country: </span> {{address.country}}</p>
                                                         <div class="mt-3">
-                                                            <input id="address{{address.id}}" value="{{address.id}}" class="radio-custom" name="address" type="radio">
+                                                            <input id="address{{address.id}}" value="{{address.id}}" class="radio-custom" name="address" type="radio" {% if forloop.first %}checked{% endif %}>
                                                             <label for="address{{address.id}}" class="radio-custom-label">Select Address</label>
                                                         </div>
                                                     </div>
@@ -100,7 +82,7 @@
                                         {% endfor %}
                                     </div>
                                 {% else %}
-                                    <p>No address yet, <a href="{% url 'customer:address_create' %}" class="text-primary">create new address.</a></p>
+                                    <p>Няма адрес, <a href="{% url 'customer:address_create' %}" class="text-primary">създайте нов адрес.</a></p>
                                 {% endif %}
                                     
                             {% else %}
@@ -110,23 +92,19 @@
                     </div>
                     <div class="col-lg-3">
                         <div class="shadow rounded p-3">
-                            <h4 class="fw-bold">Order Summary</h4>
+                            <h4 class="fw-bold">Обобщение на поръчката</h4>
 
                             <div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <p class="fw-semibold fs-6">Sub-total</p>
+                                    <p class="fw-semibold fs-6">Междинна сума</p>
                                     <p class="fs-6"><span class="cart_sub_total">{{cart_sub_total|intcomma}}</span> лв.</p>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <p class="fw-semibold fs-6">Shipping</p>
-                                    <p class="fs-6">0.00 лв.</p>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <p class="fw-semibold fs-6">Tax</p>
+                                    <p class="fw-semibold fs-6">Доставка</p>
                                     <p class="fs-6">0.00 лв.</p>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-3">
-                                    <p class="fw-bold text-dark fs-5">Total</p>
+                                    <p class="fw-bold text-dark fs-5">Общо</p>
                                     <p class="fw-bold text-dark fs-5"><span class="cart_sub_total">{{cart_sub_total|intcomma}}</span> лв.</p>
                                 </div>
                             </div>
@@ -134,11 +112,11 @@
 
                         <div class="d-flex justify-content-center w-100 mt-3">
                             {% if request.user.is_authenticated %}
-                                <button type="submit" class="btn bg-primary rounded text-white w-100">Proceed To Checkout <i class="fas fa-arrow-right ms-1"></i></button>
+                                <button type="submit" class="btn bg-primary rounded text-white w-100">Продължи към поръчка <i class="fas fa-arrow-right ms-1"></i></button>
                             {% else %}
                                 <div>
-                                    <a href="{% url 'userauths:sign-in' %}?next={{request.path}}" class="btn bg-primary rounded text-white w-100 mb-3">Login to continue <i class="fas fa-sign-in-alt ms-1"></i></a>
-                                    <a href="{% url 'userauths:sign-up' %}?next={{request.path}}" class="rounded w-100 mt-3">Create account <i class="fas fa-user-plus ms-1"></i></a>
+                                    <a href="{% url 'userauths:sign-in' %}?next={{request.path}}" class="btn bg-primary rounded text-white w-100 mb-3">Влезте, за да продължите <i class="fas fa-sign-in-alt ms-1"></i></a>
+                                    <a href="{% url 'userauths:sign-up' %}?next={{request.path}}" class="rounded w-100 mt-3">Създайте профил <i class="fas fa-user-plus ms-1"></i></a>
                                 </div>
                             {% endif %}
                         </div>

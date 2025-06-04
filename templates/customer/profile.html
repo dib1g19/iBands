@@ -1,76 +1,63 @@
 {% extends 'partials/base.html' %} 
 {% load static %}
-{% load humanize %} 
+{% load humanize %}
+
 {% block content %}
-<div class="gray py-3">
-    <div class="container">
-        <div class="row">
-            <div class="colxl-12 col-lg-12 col-md-12">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="/">Начало</a></li>
-                        <li class="breadcrumb-item"><a href="#">Потребител</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Профил</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-    </div>
-</div>
+    {% include "partials/_breadcrumbs.html" %}
 
-<section class="middle">
-    <div class="container">
-        <div class="row align-items-start justify-content-between">
-            {% include 'customer/sidebar.html' %}
+    <section class="middle">
+        <div class="container">
+            <div class="row align-items-start justify-content-between">
+                {% include 'customer/sidebar.html' %}
 
-            <div class="col-12 col-md-12 col-lg-8 col-xl-8">
-                <div class="row mb-4">
-                    <h4 class="mb-0 mb-2 fw-bold">Профил</h4>
-                </div>
-                <div class="row align-items-center">
-                    <form class="row m-0" action="" method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                            <div class="form-group">
-                                <label class="small text-dark ft-medium">Аватар</label>
-                                <input type="file" name="image" class="form-control rounded" />
+                <div class="col-12 col-md-12 col-lg-8 col-xl-8">
+                    <div class="row mb-4">
+                        <h4 class="mb-0 mb-2 fw-bold">Профил</h4>
+                    </div>
+                    <div class="row align-items-center">
+                        <form class="row m-0" action="" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
+                                <div class="form-group">
+                                    <label class="small text-dark ft-medium">Аватар</label>
+                                    <input type="file" name="image" class="form-control rounded" />
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                            <div class="form-group">
-                                <label class="small text-dark ft-medium">Пълно име</label>
-                                <input type="text" name="full_name" class="form-control rounded" value="{{profile.full_name}}" />
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
+                                <div class="form-group">
+                                    <label class="small text-dark ft-medium">Пълно име</label>
+                                    <input type="text" name="full_name" class="form-control rounded" value="{{profile.full_name}}" />
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                            <div class="form-group">
-                                <label class="small text-dark ft-medium">Имейл</label>
-                                <input type="email" name="email" class="form-control rounded bg-light" readonly value="{{profile.user.email}}" />
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
+                                <div class="form-group">
+                                    <label class="small text-dark ft-medium">Имейл</label>
+                                    <input type="email" name="email" class="form-control rounded bg-light" readonly value="{{profile.user.email}}" />
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                            <div class="form-group">
-                                <label class="small text-dark ft-medium">Мобилен телефон</label>
-                                <input type="text" name="mobile" class="form-control rounded" value="{{profile.mobile}}" />
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
+                                <div class="form-group">
+                                    <label class="small text-dark ft-medium">Мобилен телефон</label>
+                                    <input type="text" name="mobile" class="form-control rounded" value="{{profile.mobile}}" />
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                            <div class="form-group">
-                                <button type="submit" class="btn bg-primary text-white btn-sm rounded">Запази промените <i class="fas fa-save ms-2"></i></button>
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+                                <div class="form-group">
+                                    <button type="submit" class="btn bg-primary text-white btn-sm rounded">Запази промените <i class="fas fa-save ms-2"></i></button>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="mt-3">
-                            <a href="{% url 'customer:change_password' %}">Смяна на парола</a>
-                        </div>
-                    </form>
+                            <div class="mt-3">
+                                <a href="{% url 'customer:change_password' %}">Смяна на парола</a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 {% endblock content %}

@@ -65,7 +65,7 @@ class Category(models.Model):
         blank=True,
         null=True
     )
-    image = models.ImageField(upload_to="images", default="category.jpg", null=True, blank=True)
+    image = models.FileField(upload_to="images", default="category.jpg", null=True, blank=True)
     slug = models.SlugField(unique=True)
 
     class Meta:

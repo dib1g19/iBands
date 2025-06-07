@@ -106,6 +106,23 @@
                                 {% endfor %}
                             </div>
                         </div>
+
+                        <div class="prt_04 mb-4">
+                            <p class="d-flex align-items-center mb-0 text-dark ft-medium">Модел:</p>
+                            <div class="text-left pb-0 pt-2">
+                                {% for variant in product.variants.all %}
+                                    {% if variant.name|slice:":5" == "Model" %}
+                                        {% for s in variant.items.all %}
+                                            <div class="form-check size-option form-option form-check-inline mb-2">
+                                                <input class="form-check-input" value="{{s.title}}" type="radio" name="size" id="{{s.content}}"  />
+                                                <label class="form-option-label" for="{{s.content}}">{{s.content}}</label>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
                         <div class="prt_05 mb-4">
                             <div class="d-flex gap-3 mb-7">
                                 <div class="">
@@ -145,6 +162,9 @@
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" href="#information" id="information-tab" data-toggle="tab" role="tab" aria-controls="information" aria-selected="false">Характеристики</a>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" href="#length" id="length-tab" data-toggle="tab" role="tab" aria-controls="length" aria-selected="false">Дължина</a>
+                        </li>
                         <!--
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" href="#reviews" id="reviews-tab" data-toggle="tab" role="tab" aria-controls="reviews" aria-selected="false">Мнения</a>
@@ -171,6 +191,36 @@
                                                     <tr>
                                                         <th class="ft-medium text-dark">{{s.title}}</th>
                                                         <td>{{s.content}}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="length" role="tabpanel" aria-labelledby="length-tab">
+                            <div class="additionals">
+                                <table class="table table-sm align-middle text-center">
+                                    <tbody>
+                                        {% for variant in product.variants.all %}
+                                            {% if variant.name|slice:":6" == "Length" %}
+                                                {% for s in variant.items.all %}
+                                                    <tr>
+                                                        <td>
+                                                            {% if forloop.first %}
+                                                                <span class="fw-bold">{{ s.title }}</span>
+                                                            {% else %}
+                                                                {{ s.title }}
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if forloop.first %}
+                                                                <span class="fw-bold">{{ s.content }}</span>
+                                                            {% else %}
+                                                                {{ s.content }}
+                                                            {% endif %}
+                                                        </td>
                                                     </tr>
                                                 {% endfor %}
                                             {% endif %}

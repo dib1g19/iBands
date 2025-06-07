@@ -56,7 +56,7 @@ class ProductAdmin(admin.ModelAdmin):
     duplicate_product.short_description = "Duplicate selected Products"
 
 class VariantAdmin(admin.ModelAdmin):
-    list_display = ['name', 'get_products']
+    list_display = ['name', 'variant_type', 'get_products']
     search_fields = ['products__name', 'name']
     inlines = [VariantItemInline]
 

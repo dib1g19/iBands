@@ -1,3 +1,9 @@
+VARIANT_TYPE_CHOICES = (
+    ('specification', 'Specification'),
+    ('size', 'Size'),
+    ('length', 'Length'),
+    ('model', 'Model'),
+)
 from django.db import models
 from shortuuid.django_fields import ShortUUIDField
 from django.utils import timezone
@@ -132,12 +138,18 @@ class Product(models.Model):
 
 class Variant(models.Model):
     name = models.CharField(max_length=1000, verbose_name="Variant Name", null=True, blank=True)
+    variant_type = models.CharField(
+        max_length=32,
+        choices=VARIANT_TYPE_CHOICES,
+        default='specification',
+        verbose_name="Variant Type"
+    )
 
     def items(self):
         return VariantItem.objects.filter(variant=self)
 
     def __str__(self):
-        return self.name
+        return f"{self.get_variant_type_display()}: {self.name}"
 
 class VariantItem(models.Model):
     variant = models.ForeignKey(Variant, on_delete=models.CASCADE, related_name='variant_items')

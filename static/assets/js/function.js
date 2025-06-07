@@ -196,7 +196,8 @@ $(document).ready(function () {
     };
     fetchCountry();
 
-    $(document).on("change", ".search-filter, .category-filter, .rating-filter, input[name='price-filter'], input[name='items-display'], .size-filter, .colors-filter", function () {
+    // Function to gather all current filter values
+    function getFilters() {
         let filters = {
             categories: [],
             rating: [],
@@ -206,29 +207,26 @@ $(document).ready(function () {
             display: "",
             searchFilter: "",
         };
-
         $(".category-filter:checked").each(function () {
             filters.categories.push($(this).val());
         });
-
         $(".rating-filter:checked").each(function () {
             filters.rating.push($(this).val());
         });
-
         $(".size-filter:checked").each(function () {
             filters.sizes.push($(this).val());
         });
-
         $(".colors-filter:checked").each(function () {
             filters.colors.push($(this).val());
         });
-
         filters.display = $("input[name='items-display']:checked").val();
         filters.prices = $("input[name='price-filter']:checked").val();
         filters.searchFilter = $("input[name='search-filter']").val();
+        return filters;
+    }
 
-        console.log(filters);
-
+    $(document).on("change", ".search-filter, .category-filter, .rating-filter, input[name='price-filter'], input[name='items-display'], .size-filter, .colors-filter", function () {
+        let filters = getFilters();
         $.ajax({
             url: "/filter_products/",
             method: "GET",
@@ -237,6 +235,9 @@ $(document).ready(function () {
                 // Replace product list with the filtered products
                 $("#products-list").html(response.html);
                 $(".product_count").html(response.product_count);
+                if (response.pagination_html !== undefined) {
+                    $("#pagination-block").html(response.pagination_html);
+                }
             },
             error: function (error) {
                 console.log("Error fetching filtered products:", error);
@@ -258,27 +259,21 @@ $(document).ready(function () {
         $(".category-filter:checked").each(function () {
             $(this).prop("checked", false);
         });
-
         $(".rating-filter:checked").each(function () {
             $(this).prop("checked", false);
         });
-
         $(".size-filter:checked").each(function () {
             $(this).prop("checked", false);
         });
-
         $(".colors-filter:checked").each(function () {
             $(this).prop("checked", false);
         });
-
         $("input[name='items-display']").each(function () {
             $(this).prop("checked", false);
         });
-
         $("input[name='price-filter']").each(function () {
             $(this).prop("checked", false);
         });
-
         $("input[name='search-filter']").val("");
 
         Toast.fire({ icon: "success", title: "Filter Reset Successfully" });
@@ -291,9 +286,54 @@ $(document).ready(function () {
                 // Replace product list with the filtered products
                 $("#products-list").html(response.html);
                 $(".product_count").html(response.product_count);
+                if (response.pagination_html !== undefined) {
+                    $("#pagination-block").html(response.pagination_html);
+                }
             },
             error: function (error) {
                 console.log("Error fetching filtered products:", error);
+            },
+        });
+    });
+
+    // Pagination click handler for AJAX
+    $(document).on("click", ".pagination .page-link", function (e) {
+        e.preventDefault();
+        var page = null;
+        // If the link is disabled or active, do nothing
+        if ($(this).closest("li").hasClass("disabled") || $(this).closest("li").hasClass("active")) {
+            return;
+        }
+        // Try to extract page number from href or data attribute
+        var href = $(this).attr("href");
+        if (href) {
+            var match = href.match(/page=(\d+)/);
+            if (match) {
+                page = match[1];
+            }
+        }
+        if (!page) {
+            // fallback: try data-page attribute
+            page = $(this).data("page");
+        }
+        if (!page) {
+            return;
+        }
+        var filters = getFilters();
+        filters.page = page;
+        $.ajax({
+            url: "/filter_products/",
+            method: "GET",
+            data: filters,
+            success: function (response) {
+                $("#products-list").html(response.html);
+                $(".product_count").html(response.product_count);
+                if (response.pagination_html !== undefined) {
+                    $("#pagination-block").html(response.pagination_html);
+                }
+            },
+            error: function (error) {
+                console.log("Error fetching paginated products:", error);
             },
         });
     });

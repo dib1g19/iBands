@@ -713,14 +713,7 @@ def filter_products(request):
     price_order = request.GET.get('prices')
     search_filter = request.GET.get('searchFilter')
     display = request.GET.get('display')
-
-    print("categories =======", categories)
-    print("rating =======", rating)
-    print("sizes =======", sizes)
-    print("colors =======", colors)
-    print("price_order =======", price_order)
-    print("search_filter =======", search_filter)
-    print("display =======", display)
+    page = request.GET.get('page', 1)
 
     # Apply category filtering
     if categories:
@@ -734,7 +727,6 @@ def filter_products(request):
                 all_category_ids.extend(sub_ids)
             except:
                 continue
-
         products = products.filter(category__id__in=all_category_ids)
 
     # Apply rating filtering
@@ -759,13 +751,31 @@ def filter_products(request):
     if search_filter:
         products = products.filter(name__icontains=search_filter)
 
-    if display:
-        products = products.filter()[:int(display)]
+    # Determine items per page
+    try:
+        per_page = int(display) if display else 20
+    except Exception:
+        per_page = 20
+
+    # Paginate filtered queryset
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    paginator = Paginator(products, per_page)
+    try:
+        products_page = paginator.page(page)
+    except PageNotAnInteger:
+        products_page = paginator.page(1)
+    except EmptyPage:
+        products_page = paginator.page(paginator.num_pages)
 
     # Render the filtered products as HTML using render_to_string
-    html = render_to_string('partials/_store.html', {'products': products})
+    html = render_to_string('partials/_store.html', {'products': products_page})
+    pagination_html = render_to_string('partials/_pagination.html', {'products': products_page})
 
-    return JsonResponse({'html': html, 'product_count': products.count()})
+    return JsonResponse({
+        'html': html,
+        'pagination_html': pagination_html,
+        'product_count': paginator.count
+    })
 
 def order_tracker_page(request):
     if request.method == "POST":

@@ -2299,7 +2299,7 @@ nav a:hover {
 
 .nav-dropdown>li>a {
     width: 100%;
-    padding: 14px 20px 14px 10px;
+    padding: 7px 20px 7px 10px;
     border-bottom: 1px solid #e4e8ec;
     display: inline-block;
     float: left;

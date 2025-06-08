@@ -91,37 +91,37 @@
                             </div>
                         </div>
                         -->
-                        <div class="prt_04 mb-4">
-                            <p class="d-flex align-items-center mb-0 text-dark ft-medium">Размер:</p>
-                            <div class="text-left pb-0 pt-2">
-                                {% for variant in product.variants.all %}
-                                    {% if variant.name|slice:":4" == "Size" %}
+                        {% for variant in product.variants.all %}
+                            {% if variant.variant_type == "size" %}
+                                <div class="prt_04 mb-4">
+                                    <p class="d-flex align-items-center mb-0 text-dark ft-medium">Размер:</p>
+                                    <div class="text-left pb-0 pt-2">
                                         {% for s in variant.items.all %}
                                             <div class="form-check size-option form-option form-check-inline mb-2">
                                                 <input class="form-check-input" value="{{s.title}}" type="radio" name="size" id="{{s.content}}"  />
                                                 <label class="form-option-label" for="{{s.content}}">{{s.content}}</label>
                                             </div>
                                         {% endfor %}
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
 
-                        <div class="prt_04 mb-4">
-                            <p class="d-flex align-items-center mb-0 text-dark ft-medium">Модел:</p>
-                            <div class="text-left pb-0 pt-2">
-                                {% for variant in product.variants.all %}
-                                    {% if variant.name|slice:":5" == "Model" %}
+                        {% for variant in product.variants.all %}
+                            {% if variant.variant_type == "model" %}
+                                <div class="prt_04 mb-4">
+                                    <p class="d-flex align-items-center mb-0 text-dark ft-medium">Модел:</p>
+                                    <div class="text-left pb-0 pt-2">
                                         {% for s in variant.items.all %}
                                             <div class="form-check size-option form-option form-check-inline mb-2">
                                                 <input class="form-check-input" value="{{s.title}}" type="radio" name="size" id="{{s.content}}"  />
                                                 <label class="form-option-label" for="{{s.content}}">{{s.content}}</label>
                                             </div>
                                         {% endfor %}
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
                         
                         <div class="prt_05 mb-4">
                             <div class="d-flex gap-3 mb-7">
@@ -162,9 +162,11 @@
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" href="#information" id="information-tab" data-toggle="tab" role="tab" aria-controls="information" aria-selected="false">Характеристики</a>
                         </li>
+                        {% if has_length_variant %}
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" href="#length" id="length-tab" data-toggle="tab" role="tab" aria-controls="length" aria-selected="false">Дължина</a>
                         </li>
+                        {% endif %}
                         <!--
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" href="#reviews" id="reviews-tab" data-toggle="tab" role="tab" aria-controls="reviews" aria-selected="false">Мнения</a>
@@ -172,7 +174,7 @@
                         -->
                     </ul>
                     <div class="tab-content" id="myTabContent">
-                        <!-- Description Content -->
+                        <!-- Description Tab -->
                         <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
                             <div class="description_info">
                                 <p class="p-0 mb-2">
@@ -180,13 +182,13 @@
                                 </p>
                             </div>
                         </div>
-                        <!-- Additional Content -->
+                        <!-- Specification Tab -->
                         <div class="tab-pane fade" id="information" role="tabpanel" aria-labelledby="information-tab">
                             <div class="additionals">
                                 <table class="table">
                                     <tbody>
                                         {% for variant in product.variants.all %}
-                                            {% if variant.name|slice:":14" == "Specifications" %}
+                                            {% if variant.variant_type == "specification" %}
                                                 {% for s in variant.items.all %}
                                                     <tr>
                                                         <th class="ft-medium text-dark">{{s.title}}</th>
@@ -199,12 +201,13 @@
                                 </table>
                             </div>
                         </div>
+                        <!-- Length Tab -->
                         <div class="tab-pane fade" id="length" role="tabpanel" aria-labelledby="length-tab">
                             <div class="additionals">
                                 <table class="table table-sm align-middle text-center">
                                     <tbody>
                                         {% for variant in product.variants.all %}
-                                            {% if variant.name|slice:":6" == "Length" %}
+                                            {% if variant.variant_type == "length" %}
                                                 {% for s in variant.items.all %}
                                                     <tr>
                                                         <td>

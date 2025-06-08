@@ -165,6 +165,8 @@ def product_detail(request, parent_slug, category_slug, product_slug):
         category=category
     )
 
+    has_length_variant = product.variants.filter(variant_type="length").exists()
+
     product_stock_range = range(1, product.stock + 1)
     related_products_list = store_models.Product.objects.filter(
         category=product.category
@@ -193,6 +195,7 @@ def product_detail(request, parent_slug, category_slug, product_slug):
         "product_stock_range": product_stock_range,
         "products": related_products,
         "breadcrumbs": breadcrumbs,
+        "has_length_variant": has_length_variant,
     }
     return render(request, "store/product_detail.html", context)
 

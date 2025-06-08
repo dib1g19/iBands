@@ -38,7 +38,7 @@ $(document).ready(function () {
         const id = button_el.attr("data-id");
         const qty = $(".quantity").val();
         const size = $("input[name='size']:checked").val();
-        const color = $("input[name='color']:checked").val();
+        const model = $("input[name='model']:checked").val();
         const cart_id = generateCartId();
 
         $.ajax({
@@ -47,7 +47,7 @@ $(document).ready(function () {
                 id: id,
                 qty: qty,
                 size: size,
-                color: color,
+                model: model,
                 cart_id: cart_id,
             },
             beforeSend: function () {

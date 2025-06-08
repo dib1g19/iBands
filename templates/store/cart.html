@@ -27,8 +27,18 @@
                                         <div class="col-lg-4 d-flex gap-3">
                                             <img src="{{item.product.image.url}}" alt="" style="width: 100px; height: 100px; object-fit: cover" />
                                             <div class="p-2">
-                                                <h5>{{item.product.name}}</h5>
-                                                <p class="mb-0 mt-0">{{item.product.category.title}}</p>
+                                                <h5 class="mb-1">
+                                                    <span class="fw-bold">Цвят: </span>{{ item.product.name }}
+                                                </h5>
+                                                <p class="mb-0 mt-0">
+                                                    <span class="fw-bold">Тип: </span>{{ item.product.category.title }}
+                                                </p>
+                                                {% if item.size %}
+                                                    <p class="mb-0"><span class="fw-bold">Дължина:</span> {{ item.size }}</p>
+                                                {% endif %}
+                                                {% if item.model %}
+                                                    <p class="mb-0"><span class="fw-bold">Модел:</span> {{ item.model }}</p>
+                                                {% endif %}
                                             </div>
                                         </div>
                                         <div class="col-lg-2">

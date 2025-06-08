@@ -177,7 +177,7 @@ class Cart(models.Model):
     tax = models.DecimalField(decimal_places=2, max_digits=12, default=0.00, null=True, blank=True)
     total = models.DecimalField(decimal_places=2, max_digits=12, default=0.00, null=True, blank=True)
     size = models.CharField(max_length=100, null=True, blank=True)
-    color = models.CharField(max_length=100, null=True, blank=True)
+    model = models.CharField(max_length=100, null=True, blank=True)
     cart_id = models.CharField(max_length=1000, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
 
@@ -231,7 +231,7 @@ class OrderItem(models.Model):
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     qty = models.IntegerField(default=0)
-    color = models.CharField(max_length=100, null=True, blank=True)
+    model = models.CharField(max_length=100, null=True, blank=True)
     size = models.CharField(max_length=100, null=True, blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     sub_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)

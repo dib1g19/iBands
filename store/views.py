@@ -200,17 +200,17 @@ def product_detail(request, parent_slug, category_slug, product_slug):
     return render(request, "store/product_detail.html", context)
 
 def add_to_cart(request):
-    # Get parameters from the request (ID, color, size, quantity, cart_id)
+    # Get parameters from the request (ID, model, size, quantity, cart_id)
     id = request.GET.get("id")
     qty = request.GET.get("qty")
-    color = request.GET.get("color")
+    model = request.GET.get("model")
     size = request.GET.get("size")
     cart_id = request.GET.get("cart_id")
     request.session['cart_id'] = cart_id
 
     # Validate required fields
     if not id or not qty or not cart_id:
-        return JsonResponse({"error": "No color or size selected"}, status=400)
+        return JsonResponse({"error": "No model or size selected"}, status=400)
 
     # Try to fetch the product, return an error if it doesn't exist
     try:
@@ -231,7 +231,7 @@ def add_to_cart(request):
         cart.product = product
         cart.qty = qty
         cart.price = product.price
-        cart.color = color
+        cart.model = model
         cart.size = size
         cart.sub_total = Decimal(product.price) * Decimal(qty)
         cart.shipping = Decimal(product.shipping) * Decimal(qty)
@@ -242,7 +242,7 @@ def add_to_cart(request):
         message = "Продуктаът е добавен в количката"
     else:
         # If the item exists in the cart, update the existing entry
-        existing_cart_item.color = color
+        existing_cart_item.model = model
         existing_cart_item.size = size
         existing_cart_item.qty = qty
         existing_cart_item.price = product.price
@@ -361,7 +361,7 @@ def create_order(request):
                 order=order,
                 product=i.product,
                 qty=i.qty,
-                color=i.color,
+                model=i.model,
                 size=i.size,
                 price=i.price,
                 sub_total=i.sub_total,

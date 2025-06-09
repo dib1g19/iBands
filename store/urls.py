@@ -8,6 +8,7 @@ urlpatterns = [
     path("shop/", views.shop, name="shop"),
     path("categories/<slug:slug>/", views.category, name="category_root"),
     path("categories/<slug:parent_slug>/<slug:slug>/", views.category, name="category"),
+    path("products/<slug:category_slug>/<slug:product_slug>/", views.product_detail_root, name="product_detail_root"),
     path("products/<slug:parent_slug>/<slug:category_slug>/<slug:product_slug>/", views.product_detail, name="product_detail"),
     path("cart/", views.cart, name="cart"),
     path("create_order/", views.create_order, name="create_order"),
@@ -36,5 +37,4 @@ urlpatterns = [
     path("privacy_policy/", views.privacy_policy, name="privacy_policy"),
     path("terms_conditions/", views.terms_conditions, name="terms_conditions"),
     path('returns-and-exchanges/', views.returns_and_exchanges, name='returns_and_exchanges'),
-
 ]

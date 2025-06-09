@@ -1,3 +1,10 @@
+def get_category_ancestors(category):
+    """Returns a list of all ancestors (from root to parent) for a given category."""
+    ancestors = []
+    while category.parent:
+        ancestors.append(category.parent)
+        category = category.parent
+    return ancestors[::-1]
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
@@ -122,18 +129,33 @@ def category(request, slug, parent_slug=None):
 
     products = paginate_queryset(request, products_list, 12)
 
+    ancestors = get_category_ancestors(category) if category else []
+
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
     ]
-    if parent:
+    for ancestor in ancestors:
+        if ancestor.parent:
+            breadcrumbs.append({
+                "label": ancestor.title,
+                "url": reverse("store:category", args=[ancestor.parent.slug, ancestor.slug])
+            })
+        else:
+            breadcrumbs.append({
+                "label": ancestor.title,
+                "url": reverse("store:category_root", args=[ancestor.slug])
+            })
+
+    if category.parent:
         breadcrumbs.append({
-            "label": parent.title,
-            "url": reverse("store:category_root", args=[parent.slug])
+            "label": category.title,
+            "url": reverse("store:category", args=[category.parent.slug, category.slug])
         })
-    breadcrumbs.append({
-        "label": category.title,
-        "url": ""
-    })
+    else:
+        breadcrumbs.append({
+            "label": category.title,
+            "url": reverse("store:category_root", args=[category.slug])
+        })
 
     context = {
         "products": products,
@@ -173,17 +195,81 @@ def product_detail(request, parent_slug, category_slug, product_slug):
     ).exclude(id=product.id)
     related_products = paginate_queryset(request, related_products_list, 12)
 
+    ancestors = get_category_ancestors(category) if category else []
+
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
     ]
+
+    for ancestor in ancestors:
+        if ancestor.parent:
+            breadcrumbs.append({
+                "label": ancestor.title,
+                "url": reverse("store:category", args=[ancestor.parent.slug, ancestor.slug])
+            })
+        else:
+            breadcrumbs.append({
+                "label": ancestor.title,
+                "url": reverse("store:category_root", args=[ancestor.slug])
+            })
+
     if category.parent:
         breadcrumbs.append({
-            "label": category.parent.title,
-            "url": reverse("store:category_root", args=[category.parent.slug]),
+            "label": category.title,
+            "url": reverse("store:category", args=[category.parent.slug, category.slug])
+        })
+    else:
+        breadcrumbs.append({
+            "label": category.title,
+            "url": reverse("store:category_root", args=[category.slug])
         })
     breadcrumbs.append({
+        "label": product.name,
+        "url": "",
+    })
+
+    context = {
+        "product": product,
+        "product_stock_range": product_stock_range,
+        "products": related_products,
+        "breadcrumbs": breadcrumbs,
+        "has_length_variant": has_length_variant,
+    }
+    return render(request, "store/product_detail.html", context)
+
+
+# Product detail view for root categories (no parent)
+def product_detail_root(request, category_slug, product_slug):
+    category = get_object_or_404(store_models.Category, slug=category_slug, parent=None)
+    product = get_object_or_404(store_models.Product, slug=product_slug, status="Published", category=category)
+
+    has_length_variant = product.variants.filter(variant_type="length").exists()
+    product_stock_range = range(1, product.stock + 1)
+    related_products_list = store_models.Product.objects.filter(
+        category=product.category
+    ).exclude(id=product.id)
+    related_products = paginate_queryset(request, related_products_list, 12)
+
+    ancestors = get_category_ancestors(category) if category else []
+
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+    ]
+    for ancestor in ancestors:
+        if ancestor.parent:
+            breadcrumbs.append({
+                "label": ancestor.title,
+                "url": reverse("store:category", args=[ancestor.parent.slug, ancestor.slug])
+            })
+        else:
+            breadcrumbs.append({
+                "label": ancestor.title,
+                "url": reverse("store:category_root", args=[ancestor.slug])
+            })
+
+    breadcrumbs.append({
         "label": category.title,
-        "url": reverse("store:category", args=[category.parent.slug, category.slug]),
+        "url": reverse("store:category_root", args=[category.slug])
     })
     breadcrumbs.append({
         "label": product.name,

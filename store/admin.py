@@ -31,11 +31,6 @@ class ProductAdmin(admin.ModelAdmin):
     action_form = DuplicateProductForm
     actions = ['duplicate_product']
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "category":
-            kwargs["queryset"] = Category.objects.exclude(parent__isnull=True)
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
     def duplicate_product(self, request, queryset):
         number = int(request.POST.get('number_of_copies', 1))
         count = 0

@@ -17,22 +17,54 @@
 			<div class="row">
 				<!-- Sidebar Filters -->
 				<div class="col-lg-3">
-					<!-- Category Filter -->
+					<!-- Category Filter (Collapsible Nested) -->
 					<div class="border rounded p-3 mb-3">
 					    <h4>Категории</h4>
-					    <div>
-					      	{% for c in categories %}
-					        	<div class="mb-1 form-check d-flex justify-content-between align-items-center">
-					          		<div>
-					            		<input type="checkbox" class="form-check-input category-filter" value="{{c.id}}" id="category{{c.id}}">
-					            		<label class="form-check-label fs-6" for="category{{c.id}}">{{c.title}}</label>
-					          		</div>
-					          		<div>
-					           			<p class="mb-0">{{ c.total_products }}</p>
-					          		</div>
-					        	</div>
-					      	{% endfor %}
-					    </div>
+					    <ul class="category-filter-list list-unstyled">
+					        {% for root in categories %}
+					            <li>
+					                <div class="d-flex align-items-center">
+                                        <div class="form-check mb-1">
+                                            <input type="checkbox" class="form-check-input category-filter" value="{{ root.id }}" id="cat{{ root.id }}">
+                                            <label class="form-check-label fs-6" for="cat{{ root.id }}">{{ root.title }}</label>
+                                        </div>
+					                    {% if root.subcategories.all %}
+					                        <button type="button" class="btn btn-link btn-sm ms-2" data-bs-toggle="collapse" data-bs-target="#subs{{ root.id }}" aria-expanded="false" aria-controls="subs{{ root.id }}">&#x25BC;</button>
+					                    {% endif %}
+					                    <span class="ms-auto text-muted small">{{ root.total_products }}</span>
+					                </div>
+					                {% if root.subcategories.all %}
+					                    <ul class="subcategories collapse ms-4" id="subs{{ root.id }}">
+					                        {% for sub in root.subcategories.all %}
+					                            <li>
+					                                <div class="d-flex align-items-center">
+                                                        <div class="form-check mb-1">
+                                                            <input type="checkbox" class="form-check-input category-filter" value="{{ sub.id }}" id="cat{{ sub.id }}">
+                                                            <label class="form-check-label fs-6" for="cat{{ sub.id }}">{{ sub.title }}</label>
+                                                        </div>
+					                                    {% if sub.subcategories.all %}
+					                                        <button type="button" class="btn btn-link btn-sm ms-2" data-bs-toggle="collapse" data-bs-target="#subs{{ sub.id }}" aria-expanded="false" aria-controls="subs{{ sub.id }}">&#x25BC;</button>
+					                                    {% endif %}
+					                                </div>
+					                                {% if sub.subcategories.all %}
+					                                    <ul class="subcategories collapse ms-4" id="subs{{ sub.id }}">
+					                                        {% for subsub in sub.subcategories.all %}
+					                                            <li>
+                                                                <div class="form-check mb-1">
+					                                                    <input type="checkbox" class="form-check-input category-filter" value="{{ subsub.id }}" id="cat{{ subsub.id }}">
+					                                                    <label class="form-check-label fs-6" for="cat{{ subsub.id }}">{{ subsub.title }}</label>
+                                                                </div>
+					                                            </li>
+					                                        {% endfor %}
+					                                    </ul>
+					                                {% endif %}
+					                            </li>
+					                        {% endfor %}
+					                    </ul>
+					                {% endif %}
+					            </li>
+					        {% endfor %}
+					    </ul>
 					</div>
 					<!-- Price Filter -->
 					<div class="border rounded p-3 mb-3">

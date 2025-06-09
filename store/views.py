@@ -54,19 +54,10 @@ def index(request):
     return render(request, "store/index.html", context)
 
 def shop(request):
-    # Get all categories (both root and children)
-    categories = store_models.Category.objects.prefetch_related('subcategories').all()
-    # Store all selected category IDs (for filtering)
-    selected_ids = []
-    for c in categories:
-        children = c.subcategories.all()
-        all_products = list(chain.from_iterable(child.products.all() for child in children)) + list(c.products.all())
-        c.total_products = len(all_products)
-        selected_ids.append(c.id)
-        selected_ids.extend([child.id for child in children])
+    from collections import defaultdict
 
-    # Fetch products in selected categories
-    products_list = store_models.Product.objects.filter(status="Published", category__id__in=selected_ids)
+    categories = store_models.Category.objects.filter(parent__isnull=True).prefetch_related('subcategories__subcategories').order_by('id')
+    products_list = store_models.Product.objects.filter(status="Published")
     products = paginate_queryset(request, products_list, 20)
 
     colors = store_models.VariantItem.objects.filter(variant__name='Color').values('title', 'content').distinct()

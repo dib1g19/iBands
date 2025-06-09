@@ -54,19 +54,10 @@ def index(request):
     return render(request, "store/index.html", context)
 
 def shop(request):
-    from collections import defaultdict
-
-    categories = store_models.Category.objects.filter(parent__isnull=True).prefetch_related('subcategories__subcategories').order_by('id')
     products_list = store_models.Product.objects.filter(status="Published")
     products = paginate_queryset(request, products_list, 20)
 
-    colors = store_models.VariantItem.objects.filter(variant__name='Color').values('title', 'content').distinct()
-    sizes = store_models.VariantItem.objects.filter(Q(variant__name__startswith='Size')).values('title', 'content').distinct()
-
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": "Магазин", "url": ""},
-    ]
+    categories = store_models.Category.objects.filter(parent__isnull=True).prefetch_related('subcategories__subcategories').order_by('id')
     
     item_display = [
         {"id": "12", "value": 12},
@@ -89,12 +80,15 @@ def shop(request):
         {"id": "highest", "value": "Най-ниска към най-висока"},
     ]
 
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Магазин", "url": ""},
+    ]
+
     context = {
         "products": products,
         "products_list": products_list,
         "categories": categories,
-        'colors': colors,
-        'sizes': sizes,
         'item_display': item_display,
         'ratings': ratings,
         'prices': prices,

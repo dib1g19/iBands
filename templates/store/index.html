@@ -95,6 +95,9 @@
                                     <div class="d-flex align-items-center justify-content-start gap-2">
                                         <!-- Price -->
                                         <div class="elis_rty mb-0">
+                                            {% if p.regular_price %}
+                                                <span class="ft-medium text-muted line-through fs-sm me-2">{{p.regular_price}} лв.</span>
+                                            {% endif %}
                                             <span class="ft-bold text-dark fs-sm">{{p.price}} лв.</span>
                                         </div>
                                         <!-- Wishlist Icon -->

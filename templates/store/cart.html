@@ -42,7 +42,14 @@
                                             </div>
                                         </div>
                                         <div class="col-lg-2">
-                                            <h4 class="fs-3">{{ item.price|intcomma }} лв.</h4>
+                                            {% if item.product.regular_price %}
+                                                <div class="d-flex flex-column">
+                                                    <span class="text-muted text-decoration-line-through">{{ item.product.regular_price|intcomma }} лв.</span>
+                                                    <h4 class="fs-3 mb-0">{{ item.price|intcomma }} лв.</h4>
+                                                </div>
+                                            {% else %}
+                                                <h4 class="fs-3">{{ item.price|intcomma }} лв.</h4>
+                                            {% endif %}
                                         </div>
                                         <div class="col-lg-2 d-flex">
                                             <button type="button" class="btn bg-primary text-white btn-sm update_cart_qty" data-update_type="decrease" data-product_id="{{item.product.id}}" data-item_id="{{item.id}}">-</button>
@@ -50,7 +57,18 @@
                                             <button type="button" class="btn bg-primary text-white btn-sm update_cart_qty" data-update_type="increase" data-product_id="{{item.product.id}}" data-item_id="{{item.id}}">+</button>
                                         </div>
                                         <div class="col-lg-2">
-                                            <h4 class="fs-3 mb-0"><span class="item_sub_total_{{item.id}}">{{item.sub_total|intcomma}}</span> лв.</h4>
+                                            <td>
+                                                {% if item.total_regular_price %}
+                                                    <div class="d-flex flex-column">
+                                                        <span class="text-muted text-decoration-line-through">
+                                                            {{ item.total_regular_price|intcomma }} лв.
+                                                        </span>
+                                                        <span><span class="item_sub_total_{{item.id}}">{{item.sub_total|intcomma}}</span> лв.</span>
+                                                    </div>
+                                                {% else %}
+                                                    <h4 class="fs-3 mb-0"><span class="item_sub_total_{{item.id}}">{{item.sub_total|intcomma}}</span> лв.</h4>
+                                                {% endif %}
+                                            </td>
                                         </div>
                                         <div class="col-lg-2">
                                             <button type="button" class="btn bg-danger text-white btn-sm rounded delete_cart_item" data-item_id="{{item.id}}" data-product_id="{{item.product.id}}" ><i class="fas fa-trash"></i></button>

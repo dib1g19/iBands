@@ -15,14 +15,14 @@
             <div class="row justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     <div class="sec_title position-relative text-center">
-                        <h3 class="ft-bold pt-3">Checkout</h3>
+                        <h3 class="ft-bold pt-3">Завършване на поръчка</h3>
                     </div>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-lg-9">
-                    <h4 class="fw-bold p-3">Cart items</h4>
+                    <h4 class="fw-bold p-3">Продукти</h4>
                     <div style="overflow-y: scroll; max-height: 650px; overflow-x: hidden" class="p-3">
                         
                         {% for item in order.order_items.all %}
@@ -31,21 +31,38 @@
                                     <div class="col-lg-4 d-flex gap-3">
                                         <img src="{{item.product.image.url}}" alt="" style="width: 100px; height: 100px; object-fit: cover" />
                                         <div class="p-2">
-                                            <h5>{{item.product.name}}</h5>
-                                            <p class="mb-0 mt-0">{{ item.product.category.title }}</p>
+                                            <h5 class="mb-1">
+                                                <span class="fw-bold">Цвят: </span>{{ item.product.name }}
+                                            </h5>
+                                            <p class="mb-0 mt-0">
+                                                <span class="fw-bold">Тип: </span>{{ item.product.category.title }}
+                                            </p>
+                                            {% if item.size %}
+                                                <p class="mb-0"><span class="fw-bold">Дължина:</span> {{ item.size }}</p>
+                                            {% endif %}
+                                            {% if item.model %}
+                                                <p class="mb-0"><span class="fw-bold">Модел:</span> {{ item.model }}</p>
+                                            {% endif %}
                                         </div>
                                     </div>
                                     <div class="col-lg-2">
-                                        <p class="mb-1">Price</p>
-                                        <h4 class="fs-3">{{item.price}} лв.</h4>
+                                        <p class="mb-1">Цена</p>
+                                        {% if item.product.regular_price %}
+                                            <div class="d-flex flex-column">
+                                                <span class="text-muted text-decoration-line-through">{{ item.product.regular_price|intcomma }} лв.</span>
+                                                <h4 class="fs-3 mb-0">{{ item.price|intcomma }} лв.</h4>
+                                            </div>
+                                        {% else %}
+                                            <h4 class="fs-3">{{ item.price|intcomma }} лв.</h4>
+                                        {% endif %}
                                     </div>
 
                                     <div class="col-lg-2">
-                                        <p class="mb-1">Qty</p>
+                                        <p class="mb-1">Количество</p>
                                         <h4 class="fs-3 mb-0">{{item.qty}}</h4>
                                     </div>
                                     <div class="col-lg-2">
-                                        <p class="mb-1">Price</p>
+                                        <p class="mb-1">Общо</p>
                                         <h4 class="fs-3 mb-0">{{item.sub_total}} лв.</h4>
                                     </div>
                                     <div class="col-lg-2">
@@ -64,18 +81,17 @@
                                 <div class="card-wrap border rounded mb-4">
                                     <div class="card-wrap-header px-3 py-2 br-bottom d-flex align-items-center justify-content-between">
                                         <div class="card-heafder-flex">
-                                            <h4 class="fs-md ft-bold mb-1">Shipping Address</h4>
+                                            <h4 class="fs-md ft-bold mb-1">Адрес за доставка</h4>
                                         </div>
                                     </div>
                                     <div class="card-wrap-body px-3 py-3">
-                                        <p class="mb-0"><span class="fw-bold">Full Name: </span>{{order.address.full_name}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Email: </span>{{order.address.email}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Mobile: </span>{{order.address.mobile}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Address: </span>{{order.address.address}}</p>
-                                        <p class="mb-0"><span class="fw-bold">City: </span> {{order.address.city}}</p>
-                                        <p class="mb-0"><span class="fw-bold">State: </span> {{order.address.state}}</p>
-                                        <p class="mb-3"><span class="fw-bold">Country: </span> {{order.address.country}}</p>
-                                        <a href="{% url 'store:cart' %}" class="mt-3 text-primary">Change Shipping Address <i class="fas fa-edit ms-1"></i></a>
+                                        <p class="mb-0"><span class="fw-bold">Пълно Име: </span>{{order.address.full_name}}</p>
+                                        <p class="mb-0"><span class="fw-bold">Имейл: </span>{{order.address.email}}</p>
+                                        <p class="mb-0"><span class="fw-bold">Телефон: </span>{{order.address.mobile}}</p>
+                                        <p class="mb-0"><span class="fw-bold">Метод на доставка: </span>{{order.address.get_delivery_method_display}}</p>
+                                        <p class="mb-0"><span class="fw-bold">Град: </span> {{order.address.city}}</p>
+                                        <p class="mb-3"><span class="fw-bold">Адрес: </span>{{order.address.address}}</p>
+                                        <a href="{% url 'store:cart' %}" class="mt-3 text-primary">Промени адреса за доставка <i class="fas fa-edit ms-1"></i></a>
                                     </div>
                                 </div>
                             </div>
@@ -83,51 +99,51 @@
                     </div>
                 </div>
                 <div class="col-lg-3">
-                    <h4 class="fw-bold">Order Summary</h4>
+                    <h4 class="fw-bold">Обобщение на поръчката</h4>
                     <div class="shadow rounded p-3 mt-5">
 
                         <div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <p class="fw-semibold fs-6">Sub-total</p>
+                                <p class="fw-semibold fs-6">Междинна сума</p>
                                 <p class="fs-6">{{order.sub_total}} лв.</p>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <p class="fw-semibold fs-6">Shipping</p>
+                                <p class="fw-semibold fs-6">Доставка</p>
                                 <p class="fs-6">{{order.shipping}} лв.</p>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <p class="fw-semibold fs-6">Tax</p>
+                                <p class="fw-semibold fs-6">Данък</p>
                                 <p class="fs-6">{{order.tax}} лв.</p>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center">
-                                <p class="fw-semibold fs-6">Service Fee</p>
+                                <p class="fw-semibold fs-6">Такса за обслужване</p>
                                 <p class="fs-6">{{order.service_fee}} лв.</p>
                             </div>
                             
                             {% if order.saved %}
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <p class="fw-semibold fs-6">Discount</p>
+                                    <p class="fw-semibold fs-6">Отстъпка</p>
                                     <p class="fs-6">{{order.saved}} лв.</p>
                                 </div>
                                 
                                 {% for coupon in order.coupons.all %}
-                                    <small class="text-success fw-bold">{{ coupon.code }} Applied</small>
+                                    <small class="text-success fw-bold">{{ coupon.code }} Приложен</small>
                                 {% endfor %}
                             {% endif %}
 
                             <div class="d-flex justify-content-between align-items-center mt-3">
-                                <p class="fw-bold text-dark fs-5">Total</p>
+                                <p class="fw-bold text-dark fs-5">Общо</p>
                                 <p class="fw-bold text-dark fs-5">{{order.total}} лв.</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="shadow rounded p-3 mt-3">
-                        <h4 class="fw-bold">Coupons</h4>
+                        <h4 class="fw-bold">Купони</h4>
                         <form class="mb-3 d-flex" action="{% url 'store:coupon_apply' order.order_id %}" method="POST">
                             {% csrf_token %}
-                            <input type="text" class="form-control" name="coupon_code" placeholder="Coupon Code" />
+                            <input type="text" class="form-control" name="coupon_code" placeholder="Код за отстъпка" />
                             <button type="submit"  class="btn bg-secondary text-white"><i class="fas fa-check-circle"></i></button>
                         </form>
                     </div>

@@ -48,25 +48,27 @@
                                                     {% endif %}
                                                 </div>
                                                 <div class="cart_single_caption pl-3">
-                                                    <h4 class="product_title fs-sm ft-medium mb-1 lh-1">
-                                                        {% if item.product.category and item.product.category.parent %}
-                                                            <a href="{% url 'store:product_detail' item.product.category.parent.slug item.product.category.slug item.product.slug %}">{{ item.product.name }}</a>
-                                                        {% else %}
-                                                            {{ item.product.name }}
-                                                        {% endif %}
-                                                    </h4>
-                                                    <p class="mb-2">
-                                                        <!-- <span class="text-dark medium">Доставчик: {{item.product.vendor.profile.full_name}}</span> <br /> -->
-                                                        
-                                                        {% if item.color %}
-                                                            <span class="text-dark medium">Цвят: {{item.color}}</span>
-                                                        {% endif %}
-
-                                                        {% if item.size %}
-                                                            <span class="text-dark medium">Размер: {{item.size}}</span>
-                                                        {% endif %}
+                                                    <h5 class="mb-1">
+                                                        <span class="fw-bold">Цвят: </span>{{ item.product.name }}
+                                                    </h5>
+                                                    <p class="mb-0 mt-0">
+                                                        <span class="fw-bold">Тип: </span>{{ item.product.category.title }}
                                                     </p>
-                                                    <h4 class="fs-sm ft-bold mb-0 lh-1">{{item.price}} лв.</h4>
+                                                    {% if item.size %}
+                                                        <p class="mb-0"><span class="fw-bold">Дължина:</span> {{ item.size }}</p>
+                                                    {% endif %}
+                                                    {% if item.model %}
+                                                        <p class="mb-0"><span class="fw-bold">Модел:</span> {{ item.model }}</p>
+                                                    {% endif %}
+
+                                                    {% if item.product.regular_price %}
+                                                        <div class="d-flex flex-column lh-1 mt-2">
+                                                            <span class="text-muted text-decoration-line-through">{{ item.product.regular_price|intcomma }} лв.</span>
+                                                            <h4 class="fs-sm ft-bold mb-0">{{ item.price|intcomma }} лв.</h4>
+                                                        </div>
+                                                    {% else %}
+                                                        <h4 class="fs-sm ft-bold mb-0 lh-1 mt-2">{{ item.price|intcomma }} лв.</h4>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>

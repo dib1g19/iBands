@@ -237,15 +237,30 @@ def add_to_cart(request):
     except store_models.Product.DoesNotExist:
         return JsonResponse({"error": "Product not found"}, status=404)
 
-    # Check if the item is already in the cart
-    existing_cart_item = store_models.Cart.objects.filter(cart_id=cart_id, product=product).first()
-
     # Check if quantity that user is adding exceed item stock qty
     if int(qty) > product.stock:
         return JsonResponse({"error": "Qty exceed current stock amount"}, status=404)
 
-    # If the item is not in the cart, create a new cart entry
-    if not existing_cart_item:
+    cart_item = store_models.Cart.objects.filter(
+        cart_id=cart_id,
+        product=product,
+        model=model,
+        size=size,
+    ).first()
+
+    if cart_item:
+        cart_item.qty += int(qty)
+        cart_item.price = product.price
+        cart_item.sub_total = Decimal(product.price) * Decimal(cart_item.qty)
+        cart_item.shipping = Decimal(product.shipping) * Decimal(cart_item.qty)
+        cart_item.total = cart_item.sub_total + cart_item.shipping
+        cart_item.user = request.user if request.user.is_authenticated else None
+        cart_item.cart_id = cart_id
+        cart_item.size = size
+        cart_item.model = model
+        cart_item.save()
+        message = "Koличката е обновена"
+    else:
         cart = store_models.Cart()
         cart.product = product
         cart.qty = qty
@@ -258,20 +273,8 @@ def add_to_cart(request):
         cart.user = request.user if request.user.is_authenticated else None
         cart.cart_id = cart_id
         cart.save()
+        cart_item = cart
         message = "Продуктът е добавен в количката"
-    else:
-        # If the item exists in the cart, update the existing entry
-        existing_cart_item.model = model
-        existing_cart_item.size = size
-        existing_cart_item.qty = qty
-        existing_cart_item.price = product.price
-        existing_cart_item.sub_total = Decimal(product.price) * Decimal(qty)
-        existing_cart_item.shipping = Decimal(product.shipping) * Decimal(qty)
-        existing_cart_item.total = existing_cart_item.sub_total +  existing_cart_item.shipping
-        existing_cart_item.user = request.user if request.user.is_authenticated else None
-        existing_cart_item.cart_id = cart_id
-        existing_cart_item.save()
-        message = "Koличката е обновена"
 
     # Count the total number of items in the cart
     total_cart_items = store_models.Cart.objects.filter(cart_id=cart_id)
@@ -279,10 +282,10 @@ def add_to_cart(request):
 
     # Return the response with the cart update message and total cart items
     return JsonResponse({
-        "message": message ,
+        "message": message,
         "total_cart_items": total_cart_items.count(),
         "cart_sub_total": "{:,.2f}".format(cart_sub_total),
-        "item_sub_total": "{:,.2f}".format(existing_cart_item.sub_total) if existing_cart_item else "{:,.2f}".format(cart.sub_total) 
+        "item_sub_total": "{:,.2f}".format(cart_item.sub_total)
     })
 
 def cart(request):

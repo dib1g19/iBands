@@ -1,10 +1,3 @@
-def get_category_ancestors(category):
-    """Returns a list of all ancestors (from root to parent) for a given category."""
-    ancestors = []
-    while category.parent:
-        ancestors.append(category.parent)
-        category = category.parent
-    return ancestors[::-1]
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
@@ -25,10 +18,15 @@ from store import models as store_models
 from customer import models as customer_models
 from vendor import models as vendor_models
 from userauths import models as userauths_models
-from plugin.tax_calculation import tax_calculation
 from plugin.exchange_rate import convert_usd_to_inr, convert_usd_to_kobo, convert_usd_to_ngn, get_usd_to_ngn_rate
-from itertools import chain
 from django.db.models import Q
+
+def get_category_ancestors(category):
+    ancestors = []
+    while category.parent:
+        ancestors.append(category.parent)
+        category = category.parent
+    return ancestors[::-1]
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
@@ -43,7 +41,7 @@ def clear_cart_items(request):
 
 def index(request):
     products_list = store_models.Product.objects.filter(status="Published")
-    products = paginate_queryset(request, products_list, 32)
+    products = paginate_queryset(request, products_list, 20)
 
     categories = store_models.Category.objects.filter(parent__isnull=True).order_by("id")
 
@@ -158,12 +156,11 @@ def vendors(request):
     }
     return render(request, "store/vendors.html", context)
 
-def product_detail(request, parent_slug, category_slug, product_slug):
-    category = get_object_or_404(
-        store_models.Category,
-        slug=category_slug,
-        parent__slug=parent_slug
-    )
+def product_detail(request, category_slug, product_slug, parent_slug=None):
+    if parent_slug:
+        category = get_object_or_404(store_models.Category, slug=category_slug, parent__slug=parent_slug)
+    else:
+        category = get_object_or_404(store_models.Category, slug=category_slug, parent=None)
 
     product = get_object_or_404(
         store_models.Product,
@@ -173,7 +170,6 @@ def product_detail(request, parent_slug, category_slug, product_slug):
     )
 
     has_length_variant = product.variants.filter(variant_type="length").exists()
-
     product_stock_range = range(1, product.stock + 1)
     related_products_list = store_models.Product.objects.filter(
         category=product.category
@@ -208,54 +204,6 @@ def product_detail(request, parent_slug, category_slug, product_slug):
             "label": category.title,
             "url": reverse("store:category_root", args=[category.slug])
         })
-    breadcrumbs.append({
-        "label": product.name,
-        "url": "",
-    })
-
-    context = {
-        "product": product,
-        "product_stock_range": product_stock_range,
-        "products": related_products,
-        "breadcrumbs": breadcrumbs,
-        "has_length_variant": has_length_variant,
-    }
-    return render(request, "store/product_detail.html", context)
-
-
-# Product detail view for root categories (no parent)
-def product_detail_root(request, category_slug, product_slug):
-    category = get_object_or_404(store_models.Category, slug=category_slug, parent=None)
-    product = get_object_or_404(store_models.Product, slug=product_slug, status="Published", category=category)
-
-    has_length_variant = product.variants.filter(variant_type="length").exists()
-    product_stock_range = range(1, product.stock + 1)
-    related_products_list = store_models.Product.objects.filter(
-        category=product.category
-    ).exclude(id=product.id)
-    related_products = paginate_queryset(request, related_products_list, 12)
-
-    ancestors = get_category_ancestors(category) if category else []
-
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-    ]
-    for ancestor in ancestors:
-        if ancestor.parent:
-            breadcrumbs.append({
-                "label": ancestor.title,
-                "url": reverse("store:category", args=[ancestor.parent.slug, ancestor.slug])
-            })
-        else:
-            breadcrumbs.append({
-                "label": ancestor.title,
-                "url": reverse("store:category_root", args=[ancestor.slug])
-            })
-
-    breadcrumbs.append({
-        "label": category.title,
-        "url": reverse("store:category_root", args=[category.slug])
-    })
     breadcrumbs.append({
         "label": product.name,
         "url": "",
@@ -310,7 +258,7 @@ def add_to_cart(request):
         cart.user = request.user if request.user.is_authenticated else None
         cart.cart_id = cart_id
         cart.save()
-        message = "Продуктаът е добавен в количката"
+        message = "Продуктът е добавен в количката"
     else:
         # If the item exists in the cart, update the existing entry
         existing_cart_item.model = model

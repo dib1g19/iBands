@@ -9,11 +9,7 @@ from shortuuid.django_fields import ShortUUIDField
 from django.utils import timezone
 from slugify import slugify
 from django_ckeditor_5.fields import CKEditor5Field
-
 from userauths import models as user_models
-from vendor import models as vendor_models
-
-import shortuuid
 
 STATUS = (
     ("Published", "Published"),

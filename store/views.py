@@ -490,8 +490,8 @@ def checkout(request, order_id):
 def cod_payment(request, order_id):
     if request.method == "POST":
         order = store_models.Order.objects.get(order_id=order_id)
-        order.payment_method = "Cash On Delivery"
-        order.payment_status = "Paid"
+        order.payment_method = "cash_on_delivery"
+        order.payment_status = "cash_on_delivery"
         order.save()
         # Send notifications to customer and vendors
         customer_models.Notifications.objects.create(type="New Order", user=request.user)
@@ -804,27 +804,22 @@ def filter_products(request):
 
 def order_tracker_page(request):
     if request.method == "POST":
-        item_id = request.POST.get("item_id")
-        return redirect("store:order_tracker_detail", item_id)
+        key = request.POST.get("item_id", "").strip()
+        order = store_models.Order.objects.filter(order_id=key).first()
+        if not order:
+            order = store_models.Order.objects.filter(tracking_id=key).first()
+
+        if not order:
+            messages.error(request, "Поръчката не беше намерена.")
+            return redirect("store:order_tracker_page")
+
+        return redirect("customer:order_detail", order.order_id)
     
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
         {"label": "Проследяване на поръчка", "url": ""},
     ]
     return render(request, "store/order_tracker_page.html", {"breadcrumbs": breadcrumbs})
-
-def order_tracker_detail(request, item_id):
-    try:
-        item = store_models.OrderItem.objects.filter(models.Q(item_id=item_id) | models.Q(tracking_id=item_id)).first()
-    except:
-        item = None
-        messages.error(request, "Order not found!")
-        return redirect("store:order_tracker_page")
-    
-    context = {
-        "item": item,
-    }
-    return render(request, "store/order_tracker.html", context)
 
 def about(request):
     breadcrumbs = [
@@ -875,7 +870,6 @@ def terms_conditions(request):
         {"label": "Общи условия", "url": ""},
     ]
     return render(request, "pages/terms_conditions.html", {"breadcrumbs": breadcrumbs})
-
 
 def returns_and_exchanges(request):
     breadcrumbs = [

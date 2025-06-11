@@ -29,7 +29,6 @@ urlpatterns = [
     path('flutterwave_payment_callback/<order_id>/', views.flutterwave_payment_callback, name='flutterwave_payment_callback'),
 
     path("order_tracker_page/", views.order_tracker_page, name="order_tracker_page"),
-    path("order_tracker_detail/<item_id>/", views.order_tracker_detail, name="order_tracker_detail"),
 
     path("about/", views.about, name="about"),
     path("contact/", views.contact, name="contact"),

@@ -62,24 +62,6 @@ def order_detail(request, order_id):
     return render(request, "customer/order_detail.html", context)
 
 @login_required
-def order_item_detail(request, order_id, item_id):
-    order = store_models.Order.objects.get(customer=request.user, order_id=order_id)
-    item = store_models.OrderItem.objects.get(order=order, item_id=item_id)
-    
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": "Поръчки", "url": reverse("customer:orders")},
-        {"label": f"Поръчка #{order.order_id}", "url": ""},
-    ]
-    context = {
-        "order": order,
-        "item": item,
-        "breadcrumbs": breadcrumbs,
-    }
-
-    return render(request, "customer/order_item_detail.html", context)
-
-@login_required
 def wishlist(request):
     wishlist_list = customer_models.Wishlist.objects.filter(user=request.user)
     wishlist = paginate_queryset(request, wishlist_list, 6)

@@ -1,9 +1,3 @@
-VARIANT_TYPE_CHOICES = (
-    ('specification', 'Specification'),
-    ('size', 'Size'),
-    ('length', 'Length'),
-    ('model', 'Model'),
-)
 from django.db import models
 from shortuuid.django_fields import ShortUUIDField
 from django.utils import timezone
@@ -18,9 +12,9 @@ STATUS = (
 )
 
 PAYMENT_STATUS = (
-    ("Paid", "Paid"),
-    ("Processing", "Processing"),
-    ("Failed", 'Failed'),
+    ("paid", "Платено"),
+    ("cash_on_delivery", "Наложен платеж"),
+    ("failed", 'Неуспешно плащане'),
 )
 
 PAYMENT_METHOD = (
@@ -29,24 +23,30 @@ PAYMENT_METHOD = (
     ("Flutterwave", "Flutterwave"),
     ("Paystack", "Paystack"),
     ("RazorPay", "RazorPay"),
-    ("Cash on Delivery", "Cash On Delivery"),
+    ("cash_on_delivery", "Наложен платеж"),
 )
 
 ORDER_STATUS = (
-    ("Pending", "Pending"),
-    ("Processing", "Processing"),
-    ("Shipped", "Shipped"),
-    ("Fulfilled", "Fulfilled"),
-    ("Cancelled", "Cancelled"),
+    ("received", "Приета"),
+    ("shipped", "Изпратена"),
+    ("delivered", "Доставена"),
+    ("completed", "Завършена"),
+    ("canceled", "Отказана"),
 )
 
 SHIPPING_SERVICE = (
-    ("DHL", "DHL"),
-    ("FedX", "FedX"),
+    ("Econt", "Еконт"),
+    ("Speedy", "Спиди"),
     ("UPS", "UPS"),
     ("GIG Logistics", "GIG Logistics")
 )
 
+VARIANT_TYPE_CHOICES = (
+    ('specification', 'Specification'),
+    ('size', 'Size'),
+    ('length', 'Length'),
+    ('model', 'Model'),
+)
 
 RATING = (
     ( 1,  "★☆☆☆☆"),
@@ -196,9 +196,9 @@ class Order(models.Model):
     tax = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
     service_fee = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
     total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
-    payment_status = models.CharField(max_length=100, choices=PAYMENT_STATUS, default="Processing")
+    payment_status = models.CharField(max_length=100, choices=PAYMENT_STATUS, default="cash_on_delivery")
     payment_method = models.CharField(max_length=100, choices=PAYMENT_METHOD, default=None, null=True, blank=True)
-    order_status = models.CharField(max_length=100, choices=ORDER_STATUS, default="Pending")
+    order_status = models.CharField(max_length=100, choices=ORDER_STATUS, default="received")
     initial_total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2, help_text="The original total before discounts")
     saved = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True, help_text="Amount saved by customer")
     address = models.ForeignKey("customer.Address", on_delete=models.SET_NULL, null=True)
@@ -206,6 +206,18 @@ class Order(models.Model):
     order_id = ShortUUIDField(length=6, max_length=25, alphabet="1234567890")
     payment_id = models.CharField(null=True, blank=True, max_length=1000)
     date = models.DateTimeField(default=timezone.now)
+    shipping_service = models.CharField(
+        max_length=100,
+        choices=SHIPPING_SERVICE,
+        default=None,
+        null=True,
+        blank=True
+    )
+    tracking_id = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
     
     class Meta:
         verbose_name_plural = "Order"
@@ -217,13 +229,9 @@ class Order(models.Model):
     def order_items(self):
         return OrderItem.objects.filter(order=self)
     
-    
-    
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    order_status = models.CharField(max_length=100, choices=ORDER_STATUS, default="Pending")
-    shipping_service = models.CharField(max_length=100, choices=SHIPPING_SERVICE, default=None, null=True, blank=True)
-    tracking_id = models.CharField(max_length=100, default=None, null=True, blank=True)
+    order_status = models.CharField(max_length=100, choices=ORDER_STATUS, default="received")
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     qty = models.IntegerField(default=0)
@@ -239,7 +247,6 @@ class OrderItem(models.Model):
     coupon = models.ManyToManyField(Coupon, blank=True)
     applied_coupon = models.BooleanField(default=False)
     item_id = ShortUUIDField(length=6, max_length=25, alphabet="1234567890")
-    vendor = models.ForeignKey(user_models.User, on_delete=models.SET_NULL, null=True, related_name="vendor_order_items")
     date = models.DateTimeField(default=timezone.now)
 
     def order_id(self):

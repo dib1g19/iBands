@@ -754,7 +754,7 @@ div[data-overlay] p {
 }
 
 .text-success {
-    color: #5b1cee !important;
+    color: #0d6efd !important;
 }
 
 .text-info {
@@ -1005,7 +1005,7 @@ html body .bg-light {
 }
 
 html body .bg-light-primary {
-    background-color: #f1effd;
+    background-color: #e6f0fe;
 }
 
 html body .bg-light-success {

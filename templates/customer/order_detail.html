@@ -20,15 +20,15 @@
                             <div class="ord_list_body text-left">
                                 {% for item in order.order_items.all %}
                                     <div class="row align-items-center justify-content-center m-0 py-4 br-bottom">
-                                        <div class="col-xl-6 col-lg-5 col-md-5 col-12">
-                                            <div class="cart_single d-flex align-items-start mfliud-bot gap-3">
+                                        <div class="col-xl-6 col-lg-5 col-md-5 col-12 ">
+                                            <div class="cart_single d-flex align-items-center mfliud-bot gap-3">
                                                 <div class="cart_selected_single_thumb">
                                                     {% if item.product.category.parent %}
                                                         <a href="{% url 'store:product_detail' item.product.category.parent.slug item.product.category.slug item.product.slug %}">
                                                     {% else %}
                                                         <a href="{% url 'store:product_detail_root' item.product.category.slug item.product.slug %}">
                                                     {% endif %}
-                                                            <img src="{{item.product.image.url}}" width="75" class="img-fluid rounded" alt="" />
+                                                            <img src="{{item.product.image.url}}" width="100" class="img-fluid rounded" alt="" />
                                                         </a>
                                                 </div>
                                                 <div class="cart_single_caption pl-3">
@@ -44,67 +44,107 @@
                                                     {% if item.model %}
                                                         <p class="mb-0"><span class="fw-bold">Модел:</span> {{ item.model }}</p>
                                                     {% endif %}
-                                                    {% if item.product.regular_price %}
-                                                        <div class="d-flex flex-column lh-1">
-                                                            <span class="text-muted text-decoration-line-through">{{ item.product.regular_price|intcomma }} лв.</span>
-                                                            <h4 class="fs-sm ft-bold mb-0">{{ item.price|intcomma }} лв.</h4>
-                                                        </div>
-                                                    {% else %}
-                                                        <h4 class="fs-sm ft-bold mb-0 lh-1">{{ item.price|intcomma }} лв.</h4>
-                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-xl-2 col-lg-3 col-md-3 col-6">
-                                            <p class="mb-1 p-0"><span class="text-muted">Статус на доставката</span></p>
-                                            <div class="delv_status">
-                                                <span class="ft-medium small text-dark bg-light rounded px-3 py-1">{{item.order_status}}</span>
+                                        <div class="col-xl-2 col-lg-3 col-md-3 col-6 text-center">
+                                            <p class="mb-1 p-0 text-muted">Цена</p>
+                                            <div class="delv_status d-flex justify-content-center">
+                                                {% if item.product.regular_price %}
+                                                    <div class="d-flex flex-column lh-1">
+                                                        <span class="text-muted text-decoration-line-through">{{ item.product.regular_price|intcomma }} лв.</span>
+                                                        <h4 class="fs-sm ft-bold mb-0">{{ item.price|intcomma }} лв.</h4>
+                                                    </div>
+                                                {% else %}
+                                                    <h4 class="fs-sm ft-bold mb-0 lh-1">{{ item.price|intcomma }} лв.</h4>
+                                                {% endif %}
                                             </div>
                                         </div>
-                                        <div class="col-xl-2 col-lg-3 col-md-3 col-6">
-                                            <p class="mb-1 p-0"><span class="text-muted">Платежен статус</span></p>
-                                            <h6 class="mb-0 ft-medium fs-sm">{{order.payment_status}}</h6>
+                                        <div class="col-xl-2 col-lg-3 col-md-3 col-6 text-center">
+                                            <p class="mb-1 p-0 text-muted">Статус</p>
+                                            <div class="delv_status d-flex justify-content-center">
+                                                <span class="ft-medium text-warning bg-light-warning">
+                                                    {{ order.get_order_status_display }}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div class="col-xl-2 col-lg-3 col-md-3 col-6">
-                                            <a href="{% url 'customer:order_item_detail' order.order_id item.item_id %}" class="btn bg-primary btn-sm text-white rounded">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+                                        <div class="col-xl-2 col-lg-3 col-md-3 col-6 text-center">
+                                            <p class="mb-1 p-0 text-muted">Платежен статус</p>
+                                            <div class="d-flex justify-content-center">
+                                                <span class="ft-medium">
+                                                    {{ order.get_payment_status_display  }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 {% endfor %}
                             </div>
                         </div>
 
-                        <h4 class="mt-5 mb-2 fw-bold">Резюме на поръчката</h4>
-                        <div class="">
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Дата:</span> {{order.date}}</h5>
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Междинна сума:</span> {{order.sub_total|intcomma}} лв.</h5>
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Доставка:</span> {{order.shipping|intcomma}} лв.</h5>
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Данъци:</span> {{order.tax}} лв.</h5>
-                            
-                            {% if order.saved %}
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Отстъпка:</span> -{{order.saved|intcomma}} лв.</h5>
-                            {% endif %}
-                            
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Общо:</span> {{order.total|intcomma}} лв.</h5>
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Проследяване на поръчка</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="fs-sm mb-2"><strong>ID за проследяване:</strong> {{ order.tracking_id|default:"Все още не е добавен" }}</h6>
+                                <h6 class="fs-sm mb-3"><strong>Куриерска услуга:</strong> {{ order.shipping_service|default:"Все още не е добавен" }}</h6>
+                                {% if order.tracking_id and order.shipping_service %}
+                                    {% if order.shipping_service == "Econt" %}
+                                        <a target="_blank"
+                                           href="https://www.econt.com/services/track-shipment/{{ order.tracking_id }}"
+                                           class="btn btn-primary rounded btn-sm">
+                                            Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i>
+                                        </a>
+                                    {% elif order.shipping_service == "Speedy" %}
+                                        <a target="_blank"
+                                           href="https://www.speedy.bg/bg/track-shipment?shipmentNumber={{ order.tracking_id }}"
+                                           class="btn btn-primary rounded btn-sm">
+                                            Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
                         </div>
 
-                        <h4 class="mt-5 mb-2 fw-bold">Информация за клиента</h4>
-                        <div class="">
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Пълно име:</span> {{order.address.full_name}}</h5>
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Имейл:</span> {{order.address.email}}</h5>
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Мобилен телефон:</span> {{order.address.mobile}}</h5>
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Резюме на поръчката</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="fs-sm mb-2"><strong>Дата:</strong> {{ order.date }}</h6>
+                                <h6 class="fs-sm mb-2"><strong>Междинна сума:</strong> {{ order.sub_total|intcomma }} лв.</h6>
+                                <h6 class="fs-sm mb-2"><strong>Доставка:</strong> {{ order.shipping|intcomma }} лв.</h6>
+                                {% if order.saved %}
+                                    <h6 class="fs-sm mb-2"><strong>Отстъпка:</strong> -{{ order.saved|intcomma }} лв.</h6>
+                                {% endif %}
+                                <h6 class="fs-sm mb-0"><strong>Общо:</strong> {{ order.total|intcomma }} лв.</h6>
+                            </div>
                         </div>
 
-                        <h4 class="mt-5 mb-2 fw-bold">Данни за доставка</h4>
-                        <div class="">
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Метод на доставка:</span> {{order.address.get_delivery_method_display}}</h5>
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Адрес:</span> {{order.address.address}}</h5>
-                            <h5 class="mb-2 fs-sm"><span class="fw-bold">Град:</span> {{order.address.city}}</h5>
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Информация за клиента</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="fs-sm mb-2"><strong>Пълно име:</strong> {{ order.address.full_name }}</h6>
+                                <h6 class="fs-sm mb-2"><strong>Имейл:</strong> {{ order.address.email }}</h6>
+                                <h6 class="fs-sm mb-0"><strong>Мобилен телефон:</strong> {{ order.address.mobile }}</h6>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Данни за доставка</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="fs-sm mb-2"><strong>Метод на доставка:</strong> {{ order.address.get_delivery_method_display }}</h6>
+                                <h6 class="fs-sm mb-2"><strong>Адрес:</strong> {{ order.address.address }}</h6>
+                                <h6 class="fs-sm mb-0"><strong>Град:</strong> {{ order.address.city }}</h6>
+                            </div>
                         </div>
                     </div>
 
-                    <a href="#" class="btn bg-primary rounded btn-sm text-white mt-5">Свържете се с нас <i class="fas fa-phone ms-2"></i></a>
+                    <a href="{% url 'store:contact' %}" class="btn btn-primary rounded btn-sm ms-2">Свържете се с нас <i class="fas fa-phone ms-2"></i></a>
                 </div>
             </div>
         </div>

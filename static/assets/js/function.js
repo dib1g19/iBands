@@ -185,17 +185,6 @@ $(document).ready(function () {
         });
     });
 
-    const fetchCountry = () => {
-        fetch("https://api.ipregistry.co/?key=tryout")
-            .then(function (response) {
-                return response.json();
-            })
-            .then(function (payload) {
-                console.log(payload.location.country.name + ", " + payload.location.city);
-            });
-    };
-    fetchCountry();
-
     // Function to gather all current filter values
     function getFilters() {
         let filters = {

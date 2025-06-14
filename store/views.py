@@ -11,7 +11,6 @@ from django.core.mail import EmailMultiAlternatives, send_mail
 from decimal import Decimal
 import requests
 import stripe
-from plugin.service_fee import calculate_service_fee
 import razorpay
 from plugin.paginate_queryset import paginate_queryset
 from store import models as store_models
@@ -366,16 +365,22 @@ def create_order(request):
 
         items = store_models.Cart.objects.filter(cart_id=cart_id)
         cart_sub_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(sub_total = models.Sum("sub_total"))['sub_total']
-        cart_shipping_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(shipping = models.Sum("shipping"))['shipping']
+
         order = store_models.Order()
         order.sub_total = cart_sub_total
         order.customer = request.user
         order.address = address
-        order.shipping = cart_shipping_total
+
+        shipping_fee = 0
+        if address and address.delivery_method:
+            if address.delivery_method in ["econt", "speedy"]:
+                shipping_fee = 6
+            elif address.delivery_method == "personal":
+                shipping_fee = 9
+        order.shipping = shipping_fee
+
         order.tax = Decimal('0.00')
         order.total = order.sub_total + order.shipping
-        order.service_fee = calculate_service_fee(order.total)
-        order.total += order.service_fee
         order.save()
 
         for i in items:

@@ -92,26 +92,24 @@ $(document).ready(function () {
         const product_id = button_el.attr("data-product_id");
         const item_id = button_el.attr("data-item_id");
         const cart_id = generateCartId();
-        var qty = $(".item-qty-" + item_id).val();
+        var current_qty = parseInt($(".item-qty-" + item_id).val());
 
-        if (update_type === "increase") {
-            $(".item-qty-" + item_id).val(parseInt(qty) + 1);
-            qty++;
-        } else {
-            if (parseInt(qty) <= 1) {
-                $(".item-qty-" + item_id).val(1);
-                qty = 1;
-            } else {
-                $(".item-qty-" + item_id).val(parseInt(qty) - 1);
-                qty--;
-            }
+        // Default to increment/decrement by 1
+        var change_by = (update_type === "increase") ? 1 : -1;
+
+        // Prevent decreasing below 1
+        if (update_type === "decrease" && current_qty <= 1) {
+            return;
         }
+
+        // Optimistically update the input field for UX
+        $(".item-qty-" + item_id).val(current_qty + change_by);
 
         $.ajax({
             url: "/add_to_cart/",
             data: {
                 id: product_id,
-                qty: qty,
+                qty: change_by,
                 cart_id: cart_id,
             },
             beforeSend: function () {
@@ -131,8 +129,8 @@ $(document).ready(function () {
                 $(".cart_sub_total").text(response.cart_sub_total);
             },
             error: function (xhr, status, error) {
-                console.log("Error Status: " + xhr.status);
-                console.log("Response Text: " + xhr.responseText);
+                // Rollback change if there is an error
+                $(".item-qty-" + item_id).val(current_qty);
                 try {
                     let errorResponse = JSON.parse(xhr.responseText);
                     console.log("Error Message: " + errorResponse.error);

@@ -493,10 +493,23 @@ def cod_payment(request, order_id):
         order.payment_method = "cash_on_delivery"
         order.payment_status = "cash_on_delivery"
         order.save()
-        # Send notifications to customer and vendors
+        customer_merge_data = {
+            'order': order,
+            'order_items': order.order_items,
+        }
+        subject = f"Вашата поръчка #{order.order_id} е потвърдена"
+        text_body = render_to_string("email/order/order_confirmation.txt", customer_merge_data)
+        html_body = render_to_string("email/order/order_confirmation.html", customer_merge_data)
+        email_msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[order.address.email]
+        )
+        email_msg.attach_alternative(html_body, "text/html")
+        email_msg.send()
+
         customer_models.Notifications.objects.create(type="New Order", user=request.user)
-        for item in order.order_items():
-            vendor_models.Notifications.objects.create(type="New Order", user=item.vendor)
         clear_cart_items(request)
         from django.urls import reverse
         return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=paid")
@@ -552,7 +565,7 @@ def stripe_payment_verify(request, order_id):
             html_body = render_to_string("email/order/customer/customer_new_order.html", customer_merge_data)
 
             msg = EmailMultiAlternatives(
-                subject=subject, from_email=settings.FROM_EMAIL,
+                subject=subject, from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[order.address.email], body=text_body
             )
             msg.attach_alternative(html_body, "text/html")
@@ -569,7 +582,7 @@ def stripe_payment_verify(request, order_id):
                 html_body = render_to_string("email/order/vendor/vendor_new_order.html", vendor_merge_data)
 
                 msg = EmailMultiAlternatives(
-                    subject=subject, from_email=settings.FROM_EMAIL,
+                    subject=subject, from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[item.vendor.email], body=text_body
                 )
                 msg.attach_alternative(html_body, "text/html")

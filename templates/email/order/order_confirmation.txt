@@ -1,0 +1,18 @@
+Здравейте {{ order.address.full_name }},
+
+Благодарим Ви за поръчка #{{ order.order_id }}!
+В приложения списък ще видите какво поръчахте:
+
+{% for item in order_items %}
+  - {{ item.product.name }} ({{ item.qty }} x {{ item.price }}) — {{ item.sub_total }} лв.
+{% endfor %}
+
+Междинна сума: {{ order.sub_total }} лв.
+Доставка: {{ order.shipping }} лв.
+Такса за обслужване: {{ order.service_fee }} лв.
+Общо: {{ order.total }} лв.
+
+Ще се свържем с Вас скоро за потвърждение на доставката.
+
+Поздрави,
+Екипът на iBandsBG

@@ -11,6 +11,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 DEFAULT_FILE_STORAGE = 'ibands_site.storages.MediaStorage'
 
+# EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+# EMAIL_FILE_PATH = BASE_DIR / "sent_emails"
 
 DATABASES = {
     'default': dj_database_url.parse(

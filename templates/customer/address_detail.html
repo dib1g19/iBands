@@ -44,7 +44,9 @@
                                         <select name="delivery_method" class="form-control rounded">
                                             <option value="">Изберете метод на доставка</option>
                                             <option value="econt" {% if address.delivery_method == 'econt' %}selected{% endif %}>Еконт</option>
+                                            <option value="econt_box" {% if address.delivery_method == 'econt_box' %}selected{% endif %}>Еконтомат</option>
                                             <option value="speedy" {% if address.delivery_method == 'speedy' %}selected{% endif %}>Спиди</option>
+                                            <option value="speedy_box" {% if address.delivery_method == 'speedy_box' %}selected{% endif %}>Спидомат</option>
                                             <option value="personal" {% if address.delivery_method == 'personal' %}selected{% endif %}>Личен адрес</option>
                                         </select>
                                     </div>

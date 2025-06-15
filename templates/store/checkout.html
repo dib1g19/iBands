@@ -108,8 +108,8 @@
                                 <p class="fs-6">{{order.sub_total}} лв.</p>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <p class="fw-semibold fs-6">Доставка</p>
-                                <p class="fs-6">{{order.shipping}} лв.</p>
+                                <p class="fw-semibold fs-6">Доставка ({{ order.address.get_delivery_method_display }})</p>
+                                <p class="fs-6">{{ order.shipping|floatformat:2 }} лв.</p>
                             </div>
                             {% if order.saved %}
                                 <div class="d-flex justify-content-between align-items-center">

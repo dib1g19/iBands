@@ -89,7 +89,7 @@ $(document).ready(function () {
     $(document).on("click", ".update_cart_qty", function () {
         const button_el = $(this);
         const update_type = button_el.attr("data-update_type");
-        const product_id = button_el.attr("data-product_id");
+        // const product_id = button_el.attr("data-product_id"); // removed: not needed
         const item_id = button_el.attr("data-item_id");
         const cart_id = generateCartId();
         var current_qty = parseInt($(".item-qty-" + item_id).val());
@@ -108,7 +108,7 @@ $(document).ready(function () {
         $.ajax({
             url: "/add_to_cart/",
             data: {
-                id: product_id,
+                item_id: item_id,
                 qty: change_by,
                 cart_id: cart_id,
             },
@@ -125,6 +125,7 @@ $(document).ready(function () {
                 } else {
                     button_el.html("-");
                 }
+                $(".item-qty-" + item_id).val(response.current_qty);
                 $(".item_sub_total_" + item_id).text(response.item_sub_total);
                 $(".cart_sub_total").text(response.cart_sub_total);
             },

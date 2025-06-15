@@ -224,9 +224,45 @@ def add_to_cart(request):
     model = request.GET.get("model")
     size = request.GET.get("size")
     cart_id = request.GET.get("cart_id")
+    item_id = request.GET.get("item_id")
     request.session['cart_id'] = cart_id
 
-    # Validate required fields
+    # If item_id is provided, update cart item directly (from cart page +/- buttons)
+    if item_id:
+        cart_item = store_models.Cart.objects.filter(id=item_id, cart_id=cart_id).first()
+        if not cart_item:
+            return JsonResponse({"error": "Cart item not found"}, status=404)
+        new_qty = cart_item.qty + int(qty)
+        if new_qty < 1:
+            cart_item.delete()
+            message = "Продуктът е изтрит от количката"
+            total_cart_items = store_models.Cart.objects.filter(cart_id=cart_id)
+            cart_sub_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(sub_total = models.Sum("sub_total"))['sub_total'] or 0.00
+            return JsonResponse({
+                "message": message,
+                "total_cart_items": total_cart_items.count(),
+                "cart_sub_total": "{:,.2f}".format(cart_sub_total),
+                "item_sub_total": "0.00",
+                "current_qty": 0,
+            })
+        cart_item.qty = new_qty
+        cart_item.price = cart_item.product.price
+        cart_item.sub_total = Decimal(cart_item.product.price) * Decimal(cart_item.qty)
+        cart_item.user = request.user if request.user.is_authenticated else None
+        cart_item.cart_id = cart_id
+        cart_item.save()
+        message = "Koличката е обновена"
+        total_cart_items = store_models.Cart.objects.filter(cart_id=cart_id)
+        cart_sub_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(sub_total = models.Sum("sub_total"))['sub_total']
+        return JsonResponse({
+            "message": message,
+            "total_cart_items": total_cart_items.count(),
+            "cart_sub_total": "{:,.2f}".format(cart_sub_total),
+            "item_sub_total": "{:,.2f}".format(cart_item.sub_total),
+            "current_qty": cart_item.qty,
+        })
+
+    # Validate required fields for product detail add-to-cart
     if not id or not qty or not cart_id:
         return JsonResponse({"error": "No model or size selected"}, status=400)
 
@@ -248,11 +284,23 @@ def add_to_cart(request):
     ).first()
 
     if cart_item:
-        cart_item.qty += int(qty)
+        new_qty = cart_item.qty + int(qty)
+        if new_qty < 1:
+            cart_item.delete()
+            message = "Продуктът е изтрит от количката"
+            # recalculate cart_sub_total after deletion
+            total_cart_items = store_models.Cart.objects.filter(cart_id=cart_id)
+            cart_sub_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(sub_total = models.Sum("sub_total"))['sub_total'] or 0.00
+            return JsonResponse({
+                "message": message,
+                "total_cart_items": total_cart_items.count(),
+                "cart_sub_total": "{:,.2f}".format(cart_sub_total),
+                "item_sub_total": "0.00",
+                "current_qty": 0,
+            })
+        cart_item.qty = new_qty
         cart_item.price = product.price
         cart_item.sub_total = Decimal(product.price) * Decimal(cart_item.qty)
-        cart_item.shipping = Decimal(product.shipping) * Decimal(cart_item.qty)
-        cart_item.total = cart_item.sub_total + cart_item.shipping
         cart_item.user = request.user if request.user.is_authenticated else None
         cart_item.cart_id = cart_id
         cart_item.size = size
@@ -260,6 +308,8 @@ def add_to_cart(request):
         cart_item.save()
         message = "Koличката е обновена"
     else:
+        if int(qty) < 1:
+            return JsonResponse({"error": "Cannot add less than 1 item to cart"}, status=400)
         cart = store_models.Cart()
         cart.product = product
         cart.qty = qty
@@ -267,8 +317,6 @@ def add_to_cart(request):
         cart.model = model
         cart.size = size
         cart.sub_total = Decimal(product.price) * Decimal(qty)
-        cart.shipping = Decimal(product.shipping) * Decimal(qty)
-        cart.total = cart.sub_total + cart.shipping
         cart.user = request.user if request.user.is_authenticated else None
         cart.cart_id = cart_id
         cart.save()
@@ -284,7 +332,8 @@ def add_to_cart(request):
         "message": message,
         "total_cart_items": total_cart_items.count(),
         "cart_sub_total": "{:,.2f}".format(cart_sub_total),
-        "item_sub_total": "{:,.2f}".format(cart_item.sub_total)
+        "item_sub_total": "{:,.2f}".format(cart_item.sub_total),
+        "current_qty": cart_item.qty,
     })
 
 def cart(request):
@@ -373,13 +422,21 @@ def create_order(request):
 
         shipping_fee = 0
         if address and address.delivery_method:
-            if address.delivery_method in ["econt", "speedy"]:
-                shipping_fee = 6
+            if address.delivery_method in ["econt", "econt_box", "speedy", "speedy_box"]:
+                if cart_sub_total >= 75:
+                    shipping_fee = 0
+                elif address.delivery_method == "econt":
+                    shipping_fee = 6.5
+                elif address.delivery_method == "econt_box":
+                    shipping_fee = 6
+                elif address.delivery_method == "speedy":
+                    shipping_fee = 6
+                elif address.delivery_method == "speedy_box":
+                    shipping_fee = 4
             elif address.delivery_method == "personal":
                 shipping_fee = 9
-        order.shipping = shipping_fee
-
-        order.tax = Decimal('0.00')
+        from decimal import Decimal
+        order.shipping = Decimal(str(shipping_fee))
         order.total = order.sub_total + order.shipping
         order.save()
 
@@ -392,11 +449,6 @@ def create_order(request):
                 size=i.size,
                 price=i.price,
                 sub_total=i.sub_total,
-                shipping=i.shipping,
-                tax=Decimal('0.00'),
-                total=i.total,
-                initial_total=i.total
-                # vendor=i.product.vendor
             )
             # Make vendor to be not manditory for order create
             # order.vendors.add(i.product.vendor)

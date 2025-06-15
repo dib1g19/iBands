@@ -52,9 +52,9 @@
                                             {% endif %}
                                         </div>
                                         <div class="col-lg-2 d-flex">
-                                            <button type="button" class="btn bg-primary text-white btn-sm update_cart_qty" data-update_type="decrease" data-product_id="{{item.product.id}}" data-item_id="{{item.id}}">-</button>
+                                            <button type="button" class="btn bg-primary text-white btn-sm update_cart_qty" data-update_type="decrease" data-item_id="{{item.id}}">-</button>
                                             <input type="number" readonly class="form-control form-sm item-qty-{{item.id}} text-center" value="{{item.qty}}" name="" id="" />
-                                            <button type="button" class="btn bg-primary text-white btn-sm update_cart_qty" data-update_type="increase" data-product_id="{{item.product.id}}" data-item_id="{{item.id}}">+</button>
+                                            <button type="button" class="btn bg-primary text-white btn-sm update_cart_qty" data-update_type="increase" data-item_id="{{item.id}}">+</button>
                                         </div>
                                         <div class="col-lg-2">
                                             <td>
@@ -118,17 +118,12 @@
                         </div>
                     </div>
                     <div class="col-lg-3">
-                        <div class="shadow rounded p-3">
-                            <h4 class="fw-bold">Обобщение на поръчката</h4>
+                        <h4 class="fw-bold">Обобщение на поръчката</h4>
+                        <div class="shadow rounded p-3 mt-5">
 
                             <div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <p class="fw-semibold fs-6">Междинна сума</p>
-                                    <p class="fs-6"><span class="cart_sub_total">{{cart_sub_total|intcomma}}</span> лв.</p>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <p class="fw-semibold fs-6">Доставка</p>
-                                    <p class="fs-6">0.00 лв.</p>
+                                    <p class="fw-semibold fs-6 mb-0">Доставката се изчислява на следващата стъпка</p>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-3">
                                     <p class="fw-bold text-dark fs-5">Общо</p>

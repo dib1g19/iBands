@@ -68,7 +68,7 @@ class GalleryAdmin(admin.ModelAdmin):
     search_fields = ['product__name', 'gallery_id']
 
 class CartAdmin(admin.ModelAdmin):
-    list_display = ['cart_id', 'product', 'user', 'qty', 'price', 'total', 'date']
+    list_display = ['cart_id', 'product', 'user', 'qty', 'price', 'sub_total', 'date']
     search_fields = ['cart_id', 'product__name', 'user__username']
     list_filter = ['date', 'product']
 
@@ -83,7 +83,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ['payment_status', 'order_status']
 
 class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ['item_id', 'order', 'product', 'qty', 'price', 'total']
+    list_display = ['item_id', 'order', 'product', 'qty', 'price', 'sub_total']
     search_fields = ['item_id', 'order__order_id', 'product__name']
     list_filter = ['order__date']
 

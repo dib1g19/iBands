@@ -26,7 +26,9 @@ class Wishlist(models.Model):
 class Address(models.Model):
     DELIVERY_CHOICES = [
         ('econt', 'Еконт'),
+        ('econt_box', 'Еконтомат'),
         ('speedy', 'Спиди'),
+        ('speedy_box', 'Спидомат'),
         ('personal', 'Личен адрес'),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)

@@ -52,9 +52,9 @@
                                             {% endif %}
                                         </div>
                                         <div class="col-lg-2 d-flex">
-                                            <button type="button" class="btn bg-primary text-white btn-sm update_cart_qty" data-update_type="decrease" data-item_id="{{item.id}}">-</button>
+                                            <button type="button" class="btn btn-primary btn-sm update_cart_qty" data-update_type="decrease" data-item_id="{{item.id}}">-</button>
                                             <input type="number" readonly class="form-control form-sm item-qty-{{item.id}} text-center" value="{{item.qty}}" name="" id="" />
-                                            <button type="button" class="btn bg-primary text-white btn-sm update_cart_qty" data-update_type="increase" data-item_id="{{item.id}}">+</button>
+                                            <button type="button" class="btn btn-primary btn-sm update_cart_qty" data-update_type="increase" data-item_id="{{item.id}}">+</button>
                                         </div>
                                         <div class="col-lg-2">
                                             <td>
@@ -134,10 +134,10 @@
 
                         <div class="d-flex justify-content-center w-100 mt-3">
                             {% if request.user.is_authenticated %}
-                                <button type="submit" class="btn bg-primary rounded text-white w-100">Продължи към поръчка <i class="fas fa-arrow-right ms-1"></i></button>
+                                <button type="submit" class="btn btn-primary rounded w-100">Продължи към поръчка <i class="fas fa-arrow-right ms-1"></i></button>
                             {% else %}
                                 <div>
-                                    <a href="{% url 'userauths:sign-in' %}?next={{request.path}}" class="btn bg-primary rounded text-white w-100 mb-3">Влезте, за да продължите <i class="fas fa-sign-in-alt ms-1"></i></a>
+                                    <a href="{% url 'userauths:sign-in' %}?next={{request.path}}" class="btn btn-primary rounded w-100 mb-3">Влезте, за да продължите <i class="fas fa-sign-in-alt ms-1"></i></a>
                                     <a href="{% url 'userauths:sign-up' %}?next={{request.path}}" class="rounded w-100 mt-3">Създайте профил <i class="fas fa-user-plus ms-1"></i></a>
                                 </div>
                             {% endif %}

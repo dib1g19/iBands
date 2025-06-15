@@ -83,7 +83,7 @@ def remove_from_wishlist(request, id):
     wishlist = customer_models.Wishlist.objects.get(user=request.user, id=id)
     wishlist.delete()
     
-    messages.success(request, "item removed from wishlist")
+    messages.success(request, "Продуктът е премахнат от любими")
     return redirect("customer:wishlist")
 
 

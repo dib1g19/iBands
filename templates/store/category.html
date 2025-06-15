@@ -35,7 +35,13 @@
                                 {% endif %}
                             </a>
                             <div class="card-body text-center">
-                                <h5 class="card-title">{{ sub.title }}</h5>
+                                <h5 class="card-title">
+                                    {% if sub.is_all %}
+                                        Всички {{ category.title }}
+                                    {% else %}
+                                        {{ sub.title }}
+                                    {% endif %}
+                                </h5>
                             </div>
                         </div>
                     </div>
@@ -47,7 +53,7 @@
             <!-- Search Bar -->
             <form class="mb-5 d-flex justify-content-between align-items-center gap-2">
                 <input type="text" class="form-control rounded" placeholder="Търси продукти..." name="q" id="">
-                <button type="submit" class="btn bg-primary text-white rounded "><i class="fas fa-search"></i></button>
+                <button type="submit" class="btn btn-primary rounded "><i class="fas fa-search"></i></button>
             </form>
 
             <!-- Product List -->

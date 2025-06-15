@@ -14,7 +14,7 @@
                     <div class="mb-4 d-flex align-items-center justify-content-between">
                         <h4 class="mb-0 mb-2 fw-bold">Вашите адреси</h4>
                         <div>
-                            <a href="{% url 'customer:address_create' %}" class="btn btn-sm text-white bg-primary small rounded ft-medium">
+                            <a href="{% url 'customer:address_create' %}" class="btn btn-sm text-white btn-primary small rounded ft-medium">
                                 Създай адрес <i class="fas fa-plus ms-1"></i>
                             </a>
                         </div>
@@ -28,7 +28,7 @@
                                         <div class="card-heafder-flex">
                                             <h4 class="fs-md ft-bold mb-1">Адрес за доставка</h4>
                                             <div>
-                                                <a href="{% url 'customer:address_detail' address.id %}" class="btn btn-sm text-white bg-primary small rounded ft-medium">
+                                                <a href="{% url 'customer:address_detail' address.id %}" class="btn btn-sm text-white btn-primary small rounded ft-medium">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <a href="{% url 'customer:delete_address' address.id %}" class="btn btn-sm text-white bg-danger small rounded ft-medium">

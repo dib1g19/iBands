@@ -249,7 +249,7 @@ html body .db {
 }
 
 .theme-bg {
-    background: #5b1cee !important;
+    background: #0d6efd !important;
 }
 
 .trans-bg {
@@ -262,7 +262,7 @@ html body .db {
 }
 
 .theme-cl {
-    color: #5b1cee !important;
+    color: #0d6efd !important;
 }
 
 .dark_bg {
@@ -772,7 +772,7 @@ html body .text-purple {
 }
 
 html body .text-primary {
-    color: #5b1cee !important;
+    color: #0d6efd !important;
 }
 
 html body .text-megna {
@@ -784,7 +784,7 @@ html body .text-dark {
 }
 
 html body .text-themecolor {
-    color: #5b1cee;
+    color: #0d6efd;
 }
 
 /*------------------------ Global Settings: Lists ------------------*/
@@ -824,7 +824,7 @@ html body .text-themecolor {
 .lists-3.color li:before,
 .lists-2.color li:before,
 .lists-1.color li:before {
-    color: #5b1cee;
+    color: #0d6efd;
 }
 
 .lists-1 li:before {
@@ -856,7 +856,7 @@ html body .text-themecolor {
 }
 
 .alert-success {
-    color: #5b1cee;
+    color: #0d6efd;
     background-color: #e9ffeb;
     border-color: #e9ffeb;
 }
@@ -942,7 +942,7 @@ html body .text-themecolor {
 /*-------------- GLobal Settings: Background Colors ----------------*/
 
 .bg-primary {
-    background-color: #5b1cee !important;
+    background-color: #0d6efd !important;
     color: #fff;
 }
 
@@ -987,7 +987,7 @@ html body .bg-megna {
 }
 
 html body .bg-theme {
-    background-color: #5b1cee;
+    background-color: #0d6efd;
 }
 
 html body .bg-inverse {
@@ -1043,7 +1043,7 @@ html body .bg-whites {
 }
 
 html body .bg-red {
-    background-color: #5b1cee;
+    background-color: #0d6efd;
 }
 
 html body .bg-green {
@@ -1252,16 +1252,16 @@ table.table tr th {
 }
 
 .theme-btn-light {
-    color: #5b1cee;
+    color: #0d6efd;
     background: #ffffff;
-    border: 1px solid #5b1cee;
+    border: 1px solid #0d6efd;
     transition: all ease 0.4s;
 }
 
 .theme-btn-light:hover,
 .btn-light:focus {
-    background: #5b1cee;
-    border: 1px solid #5b1cee;
+    background: #0d6efd;
+    border: 1px solid #0d6efd;
     color: #ffffff;
 }
 
@@ -1332,10 +1332,10 @@ button.close {
 .pagination>li>a:focus,
 .pagination>li>a:hover {
     z-index: 2;
-    color: #5b1cee;
+    color: #0d6efd;
     cursor: pointer;
     background-color: transparent;
-    border-color#5b1cee;
+    border-color#0d6efd;
 }
 
 .pagination li:first-child a {
@@ -1358,9 +1358,9 @@ button.close {
 
 .page-item.active .page-link {
     z-index: 2;
-    color: #5b1cee;
+    color: #0d6efd;
     background-color: transparent;
-    border-color: #5b1cee;
+    border-color: #0d6efd;
 }
 
 /*----------- Global Settings: Custom Checkbox & Radio Button ----------------*/
@@ -1435,7 +1435,7 @@ button.close {
     left: 5px;
     top: 3px;
     font-size: 10px;
-    color: #5b1cee;
+    color: #0d6efd;
 }
 
 .radio-custom+.radio-custom-label:before {
@@ -1443,7 +1443,7 @@ button.close {
 }
 
 .radio-custom:checked+.radio-custom-label:before {
-    background: #5b1cee;
+    background: #0d6efd;
     box-shadow: inset 0px 0px 0px 4px #fff;
 }
 
@@ -1515,7 +1515,7 @@ button.close {
 .onoffswitch-inner:before {
     content: "";
     padding-right: 27px;
-    background-color: #5b1cee;
+    background-color: #0d6efd;
     color: #FFFFFF;
 }
 
@@ -1586,7 +1586,7 @@ button.close {
     content: '';
     width: 12px;
     height: 12px;
-    background: #5b1cee;
+    background: #0d6efd;
     position: absolute;
     top: 3px;
     left: 3px;
@@ -1931,7 +1931,7 @@ nav a:hover {
 
 @media (max-width: 992px) {
   .nav-menu>li:hover>a {
-    color: #5b1cee !important;
+    color: #0d6efd !important;
     transition: color 0.2s ease;
   }
 }
@@ -2027,7 +2027,7 @@ nav a:hover {
 .nav-menu>.active>a .submenu-indicator-chevron,
 .nav-menu>.focus>a .submenu-indicator-chevron,
 .nav-menu>li:hover>a .submenu-indicator-chevron {
-    border-color: transparent #5b1cee #5b1cee transparent
+    border-color: transparent #0d6efd #0d6efd transparent
 }
 
 .light-menu .nav-menu>.active>a .submenu-indicator-chevron,
@@ -2123,7 +2123,7 @@ nav a:hover {
 }
 
 .nav-search-button:hover .nav-search-icon {
-    color: #5b1cee
+    color: #0d6efd
 }
 
 .navigation-portrait .nav-search-button {
@@ -2210,7 +2210,7 @@ nav a:hover {
     color: #fff;
     text-align: center;
     border-radius: 4px;
-    background-color: #5b1cee;
+    background-color: #0d6efd;
     transition: opacity .3s
 }
 
@@ -2316,7 +2316,7 @@ nav a:hover {
 .nav-dropdown>li>a:hover,
 .nav-dropdown>li>a:focus {
     padding-left: 20px;
-    color: #5b1cee;
+    color: #0d6efd;
 }
 
 .social-icon a i,
@@ -2329,7 +2329,7 @@ nav a:hover {
 
 .nav-dropdown>.focus>a,
 .nav-dropdown>li:hover>a {
-    color: #5b1cee;
+    color: #0d6efd;
 }
 
 .nav-dropdown.nav-dropdown-left {
@@ -2926,7 +2926,7 @@ span.expiration {
     }
     .header-transparent.dark-text .nav-menu>li>a:hover,
     .header-transparent.dark-text .nav-menu>li>a:focus {
-        color: #5b1cee;
+        color: #0d6efd;
     }
     .header-transparent .submenu-indicator-chevron {
         border-color: transparent #ffffff #ffffff transparent;
@@ -3688,7 +3688,7 @@ ul.dahs_navbar li:last-child a {
 }
 
 ul.dahs_navbar li a.active {
-    color: #5b1cee;
+    color: #0d6efd;
 }
 
 /*------------ Instagram Gallery -----------------*/
@@ -3888,7 +3888,7 @@ small {
 }
 
 .btn.btn_love.active {
-    color: #5b1cee;
+    color: #0d6efd;
 }
 
 .rounded-circle {
@@ -5099,7 +5099,7 @@ select.form-control:focus {
 .nav-pills .nav-link.active,
 .show>.nav-pills .nav-link {
     color: #fff;
-    background-color: #5b1cee;
+    background-color: #0d6efd;
 }
 
 .nav-link {
@@ -5409,7 +5409,7 @@ button:focus {
 }
 
 .blog-page .article_detail_wrapss blockquote .icon {
-    color: #5b1cee;
+    color: #0d6efd;
     position: absolute;
     font-size: 28px;
     line-height: 28px;
@@ -5462,8 +5462,8 @@ button:focus {
 
 .blog-page .article_detail_wrapss .article_bottom_info .post-tags .list li a:hover {
     color: #ffffff;
-    background: #5b1cee;
-    border-color: #5b1cee;
+    background: #0d6efd;
+    border-color: #0d6efd;
 }
 
 .blog-page .article_detail_wrapss .article_bottom_info .post-share .list {
@@ -5517,7 +5517,7 @@ button:focus {
 
 .single_article_pagination .article_pagination_center_grid a {
     font-size: 2.5rem;
-    color: #5b1cee;
+    color: #0d6efd;
 }
 
 .single_article_pagination .prev-post a,
@@ -5602,7 +5602,7 @@ button:focus {
 }
 
 .blog-page .article_detail_wrapss .comment-area .all-comments article .comment-details .comment-meta .comment-left-meta .comment-date {
-    color: #5b1cee;
+    color: #0d6efd;
     text-transform: uppercase;
     font-size: 12px;
     font-weight: 600;
@@ -5689,7 +5689,7 @@ h3.pa-name {
 
 .social-links li a:hover,
 .social-links li a:focus {
-    color: #5b1cee;
+    color: #0d6efd;
 }
 
 /*-------------- Sidebar -----------*/
@@ -5723,7 +5723,7 @@ h3.pa-name {
     bottom: 0px;
     cursor: pointer;
     border-radius: 4px;
-    background: #5b1cee;
+    background: #0d6efd;
     color: #ffffff;
     border: 0;
     font-size: 14px;
@@ -5760,7 +5760,7 @@ h3.pa-name {
     border-radius: 50%;
     padding: 3px 4px;
     font-size: 10px;
-    color: #5b1cee;
+    color: #0d6efd;
     font-weight: 600;
 }
 

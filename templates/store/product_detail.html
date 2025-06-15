@@ -21,17 +21,15 @@
                 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
                     <div class="prd_details">
                         <div class="prt_01 mb-1">
-                            <span class="text-purple bg-light-purple rounded py-1">
-                                {% if product.category.parent %}
-                                    <a href="{% url 'store:category' product.category.parent.slug product.category.slug %}" class="text-purple">
-                                        {{ product.category.title }}
-                                    </a>
-                                {% else %}
-                                    <a href="{% url 'store:category_root' product.category.slug %}" class="text-purple">
-                                        {{ product.category.title }}
-                                    </a>
-                                {% endif %}
-                            </span>
+                            {% if product.category.parent %}
+                                <a href="{% url 'store:category' product.category.parent.slug product.category.slug %}">
+                                    {{ product.category.title }}
+                                </a>
+                            {% else %}
+                                <a href="{% url 'store:category_root' product.category.slug %}">
+                                    {{ product.category.title }}
+                                </a>
+                            {% endif %}
                         </div>
                         <div class="prt_02 mb-3">
                             <h2 class="ft-bold mb-1">{{product.name}}</h2>
@@ -91,12 +89,12 @@
                                     </select>
                                 </div>
                                 <div class="">
-                                    <button type="button" class="btn btn-sm bg-primary text-white rounded fs-6 add_to_cart" data-id="{{ product.id }}">
+                                    <button type="button" class="btn btn-sm btn-primary rounded fs-6 add_to_cart" data-id="{{ product.id }}">
                                         Добави в количка <i class="fas fa-shopping-cart ms-2"></i>
                                     </button>
                                 </div>
                                 <div class="">
-                                    <button type="button" class="btn btn-sm bg-primary text-white rounded fs-6 add_to_wishlist" data-product_id="{{ product.id }}">
+                                    <button type="button" class="btn btn-sm btn-primary rounded fs-6 add_to_wishlist" data-product_id="{{ product.id }}">
                                         <i class="fas fa-heart fs-5 c text-white"></i>
                                     </button>
                                 </div>

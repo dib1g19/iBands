@@ -64,7 +64,7 @@ def login_view(request):
 
                     if user_instance is not None:
                         login(request, user_authenticate)
-                        messages.success(request, "You are Logged In")
+                        messages.success(request, "Успешно влязохте в профила си.")
                         next_url = request.GET.get("next", 'store:index')
 
                         print("next_url ========", next_url)
@@ -98,7 +98,7 @@ def logout_view(request):
         cart_id = None
     logout(request)
     request.session['cart_id'] = cart_id
-    messages.success(request, 'You have been logged out.')
+    messages.success(request, 'Успешно излязохте от профила си.')
     return redirect("userauths:sign-in")
 
 def handler404(request, exception, *args, **kwargs):

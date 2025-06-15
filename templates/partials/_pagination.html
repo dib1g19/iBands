@@ -1,9 +1,9 @@
 {% if products.has_other_pages %}
     <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
+        <ul class="pagination justify-content-center{% if is_shop %} shop-pagination{% endif %}">
             {% if products.has_previous %}
                  <li class="page-item">
-                    <a class="page-link" href="?page={{ products.previous_page_number }}" aria-label="Previous">
+                    <a class="page-link" href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ products.previous_page_number }}" aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
                     </a>
                 </li>
@@ -15,13 +15,13 @@
                 {% if products.number == num %}
                     <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                 {% else %}
-                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    <li class="page-item"><a class="page-link" href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ num }}">{{ num }}</a></li>
                 {% endif %}
             {% endfor %}
 
             {% if products.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ products.next_page_number }}" aria-label="Next">
+                    <a class="page-link" href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ products.next_page_number }}" aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
                     </a>
                  </li>

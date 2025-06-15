@@ -284,8 +284,8 @@ $(document).ready(function () {
         });
     });
 
-    // Pagination click handler for AJAX
-    $(document).on("click", ".pagination .page-link", function (e) {
+    // Pagination click handler for AJAX (only on shop/filtered pages)
+    $(document).on("click", ".shop-pagination .page-link", function (e) {
         e.preventDefault();
         var page = null;
         // If the link is disabled or active, do nothing

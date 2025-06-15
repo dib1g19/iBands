@@ -1,3 +1,89 @@
+def get_descendant_category_ids(category):
+    """Recursively find all descendant category ids for a given category."""
+    ids = []
+    children = store_models.Category.objects.filter(parent=category)
+    for child in children:
+        ids.append(child.id)
+        ids += get_descendant_category_ids(child)
+    return ids
+
+def category_all_sub_root(request, slug):
+    category = get_object_or_404(store_models.Category, slug=slug, parent=None)
+    descendant_ids = get_descendant_category_ids(category)
+    products_list = store_models.Product.objects.filter(status="Published", category_id__in=descendant_ids)
+    query = request.GET.get("q")
+    if query:
+        products_list = products_list.filter(name__icontains=query)
+    products = paginate_queryset(request, products_list, 12)
+
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": category.title, "url": reverse("store:category_root", args=[category.slug])},
+        {"label": f"Всички {category.title}", "url": ""},
+    ]
+    context = {
+        "products": products,
+        "category": category,
+        "breadcrumbs": breadcrumbs,
+        "all_sub_mode": True,
+    }
+    querydict = request.GET.copy()
+    if 'page' in querydict:
+        del querydict['page']
+    querystring = querydict.urlencode()
+    context['querystring'] = querystring
+    return render(request, "store/category.html", context)
+
+def category_all_sub(request, parent_slug, slug):
+    parent = get_object_or_404(store_models.Category, slug=parent_slug)
+    category = get_object_or_404(store_models.Category, slug=slug, parent=parent)
+    descendant_ids = get_descendant_category_ids(category)
+    products_list = store_models.Product.objects.filter(status="Published", category_id__in=descendant_ids)
+    query = request.GET.get("q")
+    if query:
+        products_list = products_list.filter(name__icontains=query)
+    products = paginate_queryset(request, products_list, 12)
+    ancestors = get_category_ancestors(category) if category else []
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+    ]
+    for ancestor in ancestors:
+        if ancestor.parent:
+            breadcrumbs.append({
+                "label": ancestor.title,
+                "url": reverse("store:category", args=[ancestor.parent.slug, ancestor.slug])
+            })
+        else:
+            breadcrumbs.append({
+                "label": ancestor.title,
+                "url": reverse("store:category_root", args=[ancestor.slug])
+            })
+    if category.parent:
+        breadcrumbs.append({
+            "label": category.title,
+            "url": reverse("store:category", args=[category.parent.slug, category.slug])
+        })
+    else:
+        breadcrumbs.append({
+            "label": category.title,
+            "url": reverse("store:category_root", args=[category.slug])
+        })
+    breadcrumbs.append({
+        "label": f"Всички {category.title}",
+        "url": "",
+    })
+    context = {
+        "products": products,
+        "category": category,
+        "breadcrumbs": breadcrumbs,
+        "all_sub_mode": True,
+    }
+    querydict = request.GET.copy()
+    if 'page' in querydict:
+        del querydict['page']
+    querystring = querydict.urlencode()
+    context['querystring'] = querystring
+    return render(request, "store/category.html", context)
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
@@ -91,6 +177,7 @@ def shop(request):
         'prices': prices,
         "breadcrumbs": breadcrumbs,
     }
+    context['is_shop'] = True
     return render(request, "store/shop.html", context)
 
 def category(request, slug, parent_slug=None):
@@ -101,9 +188,23 @@ def category(request, slug, parent_slug=None):
         parent = None
         category = get_object_or_404(store_models.Category, slug=slug, parent=None)
 
-    child_categories = store_models.Category.objects.filter(parent=category)
-    all_categories = [category] + list(child_categories)
-    products_list = store_models.Product.objects.filter(status="Published", category__in=all_categories)
+    show_sub_only = request.GET.get("filter") == "subcategories"
+
+    child_categories_qs = store_models.Category.objects.filter(parent=category)
+    child_categories = list(child_categories_qs)
+
+    # Add pseudo "All" subcategory
+    all_sub = category
+    all_sub.is_all = True
+    subcategories_with_all = [all_sub] + child_categories
+
+    if show_sub_only:
+        # Only products in subcategories (not parent)
+        subcat_ids = [c.id for c in child_categories]
+        products_list = store_models.Product.objects.filter(status="Published", category_id__in=subcat_ids)
+    else:
+        # Only products in this parent category (not in children)
+        products_list = store_models.Product.objects.filter(status="Published", category=category)
 
     query = request.GET.get("q")
     if query:
@@ -142,9 +243,14 @@ def category(request, slug, parent_slug=None):
     context = {
         "products": products,
         "category": category,
-        "subcategories": child_categories,
+        "subcategories": subcategories_with_all,
         "breadcrumbs": breadcrumbs,
     }
+    querydict = request.GET.copy()
+    if 'page' in querydict:
+        del querydict['page']
+    querystring = querydict.urlencode()
+    context['querystring'] = querystring
     return render(request, "store/category.html", context)
 
 def vendors(request):
@@ -864,7 +970,7 @@ def filter_products(request):
 
     # Render the filtered products as HTML using render_to_string
     html = render_to_string('partials/_store.html', {'products': products_page})
-    pagination_html = render_to_string('partials/_pagination.html', {'products': products_page})
+    pagination_html = render_to_string('partials/_pagination.html', {'products': products_page, 'is_shop': True})
 
     return JsonResponse({
         'html': html,

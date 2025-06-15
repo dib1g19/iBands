@@ -10,14 +10,20 @@
             <!-- Category Title -->
             <h2 class="fw-bold mb-5">{{category.title}}</h2>
             <!-- Subcategories Section -->
-            {% if subcategories %}
+            {% if subcategories|length > 1 and not all_sub_mode %}
             <div class="mb-5">
                 <h3 class="fw-bold">Колекции</h3>
                 <div class="row">
                     {% for sub in subcategories %}
                     <div class="col-6 col-md-4 col-lg-3">
                         <div class="card mb-3">
-                            {% if sub.parent %}
+                            {% if sub.is_all %}
+                                {% if category.parent %}
+                                    <a href="{% url 'store:category_all_sub' category.parent.slug category.slug %}">
+                                {% else %}
+                                    <a href="{% url 'store:category_all_sub_root' category.slug %}">
+                                {% endif %}
+                            {% elif sub.parent %}
                                 <a href="{% url 'store:category' sub.parent.slug sub.slug %}">
                             {% else %}
                                 <a href="{% url 'store:category_root' sub.slug %}">

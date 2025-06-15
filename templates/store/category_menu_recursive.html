@@ -9,6 +9,15 @@
         </a>
         {% if category.subcategories.all %}
             <ul class="nav-dropdown nav-submenu">
+                <li>
+                    <a href="{% if category.parent %}
+                                {% url 'store:category_all_sub' category.parent.slug category.slug %}
+                             {% else %}
+                                {% url 'store:category_all_sub_root' category.slug %}
+                             {% endif %}">
+                        Всички {{ category.title }}
+                    </a>
+                </li>
                 {% include "store/category_menu_recursive.html" with categories=category.subcategories.all %}
             </ul>
         {% endif %}

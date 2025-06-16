@@ -1,6 +1,5 @@
 from django.contrib import admin
 from store import models as store_models
-from store.models import Category
 from store.admin_forms import DuplicateProductForm
 
 class GalleryInline(admin.TabularInline):
@@ -73,8 +72,8 @@ class CartAdmin(admin.ModelAdmin):
     list_filter = ['date', 'product']
 
 class CouponAdmin(admin.ModelAdmin):
-    list_display = ['code', 'vendor', 'discount']
-    search_fields = ['code', 'vendor__username']
+    list_display = ['code', 'discount']
+    search_fields = ['code']
 
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['order_id', 'customer', 'total', 'payment_status', 'order_status', 'payment_method', 'date']

@@ -101,7 +101,6 @@ class Product(models.Model):
     shipping = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True, verbose_name="Shipping Amount")
     status = models.CharField(choices=STATUS, max_length=50, default="Published")
     featured = models.BooleanField(default=False, verbose_name="Marketplace Featured")
-    vendor = models.ForeignKey(user_models.User, on_delete=models.SET_NULL, null=True, blank=True)
     sku = models.CharField(max_length=50, unique=True, verbose_name="SKU")
     slug = models.SlugField(null=True, blank=True)
     date = models.DateTimeField(default=timezone.now)
@@ -178,7 +177,6 @@ class Cart(models.Model):
         return f'{self.cart_id} - {self.product.name}'
 
 class Coupon(models.Model):
-    vendor = models.ForeignKey(user_models.User, on_delete=models.SET_NULL, null=True)
     code = models.CharField(max_length=100)
     discount = models.IntegerField(default=1)
     
@@ -186,7 +184,6 @@ class Coupon(models.Model):
         return self.code
 
 class Order(models.Model):
-    vendors = models.ManyToManyField(user_models.User, blank=True)
     customer = models.ForeignKey(user_models.User, on_delete=models.SET_NULL, null=True, related_name="customer", blank=True)
     sub_total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
     shipping = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)

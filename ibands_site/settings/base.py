@@ -68,7 +68,6 @@ INSTALLED_APPS = [
 
     'userauths',
     'store',
-    'vendor',
     'customer',
     'blog',
     'storages',
@@ -275,8 +274,6 @@ JAZZMIN_SETTINGS = {
         "store.brand",
         "store.productfaq",
         "store.review",
-        "vendor.Coupon",
-        "vendor.DeliveryCouriers",
         "userauths",
         "userauths.user",
         "userauths.profile",
@@ -320,14 +317,6 @@ JAZZMIN_SETTINGS = {
         "customer.Address":"fas fa-location-arrow",
         "customer.Wishlist":"fas fa-heart",
 
-        "vendor.DeliveryCouriers":"fas fa-truck",
-        "vendor.Coupon":"fas fa-percentage",
-        "vendor.Vendor":"fas fa-store",
-        "vendor.Notification":"fas fa-bell",
-        "vendor.PayoutTracker":"fas fa-wallet",
-        "vendor.ChatMessage":"fas fa-envelope",
-
-        "addons.BecomeAVendor":"fas fa-user-plus",
         "addons.AboutUS":"fas fa-users",
         "addons.Company":"fas fa-university",
         "addons.BasicAddon":"fas fa-cog",

@@ -101,7 +101,6 @@ import razorpay
 from plugin.paginate_queryset import paginate_queryset
 from store import models as store_models
 from customer import models as customer_models
-from vendor import models as vendor_models
 from userauths import models as userauths_models
 from plugin.exchange_rate import convert_usd_to_inr, convert_usd_to_kobo, convert_usd_to_ngn, get_usd_to_ngn_rate
 from django.db.models import Q
@@ -252,14 +251,6 @@ def category(request, slug, parent_slug=None):
     querystring = querydict.urlencode()
     context['querystring'] = querystring
     return render(request, "store/category.html", context)
-
-def vendors(request):
-    vendors = userauths_models.Profile.objects.filter(user_type="Vendor")
-    
-    context = {
-        "vendors": vendors
-    }
-    return render(request, "store/vendors.html", context)
 
 def product_detail(request, category_slug, product_slug, parent_slug=None):
     if parent_slug:
@@ -556,9 +547,6 @@ def create_order(request):
                 price=i.price,
                 sub_total=i.sub_total,
             )
-            # Make vendor to be not manditory for order create
-            # order.vendors.add(i.product.vendor)
-        
     
     return redirect("store:checkout", order.order_id)
 
@@ -589,14 +577,14 @@ def coupon_apply(request, order_id):
             messages.warning(request, "Coupon already activated")
             return redirect("store:checkout", order.order_id)
         else:
-            # Assuming coupon applies to specific vendor items, not globally
+            # Coupon now applies globally to all items
             total_discount = 0
             for item in order_items:
-                if coupon.vendor == item.product.vendor and coupon not in item.coupon.all():
-                    item_discount = item.total * coupon.discount / 100  # Discount for this item
+                if coupon not in item.coupon.all():
+                    item_discount = item.sub_total * coupon.discount / 100  # Discount for this item
                     total_discount += item_discount
-                    item.coupon.add(coupon) 
-                    item.total -= item_discount
+                    item.coupon.add(coupon)
+                    item.sub_total -= item_discount
                     item.saved += item_discount
                     item.save()
 
@@ -734,23 +722,6 @@ def stripe_payment_verify(request, order_id):
             msg.attach_alternative(html_body, "text/html")
             msg.send()
 
-            # Send Order Emails to Vendors
-            for item in order.order_items():
-                
-                vendor_merge_data = {
-                    'item': item,
-                }
-                subject = f"New Order!"
-                text_body = render_to_string("email/order/vendor/vendor_new_order.txt", vendor_merge_data)
-                html_body = render_to_string("email/order/vendor/vendor_new_order.html", vendor_merge_data)
-
-                msg = EmailMultiAlternatives(
-                    subject=subject, from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[item.vendor.email], body=text_body
-                )
-                msg.attach_alternative(html_body, "text/html")
-                msg.send()
-
             return redirect(f"/payment_status/{order.order_id}/?payment_status=paid")
     
     return redirect(f"/payment_status/{order.order_id}/?payment_status=failed")
@@ -830,8 +801,6 @@ def razorpay_payment_verify(request, order_id):
             order.save()
             clear_cart_items(request)
             customer_models.Notifications.objects.create(type="New Order", user=request.user)
-            for item in order.order_items():
-                vendor_models.Notifications.objects.create(type="New Order", user=item.vendor)
 
             return redirect(f"/payment_status/{order.order_id}/?payment_status=paid")
 

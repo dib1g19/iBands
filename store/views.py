@@ -1,89 +1,3 @@
-def get_descendant_category_ids(category):
-    """Recursively find all descendant category ids for a given category."""
-    ids = []
-    children = store_models.Category.objects.filter(parent=category)
-    for child in children:
-        ids.append(child.id)
-        ids += get_descendant_category_ids(child)
-    return ids
-
-def category_all_sub_root(request, slug):
-    category = get_object_or_404(store_models.Category, slug=slug, parent=None)
-    descendant_ids = get_descendant_category_ids(category)
-    products_list = store_models.Product.objects.filter(status="Published", category_id__in=descendant_ids)
-    query = request.GET.get("q")
-    if query:
-        products_list = products_list.filter(name__icontains=query)
-    products = paginate_queryset(request, products_list, 12)
-
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": category.title, "url": reverse("store:category_root", args=[category.slug])},
-        {"label": f"Всички {category.title}", "url": ""},
-    ]
-    context = {
-        "products": products,
-        "category": category,
-        "breadcrumbs": breadcrumbs,
-        "all_sub_mode": True,
-    }
-    querydict = request.GET.copy()
-    if 'page' in querydict:
-        del querydict['page']
-    querystring = querydict.urlencode()
-    context['querystring'] = querystring
-    return render(request, "store/category.html", context)
-
-def category_all_sub(request, parent_slug, slug):
-    parent = get_object_or_404(store_models.Category, slug=parent_slug)
-    category = get_object_or_404(store_models.Category, slug=slug, parent=parent)
-    descendant_ids = get_descendant_category_ids(category)
-    products_list = store_models.Product.objects.filter(status="Published", category_id__in=descendant_ids)
-    query = request.GET.get("q")
-    if query:
-        products_list = products_list.filter(name__icontains=query)
-    products = paginate_queryset(request, products_list, 12)
-    ancestors = get_category_ancestors(category) if category else []
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-    ]
-    for ancestor in ancestors:
-        if ancestor.parent:
-            breadcrumbs.append({
-                "label": ancestor.title,
-                "url": reverse("store:category", args=[ancestor.parent.slug, ancestor.slug])
-            })
-        else:
-            breadcrumbs.append({
-                "label": ancestor.title,
-                "url": reverse("store:category_root", args=[ancestor.slug])
-            })
-    if category.parent:
-        breadcrumbs.append({
-            "label": category.title,
-            "url": reverse("store:category", args=[category.parent.slug, category.slug])
-        })
-    else:
-        breadcrumbs.append({
-            "label": category.title,
-            "url": reverse("store:category_root", args=[category.slug])
-        })
-    breadcrumbs.append({
-        "label": f"Всички {category.title}",
-        "url": "",
-    })
-    context = {
-        "products": products,
-        "category": category,
-        "breadcrumbs": breadcrumbs,
-        "all_sub_mode": True,
-    }
-    querydict = request.GET.copy()
-    if 'page' in querydict:
-        del querydict['page']
-    querystring = querydict.urlencode()
-    context['querystring'] = querystring
-    return render(request, "store/category.html", context)
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
@@ -93,7 +7,7 @@ from django.db import models
 from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
-from django.core.mail import EmailMultiAlternatives, send_mail
+from django.core.mail import EmailMultiAlternatives
 from decimal import Decimal
 import requests
 import stripe
@@ -103,7 +17,6 @@ from store import models as store_models
 from customer import models as customer_models
 from userauths import models as userauths_models
 from plugin.exchange_rate import convert_usd_to_inr, convert_usd_to_kobo, convert_usd_to_ngn, get_usd_to_ngn_rate
-from django.db.models import Q
 
 def get_category_ancestors(category):
     ancestors = []
@@ -244,6 +157,93 @@ def category(request, slug, parent_slug=None):
         "category": category,
         "subcategories": subcategories_with_all,
         "breadcrumbs": breadcrumbs,
+    }
+    querydict = request.GET.copy()
+    if 'page' in querydict:
+        del querydict['page']
+    querystring = querydict.urlencode()
+    context['querystring'] = querystring
+    return render(request, "store/category.html", context)
+
+def get_descendant_category_ids(category):
+    """Recursively find all descendant category ids for a given category."""
+    ids = []
+    children = store_models.Category.objects.filter(parent=category)
+    for child in children:
+        ids.append(child.id)
+        ids += get_descendant_category_ids(child)
+    return ids
+
+def category_all_sub_root(request, slug):
+    category = get_object_or_404(store_models.Category, slug=slug, parent=None)
+    descendant_ids = get_descendant_category_ids(category)
+    products_list = store_models.Product.objects.filter(status="Published", category_id__in=descendant_ids)
+    query = request.GET.get("q")
+    if query:
+        products_list = products_list.filter(name__icontains=query)
+    products = paginate_queryset(request, products_list, 12)
+
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": category.title, "url": reverse("store:category_root", args=[category.slug])},
+        {"label": f"Всички {category.title}", "url": ""},
+    ]
+    context = {
+        "products": products,
+        "category": category,
+        "breadcrumbs": breadcrumbs,
+        "all_sub_mode": True,
+    }
+    querydict = request.GET.copy()
+    if 'page' in querydict:
+        del querydict['page']
+    querystring = querydict.urlencode()
+    context['querystring'] = querystring
+    return render(request, "store/category.html", context)
+
+def category_all_sub(request, parent_slug, slug):
+    parent = get_object_or_404(store_models.Category, slug=parent_slug)
+    category = get_object_or_404(store_models.Category, slug=slug, parent=parent)
+    descendant_ids = get_descendant_category_ids(category)
+    products_list = store_models.Product.objects.filter(status="Published", category_id__in=descendant_ids)
+    query = request.GET.get("q")
+    if query:
+        products_list = products_list.filter(name__icontains=query)
+    products = paginate_queryset(request, products_list, 12)
+    ancestors = get_category_ancestors(category) if category else []
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+    ]
+    for ancestor in ancestors:
+        if ancestor.parent:
+            breadcrumbs.append({
+                "label": ancestor.title,
+                "url": reverse("store:category", args=[ancestor.parent.slug, ancestor.slug])
+            })
+        else:
+            breadcrumbs.append({
+                "label": ancestor.title,
+                "url": reverse("store:category_root", args=[ancestor.slug])
+            })
+    if category.parent:
+        breadcrumbs.append({
+            "label": category.title,
+            "url": reverse("store:category", args=[category.parent.slug, category.slug])
+        })
+    else:
+        breadcrumbs.append({
+            "label": category.title,
+            "url": reverse("store:category_root", args=[category.slug])
+        })
+    breadcrumbs.append({
+        "label": f"Всички {category.title}",
+        "url": "",
+    })
+    context = {
+        "products": products,
+        "category": category,
+        "breadcrumbs": breadcrumbs,
+        "all_sub_mode": True,
     }
     querydict = request.GET.copy()
     if 'page' in querydict:

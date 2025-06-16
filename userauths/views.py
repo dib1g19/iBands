@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout
+from django.urls import reverse
 
 from userauths import models as userauths_models
 from userauths import forms as userauths_forms
@@ -32,8 +33,14 @@ def register_view(request):
         next_url = request.GET.get("next", 'store:index')
         return redirect(next_url)
     
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Създай акаунт", "url": ""},
+    ]
+    
     context = {
-        'form':form
+        "form": form,
+        "breadcrumbs": breadcrumbs,
     }
     return render(request, 'userauths/sign-up.html', context)
 
@@ -80,8 +87,17 @@ def login_view(request):
 
     else:
         form = userauths_forms.LoginForm()  
-
-    return render(request, "userauths/sign-in.html", {'form': form})
+    
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Вход", "url": ""},
+    ]
+    
+    context = {
+        "form": form,
+        "breadcrumbs": breadcrumbs,
+    }
+    return render(request, "userauths/sign-in.html", context)
 
 def logout_view(request):
     if "cart_id" in request.session:

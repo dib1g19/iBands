@@ -35,7 +35,7 @@
                         <!-- Text -->
                         <p class="ft-regular fs-md mb-5">Your order <span class="text-body text-dark fw-bold">#{{order.order_id}}</span> has been completed. <br> we have sent the order details to your email.</p>
                         <!-- Button -->
-                        <a href="{% url 'customer:order_detail' order.order_id %}" class="btn btn-sm rounded text-white bg-success">View Orders</a>
+                        <a href="{% url 'customer:order_detail' order.order_id %}" class="btn rounded btn-success">View Orders</a>
                     {% endif %}
                 </div>
 
@@ -48,7 +48,7 @@
                             <!-- Text -->
                             <p class="ft-regular fs-md mb-5">Your order couldn't be completed, try again later.</p>
                             <!-- Button -->
-                            <a href="" class="btn btn-sm rounded text-white bg-danger">Try Again <i class="fas fa-rotate ms-2"></i></a>
+                            <a href="" class="btn btn-sm rounded btn-danger">Try Again <i class="fas fa-rotate ms-2"></i></a>
                         {% endif %}
                 </div>
             </div>

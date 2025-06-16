@@ -32,7 +32,7 @@
                                         <img src="{{item.product.image.url}}" alt="" style="width: 100px; height: 100px; object-fit: cover" />
                                         <div class="p-2">
                                             <h5 class="mb-1">
-                                                <span class="fw-bold">Цвят: </span>{{ item.product.name }}
+                                                <span class="fw-bold"></span>{{ item.product.name }}
                                             </h5>
                                             <p class="mb-0 mt-0">
                                                 <span class="fw-bold">Тип: </span>{{ item.product.category.title }}
@@ -134,7 +134,7 @@
                         <form class="mb-3 d-flex" action="{% url 'store:coupon_apply' order.order_id %}" method="POST">
                             {% csrf_token %}
                             <input type="text" class="form-control" name="coupon_code" placeholder="Код за отстъпка" />
-                            <button type="submit"  class="btn bg-secondary text-white"><i class="fas fa-check-circle"></i></button>
+                            <button type="submit"  class="btn btn-secondary"><i class="fas fa-check-circle"></i></button>
                         </form>
                     </div>
 

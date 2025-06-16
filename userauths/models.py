@@ -3,11 +3,6 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 
 
-USER_TYPE = (
-    ("Vendor", "Vendor"),
-    ("Customer", "Customer"),
-)
-
 class User(AbstractUser):
     username = models.CharField(max_length=255, null=True, blank=True)
     email = models.EmailField(unique=True)
@@ -30,7 +25,6 @@ class Profile(models.Model):
     image = models.ImageField(upload_to='accounts/users', default='default/default-user.jpg', null=True, blank=True)
     full_name = models.CharField(max_length=255, null=True, blank=True)
     mobile = models.CharField(max_length=255, null=True, blank=True)
-    user_type = models.CharField(max_length=255, choices=USER_TYPE, null=True, blank=True, default=None)
 
     def __str__(self):
         return self.user.username
@@ -53,4 +47,3 @@ class ContactMessage(models.Model):
     
     class Meta:
         ordering = ['-date']
-    

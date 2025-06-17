@@ -108,11 +108,12 @@
                                     {% endfor %}
 
                                     <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
-                                        <div class="card-wrap border rounded mb-4">
-                                            <button type="button" class="btn btn-primary w-100 mb-2" id="show-new-address-form">
+                                        <div class="card-wrap border rounded mb-4 px-3 py-2">
+                                            <input id="address_new" value="new" class="radio-custom" name="address" type="radio">
+                                            <label for="address_new" class="radio-custom-label">
                                                 <i class="fas fa-plus"></i> Добави нов адрес
-                                            </button>
-                                            <div id="new-address-form" style="display: none">
+                                            </label>
+                                            <div id="new-address-form" style="display: none; width: 100%;">
                                                 {% include "partials/_address_form.html" %}
                                                 <button type="button" class="btn btn-primary w-100" id="save-address-btn">Запази адрес</button>
                                             </div>
@@ -120,7 +121,6 @@
                                     </div>
                                 </div>
                             {% else %}
-                                <p>Няма адрес.</p>
                                 <div id="new-address-form">
                                     {% include "partials/_address_form.html" %}
                                     <button type="button" class="btn btn-primary w-100" id="save-address-btn">Запази адрес</button>

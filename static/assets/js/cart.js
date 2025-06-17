@@ -1,13 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const showBtn = document.getElementById('show-new-address-form');
     const formDiv = document.getElementById('new-address-form');
-
-    if (showBtn && formDiv) {
-        showBtn.addEventListener('click', function() {
-            formDiv.style.display = 'block';
-            showBtn.style.display = 'none';
-        });
-    }
 
     document.querySelectorAll('#save-address-btn').forEach(function(saveBtn) {
         saveBtn.addEventListener('click', function() {
@@ -55,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('address-list-row').appendChild(newCard);
 
                         parent.style.display = 'none';
-                        if (showBtn) showBtn.style.display = 'block';
                     } else {
                         alert('Адресът е запазен. Можете да продължите с поръчката!');
                     }
@@ -79,4 +70,33 @@ document.querySelector('form').addEventListener('submit', function(e) {
             input.disabled = false;
         });
     }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    function toggleNewAddressFormByRadio() {
+        var newAddressRadio = document.getElementById('address_new');
+        var newAddressForm = document.getElementById('new-address-form');
+        if (!newAddressRadio || !newAddressForm) return;
+        var newAddressFields = newAddressForm.querySelectorAll('input, select');
+
+        if (newAddressRadio.checked) {
+            newAddressForm.style.display = "block";
+            newAddressFields.forEach(function(field) {
+                field.required = true;
+            });
+        } else {
+            newAddressForm.style.display = "none";
+            newAddressFields.forEach(function(field) {
+                field.required = false;
+            });
+        }
+    }
+
+    // Attach event listeners to all address radios
+    var addressRadios = document.querySelectorAll('input[name="address"]');
+    addressRadios.forEach(function(radio) {
+        radio.addEventListener('change', toggleNewAddressFormByRadio);
+    });
+    // Run on load to set initial state
+    toggleNewAddressFormByRadio();
 });

@@ -68,11 +68,12 @@ class Category(models.Model):
         null=True
     )
     image = models.FileField(upload_to="images", default="category.jpg", null=True, blank=True)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField()
 
     class Meta:
         verbose_name_plural = "Categories"
         ordering = ['sku']
+        unique_together = ('parent', 'slug')
 
     def __str__(self):
         return self.sku

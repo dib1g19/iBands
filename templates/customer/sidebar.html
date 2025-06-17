@@ -20,7 +20,7 @@
                     <a href="{% url 'customer:orders' %}" class="{% if '/customer/orders/' in request.path or '/customer/order_detail/' in request.path %} active{% endif %}"><i class="fas fa-shopping-basket me-2"></i>Поръчки</a>
                 </li>
                 <li>
-                    <a href="{% url 'customer:wishlist' %}" class="{% if '/customer/wishlist/' in request.path %} active{% endif %}"><i class="fas fa-heart me-2"></i>Желани продукти</a>
+                    <a href="{% url 'customer:wishlist' %}" class="{% if '/customer/wishlist/' in request.path %} active{% endif %}"><i class="fas fa-heart me-2"></i>Любими продукти</a>
                 </li>
                 <li>
                     <a href="{% url 'customer:addresses' %}" class="{% if '/customer/addresses/' in request.path or '/customer/address_detail/' in request.path or '/customer/address_create/' in request.path %} active {% endif %}"><i class="fas fa-map-marker me-2"></i>Адреси</a>

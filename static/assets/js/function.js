@@ -333,24 +333,14 @@ $(document).ready(function () {
 
         $.ajax({
             url: `/customer/add_to_wishlist/${product_id}/`,
-            beforeSend: function () {
-                button.html("<i class='fas fa-spinner fa-spin text-gray'></i>");
-            },
             success: function (response) {
-                if (response.message === "User is not logged in") {
-                    button.html("<i class='fas fa-heart fs-5 text-gray'></i>");
-
-                    Toast.fire({
-                        icon: "warning",
-                        title: response.message,
-                    });
-                } else {
+                if (response.status === "success") {
                     button.html("<i class='fas fa-heart fs-5 text-danger'></i>");
-                    Toast.fire({
-                        icon: "success",
-                        title: response.message,
-                    });
                 }
+                Toast.fire({
+                    icon: response.status,
+                    title: response.message,
+                });
             },
         });
     });

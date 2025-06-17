@@ -7,7 +7,6 @@ from django.urls import reverse
 from userauths import models as userauths_models
 from userauths import forms as userauths_forms
 
-
 def register_view(request):
     if request.user.is_authenticated:
         messages.warning(request, f"Вече сте влезли в профила си")
@@ -46,7 +45,7 @@ def register_view(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        messages.warning(request, "You are already logged in")
+        messages.warning(request, "Вече сте в профила си")
         return redirect('store:index')
     
     if request.method == 'POST':
@@ -58,10 +57,9 @@ def login_view(request):
 
             if captcha_verified:
                 try:
-                    user_instance = userauths_models.User.objects.get(email=email, is_active=True)
                     user_authenticate = authenticate(request, email=email, password=password)
 
-                    if user_instance is not None:
+                    if user_authenticate is not None:
                         login(request, user_authenticate)
                         messages.success(request, "Успешно влязохте в профила си.")
                         next_url = request.GET.get("next", 'store:index')
@@ -77,14 +75,12 @@ def login_view(request):
                             return redirect('store:index')
 
                         return redirect(next_url)
-
                     else:
-                        messages.error(request, 'Username or password does not exist')
+                        messages.error(request, "Грешен имейл или парола")
                 except userauths_models.User.DoesNotExist:
-                    messages.error(request, 'User does not exist')
+                    messages.error(request, 'Потребителят не съществува')
             else:
-                messages.error(request, 'Captcha verification failed. Please try again.')
-
+                messages.error(request, 'Верификацията чрез капча не бе успешна. Моля, опитайте отново.')
     else:
         form = userauths_forms.LoginForm()  
     

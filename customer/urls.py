@@ -4,6 +4,7 @@ from customer import views
 app_name = "customer"
 
 urlpatterns = [
+    path('quick_add_address/', views.quick_add_address, name='quick_add_address'),
     path("dashboard/", views.dashboard, name="dashboard"),
     path("orders/", views.orders, name="orders"),
     path("order_detail/<order_id>/", views.order_detail, name="order_detail"),

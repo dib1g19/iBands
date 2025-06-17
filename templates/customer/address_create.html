@@ -19,52 +19,7 @@
                         <div class="row align-items-center">
                             <form class="row m-0"  method="POST">
                                 {% csrf_token %}
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                                    <div class="form-group">
-                                        <label class="small text-dark ft-medium">Пълно име</label>
-                                        <input type="text" name="full_name" class="form-control rounded" />
-                                    </div>
-                                </div>
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                                    <div class="form-group">
-                                        <label class="small text-dark ft-medium">Имейл</label>
-                                        <input type="text" name="email" class="form-control rounded" />
-                                    </div>
-                                </div>
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                                    <div class="form-group">
-                                        <label class="small text-dark ft-medium">Мобилен телефон</label>
-                                        <input type="text" name="mobile" class="form-control rounded" />
-                                    </div>
-                                </div>
-
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                                    <div class="form-group">
-                                        <label class="small text-dark ft-medium">Метод на доставка</label>
-                                        <select name="delivery_method" class="form-control rounded">
-                                            <option value="">Изберете метод на доставка</option>
-                                            <option value="econt">Еконт</option>
-                                            <option value="econt_box">Еконтомат</option>
-                                            <option value="speedy">Спиди</option>
-                                            <option value="speedy_box">Спидомат</option>
-                                            <option value="personal">Личен адрес</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                                    <div class="form-group">
-                                        <label class="small text-dark ft-medium">Адрес</label>
-                                        <input type="text" name="address" class="form-control rounded" />
-                                    </div>
-                                </div>
-
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
-                                    <div class="form-group">
-                                        <label class="small text-dark ft-medium">Град</label>
-                                        <input type="text" name="city" class="form-control rounded" />
-                                    </div>
-                                </div>
+                                {% include "partials/_address_form.html" %}
 
                                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                                     <div class="form-group">

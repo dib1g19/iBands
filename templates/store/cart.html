@@ -80,41 +80,58 @@
 
                         <div class="p-3">
                         <h4 class="fw-bold mb-3">Детайли за доставка</h4>
-                            {% if request.user.is_authenticated %}
-                                
-                                {% if addresses %}
-                                    <div class="row">
-                                        {% for address in addresses %}
-                                            <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
-                                                <div class="card-wrap border rounded mb-4">
-                                                    <div class="card-wrap-header px-3 py-2 br-bottom d-flex align-items-center justify-content-between">
-                                                        <div class="card-heafder-flex">
-                                                            <h4 class="fs-md ft-bold mb-1">Адрес за доставка <a href="{% url 'customer:address_detail' address.id %}"><i class="fas fa-edit"></i></a></h4>
-                                                        </div>
+                        {% if request.user.is_authenticated %}
+                            {% if addresses %}
+                                <div class="row" id="address-list-row">
+                                    {% for address in addresses %}
+                                        <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
+                                            <div class="card-wrap border rounded mb-4">
+                                                <div class="card-wrap-header px-3 py-2 br-bottom d-flex align-items-center justify-content-between">
+                                                    <div class="card-heafder-flex">
+                                                        <h4 class="fs-md ft-bold mb-1">Адрес за доставка <a href="{% url 'customer:address_detail' address.id %}"><i class="fas fa-edit"></i></a></h4>
                                                     </div>
-                                                    <div class="card-wrap-body px-3 py-3">
-                                                        <p class="mb-0"><span class="fw-bold">Пълно Име: </span>{{address.full_name}}</p>
-                                                        <p class="mb-0"><span class="fw-bold">Имейл: </span>{{address.email}}</p>
-                                                        <p class="mb-0"><span class="fw-bold">Телефон: </span>{{address.mobile}}</p>
-                                                        <p class="mb-0"><span class="fw-bold">Метод на доставка: </span>{{address.get_delivery_method_display}}</p>
-                                                        <p class="mb-0"><span class="fw-bold">Град: </span> {{address.city}}</p>
-                                                        <p class="mb-3"><span class="fw-bold">Адрес: </span>{{address.address}}</p>
-                                                        <div class="mt-3">
-                                                            <input id="address{{address.id}}" value="{{address.id}}" class="radio-custom" name="address" type="radio" {% if forloop.first %}checked{% endif %}>
-                                                            <label for="address{{address.id}}" class="radio-custom-label">Избери адрес</label>
-                                                        </div>
+                                                </div>
+                                                <div class="card-wrap-body px-3 py-3">
+                                                    <p class="mb-0"><span class="fw-bold">Пълно Име: </span>{{address.full_name}}</p>
+                                                    <p class="mb-0"><span class="fw-bold">Имейл: </span>{{address.email}}</p>
+                                                    <p class="mb-0"><span class="fw-bold">Телефон: </span>{{address.mobile}}</p>
+                                                    <p class="mb-0"><span class="fw-bold">Метод на доставка: </span>{{address.get_delivery_method_display}}</p>
+                                                    <p class="mb-0"><span class="fw-bold">Град: </span> {{address.city}}</p>
+                                                    <p class="mb-3"><span class="fw-bold">Адрес: </span>{{address.address}}</p>
+                                                    <div class="mt-3">
+                                                        <input id="address{{address.id}}" value="{{address.id}}" class="radio-custom" name="address" type="radio" {% if forloop.first %}checked{% endif %}>
+                                                        <label for="address{{address.id}}" class="radio-custom-label">Избери адрес</label>
                                                     </div>
                                                 </div>
                                             </div>
-                                        {% endfor %}
+                                        </div>
+                                    {% endfor %}
+
+                                    <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
+                                        <div class="card-wrap border rounded mb-4">
+                                            <button type="button" class="btn btn-outline-primary w-100 mb-2" id="show-new-address-form">
+                                                <i class="fas fa-plus"></i> Добави нов адрес
+                                            </button>
+                                            <div id="new-address-form" style="display: none">
+                                                {% include "partials/_address_form.html" %}
+                                                <button type="button" class="btn btn-primary w-100" id="save-address-btn">Запази адрес</button>
+                                            </div>
+                                        </div>
                                     </div>
-                                {% else %}
-                                    <p>Няма адрес, <a href="{% url 'customer:address_create' %}" class="text-primary">създайте нов адрес.</a></p>
-                                {% endif %}
-                                    
+                                </div>
                             {% else %}
-                            <p><a href="{% url 'userauths:sign-in' %}?next={{request.path}}" class="text-primary">Влез </a> или <a class="text-primary" href="{% url 'userauths:sign-up' %}?next={{request.path}}">създай акаунт </a> за да продължиш</p>
+                                <p>Няма адрес.</p>
+                                <div id="new-address-form">
+                                    {% include "partials/_address_form.html" %}
+                                    <button type="button" class="btn btn-primary w-100" id="save-address-btn">Запази адрес</button>
+                                </div>
                             {% endif %}
+                        {% else %}
+                            <div id="new-address-form">
+                                {% include "partials/_address_form.html" %}
+                                <button type="button" class="btn btn-primary w-100" id="save-address-btn">Запази адрес</button>
+                            </div>
+                        {% endif %}
                         </div>
                     </div>
                     <div class="col-lg-3">
@@ -136,9 +153,12 @@
                             {% if request.user.is_authenticated %}
                                 <button type="submit" class="btn btn-primary rounded w-100">Продължи към поръчка <i class="fas fa-arrow-right ms-1"></i></button>
                             {% else %}
-                                <div>
-                                    <a href="{% url 'userauths:sign-in' %}?next={{request.path}}" class="btn btn-primary rounded w-100 mb-3">Влезте, за да продължите <i class="fas fa-sign-in-alt ms-1"></i></a>
-                                    <a href="{% url 'userauths:sign-up' %}?next={{request.path}}" class="rounded w-100 mt-3">Създайте профил <i class="fas fa-user-plus ms-1"></i></a>
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'userauths:sign-in' %}?next={{request.path}}" class="btn btn-outline-primary rounded w-100 mb-2">Влез</a>
+                                    <a href="{% url 'userauths:sign-up' %}?next={{request.path}}" class="btn btn-outline-secondary rounded w-100 mb-2">Създай профил</a>
+                                    <small class="text-muted text-center mt-2">Регистрирай се, за да следиш поръчките си, да пазаруваш по-бързо и да получаваш ексклузивни намаления!</small>
+                                    <button type="submit" class="btn btn-primary rounded w-100">Поръчай като гост</button>
+                                    <small class="text-muted text-center mt-2">Поръчката като гост не изисква регистрация.</small>
                                 </div>
                             {% endif %}
                         </div>
@@ -147,5 +167,8 @@
             </form>
         </div>
     </section>
-
 {% endblock content %}
+
+{% block extra_scripts %}
+  <script src="{% static 'assets/js/cart.js' %}"></script>
+{% endblock %}

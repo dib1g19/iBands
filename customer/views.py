@@ -10,6 +10,38 @@ from plugin.paginate_queryset import paginate_queryset
 from store import models as store_models
 from customer import models as customer_models
 
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+
+@csrf_exempt
+def quick_add_address(request):
+    if request.method == "POST":
+        full_name = request.POST.get("full_name")
+        mobile = request.POST.get("mobile")
+        email = request.POST.get("email")
+        delivery_method = request.POST.get("delivery_method")
+        city = request.POST.get("city")
+        address_str = request.POST.get("address")
+
+        user = request.user if request.user.is_authenticated else None
+        address = customer_models.Address.objects.create(
+            user=user,
+            full_name=full_name,
+            mobile=mobile,
+            email=email,
+            delivery_method=delivery_method,
+            city=city,
+            address=address_str
+        )
+
+        # For guests: store the address ID in session for the current checkout
+        if not user:
+            request.session['guest_address_id'] = address.id
+
+        return JsonResponse({'success': True, 'address_id': address.id})
+
+    return JsonResponse({'success': False}, status=400)
+
 @login_required
 def dashboard(request):
     orders = store_models.Order.objects.filter(customer=request.user)

@@ -1,20 +1,12 @@
 {% for category in categories %}
     <li>
-        <a href="{% if category.parent %}
-                    {% url 'store:category' category.parent.slug category.slug %}
-                 {% else %}
-                    {% url 'store:category_root' category.slug %}
-                 {% endif %}">
+        <a href="{% url 'store:category' category.get_full_path %}">
             {{ category.title }}
         </a>
         {% if category.subcategories.all %}
             <ul class="nav-dropdown nav-submenu">
                 <li>
-                    <a href="{% if category.parent %}
-                                {% url 'store:category_all_sub' category.parent.slug category.slug %}
-                             {% else %}
-                                {% url 'store:category_all_sub_root' category.slug %}
-                             {% endif %}">
+                    <a href="{% url 'store:category' category.get_full_path %}?filter=subcategories">
                         Всички {{ category.title }}
                     </a>
                 </li>

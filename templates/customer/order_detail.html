@@ -23,13 +23,9 @@
                                         <div class="col-xl-6 col-lg-5 col-md-5 col-12 ">
                                             <div class="cart_single d-flex align-items-center mfliud-bot gap-3">
                                                 <div class="cart_selected_single_thumb">
-                                                    {% if item.product.category.parent %}
-                                                        <a href="{% url 'store:product_detail' item.product.category.parent.slug item.product.category.slug item.product.slug %}">
-                                                    {% else %}
-                                                        <a href="{% url 'store:product_detail_root' item.product.category.slug item.product.slug %}">
-                                                    {% endif %}
-                                                            <img src="{{item.product.image.url}}" width="100" class="img-fluid rounded" alt="" />
-                                                        </a>
+                                                    <a href="{% url 'store:product_detail' item.product.category.get_full_path item.product.slug %}">
+                                                        <img src="{{item.product.image.url}}" width="100" class="img-fluid rounded" alt="" />
+                                                    </a>
                                                 </div>
                                                 <div class="cart_single_caption pl-3">
                                                     <h5 class="mb-1">

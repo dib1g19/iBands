@@ -92,65 +92,52 @@ def shop(request):
     context['is_shop'] = True
     return render(request, "store/shop.html", context)
 
-def category(request, slug, parent_slug=None):
-    if parent_slug:
-        parent = get_object_or_404(store_models.Category, slug=parent_slug)
-        category = get_object_or_404(store_models.Category, slug=slug, parent=parent)
-    else:
-        parent = None
-        category = get_object_or_404(store_models.Category, slug=slug, parent=None)
+def category(request, category_path):
+    from .models import Category, Product
+    slugs = category_path.strip('/').split('/')
+    category = None
+    parent = None
+    for slug in slugs:
+        category = get_object_or_404(Category, slug=slug, parent=parent)
+        parent = category
 
     show_sub_only = request.GET.get("filter") == "subcategories"
-
-    child_categories_qs = store_models.Category.objects.filter(parent=category)
+    child_categories_qs = Category.objects.filter(parent=category)
     child_categories = list(child_categories_qs)
-
-    # Add pseudo "All" subcategory
     all_sub = category
     all_sub.is_all = True
     subcategories_with_all = [all_sub] + child_categories
 
     if show_sub_only:
-        # Only products in subcategories (not parent)
         subcat_ids = [c.id for c in child_categories]
-        products_list = store_models.Product.objects.filter(status="Published", category_id__in=subcat_ids)
+        products_list = Product.objects.filter(status="Published", category_id__in=subcat_ids)
     else:
-        # Only products in this parent category (not in children)
-        products_list = store_models.Product.objects.filter(status="Published", category=category)
+        products_list = Product.objects.filter(status="Published", category=category)
 
     query = request.GET.get("q")
     if query:
         products_list = products_list.filter(name__icontains=query)
 
+    from plugin.paginate_queryset import paginate_queryset
     products = paginate_queryset(request, products_list, 12)
 
-    ancestors = get_category_ancestors(category) if category else []
-
+    # Build breadcrumbs (all ancestors)
+    ancestors = []
+    cat = category
+    while cat.parent:
+        ancestors.append(cat.parent)
+        cat = cat.parent
+    ancestors = ancestors[::-1]
+    from django.urls import reverse
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
     ]
     for ancestor in ancestors:
-        if ancestor.parent:
-            breadcrumbs.append({
-                "label": ancestor.title,
-                "url": reverse("store:category", args=[ancestor.parent.slug, ancestor.slug])
-            })
-        else:
-            breadcrumbs.append({
-                "label": ancestor.title,
-                "url": reverse("store:category_root", args=[ancestor.slug])
-            })
-
-    if category.parent:
         breadcrumbs.append({
-            "label": category.title,
-            "url": reverse("store:category", args=[category.parent.slug, category.slug])
+            "label": ancestor.title,
+            "url": reverse("store:category", args=[ancestor.get_full_path()])
         })
-    else:
-        breadcrumbs.append({
-            "label": category.title,
-            "url": reverse("store:category_root", args=[category.slug])
-        })
+    breadcrumbs.append({"label": category.title, "url": ""})
 
     context = {
         "products": products,
@@ -185,7 +172,7 @@ def category_all_sub_root(request, slug):
 
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": category.title, "url": reverse("store:category_root", args=[category.slug])},
+        {"label": category.title, "url": reverse("store:category", args=[category.get_full_path()])},
         {"label": f"Всички {category.title}", "url": ""},
     ]
     context = {
@@ -215,26 +202,14 @@ def category_all_sub(request, parent_slug, slug):
         {"label": "Начална Страница", "url": reverse("store:index")},
     ]
     for ancestor in ancestors:
-        if ancestor.parent:
-            breadcrumbs.append({
-                "label": ancestor.title,
-                "url": reverse("store:category", args=[ancestor.parent.slug, ancestor.slug])
-            })
-        else:
-            breadcrumbs.append({
-                "label": ancestor.title,
-                "url": reverse("store:category_root", args=[ancestor.slug])
-            })
-    if category.parent:
         breadcrumbs.append({
-            "label": category.title,
-            "url": reverse("store:category", args=[category.parent.slug, category.slug])
+            "label": ancestor.title,
+            "url": reverse("store:category", args=[ancestor.get_full_path()])
         })
-    else:
-        breadcrumbs.append({
-            "label": category.title,
-            "url": reverse("store:category_root", args=[category.slug])
-        })
+    breadcrumbs.append({
+        "label": category.title,
+        "url": reverse("store:category", args=[category.get_full_path()])
+    })
     breadcrumbs.append({
         "label": f"Всички {category.title}",
         "url": "",
@@ -252,58 +227,49 @@ def category_all_sub(request, parent_slug, slug):
     context['querystring'] = querystring
     return render(request, "store/category.html", context)
 
-def product_detail(request, category_slug, product_slug, parent_slug=None):
-    if parent_slug:
-        category = get_object_or_404(store_models.Category, slug=category_slug, parent__slug=parent_slug)
-    else:
-        category = get_object_or_404(store_models.Category, slug=category_slug, parent=None)
+def product_detail(request, category_path, product_slug):
+    from .models import Category, Product
 
-    product = get_object_or_404(
-        store_models.Product,
-        slug=product_slug,
-        status="Published",
-        category=category
-    )
+    # Traverse the category path to resolve the correct category
+    slugs = category_path.strip('/').split('/')
+    category = None
+    parent = None
+    for slug in slugs:
+        category = get_object_or_404(Category, slug=slug, parent=parent)
+        parent = category
 
-    has_length_variant = product.variants.filter(variant_type="length").exists()
-    product_stock_range = range(1, product.stock + 1)
-    related_products_list = store_models.Product.objects.filter(
-        category=product.category
-    ).exclude(id=product.id)
+    # Find the product within this category
+    product = get_object_or_404(Product, slug=product_slug, category=category, status="Published")
+
+    # Prepare related products (from the same category, exclude self)
+    related_products_list = Product.objects.filter(category=category).exclude(id=product.id)
+    from plugin.paginate_queryset import paginate_queryset
     related_products = paginate_queryset(request, related_products_list, 12)
 
-    ancestors = get_category_ancestors(category) if category else []
+    # Stock/variant details
+    has_length_variant = product.variants.filter(variant_type="length").exists()
+    product_stock_range = range(1, product.stock + 1)
 
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-    ]
+    # Breadcrumbs (use full path)
+    ancestors = []
+    cat = category
+    while cat.parent:
+        ancestors.append(cat.parent)
+        cat = cat.parent
+    ancestors = ancestors[::-1]
 
+    from django.urls import reverse
+    breadcrumbs = [{"label": "Начална Страница", "url": reverse("store:index")}]
     for ancestor in ancestors:
-        if ancestor.parent:
-            breadcrumbs.append({
-                "label": ancestor.title,
-                "url": reverse("store:category", args=[ancestor.parent.slug, ancestor.slug])
-            })
-        else:
-            breadcrumbs.append({
-                "label": ancestor.title,
-                "url": reverse("store:category_root", args=[ancestor.slug])
-            })
-
-    if category.parent:
         breadcrumbs.append({
-            "label": category.title,
-            "url": reverse("store:category", args=[category.parent.slug, category.slug])
-        })
-    else:
-        breadcrumbs.append({
-            "label": category.title,
-            "url": reverse("store:category_root", args=[category.slug])
+            "label": ancestor.title,
+            "url": reverse("store:category", args=[ancestor.get_full_path()])
         })
     breadcrumbs.append({
-        "label": product.name,
-        "url": "",
+        "label": category.title,
+        "url": reverse("store:category", args=[category.get_full_path()])
     })
+    breadcrumbs.append({"label": product.name, "url": ""})
 
     context = {
         "product": product,

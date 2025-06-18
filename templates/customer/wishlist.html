@@ -21,15 +21,9 @@
                                 <div class="product_grid card b-0  rounded-3 shadow m-2 p-2">
                                     <div class="card-body p-0">
                                         <div class="shop_thumb position-relative">
-                                            {% if w.product.category.parent %}
-                                                <a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail' w.product.category.parent.slug w.product.category.slug w.product.slug %}">
-                                                    <img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{w.product.image.url}}" alt="..." />
-                                                </a>
-                                            {% else %}
-                                                <a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail_root' w.product.category.slug w.product.slug %}">
-                                                    <img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{w.product.image.url}}" alt="..." />
-                                                </a>
-                                            {% endif %}
+                                            <a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail' w.product.category.get_full_path w.product.slug %}">
+                                                <img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{w.product.image.url}}" alt="..." />
+                                            </a>
                                         </div>
                                     </div>
                                     <div class="card-footer b-0 p-0 pt-2 bg-white d-flex align-items-start justify-content-between">
@@ -37,15 +31,9 @@
                                             <div class="text-left">
                                                 <div class="elso_titl">
                                                     <span class="small">
-                                                        {% if w.product.category.parent %}
-                                                            <a href="{% url 'store:category' w.product.category.parent.slug w.product.category.slug %}">
-                                                                {{ w.product.category.title }}
-                                                            </a>
-                                                        {% else %}
-                                                            <a href="{% url 'store:category_root' w.product.category.slug %}">
-                                                                {{ w.product.category.title }}
-                                                            </a>
-                                                        {% endif %}
+                                                        <a href="{% url 'store:category' w.product.category.get_full_path %}">
+                                                            {{ w.product.category.title }}
+                                                        </a>
                                                     </span>
                                                 </div>
                                                 <h5 class="mb-1">

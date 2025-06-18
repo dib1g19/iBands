@@ -31,7 +31,7 @@
                     <div class="cats_side_wrap text-center mx-auto mb-3">
                         <div class="sl_cat_01">
                             <div class="d-inline-flex align-items-center justify-content-center p-4 circle mb-2 border">
-                                <a href="{% url 'store:category_root' c.slug %}" class="d-block">
+                                <a href="{% url 'store:category' c.get_full_path %}" class="d-block">
                                     {% if c.image %}
                                     <img src="{{c.image.url}}" class="img-fluid" width="80" alt="" />
                                     {% else %}
@@ -41,7 +41,7 @@
                             </div>
                         </div>
                         <div class="sl_cat_02" style="min-height: 40px;">
-                            <h6 class="m-0 ft-medium fs-sm"><a href="{% url 'store:category_root' c.slug %}">{{c.title}}</a></h6>
+                            <h6 class="m-0 ft-medium fs-sm"><a href="{% url 'store:category' c.get_full_path %}">{{c.title}}</a></h6>
                         </div>
                     </div>
                 </div>
@@ -68,15 +68,9 @@
                             <!-- Product Image -->
                             <div class="card-body p-0">
                                 <div class="shop_thumb position-relative">
-                                    {% if p.category.parent %}
-                                        <a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail' p.category.parent.slug p.category.slug p.slug %}">
-                                            <img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{p.image.url}}" alt="..." />
-                                        </a>
-                                    {% else %}
-                                        <a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail_root' p.category.slug p.slug %}">
-                                            <img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{p.image.url}}" alt="..." />
-                                        </a>
-                                    {% endif %}
+                                    <a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail' p.category.get_full_path p.slug %}">
+                                        <img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{p.image.url}}" alt="..." />
+                                    </a>
                                 </div>
                             </div>
                             <!-- Product Info -->
@@ -86,11 +80,7 @@
                                         <span class="small">{{p.category.title}}</span>
                                     </div>
                                     <h5 class="fs-md mb-0">
-                                        {% if p.category.parent %}
-                                            <a href="{% url 'store:product_detail' p.category.parent.slug p.category.slug p.slug %}">{{p.name}}</a>
-                                        {% else %}
-                                            <a href="{% url 'store:product_detail_root' p.category.slug p.slug %}">{{p.name}}</a>
-                                        {% endif %}
+                                        <a href="{% url 'store:product_detail' p.category.get_full_path p.slug %}">{{p.name}}</a>
                                     </h5>
                                     <div class="d-flex align-items-center justify-content-start gap-2">
                                         <!-- Price -->

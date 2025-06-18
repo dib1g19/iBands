@@ -5,11 +5,9 @@ from django.db import models
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.urls import reverse
-
 from plugin.paginate_queryset import paginate_queryset
 from store import models as store_models
 from customer import models as customer_models
-
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 
@@ -110,6 +108,18 @@ def wishlist(request):
 
     return render(request, "customer/wishlist.html", context)
 
+def toggle_wishlist(request, id):
+    if request.user.is_authenticated:
+        product = store_models.Product.objects.get(id=id)
+        wishlist_item, created = customer_models.Wishlist.objects.get_or_create(product=product, user=request.user)
+        if not created:
+            wishlist_item.delete()
+            return JsonResponse({"status": "removed", "message": "Продуктът е премахнат от любими"})
+        else:
+            return JsonResponse({"status": "added", "message": "Продуктът е добавен в любими"})
+    else:
+        return JsonResponse({"status": "warning", "message": "Трябва да влезнете в профила си"})
+
 @login_required
 def remove_from_wishlist(request, id):
     wishlist = customer_models.Wishlist.objects.get(user=request.user, id=id)
@@ -117,16 +127,6 @@ def remove_from_wishlist(request, id):
     
     messages.success(request, "Продуктът е премахнат от любими")
     return redirect("customer:wishlist")
-
-
-def add_to_wishlist(request, id):
-    if request.user.is_authenticated:
-        product = store_models.Product.objects.get(id=id)
-        customer_models.Wishlist.objects.create(product=product, user=request.user)
-        wishlist = customer_models.Wishlist.objects.filter(user=request.user)
-        return JsonResponse({"message": "Продуктът е добавен в любими", "wishlist_count": wishlist.count(), "status": "success"})
-    else:
-        return JsonResponse({"message": "Трябва да влезнете в профила си", "wishlist_count": 0, "status": "warning"})
 
 @login_required
 def notis(request):

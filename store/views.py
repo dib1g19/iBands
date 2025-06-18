@@ -17,6 +17,7 @@ from store import models as store_models
 from customer import models as customer_models
 from userauths import models as userauths_models
 from plugin.exchange_rate import convert_usd_to_inr, convert_usd_to_kobo, convert_usd_to_ngn, get_usd_to_ngn_rate
+from customer.utils import get_user_wishlist_products
 
 def get_category_ancestors(category):
     ancestors = []
@@ -45,6 +46,7 @@ def index(request):
     context = {
         "products": products,
         "categories": categories,
+        "user_wishlist_products": get_user_wishlist_products(request),
     }
     return render(request, "store/index.html", context)
 
@@ -87,6 +89,7 @@ def shop(request):
         'item_display': item_display,
         'ratings': ratings,
         'prices': prices,
+        "user_wishlist_products": get_user_wishlist_products(request),
         "breadcrumbs": breadcrumbs,
     }
     context['is_shop'] = True
@@ -143,6 +146,7 @@ def category(request, category_path):
         "products": products,
         "category": category,
         "subcategories": subcategories_with_all,
+        "user_wishlist_products": get_user_wishlist_products(request),
         "breadcrumbs": breadcrumbs,
     }
     querydict = request.GET.copy()
@@ -275,6 +279,7 @@ def product_detail(request, category_path, product_slug):
         "product": product,
         "product_stock_range": product_stock_range,
         "products": related_products,
+        "user_wishlist_products": get_user_wishlist_products(request),
         "breadcrumbs": breadcrumbs,
         "has_length_variant": has_length_variant,
     }
@@ -924,8 +929,10 @@ def filter_products(request):
     except EmptyPage:
         products_page = paginator.page(paginator.num_pages)
 
-    # Render the filtered products as HTML using render_to_string
-    html = render_to_string('partials/_store.html', {'products': products_page})
+    html = render_to_string('partials/_product_list.html', {
+        'products': products_page,
+        'user_wishlist_products': get_user_wishlist_products(request),
+    })
     pagination_html = render_to_string('partials/_pagination.html', {'products': products_page, 'is_shop': True})
 
     return JsonResponse({

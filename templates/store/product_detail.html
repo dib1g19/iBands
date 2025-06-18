@@ -194,44 +194,7 @@
                 </div>
                 <!-- Product List -->
                 <div class="row align-items-center rows-products">
-                    {% for p in products %}
-                        <div class="col-6 col-md-4 col-lg-3">
-                            <div class="product_grid card b-0 rounded-3 shadow m-2 p-2">
-                                <!-- Product Image -->
-                                <div class="card-body p-0">
-                                    <div class="shop_thumb position-relative">
-                                        <a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail' p.category.get_full_path p.slug %}">
-                                            <img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{p.image.url}}" alt="..." />
-                                        </a>
-                                    </div>
-                                </div>
-                                <!-- Product Info -->
-                                <div class="card-footer b-0 p-0 pt-2 bg-white d-flex align-items-start justify-content-between">
-                                    <div class="text-left">
-                                        <div class="elso_titl">
-                                            <span class="small">{{p.category.title}}</span>
-                                        </div>
-                                        <h5 class="fs-md mb-0">
-                                            <a href="{% url 'store:product_detail' p.category.get_full_path p.slug %}">{{p.name}}</a>
-                                        </h5>
-                                        <div class="d-flex align-items-center justify-content-start gap-2">
-                                            <!-- Price -->
-                                            <div class="elis_rty mb-0">
-                                                {% if p.regular_price %}
-                                                    <span class="ft-medium text-muted line-through fs-sm me-2">{{p.regular_price}} лв.</span>
-                                                {% endif %}
-                                                <span class="ft-bold text-dark fs-sm">{{p.price}} лв.</span>
-                                            </div>
-                                            <!-- Wishlist Icon -->
-                                            <a href="#" class="add_to_wishlist text-center" data-product_id="{{p.id}}">
-                                                <i class="fas fa-heart fs-6 text-dark"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
+                    {% include 'partials/_product_list.html' %}
                 </div>
 
                 {% include 'partials/_pagination.html' %}

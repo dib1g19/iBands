@@ -2,16 +2,14 @@
 	<!-- Single Product Card -->
 	<div class="col-6 col-md-4 col-lg-3">
 		<div class="product_grid card b-0 rounded-3 shadow m-2 p-2">
-			
 			<!-- Product Image -->
 			<div class="card-body p-0">
 				<div class="shop_thumb position-relative">
 					<a class="card-img-top d-block overflow-hidden" href="{% url 'store:product_detail' p.category.get_full_path p.slug %}">
-						<img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{p.image.url}}" alt="{{p.name}}" />
+						<img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{p.image.url}}" alt="..." />
 					</a>
 				</div>
 			</div>
-
 			<!-- Product Info -->
 			<div class="card-footer b-0 p-0 pt-2 bg-white d-flex align-items-start justify-content-between">
 				<div class="text-left">
@@ -30,13 +28,18 @@
 							<span class="ft-bold text-dark fs-sm">{{p.price}} лв.</span>
 						</div>
 						<!-- Wishlist Icon -->
-						<a href="#" class="add_to_wishlist text-center" data-product_id="{{p.id}}">
-							<i class="fas fa-heart fs-6 text-dark"></i>
-						</a>
+						{% if request.user.is_authenticated and p.id in user_wishlist_products %}
+							<a href="#" class="add_to_wishlist text-center" data-product_id="{{p.id}}">
+								<i class="fas fa-heart fs-4 text-danger"></i>
+							</a>
+						{% else %}
+							<a href="#" class="add_to_wishlist text-center" data-product_id="{{p.id}}">
+								<i class="far fa-heart fs-5 text-dark"></i>
+							</a>
+						{% endif %}
 					</div>
 				</div>
 			</div>
-
 		</div>
 	</div>
 {% endfor %}

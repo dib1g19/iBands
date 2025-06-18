@@ -329,16 +329,17 @@ $(document).ready(function () {
     $(document).on("click", ".add_to_wishlist", function () {
         const button = $(this);
         const product_id = button.attr("data-product_id");
-        console.log(product_id);
 
         $.ajax({
-            url: `/customer/add_to_wishlist/${product_id}/`,
+            url: `/customer/toggle_wishlist/${product_id}/`,
             success: function (response) {
-                if (response.status === "success") {
-                    button.html("<i class='fas fa-heart fs-5 text-danger'></i>");
+                if (response.status === "added") {
+                    button.html("<i class='fas fa-heart fs-4 text-danger'></i>");
+                } else if (response.status === "removed") {
+                    button.html("<i class='far fa-heart fs-5 text-dark'></i>");
                 }
                 Toast.fire({
-                    icon: response.status,
+                    icon: response.status === "added" ? "success" : (response.status === "removed" ? "info" : "warning"),
                     title: response.message,
                 });
             },

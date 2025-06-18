@@ -141,7 +141,7 @@ a[x-apple-data-detectors],
                      <tr>
                       <td align="center" style="padding:0;Margin:0">
                         <h1 style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:30px;font-style:normal;font-weight:bold;line-height:36px;color:#333333">
-                          Потвърдена поръчка #{{ order.order_id }}
+                          Поръчка #{{ order.order_id }} е изпратена
                         </h1>
                       </td>
                      </tr>
@@ -172,23 +172,27 @@ a[x-apple-data-detectors],
                    <table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
                      <tr>
                       <td align="center" style="padding:0;Margin:0">
-                        <a href="https://ibands.online/customer/order_detail/{{ order.order_id }}"
-                          target="_blank"
-                          style="
-                            display: inline-block;
-                            background:#000;
-                            color: #fff !important;
-                            font-size: 18px;
-                            font-family: arial, 'helvetica neue', helvetica, sans-serif;
-                            font-weight: bold;
-                            padding: 12px 30px;
-                            border-radius: 30px;
-                            text-decoration: none !important;
-                            box-shadow: 0 2px 8px rgba(13, 110, 253, 0.10);
-                            border: none;
-                            letter-spacing: 0.5px;
-                          "
-                        >Виж поръчката</a>
+                        {% if order.tracking_id and order.shipping_service %}
+                            {% if order.shipping_service == "Econt" %}
+                                <a href="https://www.econt.com/services/track-shipment/{{ order.tracking_id }}"
+                                   target="_blank"
+                                   style="display: inline-block; background:#000; color: #fff !important; font-size: 18px; font-family: arial, 'helvetica neue', helvetica, sans-serif; font-weight: bold; padding: 12px 30px; border-radius: 30px; text-decoration: none !important; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.10); border: none; letter-spacing: 0.5px;">
+                                    Проследи поръчката
+                                </a>
+                            {% elif order.shipping_service == "Speedy" %}
+                                <a href="https://www.speedy.bg/bg/track-shipment?shipmentNumber={{ order.tracking_id }}"
+                                   target="_blank"
+                                   style="display: inline-block; background:#000; color: #fff !important; font-size: 18px; font-family: arial, 'helvetica neue', helvetica, sans-serif; font-weight: bold; padding: 12px 30px; border-radius: 30px; text-decoration: none !important; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.10); border: none; letter-spacing: 0.5px;">
+                                    Проследи поръчката
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="https://ibands.online/customer/order_detail/{{ order.order_id }}"
+                               target="_blank"
+                               style="display: inline-block; background:#000; color: #fff !important; font-size: 18px; font-family: arial, 'helvetica neue', helvetica, sans-serif; font-weight: bold; padding: 12px 30px; border-radius: 30px; text-decoration: none !important; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.10); border: none; letter-spacing: 0.5px;">
+                                Виж поръчката
+                            </a>
+                        {% endif %}
                       </td>
                      </tr>
                    </table></td>

@@ -1,6 +1,4 @@
 {% extends 'partials/base.html' %}
-{% load static %}
-{% load humanize %}
 
 {% block content %}
     {% include "partials/_breadcrumbs.html" %}
@@ -21,11 +19,10 @@
                 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
                     <div class="prd_details">
                         <div class="prt_01 mb-1">
-                            <a href="{% url 'store:product_detail' product.category.get_full_path product.slug %}">
+                            <a href="{% url 'store:product_detail' product.category.get_full_path product.slug %}"></a>
                         </div>
                         <div class="prt_02 mb-3">
                             <h2 class="ft-bold mb-1">{{product.name}}</h2>
-                            
                             <div class="text-left">
                                 <div class="elis_rty mt-3">
                                     <span class="ft-medium text-muted line-through fs-md me-3">

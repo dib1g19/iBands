@@ -1,6 +1,5 @@
 {% extends 'partials/base.html' %}
 {% load static %}
-{% load humanize %}
 
 {% block content %}
     <!-- Hero Section -->
@@ -34,8 +33,6 @@
                                 <a href="{% url 'store:category' c.get_full_path %}" class="d-block">
                                     {% if c.image %}
                                     <img src="{{c.image.url}}" class="img-fluid" width="80" alt="" />
-                                    {% else %}
-                                    <img src="{% static 'assets/img/headphones.png' %}" class="img-fluid" width="40" alt="" />
                                     {% endif %}
                                 </a>
                             </div>

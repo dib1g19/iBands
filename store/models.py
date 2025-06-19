@@ -67,7 +67,7 @@ class Category(models.Model):
         blank=True,
         null=True
     )
-    image = models.FileField(upload_to="images", default="category.jpg", null=True, blank=True)
+    image = models.FileField(upload_to="images",  default="default/default-image.avif", null=True, blank=True)
     slug = models.SlugField()
 
     class Meta:
@@ -100,7 +100,7 @@ class Category(models.Model):
     
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    image = models.FileField(upload_to="images", blank=True, null=True, default="product.jpg")
+    image = models.FileField(upload_to="images", blank=True, null=True, default="default/default-image.avif")
     description = CKEditor5Field('Text', config_name='extends')
 
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')

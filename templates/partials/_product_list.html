@@ -29,11 +29,11 @@
 						</div>
 						<!-- Wishlist Icon -->
 						{% if request.user.is_authenticated and p.id in user_wishlist_products %}
-							<a href="#" class="add_to_wishlist text-center" data-product_id="{{p.id}}">
+							<a class="add_to_wishlist text-center" data-product_id="{{p.id}}">
 								<i class="fas fa-heart fs-4 text-danger"></i>
 							</a>
 						{% else %}
-							<a href="#" class="add_to_wishlist text-center" data-product_id="{{p.id}}">
+							<a class="add_to_wishlist text-center" data-product_id="{{p.id}}">
 								<i class="far fa-heart fs-5 text-dark"></i>
 							</a>
 						{% endif %}

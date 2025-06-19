@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from decimal import Decimal
+from .models import Category, Product
 import requests
 import stripe
 import razorpay
@@ -96,7 +97,6 @@ def shop(request):
     return render(request, "store/shop.html", context)
 
 def category(request, category_path):
-    from .models import Category, Product
     slugs = category_path.strip('/').split('/')
     category = None
     parent = None
@@ -121,7 +121,6 @@ def category(request, category_path):
     if query:
         products_list = products_list.filter(name__icontains=query)
 
-    from plugin.paginate_queryset import paginate_queryset
     products = paginate_queryset(request, products_list, 12)
 
     # Build breadcrumbs (all ancestors)
@@ -131,7 +130,6 @@ def category(request, category_path):
         ancestors.append(cat.parent)
         cat = cat.parent
     ancestors = ancestors[::-1]
-    from django.urls import reverse
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
     ]
@@ -232,8 +230,6 @@ def category_all_sub(request, parent_slug, slug):
     return render(request, "store/category.html", context)
 
 def product_detail(request, category_path, product_slug):
-    from .models import Category, Product
-
     # Traverse the category path to resolve the correct category
     slugs = category_path.strip('/').split('/')
     category = None
@@ -247,7 +243,6 @@ def product_detail(request, category_path, product_slug):
 
     # Prepare related products (from the same category, exclude self)
     related_products_list = Product.objects.filter(category=category).exclude(id=product.id)
-    from plugin.paginate_queryset import paginate_queryset
     related_products = paginate_queryset(request, related_products_list, 12)
 
     # Stock/variant details
@@ -262,7 +257,6 @@ def product_detail(request, category_path, product_slug):
         cat = cat.parent
     ancestors = ancestors[::-1]
 
-    from django.urls import reverse
     breadcrumbs = [{"label": "Начална Страница", "url": reverse("store:index")}]
     for ancestor in ancestors:
         breadcrumbs.append({
@@ -463,8 +457,6 @@ def delete_cart_item(request):
         "total_cart_items": total_cart_items.count(),
         "cart_sub_total": "{:,.2f}".format(cart_sub_total) if cart_sub_total else 0.00
     })
-
-from decimal import Decimal
 
 def create_order(request):
     if request.method == "POST":

@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="iBands" />
 <link rel="manifest" href="{% static 'assets/favicons/site.webmanifest' %}" />
 
-<html lang="zxx">
+<html lang="bg">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -83,7 +83,6 @@
                                 <li>
                                     <a href="javascript:void(0);">Помощ</a>
                                     <ul class="nav-dropdown nav-submenu">
-                                        <!-- <li><a href="{% url 'blog:blog_list' %}"><i class="fas fa-blog me-1"></i> Blog</a></li> -->
                                         <li><a href="{% url 'store:about' %}"><i class="fas fa-info-circle me-1"></i> За нас</a></li>                                       
                                         <li><a href="{% url 'store:contact' %}"><i class="fas fa-phone-alt me-1"></i> Контакти</a></li>
                                         <li><a href="{% url 'store:returns_and_exchanges' %}"><i class="fas fa-undo-alt me-1"></i> Доставка и връщане</a></li>
@@ -96,45 +95,38 @@
                                     <a href="{% url 'store:order_tracker_page' %}">Проследи поръчка <i class="fas fa-shipping-fast ms-1"></i></a>
                                 </li>
                             </ul>
-
                             <ul class="nav-menu nav-menu-social align-to-right">
                                 <li>
                                     <a href="{% url 'store:shop' %}"><i class="fas fa-search text-white"></i></a>
                                 </li>
-                               
-                               {% if request.user.is_authenticated %}
+                                {% if request.user.is_authenticated %}
                                      <li>
                                         <a href="{% url 'customer:dashboard' %}"><i class="fas fa-user text-white"></i></a>
                                     </li>
                                     <li>
                                         <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart text-white"></i><span class="dn-counter">{{ wishlist_count.count }}</span> </a>
                                     </li>
-                               {% endif %}
-                                
+                                {% endif %}
                                 <li>
                                     <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-basket text-white"></i><span class="dn-counter total_cart_items">{{total_cart_items}}</span> </a>
                                 </li>
-                                
                                 {% if request.user.is_authenticated %}
-                                    
                                     <li>
-                                        <a href="{% url 'userauths:sign-out' %}" class="btn btn-primary py-2 px-4 rounded"><i class="fas fa-sign-out-alt me-1"></i> Sign Out </a>
+                                        <a href="{% url 'userauths:sign-out' %}" class="btn btn-primary py-2 px-4 rounded"><i class="fas fa-sign-out-alt me-1"></i> Излез </a>
                                     </li>
                                 {% else %}
                                     <li>
-                                        <a href="{% url 'userauths:sign-in' %}" class="btn btn-primary py-2 px-4 rounded">Sign In <i class="fas fa-sign-in-alt ms-1"></i></a>
+                                        <a href="{% url 'userauths:sign-in' %}" class="btn btn-primary py-2 px-4 rounded">Влез <i class="fas fa-sign-in-alt ms-1"></i></a>
                                     </li>
                                     <li>
-                                        <a href="{% url 'userauths:sign-up' %}" class="btn btn-primary py-2 px-4 rounded">Sign Up <i class="fas fa-user-plus ms-1"></i></a>
+                                        <a href="{% url 'userauths:sign-up' %}" class="btn btn-primary py-2 px-4 rounded">Регистрирай се <i class="fas fa-user-plus ms-1"></i></a>
                                     </li>
-                                {% endif %}
-                                    
+                                {% endif %} 
                             </ul>
                         </div>
                     </nav>
                 </div>
             </div>
-
            
            {% for message in messages %}
                 <div class="alert alert-{{message.tags}} alert-dismissible fade show text-center" role="alert">
@@ -143,9 +135,7 @@
                 </div>
            {% endfor %}
             
-
             {% block content %} {% endblock content %}
-
             <footer class="dark-footer skin-dark-footer">
                 <div class="footer-middle">
                     <div class="container">
@@ -155,7 +145,7 @@
                                 <div class="footer_widget">
                                     <img src="{% static 'assets/img/logo-black.avif' %}" class="img-footer small mb-2" alt="" />
                                     <div class="address mt-3">ул. "Капитан Райчо" 56<br />Пловдив</div>
-                                    <div class="address mt-3">(+359) 899 333043<br />support@ibands.online</div>
+                                    <div class="address mt-3">(+359) 899 333 043<br />support@ibands.online</div>
                                     <div class="address mt-3">
                                         <ul class="list-inline">
                                             <p class="mb-2">Последвай ни в социалните мрежи:</p>
@@ -172,7 +162,6 @@
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Help Links -->
                             <div class="col-xl-4 col-lg-4 col-md-2 col-sm-12">
                                 <div class="footer_widget">
@@ -187,7 +176,6 @@
                                     </ul>
                                 </div>
                             </div>
-
                             <!-- Subscribe Box -->
                             <div class="col-xl-4 col-lg-4 col-md-3 col-sm-12">
                                 <div class="footer_widget">

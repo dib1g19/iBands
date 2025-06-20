@@ -79,7 +79,7 @@ a.text-success:hover {
 
 a.text-primary:focus,
 a.text-primary:hover {
-    color: #fff !important;
+    color: #0855c3 !important;
 }
 
 a.text-warning:focus,
@@ -102,7 +102,7 @@ a.white-link:focus {
 }
 
 section {
-    padding: 80px 0 80px;
+    padding: 0 0 40px;
     position: relative;
 }
 

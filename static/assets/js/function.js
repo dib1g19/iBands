@@ -50,28 +50,20 @@ $(document).ready(function () {
                 model: model,
                 cart_id: cart_id,
             },
-            beforeSend: function () {
-                button_el.html('Adding To Cart <i class="fas fa-spinner fa-spin ms-2"></i>');
-            },
             success: function (response) {
                 console.log(response);
                 Toast.fire({
                     icon: "success",
                     title: response.message,
                 });
-                button_el.html('Добавено в количка <i class="fas fa-check-circle ms-2"></i>');
                 $(".total_cart_items").text(response.total_cart_items);
             },
             error: function (xhr, status, error) {
-                button_el.html('Add To Cart <i class="fas fa-shopping-cart ms-2"></i>');
-
                 console.log("Error Status: " + xhr.status); // Logs the status code, e.g., 400
                 console.log("Response Text: " + xhr.responseText); // Logs the actual response text (JSON string)
-
-                // Try parsing the JSON response
                 try {
                     let errorResponse = JSON.parse(xhr.responseText);
-                    console.log("Error Message: " + errorResponse.error); // Logs "Missing required parameters"
+                    console.log("Error Message: " + errorResponse.error);
                     Toast.fire({
                         icon: "error",
                         title: errorResponse.error,
@@ -79,8 +71,6 @@ $(document).ready(function () {
                 } catch (e) {
                     console.log("Could not parse JSON response");
                 }
-
-                // Optionally show an alert or display the error message in the UI
                 console.log("Error: " + xhr.status + " - " + error);
             },
         });

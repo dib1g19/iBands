@@ -78,13 +78,13 @@
                                     </select>
                                 </div>
                                 <div class="">
-                                    <button type="button" class="btn btn-sm btn-primary rounded fs-6 add_to_cart" data-id="{{ product.id }}">
+                                    <button type="button" class="btn btn-sm btn-primary rounded fs-5 add_to_cart" data-id="{{ product.id }}">
                                         Добави в количка <i class="fas fa-shopping-cart ms-2"></i>
                                     </button>
                                 </div>
                                 <div class="">
-                                    <button type="button" class="btn btn-sm btn-primary rounded fs-6 add_to_wishlist" data-product_id="{{ product.id }}">
-                                        <i class="fas fa-heart fs-5 c text-white"></i>
+                                    <button type="button" class="btn btn-sm btn-primary rounded fs-5 add_to_wishlist" data-product_id="{{ product.id }}">
+                                        <i class="fa-heart fs-4 {% if request.user.is_authenticated and product.id in user_wishlist_products %}fas text-danger{% else %}far text-white{% endif %}"></i>
                                     </button>
                                 </div>
                             </div>

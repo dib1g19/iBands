@@ -11,7 +11,7 @@
 				</div>
 			</div>
 			<!-- Product Info -->
-			<div class="card-footer b-0 p-0 pt-2 bg-white d-flex align-items-start justify-content-between">
+			<div class="card-footer b-0 p-0 pt-2 bg-white d-flex align-items-end justify-content-between">
 				<div class="text-left">
 					<div class="elso_titl">
 						<span class="small">{{p.category.title}}</span>
@@ -21,24 +21,19 @@
 					</h5>
 					<div class="d-flex align-items-center justify-content-start gap-2">
 						<!-- Price -->
-						<div class="elis_rty mb-0">
+						<div class="elis_rty mb-2">
 							{% if p.regular_price %}
 								<span class="ft-medium text-muted line-through fs-sm me-2">{{p.regular_price}} лв.</span>
 							{% endif %}
 							<span class="ft-bold text-dark fs-sm">{{p.price}} лв.</span>
 						</div>
-						<!-- Wishlist Icon -->
-						{% if request.user.is_authenticated and p.id in user_wishlist_products %}
-							<a class="add_to_wishlist text-center" data-product_id="{{p.id}}">
-								<i class="fas fa-heart fs-4 text-danger"></i>
-							</a>
-						{% else %}
-							<a class="add_to_wishlist text-center" data-product_id="{{p.id}}">
-								<i class="far fa-heart fs-5 text-dark"></i>
-							</a>
-						{% endif %}
 					</div>
 				</div>
+				<!-- Wishlist Icon -->
+				<a class="add_to_wishlist d-inline-flex align-items-center justify-content-center"
+				style="width: 40px; height: 40px;" data-product_id="{{p.id}}">
+					<i class="fa-heart fs-4 {% if request.user.is_authenticated and p.id in user_wishlist_products %}fas text-danger{% else %}far text-dark{% endif %}"></i>
+				</a>
 			</div>
 		</div>
 	</div>

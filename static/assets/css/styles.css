@@ -353,20 +353,45 @@ ul.list-style.style-2 li:before {
 
 /* -------------------------- Global Settings: Font Style & Position -----------------*/
 
-.fs-sm {
-    font-size: 14px !important;
+/* Responsive font size utilities */
+@media (max-width: 575.98px) {
+  .fs-xs { font-size: 12px !important; }
+  .fs-sm { font-size: 14px !important; }
+  .fs-md { font-size: 16px !important; }
+  .fs-lg { font-size: 18px !important; }
+  .fs-xl { font-size: 20px !important; }
 }
 
-.fs-md {
-    font-size: 16px !important;
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .fs-xs { font-size: 13px !important; }
+  .fs-sm { font-size: 15px !important; }
+  .fs-md { font-size: 17px !important; }
+  .fs-lg { font-size: 20px !important; }
+  .fs-xl { font-size: 24px !important; }
 }
 
-.fs-lg {
-    font-size: 20px !important;
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .fs-xs { font-size: 13.5px !important; }
+  .fs-sm { font-size: 16px !important; }
+  .fs-md { font-size: 19px !important; }
+  .fs-lg { font-size: 22px !important; }
+  .fs-xl { font-size: 26px !important; }
 }
 
-.fs-xl {
-    font-size: 28px !important;
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .fs-xs { font-size: 14px !important; }
+  .fs-sm { font-size: 17px !important; }
+  .fs-md { font-size: 21px !important; }
+  .fs-lg { font-size: 25px !important; }
+  .fs-xl { font-size: 30px !important; }
+}
+
+@media (min-width: 1200px) {
+  .fs-xs { font-size: 14.5px !important; }
+  .fs-sm { font-size: 18px !important; }
+  .fs-md { font-size: 22px !important; }
+  .fs-lg { font-size: 28px !important; }
+  .fs-xl { font-size: 34px !important; }
 }
 
 .position-absolute {

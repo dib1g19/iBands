@@ -69,7 +69,7 @@
                         {% endfor %}
                         
                         <div class="prt_05 mb-4">
-                            <div class="d-flex gap-3 mb-7">
+                            <div class="d-flex gap-3 mb-7 align-items-center ">
                                 <div class="">
                                     <select class="form-select quantity" name="quantity" id="quantity">
                                         {% for qty in product_stock_range %}
@@ -77,16 +77,23 @@
                                         {% endfor %}
                                     </select>
                                 </div>
-                                <div class="">
-                                    <button type="button" class="btn btn-sm btn-primary rounded fs-5 add_to_cart" data-id="{{ product.id }}">
+                                <div>
+                                    <button type="button"
+                                            class="btn btn-primary rounded add_to_cart fs-md py-2 px-3 px-md-4"
+                                            data-id="{{ product.id }}">
                                         Добави в количка <i class="fas fa-shopping-cart ms-2"></i>
                                     </button>
                                 </div>
-                                <div class="">
-                                    <button type="button" class="btn btn-sm btn-primary rounded fs-5 add_to_wishlist" data-product_id="{{ product.id }}">
-                                        <i class="fa-heart fs-4 {% if request.user.is_authenticated and product.id in user_wishlist_products %}fas text-danger{% else %}far text-white{% endif %}"></i>
-                                    </button>
-                                </div>
+                                <a class="add_to_wishlist d-inline-flex align-items-center justify-content-center"
+                                style="width: 40px; height: 40px;"
+                                data-product_id="{{ p.id }}">
+                                    <i class="fa-heart
+                                            {% if request.user.is_authenticated and p.id in user_wishlist_products %}
+                                                fs-4 fas text-danger
+                                            {% else %}
+                                                fs-5 far text-dark
+                                            {% endif %}"></i>
+                                </a>
                             </div>
                         </div>
                     </div>

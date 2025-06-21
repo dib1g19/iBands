@@ -331,4 +331,13 @@ $(document).ready(function () {
             },
         });
     });
+        // Show free shipping modal only once per session
+    if (!sessionStorage.getItem('freeShippingModalShown')) {
+        var modal = new bootstrap.Modal(document.getElementById('freeShippingModal'));
+        modal.show();
+        // Remember not to show again this session
+        document.getElementById('freeShippingModal').addEventListener('hidden.bs.modal', function () {
+            sessionStorage.setItem('freeShippingModalShown', '1');
+        });
+    }
 });

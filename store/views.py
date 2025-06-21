@@ -19,6 +19,7 @@ from customer import models as customer_models
 from userauths import models as userauths_models
 from plugin.exchange_rate import convert_usd_to_inr, convert_usd_to_kobo, convert_usd_to_ngn, get_usd_to_ngn_rate
 from customer.utils import get_user_wishlist_products
+from store.emails import send_order_notification_email
 
 def get_category_ancestors(category):
     ancestors = []
@@ -627,21 +628,11 @@ def cod_payment(request, order_id):
         order.payment_method = "cash_on_delivery"
         order.payment_status = "cash_on_delivery"
         order.save()
-        customer_merge_data = {
-            'order': order,
-            'order_items': order.order_items,
-        }
-        subject = f"Вашата поръчка #{order.order_id} е потвърдена"
-        text_body = render_to_string("email/order/order_confirmation.txt", customer_merge_data)
-        html_body = render_to_string("email/order/order_confirmation.html", customer_merge_data)
-        email_msg = EmailMultiAlternatives(
-            subject=subject,
-            body=text_body,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[order.address.email]
+        send_order_notification_email(
+            order=order,
+            email_heading=f"Потвърдена поръчка #{order.order_id}",
+            email_title="iBands: Приета поръчка"
         )
-        email_msg.attach_alternative(html_body, "text/html")
-        email_msg.send()
 
         if request.user.is_authenticated:
             customer_models.Notifications.objects.create(type="New Order", user=request.user)

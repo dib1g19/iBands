@@ -5,10 +5,6 @@ $(document).ready(function () {
         showConfirmButton: false,
         timer: 2000,
         timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.onmouseenter = Swal.stopTimer;
-            toast.onmouseleave = Swal.resumeTimer;
-        },
     });
     function generateCartId() {
         // Retrieve the value of "cartId" from local storage and assign it to the variable 'ls_cartId'

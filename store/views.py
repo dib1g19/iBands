@@ -40,7 +40,7 @@ def clear_cart_items(request):
     return
 
 def index(request):
-    products_list = store_models.Product.objects.filter(status="Published")
+    products_list = store_models.Product.objects.filter(status="Published", featured=True)
     products = paginate_queryset(request, products_list, 20)
 
     categories = store_models.Category.objects.filter(parent__isnull=True).order_by("id")

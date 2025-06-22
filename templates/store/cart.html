@@ -7,14 +7,6 @@
 
     <section class="middle">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                    <div class="sec_title position-relative text-center">
-                        <h3 class="ft-bold pt-3">Количка</h3>
-                    </div>
-                </div>
-            </div>
-
             <form action="{% url 'store:create_order' %}" method="POST">
                 {% csrf_token %}
                 <div class="row">
@@ -23,15 +15,15 @@
                         <div style="overflow-y: scroll; max-height: 650px; overflow-x: hidden" class="p-3">
                             {% for item in items %}
                                 <div class="shadow rounded mb-3 item_div_{{item.id}}">
-                                    <div class="row d-flex align-items-center p-3">
-                                        <div class="col-lg-4 d-flex gap-3">
+                                    <div class="row d-flex align-items-center text-center p-3">
+                                        <div class="col-xl-4 d-flex justify-content-center align-items-center text-start gap-3">
                                             <img src="{{item.product.image.url}}" alt="" style="width: 100px; height: 100px; object-fit: cover" />
                                             <div class="p-2">
                                                 <h5 class="mb-1">
                                                     <span class="fw-bold"></span>{{ item.product.name }}
                                                 </h5>
                                                 <p class="mb-0 mt-0">
-                                                    <span class="fw-bold">Тип: </span>{{ item.product.category.title }}
+                                                    <span class="fw-bold"></span>{{ item.product.category.title }}
                                                 </p>
                                                 {% if item.size %}
                                                     <p class="mb-0"><span class="fw-bold">Дължина:</span> {{ item.size }}</p>
@@ -41,36 +33,28 @@
                                                 {% endif %}
                                             </div>
                                         </div>
-                                        <div class="col-lg-2">
+                                        <div class="col-xl-2 mb-xl-3">
                                             {% if item.product.regular_price %}
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-muted text-decoration-line-through">{{ item.product.regular_price|intcomma }} лв.</span>
-                                                    <h4 class="fs-3 mb-0">{{ item.price|intcomma }} лв.</h4>
-                                                </div>
+                                                <span class="text-decoration-line-through">
+                                                    {{ item.product.regular_price|intcomma }} лв.
+                                                </span>
                                             {% else %}
-                                                <h4 class="fs-3">{{ item.price|intcomma }} лв.</h4>
+                                                <span class="invisible d-none d-xl-inline">0 лв.</span>
                                             {% endif %}
+                                            <h4 class="fs-3 {% if item.product.regular_price %}fw-bold text-danger{% else %}text-dark{% endif %}">
+                                                {{ item.price|intcomma }} лв.
+                                            </h4>
                                         </div>
-                                        <div class="col-lg-2 d-flex">
-                                            <button type="button" class="btn btn-primary btn-sm update_cart_qty" data-update_type="decrease" data-item_id="{{item.id}}">-</button>
-                                            <input type="number" readonly class="form-control form-sm item-qty-{{item.id}} text-center" value="{{item.qty}}" name="" id="" />
-                                            <button type="button" class="btn btn-primary btn-sm update_cart_qty" data-update_type="increase" data-item_id="{{item.id}}">+</button>
+                                        <div class="col-xl-2 offset-xl-0 col-6 offset-3 d-flex justify-content-center">
+                                            <button type="button" class="btn btn-primary btn-xs update_cart_qty" data-update_type="decrease" data-item_id="{{item.id}}"><i class="fas fa-minus fa-xs"></i></button>
+                                            <input type="number" readonly class="form-control form-sm item-qty-{{item.id}} text-center px-1" value="{{item.qty}}" name="" id="" />
+                                            <button type="button" class="btn btn-primary btn-xs update_cart_qty" data-update_type="increase" data-item_id="{{item.id}}"><i class="fas fa-plus fa-xs"></i></button>
                                         </div>
-                                        <div class="col-lg-2">
-                                            <td>
-                                                {% if item.total_regular_price %}
-                                                    <div class="d-flex flex-column">
-                                                        <span class="text-muted text-decoration-line-through">
-                                                            {{ item.total_regular_price|intcomma }} лв.
-                                                        </span>
-                                                        <span><span class="item_sub_total_{{item.id}}">{{item.sub_total|intcomma}}</span> лв.</span>
-                                                    </div>
-                                                {% else %}
-                                                    <h4 class="fs-3 mb-0"><span class="item_sub_total_{{item.id}}">{{item.sub_total|intcomma}}</span> лв.</h4>
-                                                {% endif %}
-                                            </td>
+                                        <div class="col-xl-2 mb-xl-3">
+                                            <span class="invisible d-none d-xl-block">0 лв.</span>
+                                            <h4 class="fs-3">{{item.sub_total|intcomma}} лв.</h4>
                                         </div>
-                                        <div class="col-lg-2">
+                                        <div class="col-xl-1">
                                             <button type="button" class="btn btn-danger btn-sm rounded delete_cart_item" data-item_id="{{item.id}}" data-product_id="{{item.product.id}}" ><i class="fas fa-trash"></i></button>
                                         </div>
                                     </div>
@@ -87,8 +71,11 @@
                                         <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
                                             <div class="card-wrap border rounded mb-4">
                                                 <div class="card-wrap-header px-3 py-2 br-bottom d-flex align-items-center justify-content-between">
-                                                    <div class="card-heafder-flex">
-                                                        <h4 class="fs-md ft-bold mb-1">Адрес за доставка <a href="{% url 'customer:address_detail' address.id %}"><i class="fas fa-edit"></i></a></h4>
+                                                    <div class="card-header-flex">
+                                                        <h4 class="fs-md ft-bold mb-1">
+                                                            Адрес {{ forloop.counter }}
+                                                            <a href="{% url 'customer:address_detail' address.id %}"><i class="fas fa-edit"></i></a>
+                                                        </h4>
                                                     </div>
                                                 </div>
                                                 <div class="card-wrap-body px-3 py-3">
@@ -139,7 +126,7 @@
 
                             <div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <p class="fw-semibold fs-6 mb-0">Доставката се изчислява на следващата стъпка</p>
+                                    <p class="fw-semibold fs-6 mb-0">Доставката и купоните се начисляват на следващата стъпка</p>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-3">
                                     <p class="fw-bold text-dark fs-5">Общо</p>

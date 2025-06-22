@@ -25,10 +25,12 @@
                             <h2 class="ft-bold mb-1">{{product.name}}</h2>
                             <div class="text-left">
                                 <div class="elis_rty mt-3">
-                                    <span class="ft-medium text-muted line-through fs-md me-3">
-                                        {% if product.regular_price %} {{product.regular_price}} лв. {% endif %}
-                                    </span>
-                                    <span class="ft-bold theme-cl fs-lg me-3">{{product.price}} лв.</span>
+                                    {% if product.regular_price %}
+                                        <span class="ft-medium line-through fs-md me-3">{{product.regular_price}} лв.</span>
+                                        <span class="ft-bold text-danger fs-lg me-3">{{product.price}} лв.</span>
+                                    {% else %}
+                                        <span class="ft-bold fs-lg me-3">{{product.price}} лв.</span>
+                                    {% endif %}
                                     <span class="ft-regular text-light bg-success py-1 px-2 fs-sm">
                                         {% if product.stock > 0 %} В наличност {% else %} Няма наличност {% endif %}
                                     </span>

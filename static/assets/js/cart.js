@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         newCard.innerHTML = `
                             <div class="card-wrap border rounded mb-4">
                                 <div class="card-wrap-header px-3 py-2 br-bottom d-flex align-items-center justify-content-between">
-                                    <div class="card-heafder-flex">
+                                    <div class="card-header-flex">
                                         <h4 class="fs-md ft-bold mb-1">Адрес за доставка <i class="fas fa-check text-success"></i></h4>
                                     </div>
                                 </div>

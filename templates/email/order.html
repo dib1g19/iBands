@@ -275,7 +275,7 @@ a[x-apple-data-detectors],
                       <td align="left" style="padding:0;Margin:0;width:270px">
                        <h3 style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;mso-line-height-rule:exactly;letter-spacing:0;font-size:20px;font-style:normal;font-weight:bold;line-height:24px;color:#333333">{{ item.product.name }}</h3>
                        <p style="Margin:4px 0 0 0;font-family:arial, sans-serif;font-size:14px;color:#000000;">
-                         <strong>Тип:</strong> {{ item.product.category.title }}
+                         {{ item.product.category.title }}
                        </p>
                        {% if item.size %}
                        <p style="Margin:2px 0 0 0;font-family:arial, sans-serif;font-size:14px;color:#000000;">
@@ -340,6 +340,12 @@ a[x-apple-data-detectors],
                  <tr>
                   <td colspan="3" align="right" style="padding:0;Margin:0">
                     <p>Междинна сума: {{ order.sub_total }} лв.</p>
+                    {% for coupon in order.coupons.all %}
+                      <p style="color:#198754">Купон ({{ coupon.code }}): -{{ coupon.discount|floatformat:2 }}%</p>
+                    {% endfor %}
+                    {% if order.saved and order.saved > 0 %}
+                        <p>Отстъпка: -{{ order.saved|floatformat:2 }} лв.</p>
+                    {% endif %}
                     <p>Доставка: {{ order.shipping }} лв.</p>
                     <p><strong>Общо: {{ order.total }} лв.</strong></p>
                   </td>

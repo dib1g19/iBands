@@ -568,7 +568,6 @@ def coupon_apply(request, order_id):
                     item_discount = item.sub_total * coupon.discount / 100  # Discount for this item
                     total_discount += item_discount
                     item.coupon.add(coupon)
-                    item.sub_total -= item_discount
                     item.saved += item_discount
                     item.save()
 
@@ -576,7 +575,6 @@ def coupon_apply(request, order_id):
             if total_discount > 0:
                 order.coupons.add(coupon)
                 order.total -= total_discount
-                order.sub_total -= total_discount
                 order.saved += total_discount
                 order.save()
         

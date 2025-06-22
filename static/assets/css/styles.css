@@ -776,10 +776,6 @@ div[data-overlay] p {
     color: #ff9b20 !important;
 }
 
-.text-success {
-    color: #0d6efd !important;
-}
-
 .text-info {
     color: #2196f3 !important;
 }
@@ -1181,6 +1177,10 @@ table.table tr th {
     -o-transition: 0s;
     transition: 0s;
     border-radius: 0.1rem;
+}
+
+.btn.btn-xs {
+    padding: 6px 10px;
 }
 
 .btn.btn-sm {

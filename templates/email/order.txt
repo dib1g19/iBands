@@ -10,10 +10,16 @@
 
 Продукти:
 {% for item in order_items %}
-- {{ item.product.name }}{% if item.size %} (Дължина: {{ item.size }}){% endif %}{% if item.model %} (Модел: {{ item.model }}){% endif %} — {{ item.qty }} x {{ item.price }} лв.
+- {{ item.product.name }} {{ item.product.category.title }}{% if item.size %} (Дължина: {{ item.size }}){% endif %}{% if item.model %} (Модел: {{ item.model }}){% endif %} — {{ item.qty }} x {{ item.price }} лв.
 {% endfor %}
 
 Междинна сума: {{ order.sub_total }} лв.
+{% for coupon in order.coupons.all %}
+Купон ({{ coupon.code }}): -{{ coupon.discount|floatformat:2 }}%
+{% endfor %}
+{% if order.saved and order.saved > 0 %}
+Отстъпка: -{{ order.saved|floatformat:2 }} лв.
+{% endif %}
 Доставка: {{ order.shipping }} лв.
 Общо: {{ order.total }} лв.
 

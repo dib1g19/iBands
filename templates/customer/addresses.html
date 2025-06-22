@@ -23,8 +23,8 @@
                             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                                 <div class="card-wrap border rounded mb-4">
                                     <div class="card-wrap-header px-3 py-2 br-bottom d-flex align-items-center justify-content-between">
-                                        <div class="card-heafder-flex">
-                                            <h4 class="fs-md ft-bold mb-1">Адрес за доставка</h4>
+                                        <div class="card-header-flex">
+                                            <h4 class="fs-md ft-bold mb-1">Адрес {{ forloop.counter }}</h4>
                                             <div>
                                                 <a href="{% url 'customer:address_detail' address.id %}" class="btn btn-sm btn-primary small rounded ft-medium">
                                                     <i class="fas fa-edit"></i>

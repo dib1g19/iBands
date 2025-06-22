@@ -26,15 +26,15 @@
                         
                         {% for item in order.order_items.all %}
                             <div class="shadow rounded mb-3">
-                                <div class="row d-flex align-items-center p-3">
-                                    <div class="col-lg-4 d-flex gap-3">
+                                <div class="row d-flex align-items-center text-center p-3">
+                                    <div class="col-xl-4 d-flex justify-content-center align-items-center text-start gap-3 ">
                                         <img src="{{item.product.image.url}}" alt="" style="width: 100px; height: 100px; object-fit: cover" />
                                         <div class="p-2">
                                             <h5 class="mb-1">
                                                 <span class="fw-bold"></span>{{ item.product.name }}
                                             </h5>
                                             <p class="mb-0 mt-0">
-                                                <span class="fw-bold">Тип: </span>{{ item.product.category.title }}
+                                                <span class="fw-bold"></span>{{ item.product.category.title }}
                                             </p>
                                             {% if item.size %}
                                                 <p class="mb-0"><span class="fw-bold">Дължина:</span> {{ item.size }}</p>
@@ -44,27 +44,30 @@
                                             {% endif %}
                                         </div>
                                     </div>
-                                    <div class="col-lg-2">
-                                        <p class="mb-1">Цена</p>
+                                    <div class="col-xl-2">
+                                        <p class="mb-0">Цена</p>
                                         {% if item.product.regular_price %}
-                                            <div class="d-flex flex-column">
-                                                <span class="text-muted text-decoration-line-through">{{ item.product.regular_price|intcomma }} лв.</span>
-                                                <h4 class="fs-3 mb-0">{{ item.price|intcomma }} лв.</h4>
-                                            </div>
+                                            <span class="text-decoration-line-through">
+                                                {{ item.product.regular_price|intcomma }} лв.
+                                            </span>
                                         {% else %}
-                                            <h4 class="fs-3">{{ item.price|intcomma }} лв.</h4>
+                                            <span class="invisible d-none d-xl-inline">0 лв.</span>
                                         {% endif %}
+                                        <h4 class="fs-3 {% if item.product.regular_price %}fw-bold text-danger{% else %}text-dark{% endif %}">
+                                            {{ item.price|intcomma }} лв.
+                                        </h4>
                                     </div>
-
-                                    <div class="col-lg-2">
-                                        <p class="mb-1">Количество</p>
-                                        <h4 class="fs-3 mb-0">{{item.qty}}</h4>
+                                    <div class="col-xl-2">
+                                        <p class="mb-0">Количество</p>
+                                        <span class="invisible d-none d-xl-block">0 лв.</span>
+                                        <h4 class="fs-3">{{item.qty}}</h4>
                                     </div>
-                                    <div class="col-lg-2">
-                                        <p class="mb-1">Общо</p>
-                                        <h4 class="fs-3 mb-0">{{item.sub_total}} лв.</h4>
+                                    <div class="col-xl-2">
+                                        <p class="mb-0">Общо</p>
+                                        <span class="invisible d-none d-xl-block">0 лв.</span>
+                                        <h4 class="fs-3">{{item.sub_total|intcomma}} лв.</h4>
                                     </div>
-                                    <div class="col-lg-2">
+                                    <div class="col-xl-2">
                                         <a href="{% url 'store:cart' %}" class="btn btn-primary btn-sm rounded"><i class="fas fa-edit"></i></a>
                                     </div>
                                 </div>
@@ -79,7 +82,7 @@
                             <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
                                 <div class="card-wrap border rounded mb-4">
                                     <div class="card-wrap-header px-3 py-2 br-bottom d-flex align-items-center justify-content-between">
-                                        <div class="card-heafder-flex">
+                                        <div class="card-header-flex">
                                             <h4 class="fs-md ft-bold mb-1">Адрес за доставка</h4>
                                         </div>
                                     </div>
@@ -110,21 +113,26 @@
                                 <p class="fw-semibold fs-6">Междинна сума</p>
                                 <p class="fs-6">{{order.sub_total}} лв.</p>
                             </div>
+                            {% if order.saved %}
+                                {% for coupon in order.coupons.all %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="fs-6 text-success fw-bold">
+                                            {{ coupon.code }}  
+                                        </small>
+                                        <small class="fs-6 text-success">
+                                            -{{ coupon.discount|floatformat:2 }}%
+                                        </small>
+                                    </div>
+                                {% endfor %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <p class="fw-semibold fs-6">Отстъпка</p>
+                                    <p class="fs-6">{{order.saved}} лв.</p>
+                                </div> 
+                            {% endif %}
                             <div class="d-flex justify-content-between align-items-center">
                                 <p class="fw-semibold fs-6">Доставка ({{ order.address.get_delivery_method_display }})</p>
                                 <p class="fs-6">{{ order.shipping|floatformat:2 }} лв.</p>
                             </div>
-                            {% if order.saved %}
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <p class="fw-semibold fs-6">Отстъпка</p>
-                                    <p class="fs-6">{{order.saved}} лв.</p>
-                                </div>
-                                
-                                {% for coupon in order.coupons.all %}
-                                    <small class="text-success fw-bold">{{ coupon.code }} Приложен</small>
-                                {% endfor %}
-                            {% endif %}
-
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <p class="fw-bold text-dark fs-5">Общо</p>
                                 <p class="fw-bold text-dark fs-5">{{order.total}} лв.</p>
@@ -137,7 +145,7 @@
                         <form class="mb-3 d-flex" action="{% url 'store:coupon_apply' order.order_id %}" method="POST">
                             {% csrf_token %}
                             <input type="text" class="form-control" name="coupon_code" placeholder="Код за отстъпка" />
-                            <button type="submit"  class="btn btn-secondary"><i class="fas fa-check-circle"></i></button>
+                            <button type="submit"  class="btn btn-success"><i class="fas fa-check-circle"></i></button>
                         </form>
                     </div>
 

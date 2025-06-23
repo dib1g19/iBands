@@ -103,7 +103,7 @@ class Product(models.Model):
     regular_price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True, verbose_name="Regular Price")
     stock = models.PositiveIntegerField(default=0, null=True, blank=True)
     shipping = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True, verbose_name="Shipping Amount")
-    status = models.CharField(choices=STATUS, max_length=50, default="Published")
+    status = models.CharField(choices=STATUS, max_length=50, default="published")
     featured = models.BooleanField(default=False, verbose_name="Marketplace Featured")
     sku = models.CharField(max_length=50, unique=True, verbose_name="SKU")
     slug = models.SlugField(null=True, blank=True)

@@ -40,7 +40,7 @@ def clear_cart_items(request):
     return
 
 def index(request):
-    products_list = store_models.Product.objects.filter(status="Published", featured=True)
+    products_list = store_models.Product.objects.filter(status="published", featured=True)
     products = paginate_queryset(request, products_list, 20)
 
     categories = store_models.Category.objects.filter(parent__isnull=True).order_by("id")
@@ -53,7 +53,7 @@ def index(request):
     return render(request, "store/index.html", context)
 
 def shop(request):
-    products_list = store_models.Product.objects.filter(status="Published")
+    products_list = store_models.Product.objects.filter(status="published")
     products = paginate_queryset(request, products_list, 20)
 
     categories = store_models.Category.objects.filter(parent__isnull=True).prefetch_related('subcategories__subcategories').order_by('id')
@@ -114,9 +114,9 @@ def category(request, category_path):
 
     if show_sub_only:
         subcat_ids = [c.id for c in child_categories]
-        products_list = Product.objects.filter(status="Published", category_id__in=subcat_ids)
+        products_list = Product.objects.filter(status="published", category_id__in=subcat_ids)
     else:
-        products_list = Product.objects.filter(status="Published", category=category)
+        products_list = Product.objects.filter(status="published", category=category)
 
     query = request.GET.get("q")
     if query:
@@ -167,7 +167,7 @@ def get_descendant_category_ids(category):
 def category_all_sub_root(request, slug):
     category = get_object_or_404(store_models.Category, slug=slug, parent=None)
     descendant_ids = get_descendant_category_ids(category)
-    products_list = store_models.Product.objects.filter(status="Published", category_id__in=descendant_ids)
+    products_list = store_models.Product.objects.filter(status="published", category_id__in=descendant_ids)
     query = request.GET.get("q")
     if query:
         products_list = products_list.filter(name__icontains=query)
@@ -195,7 +195,7 @@ def category_all_sub(request, parent_slug, slug):
     parent = get_object_or_404(store_models.Category, slug=parent_slug)
     category = get_object_or_404(store_models.Category, slug=slug, parent=parent)
     descendant_ids = get_descendant_category_ids(category)
-    products_list = store_models.Product.objects.filter(status="Published", category_id__in=descendant_ids)
+    products_list = store_models.Product.objects.filter(status="published", category_id__in=descendant_ids)
     query = request.GET.get("q")
     if query:
         products_list = products_list.filter(name__icontains=query)
@@ -240,7 +240,7 @@ def product_detail(request, category_path, product_slug):
         parent = category
 
     # Find the product within this category
-    product = get_object_or_404(Product, slug=product_slug, category=category, status="Published")
+    product = get_object_or_404(Product, slug=product_slug, category=category, status="published")
 
     # Prepare related products (from the same category, exclude self)
     related_products_list = Product.objects.filter(category=category).exclude(id=product.id)
@@ -331,7 +331,7 @@ def add_to_cart(request):
 
     # Try to fetch the product, return an error if it doesn't exist
     try:
-        product = store_models.Product.objects.get(status="Published", id=id)
+        product = store_models.Product.objects.get(status="published", id=id)
     except store_models.Product.DoesNotExist:
         return JsonResponse({"error": "Product not found"}, status=404)
 
@@ -441,7 +441,7 @@ def delete_cart_item(request):
         return JsonResponse({"error": "Item or Product id not found"}, status=400)
 
     try:
-        product = store_models.Product.objects.get(status="Published", id=id)
+        product = store_models.Product.objects.get(status="published", id=id)
     except store_models.Product.DoesNotExist:
         return JsonResponse({"error": "Product not found"}, status=404)
 

@@ -1,0 +1,15 @@
+<div class="col-xl-5 col-12">
+    <div class="d-flex flex-xl-row flex-column align-items-center text-start gap-3">
+        <img src="{{item.product.image.url}}" alt="{{ item.product.name }}" class="product-image" />
+        <div class="text-center text-xl-start w-100">
+            <h5 class="mb-1">{{ item.product.name }}</h5>
+            <p class="mb-0 mt-0">{{ item.product.category.title }}</p>
+            {% if item.size %}
+                <p class="mb-0"><span class="fw-bold">Дължина:</span> {{ item.size }}</p>
+            {% endif %}
+            {% if item.model %}
+                <p class="mb-0"><span class="fw-bold">Модел:</span> {{ item.model }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>

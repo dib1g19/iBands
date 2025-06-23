@@ -98,18 +98,15 @@ $(document).ready(function () {
                 qty: change_by,
                 cart_id: cart_id,
             },
-            beforeSend: function () {
-                button_el.html('<i class="fas fa-spinner fa-spin"></i>');
-            },
             success: function (response) {
                 Toast.fire({
                     icon: "success",
                     title: response.message,
                 });
                 if (update_type === "increase") {
-                    button_el.html("+");
+                    button_el.html('<i class="fas fa-plus fa-xs"></i>');
                 } else {
-                    button_el.html("-");
+                    button_el.html('<i class="fas fa-minus fa-xs"></i>');
                 }
                 $(".item-qty-" + item_id).val(response.current_qty);
                 $(".item_sub_total_" + item_id).text(response.item_sub_total);

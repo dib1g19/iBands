@@ -16,23 +16,7 @@
                             {% for item in items %}
                                 <div class="shadow rounded mb-3 item_div_{{item.id}}">
                                     <div class="row d-flex align-items-center text-center p-3">
-                                        <div class="col-xl-4 d-flex justify-content-center align-items-center text-start gap-3">
-                                            <img src="{{item.product.image.url}}" alt="" style="width: 100px; height: 100px; object-fit: cover" />
-                                            <div class="p-2">
-                                                <h5 class="mb-1">
-                                                    <span class="fw-bold"></span>{{ item.product.name }}
-                                                </h5>
-                                                <p class="mb-0 mt-0">
-                                                    <span class="fw-bold"></span>{{ item.product.category.title }}
-                                                </p>
-                                                {% if item.size %}
-                                                    <p class="mb-0"><span class="fw-bold">Дължина:</span> {{ item.size }}</p>
-                                                {% endif %}
-                                                {% if item.model %}
-                                                    <p class="mb-0"><span class="fw-bold">Модел:</span> {{ item.model }}</p>
-                                                {% endif %}
-                                            </div>
-                                        </div>
+                                        {% include "partials/_product_card.html" with item=item %}
                                         <div class="col-xl-2 mb-xl-3">
                                             {% if item.product.regular_price %}
                                                 <span class="text-decoration-line-through">

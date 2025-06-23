@@ -99,9 +99,19 @@ def toggle_wishlist(request, id):
         wishlist_item, created = customer_models.Wishlist.objects.get_or_create(product=product, user=request.user)
         if not created:
             wishlist_item.delete()
-            return JsonResponse({"status": "removed", "message": "Продуктът е премахнат от любими"})
+            total_wishlist_items = customer_models.Wishlist.objects.filter(user=request.user).count()
+            return JsonResponse({
+                "status": "removed",
+                "message": "Продуктът е премахнат от любими",
+                "total_wishlist_items": total_wishlist_items
+            })
         else:
-            return JsonResponse({"status": "added", "message": "Продуктът е добавен в любими"})
+            total_wishlist_items = customer_models.Wishlist.objects.filter(user=request.user).count()
+            return JsonResponse({
+                "status": "added",
+                "message": "Продуктът е добавен в любими",
+                "total_wishlist_items": total_wishlist_items
+            })
     else:
         return JsonResponse({"status": "warning", "message": "Трябва да влезнете в профила си"})
 

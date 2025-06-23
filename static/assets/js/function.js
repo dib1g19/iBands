@@ -325,6 +325,9 @@ $(document).ready(function () {
                     icon: response.status === "added" ? "success" : (response.status === "removed" ? "info" : "warning"),
                     title: response.message,
                 });
+                if (response.total_wishlist_items !== undefined) {
+                    $(".total_wishlist_items").text(response.total_wishlist_items);
+                }
             },
         });
     });

@@ -151,7 +151,8 @@
 
                     <div class="shadow rounded p-3 mt-3">
                         <h4 class="fw-bold">Начин на плащане</h4>
-                        <button type="button" id="cod-payment" class="btn btn-primary rounded w-100">Плати при доставка</button>
+                        <button type="button" id="stripe-payment" class="btn btn-primary mb-3 rounded w-100">Плащане с карта</button>
+                        <button type="button" id="cod-payment" class="btn btn-primary mb-3 rounded w-100">Наложен платеж</button>
                     </div>
 
                     <!-- <div class="w-100 mt-3">
@@ -219,9 +220,7 @@
         try {
             checkoutButton.addEventListener("click", function () {
                 var email = "{{order.address.email}}"; 
-
-                checkoutButton.innerHTML = "Processing <i class='fas fa-spinner fa-spin'></i>";
-
+                checkoutButton.innerHTML = 'Плащане с карта <i class="fas fa-spinner fa-spin ms-2"></i>';
                 fetch("/stripe_payment/{{order.order_id}}/", {
                     method: "POST",
                     body: JSON.stringify({ email: email }),
@@ -331,7 +330,7 @@
         var codButton = document.getElementById("cod-payment");
         try {
             codButton.addEventListener("click", function () {
-                codButton.innerHTML = "Обработка... <i class='fas fa-spinner fa-spin'></i>";
+                codButton.innerHTML = "Наложен платеж <i class='fas fa-spinner fa-spin'></i>";
                 fetch("{% url 'store:cod_payment' order.order_id %}", {
                     method: "POST",
                     headers: {'X-CSRFToken': csrftoken}

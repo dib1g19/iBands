@@ -635,7 +635,6 @@ def cod_payment(request, order_id):
         if request.user.is_authenticated:
             customer_models.Notifications.objects.create(type="New Order", user=request.user)
         clear_cart_items(request)
-        from django.urls import reverse
         return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=paid")
     else:
         return redirect("store:checkout", order_id)
@@ -651,7 +650,7 @@ def stripe_payment(request, order_id):
         line_items = [
             {
                 'price_data': {
-                    'currency': 'USD',
+                    'currency': 'BGN',
                     'product_data': {
                         'name': order.address.full_name
                     },
@@ -670,33 +669,22 @@ def stripe_payment(request, order_id):
 
 def stripe_payment_verify(request, order_id):
     order = store_models.Order.objects.get(order_id=order_id)
-
     session_id = request.GET.get("session_id")
     session = stripe.checkout.Session.retrieve(session_id)
 
     if session.payment_status == "paid":
-        if order.payment_status == "Processing":
-            order.payment_status = "Paid"
+        if order.payment_status == "processing":
+            order.payment_status = "paid"
+            order.payment_method = "card"
             order.save()
-            clear_cart_items(request)
-            customer_models.Notifications.objects.create(type="New Order", user=request.user)
-            customer_merge_data = {
-                'order': order,
-                'order_items': order.order_items(),
-            }
-            subject = f"New Order!"
-            text_body = render_to_string("email/order/customer/customer_new_order.txt", customer_merge_data)
-            html_body = render_to_string("email/order/customer/customer_new_order.html", customer_merge_data)
-
-            msg = EmailMultiAlternatives(
-                subject=subject, from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[order.address.email], body=text_body
+            send_order_notification_email(
+                order=order,
+                email_heading=f"Потвърдена поръчка #{order.order_id}",
+                email_title="iBands: Приета поръчка"
             )
-            msg.attach_alternative(html_body, "text/html")
-            msg.send()
-
+            customer_models.Notifications.objects.create(type="New Order", user=request.user)
+            clear_cart_items(request)
             return redirect(f"/payment_status/{order.order_id}/?payment_status=paid")
-    
     return redirect(f"/payment_status/{order.order_id}/?payment_status=failed")
     
 def get_paypal_access_token():

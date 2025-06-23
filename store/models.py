@@ -6,23 +6,20 @@ from django_ckeditor_5.fields import CKEditor5Field
 from userauths import models as user_models
 
 STATUS = (
-    ("Published", "Published"),
-    ("Draft", "Draft"),
-    ("Disabled", "Disabled"),
+    ("published", "Published"),
+    ("draft", "Draft"),
+    ("disabled", "Disabled"),
 )
 
 PAYMENT_STATUS = (
+    ("processing", "Обработка"),
     ("paid", "Платено"),
-    ("cash_on_delivery", "Наложен платеж"),
     ("failed", 'Неуспешно плащане'),
+    ("cash_on_delivery", "Наложен платеж"),
 )
 
 PAYMENT_METHOD = (
-    ("PayPal", "PayPal"),
-    ("Stripe", "Stripe"),
-    ("Flutterwave", "Flutterwave"),
-    ("Paystack", "Paystack"),
-    ("RazorPay", "RazorPay"),
+    ("card", "карта"),
     ("cash_on_delivery", "Наложен платеж"),
 )
 
@@ -35,10 +32,8 @@ ORDER_STATUS = (
 )
 
 SHIPPING_SERVICE = (
-    ("Econt", "Еконт"),
-    ("Speedy", "Спиди"),
-    ("UPS", "UPS"),
-    ("GIG Logistics", "GIG Logistics")
+    ("econt", "Еконт"),
+    ("speedy", "Спиди"),
 )
 
 VARIANT_TYPE_CHOICES = (
@@ -197,7 +192,7 @@ class Order(models.Model):
     sub_total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
     shipping = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
     total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
-    payment_status = models.CharField(max_length=100, choices=PAYMENT_STATUS, default="cash_on_delivery")
+    payment_status = models.CharField(max_length=100, choices=PAYMENT_STATUS, default="processing")
     payment_method = models.CharField(max_length=100, choices=PAYMENT_METHOD, default=None, null=True, blank=True)
     order_status = models.CharField(max_length=100, choices=ORDER_STATUS, default="received")
     initial_total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2, help_text="The original total before discounts")

@@ -61,21 +61,6 @@ def dashboard(request):
     return render(request, "customer/dashboard.html", context)
 
 @login_required
-def orders(request):
-    orders = store_models.Order.objects.filter(customer=request.user)
-
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": "Поръчки", "url": ""},
-    ]
-    context = {
-        "orders": orders,
-        "breadcrumbs": breadcrumbs,
-    }
-
-    return render(request, "customer/orders.html", context)
-
-@login_required
 def order_detail(request, order_id):
     order = store_models.Order.objects.get(customer=request.user, order_id=order_id)
 
@@ -125,7 +110,7 @@ def remove_from_wishlist(request, id):
     wishlist = customer_models.Wishlist.objects.get(user=request.user, id=id)
     wishlist.delete()
     
-    messages.success(request, "Продуктът е премахнат от любими")
+    messages.success(request, "Продуктът е премахнат от любими.")
     return redirect("customer:wishlist")
 
 @login_required
@@ -151,7 +136,7 @@ def mark_noti_seen(request, id):
     noti.seen = True
     noti.save()
 
-    messages.success(request, "Notification marked as seen")
+    messages.success(request, "Нотификацията е отбелязана като прочетена.")
     return redirect("customer:notis")
 
 
@@ -189,7 +174,7 @@ def address_detail(request, id):
         address.address = address_location
         address.save()
 
-        messages.success(request, "Address updated successfully!")
+        messages.success(request, "Адресът е обновен успешно!")
         return redirect("customer:addresses")
     
     breadcrumbs = [
@@ -224,7 +209,7 @@ def address_create(request):
             address=address,
         )
 
-        messages.success(request, "Address created successfully!")
+        messages.success(request, "Адресът е създаден успешно!")
         return redirect("customer:addresses")
     
     breadcrumbs = [
@@ -241,7 +226,7 @@ def address_create(request):
 def delete_address(request, id):
     address = customer_models.Address.objects.get(user=request.user, id=id)
     address.delete()
-    messages.success(request, "Address deleted")
+    messages.success(request, "Адресът е изтрит.")
     return redirect("customer:addresses")
 
 @login_required
@@ -262,7 +247,7 @@ def profile(request):
         request.user.save()
         profile.save()
 
-        messages.success(request, "Profile Updated Successfully")
+        messages.success(request, "Профилът е обновен успешно.")
         return redirect("customer:profile")
 
     breadcrumbs = [
@@ -284,16 +269,16 @@ def change_password(request):
         confirm_new_password = request.POST.get("confirm_new_password")
 
         if confirm_new_password != new_password:
-            messages.error(request, "Confirm Password and New Password Does Not Match")
+            messages.error(request, "Паролите не съвпадат.")
             return redirect("customer:change_password")
         
         if check_password(old_password, request.user.password):
             request.user.set_password(new_password)
             request.user.save()
-            messages.success(request, "Password Changed Successfully")
+            messages.success(request, "Паролата беше успешно променена.")
             return redirect("customer:profile")
         else:
-            messages.error(request, "Old password is not correct")
+            messages.error(request, "Старата парола е неправилна.")
             return redirect("customer:change_password")
 
     breadcrumbs = [

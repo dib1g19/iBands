@@ -17,17 +17,14 @@
                     <a href="{% url 'customer:dashboard' %}" class="{% if '/customer/dashboard/' in request.path %} active{% endif %}"><i class="bi bi-grid-fill me-2"></i>Табло</a>
                 </li>
                 <li>
-                    <a href="{% url 'customer:orders' %}" class="{% if '/customer/orders/' in request.path or '/customer/order_detail/' in request.path %} active{% endif %}"><i class="fas fa-shopping-basket me-2"></i>Поръчки</a>
-                </li>
-                <li>
                     <a href="{% url 'customer:wishlist' %}" class="{% if '/customer/wishlist/' in request.path %} active{% endif %}"><i class="fas fa-heart me-2"></i>Любими продукти</a>
                 </li>
                 <li>
                     <a href="{% url 'customer:addresses' %}" class="{% if '/customer/addresses/' in request.path or '/customer/address_detail/' in request.path or '/customer/address_create/' in request.path %} active {% endif %}"><i class="fas fa-map-marker me-2"></i>Адреси</a>
                 </li>
-                <li>
+                <!-- <li>
                     <a href="{% url 'customer:notis' %}" class="{% if '/customer/notis/' in request.path %} active{% endif %}"><i class="fas fa-bell me-2"></i>Известия</a>
-                </li>
+                </li> -->
                 <li>
                     <a href="{% url 'customer:profile' %}" class="{% if '/customer/profile/' in request.path %} active{% endif %}"><i class="fas fa-user me-2"></i>Профил</a>
                 </li>

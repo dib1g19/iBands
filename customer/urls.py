@@ -6,7 +6,6 @@ app_name = "customer"
 urlpatterns = [
     path('quick_add_address/', views.quick_add_address, name='quick_add_address'),
     path("dashboard/", views.dashboard, name="dashboard"),
-    path("orders/", views.orders, name="orders"),
     path("order_detail/<order_id>/", views.order_detail, name="order_detail"),
     path("wishlist/", views.wishlist, name="wishlist"),
     path("remove_from_wishlist/<id>/", views.remove_from_wishlist, name="remove_from_wishlist"),

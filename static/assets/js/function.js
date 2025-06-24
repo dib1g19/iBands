@@ -50,7 +50,7 @@ $(document).ready(function () {
                 console.log(response);
                 Toast.fire({
                     icon: "success",
-                    title: response.message,
+                    html: response.message + '<br><a href="/cart/" class="btn btn-sm btn-primary mt-2 w-100">Виж количката</a>' 
                 });
                 $(".total_cart_items").text(response.total_cart_items);
             },

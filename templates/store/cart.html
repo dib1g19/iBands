@@ -36,7 +36,7 @@
                                         </div>
                                         <div class="col-xl-2 mb-xl-3">
                                             <span class="invisible d-none d-xl-block">0 лв.</span>
-                                            <h4 class="fs-3">{{item.sub_total|intcomma}} лв.</h4>
+                                            <h4 class="fs-3"><span class="item_sub_total_{{item.id}}">{{item.sub_total|intcomma}}</span> лв.</h4>
                                         </div>
                                         <div class="col-xl-1">
                                             <button type="button" class="btn btn-danger btn-sm rounded delete_cart_item" data-item_id="{{item.id}}" data-product_id="{{item.product.id}}" ><i class="fas fa-trash"></i></button>

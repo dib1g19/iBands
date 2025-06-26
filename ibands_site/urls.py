@@ -19,9 +19,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from django.shortcuts import render
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', lambda request: render(request, 'coming_soon.html'), name='coming_soon'),
     path('', include("store.urls")),
     path('auth/', include("userauths.urls")),
     path('customer/', include("customer.urls")),

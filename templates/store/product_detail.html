@@ -1,5 +1,17 @@
 {% extends 'partials/base.html' %}
 
+{% block title %}
+    {{ product.category.get_full_name_path }} - {{ product.name }}
+{% endblock %}
+
+{% block meta_description %}
+    {% if product.meta_description %}
+        {{ product.meta_description }}
+    {% else %}
+        {{ product.description|striptags|truncatechars:150 }}
+    {% endif %}
+{% endblock %}
+
 {% block content %}
     {% include "partials/_breadcrumbs.html" %}
 
@@ -22,7 +34,9 @@
                             <a href="{% url 'store:product_detail' product.category.get_full_path product.slug %}"></a>
                         </div>
                         <div class="prt_02 mb-3">
-                            <h2 class="ft-bold mb-1">{{product.name}}</h2>
+                            <h1 class="ft-bold mb-1">
+                                {{ product.category.title }} - {{ product.name }}
+                            </h1>
                             <div class="text-left">
                                 <div class="elis_rty mt-3">
                                     {% if product.regular_price %}

@@ -78,6 +78,17 @@ class Category(models.Model):
             current = current.parent
         return '/'.join(parts)
     
+    def get_full_name_path(self):
+        """
+        Returns a human-readable category path, e.g. "Parent / Child / Subcategory".
+        """
+        names = []
+        current = self
+        while current:
+            names.insert(0, current.title)
+            current = current.parent
+        return " - ".join(names)
+    
     def __str__(self):
         return self.sku
 
@@ -97,6 +108,7 @@ class Product(models.Model):
     name = models.CharField(max_length=100)
     image = models.FileField(upload_to="images", blank=True, null=True, default="default/default-image.avif")
     description = CKEditor5Field('Text', config_name='extends')
+    meta_description = models.CharField(max_length=300, blank=True, null=True, help_text="Meta description for SEO")
 
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True, verbose_name="Sale Price")

@@ -4339,6 +4339,14 @@ small {
         margin-bottom: 0;
     }
 }
+
+@media (max-width: 576px) {
+  .hero {
+    height: 24vh !important;
+    object-position: center top;
+  }
+}
+
 .short_products_info_body {
     border: 1px solid #eef0f5;
     border-radius: 0.2rem;

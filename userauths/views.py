@@ -51,7 +51,7 @@ def login_view(request):
     if request.method == 'POST':
         form = userauths_forms.LoginForm(request.POST)  
         if form.is_valid():
-            email = form.cleaned_data['email']
+            email = form.cleaned_data['email'].lower().strip()
             password = form.cleaned_data['password']
             captcha_verified = form.cleaned_data.get('captcha', False)  
 

@@ -31,7 +31,7 @@
                 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
                     <div class="prd_details">
                         <div class="prt_01 mb-1">
-                            <a href="{% url 'store:product_detail' product.category.get_full_path product.slug %}"></a>
+                            <a href="{{ product.get_absolute_url }}"></a>
                         </div>
                         <div class="prt_02 mb-3">
                             <h1 class="ft-bold mb-1">

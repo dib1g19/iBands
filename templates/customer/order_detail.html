@@ -22,7 +22,7 @@
                                         <div class="col-xl-6 col-lg-5 col-md-5 col-12 ">
                                             <div class="cart_single d-flex align-items-center mfliud-bot gap-3">
                                                 <div class="cart_selected_single_thumb">
-                                                    <a href="{% url 'store:product_detail' item.product.category.get_full_path item.product.slug %}">
+                                                    <a href="{{ item.product.get_absolute_url }}">
                                                         <img src="{{item.product.image.url}}" width="100" class="img-fluid rounded" alt="" />
                                                     </a>
                                                 </div>

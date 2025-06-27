@@ -33,7 +33,7 @@
                     <div class="cats_side_wrap text-center mx-auto mb-3">
                         <div class="sl_cat_01">
                             <div class="d-inline-flex align-items-center justify-content-center p-4 circle mb-2 border">
-                                <a href="{% url 'store:category' c.get_full_path %}" class="d-block">
+                                <a href="{{ c.get_absolute_url }}" class="d-block">
                                     {% if c.image %}
                                     <img src="{{c.image.url}}" class="img-fluid" width="80" alt="" />
                                     {% endif %}
@@ -41,7 +41,7 @@
                             </div>
                         </div>
                         <div class="sl_cat_02" style="min-height: 40px;">
-                            <h6 class="m-0 ft-medium fs-sm"><a href="{% url 'store:category' c.get_full_path %}">{{c.title}}</a></h6>
+                            <h6 class="m-0 ft-medium fs-sm"><a href="{{ c.get_absolute_url }}">{{c.title}}</a></h6>
                         </div>
                     </div>
                 </div>

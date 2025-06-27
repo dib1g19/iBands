@@ -137,7 +137,7 @@ def category(request, category_path):
     for ancestor in ancestors:
         breadcrumbs.append({
             "label": ancestor.title,
-            "url": reverse("store:category", args=[ancestor.get_full_path()])
+            "url": ancestor.get_absolute_url
         })
     breadcrumbs.append({"label": category.title, "url": ""})
 
@@ -175,7 +175,7 @@ def category_all_sub_root(request, slug):
 
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": category.title, "url": reverse("store:category", args=[category.get_full_path()])},
+        {"label": category.title, "url": category.get_absolute_url},
         {"label": f"Всички {category.title}", "url": ""},
     ]
     context = {
@@ -207,11 +207,11 @@ def category_all_sub(request, parent_slug, slug):
     for ancestor in ancestors:
         breadcrumbs.append({
             "label": ancestor.title,
-            "url": reverse("store:category", args=[ancestor.get_full_path()])
+            "url": ancestor.get_absolute_url
         })
     breadcrumbs.append({
         "label": category.title,
-        "url": reverse("store:category", args=[category.get_full_path()])
+        "url": category.get_absolute_url
     })
     breadcrumbs.append({
         "label": f"Всички {category.title}",
@@ -262,11 +262,11 @@ def product_detail(request, category_path, product_slug):
     for ancestor in ancestors:
         breadcrumbs.append({
             "label": ancestor.title,
-            "url": reverse("store:category", args=[ancestor.get_full_path()])
+            "url": ancestor.get_absolute_url
         })
     breadcrumbs.append({
         "label": category.title,
-        "url": reverse("store:category", args=[category.get_full_path()])
+        "url": category.get_absolute_url
     })
     breadcrumbs.append({"label": product.name, "url": ""})
 

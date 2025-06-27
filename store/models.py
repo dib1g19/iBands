@@ -4,6 +4,7 @@ from django.utils import timezone
 from slugify import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 from userauths import models as user_models
+from django.urls import reverse
 
 STATUS = (
     ("published", "Published"),
@@ -95,6 +96,9 @@ class Category(models.Model):
     def products(self):
         return Product.objects.filter(category=self)
     
+    def get_absolute_url(self):
+        return reverse('store:category', args=[self.get_full_path()])
+    
     def save(self, *args, **kwargs):
         if self.pk:
             orig = Category.objects.get(pk=self.pk)
@@ -146,6 +150,9 @@ class Product(models.Model):
         else:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('store:product_detail', args=[self.category.get_full_path(), self.slug])
 
 class Variant(models.Model):
     name = models.CharField(max_length=1000, verbose_name="Variant Name", null=True, blank=True)

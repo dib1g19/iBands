@@ -24,7 +24,7 @@
                                     <a href="{% url 'store:category_all_sub_root' category.slug %}">
                                 {% endif %}
                             {% else %}
-                                <a href="{% url 'store:category' sub.get_full_path %}">
+                                <a href="{{ sub.get_absolute_url }}">
                             {% endif %}
                                 {% if sub.image %}
                                 <img src="{{ sub.image.url }}" class="card-img-top" alt="{{ sub.title }}" />

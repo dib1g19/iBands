@@ -1,6 +1,6 @@
 <div class="col-xl-5 col-12">
     <div class="d-flex flex-xl-row flex-column align-items-center text-start gap-3">
-        <a href="{% url 'store:product_detail' item.product.category.get_full_path item.product.slug %}">
+        <a href="{{ item.product.get_absolute_url }}">
             <img src="{{item.product.image.url}}" alt="{{ item.product.name }}" class="product-image" />
         </a>
         <div class="text-center text-xl-start w-100">

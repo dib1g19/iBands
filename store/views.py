@@ -854,8 +854,8 @@ def filter_products(request):
                 cid_int = int(cid)
                 all_category_ids.append(cid_int)
                 category = store_models.Category.objects.get(id=cid_int)
-                sub_ids = category.subcategories.values_list('id', flat=True)
-                all_category_ids.extend(sub_ids)
+                descendant_ids = get_descendant_category_ids(category)
+                all_category_ids.extend(descendant_ids)
             except:
                 continue
         products = products.filter(category__id__in=all_category_ids)

@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from django.contrib.sitemaps.views import sitemap
 from store.sitemaps import ProductSitemap, CategorySitemap
+from django.views.static import serve
 
 sitemaps = {
     'products': ProductSitemap,
@@ -39,6 +40,11 @@ urlpatterns = [
     path('password-reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='userauths/password/password_reset_confirmation.html'), name='password_reset_confirm'),
     path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(template_name='userauths/password/password_reset_complete.html'), name='password_reset_complete'),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
+    path('robots.txt', serve, {
+        'path': 'robots.txt',
+        'document_root': settings.STATIC_ROOT,
+        'content_type': 'text/plain'
+    }),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

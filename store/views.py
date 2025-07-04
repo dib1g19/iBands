@@ -25,6 +25,7 @@ from plugin.exchange_rate import (
 )
 from customer.utils import get_user_wishlist_products
 from store.emails import send_order_notification_email
+from django.db.models import Q
 
 
 def get_category_ancestors(category):
@@ -143,7 +144,11 @@ def category(request, category_path):
 
     query = request.GET.get("q")
     if query:
-        products_list = products_list.filter(name__icontains=query)
+        products_list = products_list.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(category__title__icontains=query)
+        )
 
     products = paginate_queryset(request, products_list, 12)
 
@@ -194,7 +199,11 @@ def category_all_sub_root(request, slug):
     )
     query = request.GET.get("q")
     if query:
-        products_list = products_list.filter(name__icontains=query)
+        products_list = products_list.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(category__title__icontains=query)
+        )
     products = paginate_queryset(request, products_list, 12)
 
     breadcrumbs = [
@@ -225,7 +234,11 @@ def category_all_sub(request, parent_slug, slug):
     )
     query = request.GET.get("q")
     if query:
-        products_list = products_list.filter(name__icontains=query)
+        products_list = products_list.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(category__title__icontains=query)
+        )
     products = paginate_queryset(request, products_list, 12)
     ancestors = get_category_ancestors(category) if category else []
     breadcrumbs = [
@@ -995,7 +1008,11 @@ def filter_products(request):
 
     # Apply search filter
     if search_filter:
-        products = products.filter(name__icontains=search_filter)
+        products = products.filter(
+            Q(name__icontains=search_filter) |
+            Q(description__icontains=search_filter) |
+            Q(category__title__icontains=search_filter)
+        )
 
     # Determine items per page
     try:

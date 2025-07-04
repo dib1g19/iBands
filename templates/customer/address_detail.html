@@ -1,7 +1,7 @@
-{% extends 'partials/base.html' %} 
+{% extends 'partials/base.html' %}
 
 {% block content %}
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <section class="middle">
         <div class="container">
@@ -17,14 +17,13 @@
                         <div class="row align-items-center">
                             <form class="row m-0" action="" method="POST">
                                 {% csrf_token %}
-                                {% include "partials/_address_form.html" %}
+                                {% include 'partials/_address_form.html' %}
 
                                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                                     <div class="form-group">
-                                        <a href="{% url 'customer:addresses' %}" class="btn btn-secondary btn-sm rounded"> 
-                                            <i class="fas fa-arrow-left"></i> Назад
-                                        </a>
-                                        <button type="submit" class="btn btn-primary btn-sm rounded">Запази промените
+                                        <a href="{% url 'customer:addresses' %}" class="btn btn-secondary btn-sm rounded"><i class="fas fa-arrow-left"></i> Назад</a>
+                                        <button type="submit" class="btn btn-primary btn-sm rounded">
+                                            Запази промените
                                             <i class="fas fa-save ms-2"></i>
                                         </button>
                                     </div>
@@ -36,4 +35,4 @@
             </div>
         </div>
     </section>
-{% endblock content %}
+{% endblock %}

@@ -1,7 +1,7 @@
-{% extends 'partials/base.html' %} 
+{% extends 'partials/base.html' %}
 
 {% block content %}
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <section class="middle">
         <div class="container">
@@ -12,9 +12,7 @@
                     <div class="mb-4 d-flex align-items-center justify-content-between">
                         <h4 class="mb-0 mb-2 fw-bold">Вашите адреси</h4>
                         <div>
-                            <a href="{% url 'customer:address_create' %}" class="btn btn-sm btn-primary small rounded ft-medium">
-                                Създай адрес <i class="fas fa-plus ms-1"></i>
-                            </a>
+                            <a href="{% url 'customer:address_create' %}" class="btn btn-sm btn-primary small rounded ft-medium">Създай адрес <i class="fas fa-plus ms-1"></i></a>
                         </div>
                     </div>
 
@@ -26,22 +24,30 @@
                                         <div class="card-header-flex">
                                             <h4 class="fs-md ft-bold mb-1">Адрес {{ forloop.counter }}</h4>
                                             <div>
-                                                <a href="{% url 'customer:address_detail' address.id %}" class="btn btn-sm btn-primary small rounded ft-medium">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <a href="{% url 'customer:delete_address' address.id %}" class="btn btn-sm btn-danger small rounded ft-medium">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
+                                                <a href="{% url 'customer:address_detail' address.id %}" class="btn btn-sm btn-primary small rounded ft-medium"><i class="fas fa-edit"></i></a>
+                                                <a href="{% url 'customer:delete_address' address.id %}" class="btn btn-sm btn-danger small rounded ft-medium"><i class="fas fa-trash"></i></a>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="card-wrap-body px-3 py-3">
-                                        <p class="mb-0"><span class="fw-bold">Пълно име:</span> {{address.full_name}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Имейл:</span> {{address.email}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Мобилен телефон:</span> {{address.mobile}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Метод на доставка:</span> {{address.get_delivery_method_display}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Адрес:</span> {{address.address}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Град:</span> {{address.city}}</p>
+                                        <p class="mb-0">
+                                            <span class="fw-bold">Пълно име:</span> {{ address.full_name }}
+                                        </p>
+                                        <p class="mb-0">
+                                            <span class="fw-bold">Имейл:</span> {{ address.email }}
+                                        </p>
+                                        <p class="mb-0">
+                                            <span class="fw-bold">Мобилен телефон:</span> {{ address.mobile }}
+                                        </p>
+                                        <p class="mb-0">
+                                            <span class="fw-bold">Метод на доставка:</span> {{ address.get_delivery_method_display }}
+                                        </p>
+                                        <p class="mb-0">
+                                            <span class="fw-bold">Адрес:</span> {{ address.address }}
+                                        </p>
+                                        <p class="mb-0">
+                                            <span class="fw-bold">Град:</span> {{ address.city }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -51,4 +57,4 @@
             </div>
         </div>
     </section>
-{% endblock content %}
+{% endblock %}

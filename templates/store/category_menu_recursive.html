@@ -1,16 +1,12 @@
 {% for category in categories %}
     <li>
-        <a href="{{ category.get_absolute_url }}">
-            {{ category.title }}
-        </a>
+        <a href="{{ category.get_absolute_url }}">{{ category.title }}</a>
         {% if category.subcategories.all %}
             <ul class="nav-dropdown nav-submenu">
                 <li>
-                    <a href="{{ category.get_absolute_url }}?filter=subcategories">
-                        Всички {{ category.title }}
-                    </a>
+                    <a href="{{ category.get_absolute_url }}?filter=subcategories">Всички {{ category.title }}</a>
                 </li>
-                {% include "store/category_menu_recursive.html" with categories=category.subcategories.all %}
+                {% include 'store/category_menu_recursive.html' with categories=category.subcategories.all %}
             </ul>
         {% endif %}
     </li>

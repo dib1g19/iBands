@@ -7,6 +7,7 @@ env.read_env()
 # Use environment override for Mailgun API base URL, default to EU region
 MAILGUN_API_URL = env("MAILGUN_API_URL", "https://api.eu.mailgun.net/v3")
 
+
 def send_simple_message():
     api_key = env("MAILGUN_API_KEY")
     domain = env("MAILGUN_SENDER_DOMAIN")
@@ -38,10 +39,11 @@ def send_simple_message():
             "to": recipient,
             "subject": "Mailgun Test from Django Environment",
             "text": "If you’re seeing this, your MAILGUN setup is working!",
-        }
+        },
     )
     response.raise_for_status()
     print("✅ Sent! Response:", response.json())
+
 
 if __name__ == "__main__":
     send_simple_message()

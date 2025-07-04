@@ -20,5 +20,5 @@ if ENVIRONMENT == "prod":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ibands_site.settings.prod")
 else:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ibands_site.settings.dev")
-    
+
 application = get_wsgi_application()

@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <!-- Favicons -->
 <link rel="icon" type="image/svg+xml" href="{% static 'assets/favicons/favicon.svg' %}" />
-<link rel="icon" type="image/svg+xml" href="{% static 'assets/favicons/favicon-dark.svg' %}" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="{% static 'assets/favicons/favicon-dark.svg' %}" media="(prefers-color-scheme: dark)" />
 <link rel="shortcut icon" href="{% static 'assets/favicons/favicon.ico' %}" />
 <link rel="icon" type="image/png" href="{% static 'assets/favicons/favicon-96x96.png' %}" sizes="96x96" />
 <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/favicons/apple-touch-icon.png' %}" />
@@ -15,8 +15,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
         <!-- 🔍 SEO -->
-        <title>{% block title %}iBands – Онлайн магазин за стилни аксесоари{% endblock %}</title>
-        <meta name="description" content="{% block meta_description %}Открий изискани аксесоари в iBands. Качествени продукти, бърза доставка и отлично обслужване.{% endblock %}">
+        <title>
+            {% block title %}
+                iBands – Онлайн магазин за стилни аксесоари
+            {% endblock %}
+        </title>
+        <meta name="description"
+            content="{% block meta_description %}
+                Открий изискани аксесоари в iBands. Качествени продукти, бърза доставка и отлично обслужване.
+            {% endblock %}" />
         <meta name="keywords" content="iBands, аксесоари, онлайн магазин, гривни, часовници, мода" />
         <meta name="author" content="iBands" />
 
@@ -36,10 +43,12 @@
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-23VVED7L4R"></script>
         <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-23VVED7L4R');
+            window.dataLayer = window.dataLayer || []
+            function gtag() {
+                dataLayer.push(arguments)
+            }
+            gtag('js', new Date())
+            gtag('config', 'G-23VVED7L4R')
         </script>
 
         <!-- Stylesheets -->
@@ -69,35 +78,49 @@
                                         <a href="{% url 'customer:dashboard' %}"><i class="fas fa-user"></i></a>
                                     </li>
                                     <li>
-                                        <a href="{% url 'customer:wishlist' %}"> <i class="fas fa-heart"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count.count }}</span> </a>
+                                        <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count.count }}</span></a>
                                     </li>
                                     <li>
-                                        <a href="{% url 'store:cart' %}"> <i class="fas fa-shopping-basket"></i><span class="dn-counter total_cart_items">{{total_cart_items}}</span> </a>
+                                        <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-basket"></i><span class="dn-counter total_cart_items">{{ total_cart_items }}</span></a>
                                     </li>
                                 </ul>
                             </div>
                         </div>
                         <div class="nav-menus-wrapper" style="transition-property: none">
                             <ul class="nav-menu">
-                                <li><a href="/"><i class="fas fa-home"></i></a></li>
+                                <li>
+                                    <a href="/"><i class="fas fa-home"></i></a>
+                                </li>
                                 <li>
                                     <a href="{% url 'store:shop' %}">Всички продукти</a>
                                 </li>
-                                 <li>
+                                <li>
                                     <a href="javascript:void(0);">Категории</a>
                                     <ul class="nav-dropdown nav-submenu">
-                                        {% include "store/category_menu_recursive.html" with categories=root_categories %}                               
+                                        {% include 'store/category_menu_recursive.html' with categories=root_categories %}
                                     </ul>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);">Помощ</a>
                                     <ul class="nav-dropdown nav-submenu">
-                                        <li><a href="{% url 'store:about' %}"><i class="fas fa-info-circle me-1"></i> За нас</a></li>                                       
-                                        <li><a href="{% url 'store:contact' %}"><i class="fas fa-phone-alt me-1"></i> Контакти</a></li>
-                                        <li><a href="{% url 'store:returns_and_exchanges' %}"><i class="fas fa-undo-alt me-1"></i> Доставка и връщане</a></li>
-                                        <li><a href="{% url 'store:faqs' %}"><i class="fas fa-question-circle me-1"></i> Често задавани въпроси</a></li>
-                                        <li><a href="{% url 'store:privacy_policy' %}"><i class="fas fa-user-shield me-1"></i> Политика за поверителност</a></li>
-                                        <li><a href="{% url 'store:terms_conditions' %}"><i class="fas fa-file-alt me-1"></i> Общи условия</a></li>
+                                        <li>
+                                            <a href="{% url 'store:about' %}"><i class="fas fa-info-circle me-1"></i> За нас</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'store:contact' %}"><i class="fas fa-phone-alt me-1"></i> Контакти</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'store:returns_and_exchanges' %}"><i class="fas fa-undo-alt me-1"></i> Доставка и връщане</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'store:faqs' %}"><i class="fas fa-question-circle me-1"></i> Често задавани въпроси</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'store:privacy_policy' %}"><i class="fas fa-user-shield me-1"></i> Политика за поверителност</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'store:terms_conditions' %}"><i class="fas fa-file-alt me-1"></i> Общи условия</a>
+                                        </li>
                                     </ul>
                                 </li>
                                 <li>
@@ -109,19 +132,19 @@
                                     <a href="{% url 'store:shop' %}"><i class="fas fa-search text-white"></i></a>
                                 </li>
                                 {% if request.user.is_authenticated %}
-                                     <li>
+                                    <li>
                                         <a href="{% url 'customer:dashboard' %}"><i class="fas fa-user text-white"></i></a>
                                     </li>
                                     <li>
-                                        <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart text-white"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count.count }}</span> </a>
+                                        <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart text-white"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count.count }}</span></a>
                                     </li>
                                 {% endif %}
                                 <li>
-                                    <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-basket text-white"></i><span class="dn-counter total_cart_items">{{total_cart_items}}</span> </a>
+                                    <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-basket text-white"></i><span class="dn-counter total_cart_items">{{ total_cart_items }}</span></a>
                                 </li>
                                 {% if request.user.is_authenticated %}
                                     <li>
-                                        <a href="{% url 'userauths:sign-out' %}" class="btn btn-primary py-2 px-4 rounded"><i class="fas fa-sign-out-alt me-1"></i> Излез </a>
+                                        <a href="{% url 'userauths:sign-out' %}" class="btn btn-primary py-2 px-4 rounded"><i class="fas fa-sign-out-alt me-1"></i> Излез</a>
                                     </li>
                                 {% else %}
                                     <li>
@@ -130,21 +153,23 @@
                                     <li>
                                         <a href="{% url 'userauths:sign-up' %}" class="btn btn-primary py-2 px-4 rounded">Регистрирай се <i class="fas fa-user-plus ms-1"></i></a>
                                     </li>
-                                {% endif %} 
+                                {% endif %}
                             </ul>
                         </div>
                     </nav>
                 </div>
             </div>
-           
-           {% for message in messages %}
-                <div class="alert alert-{{message.tags}} alert-dismissible fade show text-center" role="alert">
-                    <strong>{{message}}</strong>
+
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-center" role="alert">
+                    <strong>{{ message }}</strong>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-           {% endfor %}
-            
-            {% block content %} {% endblock content %}
+            {% endfor %}
+
+            {% block content %}
+
+            {% endblock %}
             <footer class="dark-footer skin-dark-footer">
                 <div class="footer-middle">
                     <div class="container">
@@ -153,8 +178,12 @@
                             <div class="col-xl-4 col-lg-4 col-md-3 col-sm-12">
                                 <div class="footer_widget">
                                     <img src="{% static 'assets/img/logo-black.avif' %}" class="img-footer small mb-2" alt="" />
-                                    <div class="address mt-3">ул. "Капитан Райчо" 56<br />Пловдив</div>
-                                    <div class="address mt-3">(+359) 899 333 043<br />support@ibands.online</div>
+                                    <div class="address mt-3">
+                                        ул. "Капитан Райчо" 56<br />Пловдив
+                                    </div>
+                                    <div class="address mt-3">
+                                        (+359) 899 333 043<br />support@ibands.online
+                                    </div>
                                     <div class="address mt-3">
                                         <ul class="list-inline">
                                             <p class="mb-2">Последвай ни в социалните мрежи:</p>
@@ -175,13 +204,27 @@
                             <div class="col-xl-4 col-lg-4 col-md-2 col-sm-12">
                                 <div class="footer_widget">
                                     <ul class="footer-menu">
-                                        <li><a href="{% url 'store:order_tracker_page' %}"><i class="fas fa-shipping-fast me-1"></i> Проследи поръчка</a></li>
-                                        <li><a href="{% url 'store:about' %}"><i class="fas fa-info-circle me-1"></i> За нас</a></li>
-                                        <li><a href="{% url 'store:contact' %}"><i class="fas fa-phone-alt me-1"></i> Свържи се с нас</a></li>
-                                        <li><a href="{% url 'store:returns_and_exchanges' %}"><i class="fas fa-undo-alt me-1"></i> Доставка и връщане</a></li>
-                                        <li><a href="{% url 'store:faqs' %}"><i class="fas fa-question-circle me-1"></i> Често задавани въпроси</a></li>
-                                        <li><a href="{% url 'store:privacy_policy' %}"><i class="fas fa-user-shield me-1"></i> Политика за поверителност</a></li>
-                                        <li><a href="{% url 'store:terms_conditions' %}"><i class="fas fa-file-alt me-1"></i> Общи условия</a></li>
+                                        <li>
+                                            <a href="{% url 'store:order_tracker_page' %}"><i class="fas fa-shipping-fast me-1"></i> Проследи поръчка</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'store:about' %}"><i class="fas fa-info-circle me-1"></i> За нас</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'store:contact' %}"><i class="fas fa-phone-alt me-1"></i> Свържи се с нас</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'store:returns_and_exchanges' %}"><i class="fas fa-undo-alt me-1"></i> Доставка и връщане</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'store:faqs' %}"><i class="fas fa-question-circle me-1"></i> Често задавани въпроси</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'store:privacy_policy' %}"><i class="fas fa-user-shield me-1"></i> Политика за поверителност</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'store:terms_conditions' %}"><i class="fas fa-file-alt me-1"></i> Общи условия</a>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
@@ -194,9 +237,7 @@
                                         <div class="input-group">
                                             <input type="text" class="form-control" placeholder="Имейл адрес" />
                                             <div class="input-group-append">
-                                                <button type="button" class="input-group-text b-0 text-light">
-                                                    <i class="fas fa-arrow-right"></i>
-                                                </button>
+                                                <button type="button" class="input-group-text b-0 text-light"><i class="fas fa-arrow-right"></i></button>
                                             </div>
                                         </div>
                                     </div>
@@ -215,7 +256,9 @@
                             <i class="fas fs-1 fa-shipping-fast"></i>
                         </div>
                         <h2 class="mb-3 fs-3 ft-bold">Безплатна доставка!</h2>
-                        <p class="mb-4 fs-5">За поръчки над <strong>75 лв.</strong></p>
+                        <p class="mb-4 fs-5">
+                            За поръчки над <strong>75 лв.</strong>
+                        </p>
                         <button type="button" class="btn btn-success rounded px-4 py-2 fs-4" data-bs-dismiss="modal">Пазарувай сега</button>
                     </div>
                 </div>
@@ -234,6 +277,7 @@
         <script src="{% static 'assets/js/custom.js' %}"></script>
         <script src="{% static 'assets/js/function.js' %}"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% block extra_scripts %}{% endblock %}
+        {% block extra_scripts %}
+        {% endblock %}
     </body>
 </html>

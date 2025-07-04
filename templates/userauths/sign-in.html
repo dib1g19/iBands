@@ -1,7 +1,7 @@
 {% extends 'partials/base.html' %}
 
 {% block content %}
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <section class="middle" style="margin-bottom: 400px;">
         <div class="container">
@@ -13,17 +13,15 @@
                         {% csrf_token %}
                         <div class="form-group mb-4">
                             <label>Имейл *</label>
-                            {{form.email}}
+                            {{ form.email }}
                         </div>
                         <div class="form-group mb-4">
                             <label>Парола *</label>
-                            {{form.password}}
+                            {{ form.password }}
                         </div>
+                        <div class="form-group mb-4">{{ form.captcha }}</div>
                         <div class="form-group mb-4">
-                            {{form.captcha}}
-                        </div>
-                        <div class="form-group mb-4">
-                            <div class="d-flex align-items-center justify-content-between">     
+                            <div class="d-flex align-items-center justify-content-between">
                                 <div class="eltio_k2">
                                     <a href="{% url 'password_reset' %}">Забравена парола?</a>
                                 </div>
@@ -40,4 +38,4 @@
             </div>
         </div>
     </section>
-{% endblock content %}
+{% endblock %}

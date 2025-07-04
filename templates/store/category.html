@@ -3,61 +3,63 @@
 {% load humanize %}
 
 {% block content %}
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <section class="middle">
         <div class="container">
             <!-- Category Title -->
-            <h2 class="fw-bold mb-5">{{category.title}}</h2>
+            <h2 class="fw-bold mb-5">{{ category.title }}</h2>
             <!-- Subcategories Section -->
             {% if subcategories|length > 1 and not all_sub_mode %}
-            <div class="mb-5">
-                <h3 class="fw-bold">Колекции</h3>
-                <div class="row">
-                    {% for sub in subcategories %}
-                    <div class="col-6 col-md-4 col-lg-3">
-                        <div class="card mb-3">
-                            {% if sub.is_all %}
-                                {% if category.parent %}
-                                    <a href="{% url 'store:category_all_sub' category.parent.slug category.slug %}">
-                                {% else %}
-                                    <a href="{% url 'store:category_all_sub_root' category.slug %}">
-                                {% endif %}
-                            {% else %}
-                                <a href="{{ sub.get_absolute_url }}">
-                            {% endif %}
-                                {% if sub.image %}
-                                <img src="{{ sub.image.url }}" class="card-img-top" alt="{{ sub.title }}" />
-                                {% endif %}
-                            </a>
-                            <div class="card-body text-center">
-                                <h5 class="card-title">
+                <div class="mb-5">
+                    <h3 class="fw-bold">Колекции</h3>
+                    <div class="row">
+                        {% for sub in subcategories %}
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <div class="card mb-3">
                                     {% if sub.is_all %}
-                                        Всички {{ category.title }}
+                                        {% if category.parent %}
+                                            {% if sub.image %}
+                                                <a href="{% url 'store:category_all_sub' category.parent.slug category.slug %}"><img src="{{ sub.image.url }}" class="card-img-top" alt="{{ sub.title }}" /></a>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if sub.image %}
+                                                <a href="{% url 'store:category_all_sub_root' category.slug %}"><img src="{{ sub.image.url }}" class="card-img-top" alt="{{ sub.title }}" /></a>
+                                            {% endif %}
+                                        {% endif %}
                                     {% else %}
-                                        {{ sub.title }}
+                                        {% if sub.image %}
+                                            <a href="{{ sub.get_absolute_url }}"><img src="{{ sub.image.url }}" class="card-img-top" alt="{{ sub.title }}" /></a>
+                                        {% endif %}
                                     {% endif %}
-                                </h5>
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">
+                                            {% if sub.is_all %}
+                                                Всички {{ category.title }}
+                                            {% else %}
+                                                {{ sub.title }}
+                                            {% endif %}
+                                        </h5>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
             {% endif %}
 
             <!-- Search Bar -->
             <form class="mb-5 d-flex justify-content-between align-items-center gap-2">
-                <input type="text" class="form-control rounded" placeholder="Търси продукти..." name="q" id="">
-                <button type="submit" class="btn btn-primary rounded "><i class="fas fa-search"></i></button>
+                <input type="text" class="form-control rounded" placeholder="Търси продукти..." name="q" id="" />
+                <button type="submit" class="btn btn-primary rounded"><i class="fas fa-search"></i></button>
             </form>
 
             <!-- Product List -->
             <div class="row align-items-center rows-products" id="products-list">
                 {% include 'partials/_product_list.html' %}
             </div>
-			
-			{% include 'partials/_pagination.html' %}
+
+            {% include 'partials/_pagination.html' %}
         </div>
     </section>
-{% endblock content %}
+{% endblock %}

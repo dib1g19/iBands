@@ -1,8 +1,8 @@
-{% extends 'partials/base.html' %} 
+{% extends 'partials/base.html' %}
 {% load humanize %}
 
 {% block content %}
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <section class="middle">
         <div class="container">
@@ -11,41 +11,37 @@
 
                 <div class="col-12 col-md-12 col-lg-8 col-xl-8">
                     <div class="row mb-4">
-                        <h4 class="mb-0 mb-2 fw-bold">Любими ({{wishlist_count.count}})</h4>
+                        <h4 class="mb-0 mb-2 fw-bold">Любими ({{ wishlist_count.count }})</h4>
                     </div>
 
                     <div class="row align-items-center rows-products">
                         {% for w in wishlist %}
                             <div class="col-lg-4 mb-3">
-                                <div class="product_grid card b-0  rounded-3 shadow m-2 p-2">
+                                <div class="product_grid card b-0 rounded-3 shadow m-2 p-2">
                                     <div class="card-body p-0">
                                         <div class="shop_thumb position-relative">
-                                            <a class="card-img-top d-block overflow-hidden" href="{{ w.product.get_absolute_url }}">
-                                                <img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{w.product.image.url}}" alt="..." />
-                                            </a>
+                                            <a class="card-img-top d-block overflow-hidden" href="{{ w.product.get_absolute_url }}"><img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{ w.product.image.url }}" alt="..." /></a>
                                         </div>
                                     </div>
                                     <div class="card-footer b-0 p-0 pt-2 bg-white d-flex align-items-start justify-content-between">
                                         <div class="text-left">
                                             <div class="text-left">
                                                 <div class="elso_titl">
-                                                    <span class="small">
-                                                        <a href="{{ w.product.category.get_absolute_url }}">
-                                                            {{ w.product.category.title }}
-                                                        </a>
-                                                    </span>
+                                                    <span class="small"><a href="{{ w.product.category.get_absolute_url }}">{{ w.product.category.title }}</a></span>
                                                 </div>
-                                                <h5 class="mb-1">
-                                                    <span class="fw-bold"></span>{{ w.product.name }}
-                                                </h5>
+                                                <h5 class="mb-1"><span class="fw-bold"></span>{{ w.product.name }}</h5>
                                                 <p class="mb-0 mt-0">
-                                                    <span class="fw-bold">Тип: </span>{{ w.product.category.title }}
+                                                    <span class="fw-bold">Тип:</span>{{ w.product.category.title }}
                                                 </p>
                                                 {% if w.product.length %}
-                                                    <p class="mb-0"><span class="fw-bold">Дължина:</span> {{ w.product.length }}</p>
+                                                    <p class="mb-0">
+                                                        <span class="fw-bold">Дължина:</span> {{ w.product.length }}
+                                                    </p>
                                                 {% endif %}
                                                 {% if w.product.model %}
-                                                    <p class="mb-0"><span class="fw-bold">Модел:</span> {{ w.product.model }}</p>
+                                                    <p class="mb-0">
+                                                        <span class="fw-bold">Модел:</span> {{ w.product.model }}
+                                                    </p>
                                                 {% endif %}
 
                                                 {% if w.product.regular_price %}
@@ -58,20 +54,16 @@
                                                 {% endif %}
                                             </div>
                                             <div class="d-flex align-items-center gap-3">
-                                                <button type="button" class="btn btn-sm btn-primary rounded add_to_cart" data-id="{{w.product.id}}">
-                                                    Добави в количката <i class="fas fa-shopping-cart ms-2"></i>
-                                                </button>
-                                                <input type="hidden" class="quantity" value="1" name="" id="">
-                                                <a href="{% url 'customer:remove_from_wishlist' w.id %}" class="">
-                                                    <i class="fas fa-trash fs-4 text-danger"></i>
-                                                </a>
+                                                <button type="button" class="btn btn-sm btn-primary rounded add_to_cart" data-id="{{ w.product.id }}">Добави в количката <i class="fas fa-shopping-cart ms-2"></i></button>
+                                                <input type="hidden" class="quantity" value="1" name="" id="" />
+                                                <a href="{% url 'customer:remove_from_wishlist' w.id %}" class=""><i class="fas fa-trash fs-4 text-danger"></i></a>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         {% empty %}
-                        <p>Няма артикули в любими</p>
+                            <p>Няма артикули в любими</p>
                         {% endfor %}
                     </div>
 
@@ -106,4 +98,4 @@
             </div>
         </div>
     </section>
-{% endblock content %}
+{% endblock %}

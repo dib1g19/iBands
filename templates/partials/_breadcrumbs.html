@@ -10,9 +10,7 @@
                                     <a href="{{ crumb.url }}">{{ crumb.label }}</a>
                                 </li>
                             {% else %}
-                                <li class="breadcrumb-item active" aria-current="page">
-                                    {{ crumb.label }}
-                                </li>
+                                <li class="breadcrumb-item active" aria-current="page">{{ crumb.label }}</li>
                             {% endif %}
                         {% endfor %}
                     </ol>

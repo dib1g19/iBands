@@ -13,18 +13,20 @@
 {% endblock %}
 
 {% block content %}
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <!-- Product Detail Section -->
     <section class="middle">
         <div class="container">
             <div class="row">
                 <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
-                    <div class="sp-loading"><img src="{{product.image.url}}" alt="" /><br />Зареждане на изображения...</div>
+                    <div class="sp-loading">
+                        <img src="{{ product.image.url }}" alt="" /><br />Зареждане на изображения...
+                    </div>
                     <div class="sp-wrap">
-                        <a href="{{product.image.url}}"><img style="height: 100%; width: 100%; object-fit: cover; border-radius: 20px;" src="{{product.image.url}}" alt="" /></a>
+                        <a href="{{ product.image.url }}"><img style="height: 100%; width: 100%; object-fit: cover; border-radius: 20px;" src="{{ product.image.url }}" alt="" /></a>
                         {% for image in product.gallery.all %}
-                            <a href="{{image.image.url}}"><img src="{{image.image.url}}" alt="" /></a>
+                            <a href="{{ image.image.url }}"><img src="{{ image.image.url }}" alt="" /></a>
                         {% endfor %}
                     </div>
                 </div>
@@ -34,33 +36,34 @@
                             <a href="{{ product.get_absolute_url }}"></a>
                         </div>
                         <div class="prt_02 mb-3">
-                            <h1 class="ft-bold mb-1">
-                                {{ product.category.title }} - {{ product.name }}
-                            </h1>
+                            <h1 class="ft-bold mb-1">{{ product.category.title }} - {{ product.name }}</h1>
                             <div class="text-left">
                                 <div class="elis_rty mt-3">
                                     {% if product.regular_price %}
-                                        <span class="ft-medium line-through fs-md me-3">{{product.regular_price}} лв.</span>
-                                        <span class="ft-bold text-danger fs-lg me-3">{{product.price}} лв.</span>
+                                        <span class="ft-medium line-through fs-md me-3">{{ product.regular_price }} лв.</span>
+                                        <span class="ft-bold text-danger fs-lg me-3">{{ product.price }} лв.</span>
                                     {% else %}
-                                        <span class="ft-bold fs-lg me-3">{{product.price}} лв.</span>
+                                        <span class="ft-bold fs-lg me-3">{{ product.price }} лв.</span>
                                     {% endif %}
                                     <span class="ft-regular text-light bg-success py-1 px-2 fs-sm">
-                                        {% if product.stock > 0 %} В наличност {% else %} Няма наличност {% endif %}
+                                        {% if product.stock > 0 %}
+                                             В наличност
+                                        {% else %}
+                                            Няма наличност
+                                        {% endif %}
                                     </span>
                                 </div>
                             </div>
-                           
                         </div>
                         {% for variant in product.variants.all %}
-                            {% if variant.variant_type == "size" %}
+                            {% if variant.variant_type == 'size' %}
                                 <div class="prt_04 mb-4">
                                     <p class="d-flex align-items-center mb-0 text-dark ft-medium">Размер:</p>
                                     <div class="text-left pb-0 pt-2">
                                         {% for s in variant.items.all %}
                                             <div class="form-check size-option form-option form-check-inline mb-2">
-                                                <input class="form-check-input" value="{{s.title}}" type="radio" name="size" id="{{s.content}}"  />
-                                                <label class="form-option-label" for="{{s.content}}">{{s.content}}</label>
+                                                <input class="form-check-input" value="{{ s.title }}" type="radio" name="size" id="{{ s.content }}" />
+                                                <label class="form-option-label" for="{{ s.content }}">{{ s.content }}</label>
                                             </div>
                                         {% endfor %}
                                     </div>
@@ -69,46 +72,46 @@
                         {% endfor %}
 
                         {% for variant in product.variants.all %}
-                            {% if variant.variant_type == "model" %}
+                            {% if variant.variant_type == 'model' %}
                                 <div class="prt_04 mb-4">
                                     <p class="d-flex align-items-center mb-0 text-dark ft-medium">Модел:</p>
                                     <div class="text-left pb-0 pt-2">
                                         {% for s in variant.items.all %}
                                             <div class="form-check size-option form-option form-check-inline mb-2">
-                                                <input class="form-check-input" value="{{s.title}}" type="radio" name="model" id="{{s.content}}"  />
-                                                <label class="form-option-label" for="{{s.content}}">{{s.content}}</label>
+                                                <input class="form-check-input" value="{{ s.title }}" type="radio" name="model" id="{{ s.content }}" />
+                                                <label class="form-option-label" for="{{ s.content }}">{{ s.content }}</label>
                                             </div>
                                         {% endfor %}
                                     </div>
                                 </div>
                             {% endif %}
                         {% endfor %}
-                        
+
                         <div class="prt_05 mb-4">
-                            <div class="d-flex gap-3 mb-7 align-items-center ">
+                            <div class="d-flex gap-3 mb-7 align-items-center">
                                 <div class="">
                                     <select class="form-select quantity" name="quantity" id="quantity">
                                         {% for qty in product_stock_range %}
-                                            <option class="stock-{{qty}}" value="{{ qty }}">{{ qty }}</option>
+                                            <option class="stock-{{ qty }}" value="{{ qty }}">{{ qty }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
                                 <div>
-                                    <button type="button"
-                                            class="btn btn-primary rounded add_to_cart fs-md py-2 px-3 px-md-4"
-                                            data-id="{{ product.id }}">
-                                        Добави в количка <i class="fas fa-shopping-cart ms-2"></i>
-                                    </button>
+                                    <button type="button" class="btn btn-primary rounded add_to_cart fs-md py-2 px-3 px-md-4" data-id="{{ product.id }}">Добави в количка <i class="fas fa-shopping-cart ms-2"></i></button>
                                 </div>
-                                <a class="add_to_wishlist d-inline-flex align-items-center justify-content-center"
-                                style="width: 40px; height: 40px;"
-                                data-product_id="{{ product.id }}">
+                                <a class="add_to_wishlist d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" data-product_id="{{ product.id }}">
                                     <i class="fa-heart
                                             {% if request.user.is_authenticated and product.id in user_wishlist_products %}
+                                            
                                                 fs-4 fas text-danger
-                                            {% else %}
+
+                                        {% else %}
+                                            
                                                 fs-5 far text-dark
-                                            {% endif %}"></i>
+
+                                        {% endif %}">
+
+                                    </i>
                                 </a>
                             </div>
                         </div>
@@ -131,18 +134,16 @@
                             <a class="nav-link" href="#information" id="information-tab" data-bs-toggle="tab" role="tab" aria-controls="information" aria-selected="false">Характеристики</a>
                         </li>
                         {% if has_length_variant %}
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" href="#length" id="length-tab" data-bs-toggle="tab" role="tab" aria-controls="length" aria-selected="false">Дължина</a>
-                        </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" href="#length" id="length-tab" data-bs-toggle="tab" role="tab" aria-controls="length" aria-selected="false">Дължина</a>
+                            </li>
                         {% endif %}
                     </ul>
                     <div class="tab-content" id="myTabContent">
                         <!-- Description Tab -->
                         <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
                             <div class="description_info">
-                                <p class="p-0 mb-2">
-                                    {{product.description|safe}}
-                                </p>
+                                <p class="p-0 mb-2">{{ product.description|safe }}</p>
                             </div>
                         </div>
                         <!-- Specification Tab -->
@@ -151,11 +152,11 @@
                                 <table class="table">
                                     <tbody>
                                         {% for variant in product.variants.all %}
-                                            {% if variant.variant_type == "specification" %}
+                                            {% if variant.variant_type == 'specification' %}
                                                 {% for s in variant.items.all %}
                                                     <tr>
-                                                        <th class="ft-medium text-dark">{{s.title}}</th>
-                                                        <td>{{s.content}}</td>
+                                                        <th class="ft-medium text-dark">{{ s.title }}</th>
+                                                        <td>{{ s.content }}</td>
                                                     </tr>
                                                 {% endfor %}
                                             {% endif %}
@@ -170,7 +171,7 @@
                                 <table class="table table-sm align-middle text-center">
                                     <tbody>
                                         {% for variant in product.variants.all %}
-                                            {% if variant.variant_type == "length" %}
+                                            {% if variant.variant_type == 'length' %}
                                                 {% for s in variant.items.all %}
                                                     <tr>
                                                         <td>
@@ -200,7 +201,7 @@
             </div>
         </div>
     </section>
-    
+
     <!-- Related Products Section -->
     {% if products %}
         <section class="middle pt-0">
@@ -221,4 +222,4 @@
             </div>
         </section>
     {% endif %}
-{% endblock content %}
+{% endblock %}

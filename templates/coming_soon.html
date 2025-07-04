@@ -1,136 +1,132 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="bg">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>iBands – Очаквайте скоро!</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="{% static 'assets/css/styles.css' %}" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-<style>
-@media (max-width: 576px) {
-  .coming-soon-hero {
-    height: 24vh !important;
-    object-position: center top;
-  }
-}
-</style>
-</head>
-<body>
-    <div id="main-wrapper">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>iBands – Очаквайте скоро!</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="{% static 'assets/css/styles.css' %}" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+        <style>
+            @media (max-width: 576px) {
+                .coming-soon-hero {
+                    height: 24vh !important;
+                    object-position: center top;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="main-wrapper">
+            <!-- Hero Section (full width cover image, flush to header) -->
+            <section>
+                <div class="container-fluid p-0">
+                    <div class="position-relative">
+                        <img class="img-fluid w-100 coming-soon-hero" style="height: 40vh; object-fit: cover; " src="{% static 'assets/img/cover.avif' %}" alt="Hero Cover" />
+                        <!-- Optional: You can put countdown or button absolutely positioned here if you want -->
+                    </div>
+                </div>
+            </section>
+            <!-- Coming Soon Main Section -->
+            <section class="container d-flex flex-column align-items-center justify-content-center" style="min-height:50vh;">
+                <div class="text-center">
+                    <h1 class="fw-bold mb-3 display-4">Очаквайте скоро!</h1>
+                    <div id="countdown" class="countdown fs-3 fw-bold text-primary mb-4"></div>
+                    <p class="mb-4 text-muted fs-5">
+                        Сайтът на <strong>iBands</strong> се подготвя за официалното си откриване.<br />
+                        Следете ни в социалните мрежи или се абонирайте за новини!
+                    </p>
+                    <!-- Social icons -->
+                    <div class="mb-4">
+                        <a href="https://www.facebook.com/share/1EazG79FaH/?mibextid=wwXIfr" target="_blank" class="mx-2 text-primary fs-2"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/ibandsbg?igsh=MWxoZmkxZGVrOWQ3Zg%3D%3D&utm_source=qr" target="_blank" class="mx-2 text-danger fs-2"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@ibandsbg?_t=8sEeWXyGNuB&_r=1" target="_blank" class="mx-2" style="color:#000; font-size:2rem"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                    <!-- Subscribe newsletter -->
+                    <div class="d-flex justify-content-center">
+                        <form class="subscribe-box w-100" style="max-width:350px;">
+                            <div class="input-group">
+                                <input type="email" class="form-control" placeholder="Имейл адрес" required />
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                    <small class="text-muted d-block mt-3">Получавай индивидуални отстъпки, достъп до лимитирани колекции и подаръци.</small>
+                </div>
+            </section>
 
-        <!-- Hero Section (full width cover image, flush to header) -->
-        <section>
-            <div class="container-fluid p-0">
-                <div class="position-relative">
-                    <img class="img-fluid w-100 coming-soon-hero" style="height: 40vh; object-fit: cover; " src="{% static 'assets/img/cover.avif' %}" alt="Hero Cover" />
-                    <!-- Optional: You can put countdown or button absolutely positioned here if you want -->
-                </div>
-            </div>
-        </section>
-        <!-- Coming Soon Main Section -->
-        <section class="container d-flex flex-column align-items-center justify-content-center" style="min-height:50vh;">
-            <div class="text-center">
-                <h1 class="fw-bold mb-3 display-4">Очаквайте скоро!</h1>
-                <div id="countdown" class="countdown fs-3 fw-bold text-primary mb-4"></div>
-                <p class="mb-4 text-muted fs-5">
-                    Сайтът на <strong>iBands</strong> се подготвя за официалното си откриване.<br>
-                    Следете ни в социалните мрежи или се абонирайте за новини!
-                </p>
-                <!-- Social icons -->
-                <div class="mb-4">
-                    <a href="https://www.facebook.com/share/1EazG79FaH/?mibextid=wwXIfr" target="_blank" class="mx-2 text-primary fs-2"><i class="fab fa-facebook"></i></a>
-                    <a href="https://www.instagram.com/ibandsbg?igsh=MWxoZmkxZGVrOWQ3Zg%3D%3D&utm_source=qr" target="_blank" class="mx-2 text-danger fs-2"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.tiktok.com/@ibandsbg?_t=8sEeWXyGNuB&_r=1" target="_blank" class="mx-2" style="color:#000; font-size:2rem"><i class="fab fa-tiktok"></i></a>
-                </div>
-                <!-- Subscribe newsletter -->
-                <div class="d-flex justify-content-center">
-                    <form class="subscribe-box w-100" style="max-width:350px;">
-                        <div class="input-group">
-                            <input type="email" class="form-control" placeholder="Имейл адрес" required>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-arrow-right"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-                <small class="text-muted d-block mt-3">
-                    Получавай индивидуални отстъпки, достъп до лимитирани колекции и подаръци.
-                </small>
-            </div>
-        </section>
-
-        <footer class="dark-footer skin-dark-footer">
-            <div class="footer-middle">
-                <div class="container">
-                    <div class="row">
-                        <!-- Only keep the first column and subscribe box, or simplify further if you want -->
-                        <div class="col-xl-4 col-lg-4 col-md-3 col-sm-12">
-                            <div class="footer_widget">
-                                <img src="{% static 'assets/img/logo-black.avif' %}" class="img-footer small mb-2" alt="" />
-                                <div class="address mt-3">ул. "Капитан Райчо" 56<br />Пловдив</div>
-                                <div class="address mt-3">(+359) 899 333 043<br />support@ibands.online</div>
-                                <div class="address mt-3">
-                                    <ul class="list-inline">
-                                        <p class="mb-2">Последвай ни в социалните мрежи:</p>
-                                        <li class="list-inline-item">
-                                            <a target="_blank" href="https://www.facebook.com/share/1EazG79FaH/?mibextid=wwXIfr"><i class="fab fa-facebook fa-2x"></i></a>
-                                        </li>
-                                        <li class="list-inline-item">
-                                            <a target="_blank" href="https://www.instagram.com/ibandsbg?igsh=MWxoZmkxZGVrOWQ3Zg%3D%3D&utm_source=qr"><i class="fab fa-instagram fa-2x"></i></a>
-                                        </li>
-                                        <li class="list-inline-item">
-                                            <a target="_blank" href="https://www.tiktok.com/@ibandsbg?_t=8sEeWXyGNuB&_r=1"><i class="fab fa-tiktok fa-2x"></i></a>
-                                        </li>
-                                    </ul>
+            <footer class="dark-footer skin-dark-footer">
+                <div class="footer-middle">
+                    <div class="container">
+                        <div class="row">
+                            <!-- Only keep the first column and subscribe box, or simplify further if you want -->
+                            <div class="col-xl-4 col-lg-4 col-md-3 col-sm-12">
+                                <div class="footer_widget">
+                                    <img src="{% static 'assets/img/logo-black.avif' %}" class="img-footer small mb-2" alt="" />
+                                    <div class="address mt-3">
+                                        ул. "Капитан Райчо" 56<br />Пловдив
+                                    </div>
+                                    <div class="address mt-3">
+                                        (+359) 899 333 043<br />support@ibands.online
+                                    </div>
+                                    <div class="address mt-3">
+                                        <ul class="list-inline">
+                                            <p class="mb-2">Последвай ни в социалните мрежи:</p>
+                                            <li class="list-inline-item">
+                                                <a target="_blank" href="https://www.facebook.com/share/1EazG79FaH/?mibextid=wwXIfr"><i class="fab fa-facebook fa-2x"></i></a>
+                                            </li>
+                                            <li class="list-inline-item">
+                                                <a target="_blank" href="https://www.instagram.com/ibandsbg?igsh=MWxoZmkxZGVrOWQ3Zg%3D%3D&utm_source=qr"><i class="fab fa-instagram fa-2x"></i></a>
+                                            </li>
+                                            <li class="list-inline-item">
+                                                <a target="_blank" href="https://www.tiktok.com/@ibandsbg?_t=8sEeWXyGNuB&_r=1"><i class="fab fa-tiktok fa-2x"></i></a>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-xl-4 col-lg-4 col-md-3 col-sm-12">
-                            <div class="footer_widget">
-                                <h4 class="widget_title">Присъедини се към iBands club</h4>
-                                <p>Получавай индивидуални отстъпки, достъп до лимитирани колекции, подаръци и изненади преди всички останали</p>
-                                <div class="foot-news-last">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" placeholder="Имейл адрес" />
-                                        <div class="input-group-append">
-                                            <button type="button" class="input-group-text b-0 text-light">
-                                                <i class="fas fa-arrow-right"></i>
-                                            </button>
+                            <div class="col-xl-4 col-lg-4 col-md-3 col-sm-12">
+                                <div class="footer_widget">
+                                    <h4 class="widget_title">Присъедини се към iBands club</h4>
+                                    <p>Получавай индивидуални отстъпки, достъп до лимитирани колекции, подаръци и изненади преди всички останали</p>
+                                    <div class="foot-news-last">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" placeholder="Имейл адрес" />
+                                            <div class="input-group-append">
+                                                <button type="button" class="input-group-text b-0 text-light"><i class="fas fa-arrow-right"></i></button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            <!-- Remove the 'Help Links' column to avoid broken links -->
                         </div>
-                        <!-- Remove the 'Help Links' column to avoid broken links -->
                     </div>
                 </div>
-            </div>
-        </footer>
-    </div>
+            </footer>
+        </div>
 
-    <script src="{% static 'assets/js/jquery.min.js' %}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    // Countdown timer as before
-    var launchDate = new Date("2025-06-27T11:00:00+03:00").getTime();
-    function updateCountdown() {
-        var now = new Date().getTime();
-        var distance = launchDate - now;
-        if (distance <= 0) {
-            document.getElementById("countdown").innerHTML = "Вече сме онлайн!";
-            return;
-        }
-        var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        document.getElementById("countdown").innerHTML =
-            days + "д " + hours + "ч " + minutes + "м " + seconds + "с ";
-    }
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-    </script>
-</body>
+        <script src="{% static 'assets/js/jquery.min.js' %}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Countdown timer as before
+            var launchDate = new Date('2025-06-27T11:00:00+03:00').getTime()
+            function updateCountdown() {
+                var now = new Date().getTime()
+                var distance = launchDate - now
+                if (distance <= 0) {
+                    document.getElementById('countdown').innerHTML = 'Вече сме онлайн!'
+                    return
+                }
+                var days = Math.floor(distance / (1000 * 60 * 60 * 24))
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000)
+                document.getElementById('countdown').innerHTML = days + 'д ' + hours + 'ч ' + minutes + 'м ' + seconds + 'с '
+            }
+            updateCountdown()
+            setInterval(updateCountdown, 1000)
+        </script>
+    </body>
 </html>

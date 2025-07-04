@@ -1,106 +1,108 @@
-{% extends 'partials/base.html' %} 
+{% extends 'partials/base.html' %}
 
 {% block content %}
-	{% include "partials/_breadcrumbs.html" %}
-	
-	<section class="middle">
-		<div class="container">
-			<!-- Page Title & Search -->
-			<h2 class="fw-bold mb-5">Всички продукти (<span class="product_count">{{ products_list.count }}</span>)</h2>
-			<div class="mb-5 d-flex justify-content-between align-items-center gap-2">
-				<input type="text" class="form-control rounded search-filter" placeholder="Търси продукти..." name="search-filter" id="">
-				<button class="btn btn-primary rounded "><i class="fas fa-search"></i></button>
-			</div>
+    {% include 'partials/_breadcrumbs.html' %}
 
-			<div class="row">
-				<!-- Sidebar Filters -->
-				<div class="col-lg-3">
-					<!-- Category Filter -->
-					<div class="border rounded p-3 mb-3">
-					    <h4>Категории</h4>
-					    <ul class="category-filter-list list-unstyled">
-					        {% for root in categories %}
-					            <li>
-					                <div class="d-flex align-items-center">
+    <section class="middle">
+        <div class="container">
+            <!-- Page Title & Search -->
+            <h2 class="fw-bold mb-5">Всички продукти (<span class="product_count">{{ products_list.count }}</span>)</h2>
+            <div class="mb-5 d-flex justify-content-between align-items-center gap-2">
+                <input type="text" class="form-control rounded search-filter" placeholder="Търси продукти..." name="search-filter" id="" />
+                <button class="btn btn-primary rounded"><i class="fas fa-search"></i></button>
+            </div>
+
+            <div class="row">
+                <!-- Sidebar Filters -->
+                <div class="col-lg-3">
+                    <!-- Category Filter -->
+                    <div class="border rounded p-3 mb-3">
+                        <h4>Категории</h4>
+                        <ul class="category-filter-list list-unstyled">
+                            {% for root in categories %}
+                                <li>
+                                    <div class="d-flex align-items-center">
                                         <div class="form-check mb-1">
-                                            <input type="checkbox" class="form-check-input category-filter" value="{{ root.id }}" id="cat{{ root.id }}">
+                                            <input type="checkbox" class="form-check-input category-filter" value="{{ root.id }}" id="cat{{ root.id }}" />
                                             <label class="form-check-label fs-6" for="cat{{ root.id }}">{{ root.title }}</label>
                                         </div>
-					                    {% if root.subcategories.all %}
-					                        <button type="button" class="btn btn-link btn-sm ms-2" data-bs-toggle="collapse" data-bs-target="#subs{{ root.id }}" aria-expanded="false" aria-controls="subs{{ root.id }}">&#x25BC;</button>
-					                    {% endif %}
-					                    <span class="ms-auto text-muted small">{{ root.total_products }}</span>
-					                </div>
-					                {% if root.subcategories.all %}
-					                    <ul class="subcategories collapse ms-4" id="subs{{ root.id }}">
-					                        {% for sub in root.subcategories.all %}
-					                            <li>
-					                                <div class="d-flex align-items-center">
+                                        {% if root.subcategories.all %}
+                                            <button type="button" class="btn btn-link btn-sm ms-2" data-bs-toggle="collapse" data-bs-target="#subs{{ root.id }}" aria-expanded="false" aria-controls="subs{{ root.id }}">&#x25BC;</button>
+                                        {% endif %}
+                                        <span class="ms-auto text-muted small">{{ root.total_products }}</span>
+                                    </div>
+                                    {% if root.subcategories.all %}
+                                        <ul class="subcategories collapse ms-4" id="subs{{ root.id }}">
+                                            {% for sub in root.subcategories.all %}
+                                                <li>
+                                                    <div class="d-flex align-items-center">
                                                         <div class="form-check mb-1">
-                                                            <input type="checkbox" class="form-check-input category-filter" value="{{ sub.id }}" id="cat{{ sub.id }}">
+                                                            <input type="checkbox" class="form-check-input category-filter" value="{{ sub.id }}" id="cat{{ sub.id }}" />
                                                             <label class="form-check-label fs-6" for="cat{{ sub.id }}">{{ sub.title }}</label>
                                                         </div>
-					                                    {% if sub.subcategories.all %}
-					                                        <button type="button" class="btn btn-link btn-sm ms-2" data-bs-toggle="collapse" data-bs-target="#subs{{ sub.id }}" aria-expanded="false" aria-controls="subs{{ sub.id }}">&#x25BC;</button>
-					                                    {% endif %}
-					                                </div>
-					                                {% if sub.subcategories.all %}
-					                                    <ul class="subcategories collapse ms-4" id="subs{{ sub.id }}">
-					                                        {% for subsub in sub.subcategories.all %}
-					                                            <li>
-                                                                <div class="form-check mb-1">
-					                                                    <input type="checkbox" class="form-check-input category-filter" value="{{ subsub.id }}" id="cat{{ subsub.id }}">
-					                                                    <label class="form-check-label fs-6" for="cat{{ subsub.id }}">{{ subsub.title }}</label>
-                                                                </div>
-					                                            </li>
-					                                        {% endfor %}
-					                                    </ul>
-					                                {% endif %}
-					                            </li>
-					                        {% endfor %}
-					                    </ul>
-					                {% endif %}
-					            </li>
-					        {% endfor %}
-					    </ul>
-					</div>
-					<!-- Price Filter -->
-					<div class="border rounded p-3 mb-3">
-						<h4>Цена</h4>
-						<div  style="margin-left: -18px;">
-							{% for p in prices %}
-								<div class="mb-1 form-check">
-									<input type="radio" name="price-filter" value="{{p.id}}" class="form-check-input " id="{{p.id}}">
-									<label class="form-check-label fs-6" for="{{p.id}}">{{p.value}}</label>
-								</div>
-							{% endfor %}
-						</div>
-					</div>
-					<!-- Display Filter -->
-					<div class="border rounded p-3 mb-3">
-						<h4>Резултати на страница</h4>
-						<div  style="margin-left: -18px;">
-							{% for i in item_display %}
-								<div class="mb-1 form-check">
-									<input type="radio" name="items-display" value="{{i.id}}" class="form-check-input items-display" id="display{{i.id}}">
-									<label class="form-check-label fs-6" for="display{{i.id}}">{{i.value}}</label>
-								</div>
-							{% endfor %}
-						</div>
-					</div>
-					<!-- Reset Filters Button -->
-					<button class="btn btn-primary btn-sm rounded reset_shop_filter_btn">Премахни филтри <i class="fas fa-rotate ms-2"></i></button>
-				</div>
+                                                        {% if sub.subcategories.all %}
+                                                            <button type="button" class="btn btn-link btn-sm ms-2" data-bs-toggle="collapse" data-bs-target="#subs{{ sub.id }}" aria-expanded="false" aria-controls="subs{{ sub.id }}">&#x25BC;</button>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if sub.subcategories.all %}
+                                                        <ul class="subcategories collapse ms-4" id="subs{{ sub.id }}">
+                                                            {% for subsub in sub.subcategories.all %}
+                                                                <li>
+                                                                    <div class="form-check mb-1">
+                                                                        <input type="checkbox" class="form-check-input category-filter" value="{{ subsub.id }}" id="cat{{ subsub.id }}" />
+                                                                        <label class="form-check-label fs-6" for="cat{{ subsub.id }}">{{ subsub.title }}</label>
+                                                                    </div>
+                                                                </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <!-- Price Filter -->
+                    <div class="border rounded p-3 mb-3">
+                        <h4>Цена</h4>
+                        <div style="margin-left: -18px;">
+                            {% for p in prices %}
+                                <div class="mb-1 form-check">
+                                    <input type="radio" name="price-filter" value="{{ p.id }}" class="form-check-input" id="{{ p.id }}" />
+                                    <label class="form-check-label fs-6" for="{{ p.id }}">{{ p.value }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <!-- Display Filter -->
+                    <div class="border rounded p-3 mb-3">
+                        <h4>Резултати на страница</h4>
+                        <div style="margin-left: -18px;">
+                            {% for i in item_display %}
+                                <div class="mb-1 form-check">
+                                    <input type="radio" name="items-display" value="{{ i.id }}" class="form-check-input items-display" id="display{{ i.id }}" />
+                                    <label class="form-check-label fs-6" for="display{{ i.id }}">{{ i.value }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <!-- Reset Filters Button -->
+                    <button class="btn btn-primary btn-sm rounded reset_shop_filter_btn">Премахни филтри <i class="fas fa-rotate ms-2"></i></button>
+                </div>
 
-				<!-- Products Section -->
-				<div class="col-lg-9"> 
-					<div class="row align-items-center rows-products" id="products-list">
-                		{% include 'partials/_product_list.html' %}
-					</div>
-				</div>
-			</div>
+                <!-- Products Section -->
+                <div class="col-lg-9">
+                    <div class="row align-items-center rows-products" id="products-list">
+                        {% include 'partials/_product_list.html' %}
+                    </div>
+                </div>
+            </div>
 
-			<div id="pagination-block">{% include 'partials/_pagination.html' %}</div>
-		</div>
-	</section>
-{% endblock content %}
+            <div id="pagination-block">
+                {% include 'partials/_pagination.html' %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

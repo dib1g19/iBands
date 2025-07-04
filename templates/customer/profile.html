@@ -1,7 +1,7 @@
-{% extends 'partials/base.html' %} 
+{% extends 'partials/base.html' %}
 
 {% block content %}
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <section class="middle">
         <div class="container">
@@ -25,21 +25,21 @@
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
                                     <label class="small text-dark ft-medium">Пълно име</label>
-                                    <input type="text" name="full_name" class="form-control rounded" value="{{profile.full_name}}" />
+                                    <input type="text" name="full_name" class="form-control rounded" value="{{ profile.full_name }}" />
                                 </div>
                             </div>
 
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
                                     <label class="small text-dark ft-medium">Имейл</label>
-                                    <input type="email" name="email" class="form-control rounded bg-light" readonly value="{{profile.user.email}}" />
+                                    <input type="email" name="email" class="form-control rounded bg-light" readonly value="{{ profile.user.email }}" />
                                 </div>
                             </div>
 
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
                                     <label class="small text-dark ft-medium">Мобилен телефон</label>
-                                    <input type="text" name="mobile" class="form-control rounded" value="{{profile.mobile}}" />
+                                    <input type="text" name="mobile" class="form-control rounded" value="{{ profile.mobile }}" />
                                 </div>
                             </div>
 
@@ -58,4 +58,4 @@
             </div>
         </div>
     </section>
-{% endblock content %}
+{% endblock %}

@@ -50,7 +50,9 @@ $(document).ready(function () {
                 console.log(response);
                 Toast.fire({
                     icon: "success",
-                    html: response.message + '<br><a href="/cart/" class="btn btn-sm btn-primary mt-2 w-100">Виж количката</a>' 
+                    html:
+                        response.message +
+                        '<br><a href="/cart/" class="btn btn-sm btn-primary mt-2 w-100">Виж количката</a>',
                 });
                 $(".total_cart_items").text(response.total_cart_items);
             },
@@ -81,7 +83,7 @@ $(document).ready(function () {
         var current_qty = parseInt($(".item-qty-" + item_id).val());
 
         // Default to increment/decrement by 1
-        var change_by = (update_type === "increase") ? 1 : -1;
+        var change_by = update_type === "increase" ? 1 : -1;
 
         // Prevent decreasing below 1
         if (update_type === "decrease" && current_qty <= 1) {
@@ -196,25 +198,29 @@ $(document).ready(function () {
         return filters;
     }
 
-    $(document).on("change", ".search-filter, .category-filter, .rating-filter, input[name='price-filter'], input[name='items-display'], .size-filter, .colors-filter", function () {
-        let filters = getFilters();
-        $.ajax({
-            url: "/filter_products/",
-            method: "GET",
-            data: filters,
-            success: function (response) {
-                // Replace product list with the filtered products
-                $("#products-list").html(response.html);
-                $(".product_count").html(response.product_count);
-                if (response.pagination_html !== undefined) {
-                    $("#pagination-block").html(response.pagination_html);
-                }
-            },
-            error: function (error) {
-                console.log("Error fetching filtered products:", error);
-            },
-        });
-    });
+    $(document).on(
+        "change",
+        ".search-filter, .category-filter, .rating-filter, input[name='price-filter'], input[name='items-display'], .size-filter, .colors-filter",
+        function () {
+            let filters = getFilters();
+            $.ajax({
+                url: "/filter_products/",
+                method: "GET",
+                data: filters,
+                success: function (response) {
+                    // Replace product list with the filtered products
+                    $("#products-list").html(response.html);
+                    $(".product_count").html(response.product_count);
+                    if (response.pagination_html !== undefined) {
+                        $("#pagination-block").html(response.pagination_html);
+                    }
+                },
+                error: function (error) {
+                    console.log("Error fetching filtered products:", error);
+                },
+            });
+        }
+    );
 
     $(document).on("click", ".reset_shop_filter_btn", function () {
         let filters = {
@@ -272,7 +278,10 @@ $(document).ready(function () {
         e.preventDefault();
         var page = null;
         // If the link is disabled or active, do nothing
-        if ($(this).closest("li").hasClass("disabled") || $(this).closest("li").hasClass("active")) {
+        if (
+            $(this).closest("li").hasClass("disabled") ||
+            $(this).closest("li").hasClass("active")
+        ) {
             return;
         }
         // Try to extract page number from href or data attribute
@@ -317,27 +326,40 @@ $(document).ready(function () {
             url: `/customer/toggle_wishlist/${product_id}/`,
             success: function (response) {
                 if (response.status === "added") {
-                    button.html("<i class='fas fa-heart fs-4 text-danger'></i>");
+                    button.html(
+                        "<i class='fas fa-heart fs-4 text-danger'></i>"
+                    );
                 } else if (response.status === "removed") {
                     button.html("<i class='far fa-heart fs-5 text-dark'></i>");
                 }
                 Toast.fire({
-                    icon: response.status === "added" ? "success" : (response.status === "removed" ? "info" : "warning"),
+                    icon:
+                        response.status === "added"
+                            ? "success"
+                            : response.status === "removed"
+                            ? "info"
+                            : "warning",
                     title: response.message,
                 });
                 if (response.total_wishlist_items !== undefined) {
-                    $(".total_wishlist_items").text(response.total_wishlist_items);
+                    $(".total_wishlist_items").text(
+                        response.total_wishlist_items
+                    );
                 }
             },
         });
     });
-        // Show free shipping modal only once per session
-    if (!sessionStorage.getItem('freeShippingModalShown')) {
-        var modal = new bootstrap.Modal(document.getElementById('freeShippingModal'));
+    // Show free shipping modal only once per session
+    if (!sessionStorage.getItem("freeShippingModalShown")) {
+        var modal = new bootstrap.Modal(
+            document.getElementById("freeShippingModal")
+        );
         modal.show();
         // Remember not to show again this session
-        document.getElementById('freeShippingModal').addEventListener('hidden.bs.modal', function () {
-            sessionStorage.setItem('freeShippingModalShown', '1');
-        });
+        document
+            .getElementById("freeShippingModal")
+            .addEventListener("hidden.bs.modal", function () {
+                sessionStorage.setItem("freeShippingModalShown", "1");
+            });
     }
 });

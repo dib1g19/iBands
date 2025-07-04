@@ -1,13 +1,13 @@
 {% extends 'partials/base.html' %}
-{% load humanize %} 
+{% load humanize %}
 
 {% block content %}
     <style>
-        .razorpay-payment-button{
+        .razorpay-payment-button {
             display: none;
         }
     </style>
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <section class="middle">
         <div class="container">
@@ -23,33 +23,34 @@
                 <div class="col-lg-9">
                     <h4 class="fw-bold p-3">Продукти</h4>
                     <div style="overflow-y: scroll; max-height: 650px; overflow-x: hidden" class="p-3">
-                        
                         {% for item in order.order_items.all %}
                             <div class="shadow rounded mb-3">
                                 <div class="row d-flex align-items-center text-center p-3">
-                                    {% include "partials/_product_card.html" with item=item %}
+                                    {% include 'partials/_product_card.html' with item=item %}
                                     <div class="col-xl-2">
                                         <p class="mb-0">Цена</p>
                                         {% if item.product.regular_price %}
-                                            <span class="text-decoration-line-through">
-                                                {{ item.product.regular_price|intcomma }} лв.
-                                            </span>
+                                            <span class="text-decoration-line-through">{{ item.product.regular_price|intcomma }} лв.</span>
                                         {% else %}
                                             <span class="invisible d-none d-xl-inline">0 лв.</span>
                                         {% endif %}
-                                        <h4 class="fs-3 {% if item.product.regular_price %}fw-bold text-danger{% else %}text-dark{% endif %}">
+                                        <h4 class="fs-3 {% if item.product.regular_price %}
+                                                fw-bold text-danger
+                                            {% else %}
+                                                text-dark
+                                            {% endif %}">
                                             {{ item.price|intcomma }} лв.
                                         </h4>
                                     </div>
                                     <div class="col-xl-2">
                                         <p class="mb-0">Количество</p>
                                         <span class="invisible d-none d-xl-block">0 лв.</span>
-                                        <h4 class="fs-3">{{item.qty}}</h4>
+                                        <h4 class="fs-3">{{ item.qty }}</h4>
                                     </div>
                                     <div class="col-xl-2">
                                         <p class="mb-0">Общо</p>
                                         <span class="invisible d-none d-xl-block">0 лв.</span>
-                                        <h4 class="fs-3">{{item.sub_total|intcomma}} лв.</h4>
+                                        <h4 class="fs-3">{{ item.sub_total|intcomma }} лв.</h4>
                                     </div>
                                     <div class="col-xl-1">
                                         <a href="{% url 'store:cart' %}" class="btn btn-primary btn-sm rounded"><i class="fas fa-edit"></i></a>
@@ -57,8 +58,6 @@
                                 </div>
                             </div>
                         {% endfor %}
-                            
-                        
                     </div>
 
                     <div class="p-3">
@@ -71,16 +70,26 @@
                                         </div>
                                     </div>
                                     <div class="card-wrap-body px-3 py-3">
-                                        <p class="mb-0"><span class="fw-bold">Пълно Име: </span>{{order.address.full_name}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Имейл: </span>{{order.address.email}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Телефон: </span>{{order.address.mobile}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Метод на доставка: </span>{{order.address.get_delivery_method_display}}</p>
-                                        <p class="mb-0"><span class="fw-bold">Град: </span> {{order.address.city}}</p>
-                                        <p class="mb-3"><span class="fw-bold">Адрес: </span>{{order.address.address}}</p>
+                                        <p class="mb-0">
+                                            <span class="fw-bold">Пълно Име:</span>{{ order.address.full_name }}
+                                        </p>
+                                        <p class="mb-0">
+                                            <span class="fw-bold">Имейл:</span>{{ order.address.email }}
+                                        </p>
+                                        <p class="mb-0">
+                                            <span class="fw-bold">Телефон:</span>{{ order.address.mobile }}
+                                        </p>
+                                        <p class="mb-0">
+                                            <span class="fw-bold">Метод на доставка:</span>{{ order.address.get_delivery_method_display }}
+                                        </p>
+                                        <p class="mb-0">
+                                            <span class="fw-bold">Град:</span> {{ order.address.city }}
+                                        </p>
+                                        <p class="mb-3">
+                                            <span class="fw-bold">Адрес:</span>{{ order.address.address }}
+                                        </p>
                                         {% if request.user.is_authenticated %}
-                                            <a href="{% url 'store:cart' %}" class="mt-3 text-primary">
-                                                Промени адреса за доставка <i class="fas fa-edit ms-1"></i>
-                                            </a>
+                                            <a href="{% url 'store:cart' %}" class="mt-3 text-primary">Промени адреса за доставка <i class="fas fa-edit ms-1"></i></a>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -91,27 +100,22 @@
                 <div class="col-lg-3">
                     <h4 class="fw-bold">Обобщение на поръчката</h4>
                     <div class="shadow rounded p-3 mt-5">
-
                         <div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <p class="fw-semibold fs-6">Междинна сума</p>
-                                <p class="fs-6">{{order.sub_total}} лв.</p>
+                                <p class="fs-6">{{ order.sub_total }} лв.</p>
                             </div>
                             {% if order.saved %}
                                 {% for coupon in order.coupons.all %}
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <small class="fs-6 text-success fw-bold">
-                                            {{ coupon.code }}  
-                                        </small>
-                                        <small class="fs-6 text-success">
-                                            -{{ coupon.discount|floatformat:2 }}%
-                                        </small>
+                                        <small class="fs-6 text-success fw-bold">{{ coupon.code }}</small>
+                                        <small class="fs-6 text-success">-{{ coupon.discount|floatformat:2 }}%</small>
                                     </div>
                                 {% endfor %}
                                 <div class="d-flex justify-content-between align-items-center">
                                     <p class="fw-semibold fs-6">Отстъпка</p>
-                                    <p class="fs-6">{{order.saved}} лв.</p>
-                                </div> 
+                                    <p class="fs-6">{{ order.saved }} лв.</p>
+                                </div>
                             {% endif %}
                             <div class="d-flex justify-content-between align-items-center">
                                 <p class="fw-semibold fs-6">Доставка ({{ order.address.get_delivery_method_display }})</p>
@@ -119,7 +123,7 @@
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <p class="fw-bold text-dark fs-5">Общо</p>
-                                <p class="fw-bold text-dark fs-5">{{order.total}} лв.</p>
+                                <p class="fw-bold text-dark fs-5">{{ order.total }} лв.</p>
                             </div>
                         </div>
                     </div>
@@ -129,7 +133,7 @@
                         <form class="mb-3 d-flex" action="{% url 'store:coupon_apply' order.order_id %}" method="POST">
                             {% csrf_token %}
                             <input type="text" class="form-control" name="coupon_code" placeholder="Код за отстъпка" />
-                            <button type="submit"  class="btn btn-success"><i class="fas fa-check-circle"></i></button>
+                            <button type="submit" class="btn btn-success"><i class="fas fa-check-circle"></i></button>
                         </form>
                     </div>
 
@@ -139,7 +143,7 @@
                         <button type="button" id="cod-payment" class="btn btn-primary mb-3 rounded w-100">Наложен платеж</button>
                     </div>
 
-                    <!-- <div class="w-100 mt-3">
+                    <!--  <div class="w-100 mt-3">
                         <button type="button" id="stripe-payment" class="btn rounded text-primary fw-bold w-100 mb-3 payment-btn-stripe" style="background-color: #bcb9f2b4;">
                             <img style="width: 100px; height: 30px; object-fit: contain;" src="https://hostbillapp.com/appstore/payment_stripe/images/thumbnails/m_logo.png" alt="">
                         </button>
@@ -185,49 +189,48 @@
                         </form>
                         <div id="paypal-button-container"></div>
 
-                    </div> -->
-                    
+                    </div>  -->
                 </div>
             </div>
         </div>
     </section>
 
-    <script src="https://www.paypal.com/sdk/js?client-id={{paypal_client_id}}&currency=USD"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=USD"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://js.stripe.com/v3/"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <script src="https://checkout.flutterwave.com/v3.js"></script>
     <script>
-        var stripe = Stripe("{{stripe_public_key}}"); 
-        var checkoutButton = document.getElementById("stripe-payment");
-
+        var stripe = Stripe('{{stripe_public_key}}')
+        var checkoutButton = document.getElementById('stripe-payment')
+        
         try {
-            checkoutButton.addEventListener("click", function () {
-                var email = "{{order.address.email}}"; 
-                checkoutButton.innerHTML = 'Плащане с карта <i class="fas fa-spinner fa-spin ms-2"></i>';
-                fetch("/stripe_payment/{{order.order_id}}/", {
-                    method: "POST",
-                    body: JSON.stringify({ email: email }),
+            checkoutButton.addEventListener('click', function () {
+                var email = '{{order.address.email}}'
+                checkoutButton.innerHTML = 'Плащане с карта <i class="fas fa-spinner fa-spin ms-2"></i>'
+                fetch('/stripe_payment/{{order.order_id}}/', {
+                    method: 'POST',
+                    body: JSON.stringify({ email: email })
                 })
                     .then(function (response) {
-                        console.log(response);
-                        console.log(stripe);
-                        return response.json();
+                        console.log(response)
+                        console.log(stripe)
+                        return response.json()
                     })
                     .then(function (session) {
-                        return stripe.redirectToCheckout({ sessionId: session.sessionId });
+                        return stripe.redirectToCheckout({ sessionId: session.sessionId })
                     })
                     .then(function (result) {
                         if (result.error) {
-                            alert(result.error.message);
+                            alert(result.error.message)
                         }
                     })
                     .catch(function (error) {
-                        console.log("Error: ", error);
-                    });
-            });
+                        console.log('Error: ', error)
+                    })
+            })
         } catch (error) {
-            console.log(error);
+            console.log(error)
         }
     </script>
 
@@ -236,100 +239,100 @@
             paypal
                 .Buttons({
                     style: {
-                        shape: "rect",
-                        color: "gold",
-                        layout: "vertical",
-                        label: "paypal",
+                        shape: 'rect',
+                        color: 'gold',
+                        layout: 'vertical',
+                        label: 'paypal'
                     },
-
+        
                     createOrder: function (data, actions) {
                         return actions.order.create({
                             purchase_units: [
                                 {
                                     amount: {
-                                        currency_code: "USD",
-                                        value: "{{order.total}}", 
-                                    },
-                                },
-                            ],
-                        });
+                                        currency_code: 'USD',
+                                        value: '{{order.total}}'
+                                    }
+                                }
+                            ]
+                        })
                     },
-
+        
                     onApprove: function (data, actions) {
                         return actions.order.capture().then(function (orderData) {
-                            console.log("Capture result", orderData, JSON.stringify(orderData, null, 2));
-
-                            const element = document.getElementById("paypal-button-container");
-                            element.innerHTML = "";
-                            element.innerHTML = "<h5>Verifying payment...</h5>";
-                            window.location.href = `/paypal_payment_verify/{{order.order_id}}/?transaction_id=${orderData.id}&payment_method=PayPal`; // Replace with your actual order ID
-                        });
+                            console.log('Capture result', orderData, JSON.stringify(orderData, null, 2))
+        
+                            const element = document.getElementById('paypal-button-container')
+                            element.innerHTML = ''
+                            element.innerHTML = '<h5>Verifying payment...</h5>'
+                            window.location.href = `/paypal_payment_verify/{{order.order_id}}/?transaction_id=${orderData.id}&payment_method=PayPal` // Replace with your actual order ID
+                        })
                     },
-
+        
                     onError: function (err) {
-                        console.log(err);
-                    },
+                        console.log(err)
+                    }
                 })
-                .render("#paypal-button-container");
+                .render('#paypal-button-container')
         }
-        initPayPalButton();
+        initPayPalButton()
     </script>
 
     <script type="text/javascript">
-        function payWithPaystack(){
+        function payWithPaystack() {
             var handler = PaystackPop.setup({
                 key: '{{ paystack_public_key }}',
                 email: '{{order.address.email}}',
-                amount: '{{amount_in_kobo}}', 
-                currency: "NGN",
-                ref: '' + Math.floor((Math.random() * 1000000000) + 1), 
-                callback: function(response){
-                    window.location.href = '/paystack_payment_verify/{{ order.order_id }}/?reference=' + response.reference + "&payment_method=Paystack";
+                amount: '{{amount_in_kobo}}',
+                currency: 'NGN',
+                ref: '' + Math.floor(Math.random() * 1000000000 + 1),
+                callback: function (response) {
+                    window.location.href = '/paystack_payment_verify/{{ order.order_id }}/?reference=' + response.reference + '&payment_method=Paystack'
                 },
-                onClose: function(){
-                    alert('Payment window closed');
+                onClose: function () {
+                    alert('Payment window closed')
                 }
-            });
-            handler.openIframe();
+            })
+            handler.openIframe()
         }
     </script>
 
     <script>
         // Helper to get CSRF token from cookies
         function getCookie(name) {
-            let cookieValue = null;
+            let cookieValue = null
             if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
+                const cookies = document.cookie.split(';')
                 for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
+                    const cookie = cookies[i].trim()
                     if (cookie.startsWith(name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
+                        break
                     }
                 }
             }
-            return cookieValue;
+            return cookieValue
         }
-        const csrftoken = getCookie('csrftoken');
-        var codButton = document.getElementById("cod-payment");
+        const csrftoken = getCookie('csrftoken')
+        var codButton = document.getElementById('cod-payment')
         try {
-            codButton.addEventListener("click", function () {
-                codButton.innerHTML = "Наложен платеж <i class='fas fa-spinner fa-spin'></i>";
+            codButton.addEventListener('click', function () {
+                codButton.innerHTML = 'Наложен платеж <i class="fas fa-spinner fa-spin"></i>'
                 fetch("{% url 'store:cod_payment' order.order_id %}", {
-                    method: "POST",
-                    headers: {'X-CSRFToken': csrftoken}
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken }
                 })
-                .then(function (response) {
-                    if (response.redirected) {
-                        window.location.href = response.url;
-                    }
-                })
-                .catch(function (error) {
-                    console.error("Error:", error);
-                });
-            });
+                    .then(function (response) {
+                        if (response.redirected) {
+                            window.location.href = response.url
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error('Error:', error)
+                    })
+            })
         } catch (error) {
-            console.log(error);
+            console.log(error)
         }
     </script>
-{% endblock content %}
+{% endblock %}

@@ -1,69 +1,70 @@
-{% extends 'partials/base.html' %} 
+{% extends 'partials/base.html' %}
 
 {% block content %}
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <section class="middle">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                    <div class="sec_title position-relative ">
+                    <div class="sec_title position-relative">
                         <h1 class="fw-bold pt-3">Свържи се с нас</h1>
                     </div>
                 </div>
             </div>
-            
+
             <div class="row align-items-start justify-content-between">
-            
                 <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12">
                     <div class="card-wrap-body mb-4">
                         <h4 class="fw-bold mb-3 text-dark">Магазин</h4>
-                        <p>1 етаж ТЦ "Гранд"<br> Ул. "Капитан Райчо" 56 <br> Пловдив, България</p>
+                        <p>
+                            1 етаж ТЦ "Гранд"<br /> Ул. "Капитан Райчо" 56 <br /> Пловдив, България
+                        </p>
                     </div>
-                    
+
                     <div class="card-wrap-body mb-3">
                         <h4 class="fw-bold mb-3 text-dark">Телефонен номер</h4>
-                        <p class="mb-0">(+359) 899 333 043</p>   
+                        <p class="mb-0">(+359) 899 333 043</p>
                     </div>
-                    
+
                     <div class="card-wrap-body mb-3">
                         <h4 class="fw-bold mb-3 text-dark">Изпрати имейл</h4>
-                        <p class="lh-1 text-dark"> support@ibands.online</p>
-                        <p class="lh-1 text-dark"> order@ibands.online</p>
+                        <p class="lh-1 text-dark">support@ibands.online</p>
+                        <p class="lh-1 text-dark">order@ibands.online</p>
                     </div>
                 </div>
-                
+
                 <div class="col-xl-7 col-lg-8 col-md-12 col-sm-12">
                     <form class="row" method="POST">
-                            {% csrf_token %}
+                        {% csrf_token %}
                         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-3">
                             <div class="form-group">
                                 <label class="small text-dark fw-medium">Име *</label>
-                                <input type="text" name="full_name" class="form-control rounded " placeholder="Име">
+                                <input type="text" name="full_name" class="form-control rounded" placeholder="Име" />
                             </div>
                         </div>
-                        
+
                         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-3">
                             <div class="form-group">
                                 <label class="small text-dark fw-medium">Имейл *</label>
-                                <input type="text" name="email" class="form-control rounded " placeholder="Имейл">
+                                <input type="text" name="email" class="form-control rounded" placeholder="Имейл" />
                             </div>
                         </div>
-                        
+
                         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-3">
                             <div class="form-group">
                                 <label class="small text-dark fw-medium">Основание</label>
-                                <input type="text" name="subject" class="form-control rounded " placeholder="Основание">
+                                <input type="text" name="subject" class="form-control rounded" placeholder="Основание" />
                             </div>
                         </div>
-                        
+
                         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-3">
                             <div class="form-group">
                                 <label class="small text-dark fw-medium">Съобщение</label>
-                                <textarea name="message" class="form-control rounded  ht-80" placeholder="Причина за контакт"></textarea>
+                                <textarea name="message" class="form-control rounded ht-80" placeholder="Причина за контакт"></textarea>
                             </div>
                         </div>
-                        
+
                         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-3">
                             <div class="form-group">
                                 <button type="submit" class="btn btn-primary btn-sm rounded">Изпрати съобщение <i class="fas fa-envelope"></i></button>
@@ -74,4 +75,4 @@
             </div>
         </div>
     </section>
-{% endblock content %}
+{% endblock %}

@@ -1,7 +1,7 @@
-{% extends 'partials/base.html' %} 
+{% extends 'partials/base.html' %}
 
 {% block content %}
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <section class="middle">
         <div class="container">
@@ -9,20 +9,19 @@
                 {% include 'customer/sidebar.html' %}
 
                 <div class="col-12 col-md-12 col-lg-8 col-xl-8">
-                    <h4 class="mb-0 mb-4 fw-bold">Известия ({{notis_list.count}} Непрочетени)</h4>
+                    <h4 class="mb-0 mb-4 fw-bold">Известия ({{ notis_list.count }} Непрочетени)</h4>
                     <div class="card mb-4">
                         <div class="card-body">
                             <ul class="list-group list-group-flush">
-                                
                                 {% for n in notis %}
                                     <li class="list-group-item p-4 shadow rounded-3 mb-3">
                                         <div class="d-flex">
                                             <div class="ms-3 mt-2">
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     <div>
-                                                        <h4 class="mb-3 fw-bold">{{n.type}}</h4>
-                                                        <p class="mb-0 mt-0">Дата: {{n.date}}</p>
-                                                        <p class="mb-0 mt-0">Продукт: {{n.order.product.name}}</p>
+                                                        <h4 class="mb-3 fw-bold">{{ n.type }}</h4>
+                                                        <p class="mb-0 mt-0">Дата: {{ n.date }}</p>
+                                                        <p class="mb-0 mt-0">Продукт: {{ n.order.product.name }}</p>
                                                     </div>
                                                 </div>
                                                 <a href="{% url 'customer:mark_noti_seen' n.id %}" class="btn btn-primary rounded btn-sm mt-3">Отбележи като прочетено <i class="fas fa-inbox ms-2"></i></a>
@@ -30,7 +29,6 @@
                                         </div>
                                     </li>
                                 {% endfor %}
-                                    
                             </ul>
                         </div>
                     </div>
@@ -68,4 +66,4 @@
             </div>
         </div>
     </section>
-{% endblock content %}
+{% endblock %}

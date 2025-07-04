@@ -1,8 +1,7 @@
 {% extends 'partials/base.html' %}
 
 {% block content %}
-
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <!-- Order Tracker Form Section -->
     <section class="middle" style="margin-bottom: 600px;">
@@ -11,10 +10,12 @@
                 {% if request.user.is_authenticated %}
                     <form class="col-12 col-md-10 col-lg-12 col-xl-12 text-center" method="POST">
                         {% csrf_token %}
-                        <div class="p-4 d-inline-flex align-items-center justify-content-center circle bg-light-primary text-primary mx-auto mb-4"><i class="fas fa-shipping-fast fs-1"></i></div>
+                        <div class="p-4 d-inline-flex align-items-center justify-content-center circle bg-light-primary text-primary mx-auto mb-4">
+                            <i class="fas fa-shipping-fast fs-1"></i>
+                        </div>
                         <h2 class="mb-2 ft-bold">Проследяване на поръчка</h2>
                         <div class="d-flex align-items-center justify-content-center">
-                            <input type="text"  name="item_id" class="form-control rounded w-50" placeholder="Номер на поръчка или проследяване" id="">
+                            <input type="text" name="item_id" class="form-control rounded w-50" placeholder="Номер на поръчка или проследяване" id="" />
                         </div>
                         <button type="submit" class="btn btn-sm btn-primary mt-3">Намери <i class="fas fa-arrow-right ms-1"></i></button>
                     </form>
@@ -24,11 +25,13 @@
                             <i class="fas fa-shipping-fast fs-1"></i>
                         </div>
                         <h2 class="mb-2 ft-bold">Проследяване на поръчка</h2>
-                        <p class="mb-3">За да проследите своите поръчки, моля <b>влезте в профила си</b>.</p>
+                        <p class="mb-3">
+                            За да проследите своите поръчки, моля <b>влезте в профила си</b>.
+                        </p>
                         <a href="{% url 'userauths:sign-in' %}?next={{ request.path }}" class="btn btn-primary">Вход</a>
                     </div>
                 {% endif %}
             </div>
         </div>
     </section>
-{% endblock content %}
+{% endblock %}

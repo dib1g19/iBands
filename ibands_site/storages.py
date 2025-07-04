@@ -1,15 +1,15 @@
 from storages.backends.s3boto3 import S3Boto3Storage
 
+
 class StaticStorage(S3Boto3Storage):
-    location = 'static'
+    location = "static"
     default_acl = None
     file_overwrite = True
+
 
 class MediaStorage(S3Boto3Storage):
-    location = 'media'
+    location = "media"
     default_acl = None
     file_overwrite = True
 
-    object_parameters = {
-        'CacheControl': 'max-age=86400'
-    }
+    object_parameters = {"CacheControl": "max-age=86400"}

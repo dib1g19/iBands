@@ -11,6 +11,7 @@ from customer import models as customer_models
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 
+
 @csrf_exempt
 def quick_add_address(request):
     if request.method == "POST":
@@ -29,21 +30,24 @@ def quick_add_address(request):
             email=email,
             delivery_method=delivery_method,
             city=city,
-            address=address_str
+            address=address_str,
         )
 
         # For guests: store the address ID in session for the current checkout
         if not user:
-            request.session['guest_address_id'] = address.id
+            request.session["guest_address_id"] = address.id
 
-        return JsonResponse({'success': True, 'address_id': address.id})
+        return JsonResponse({"success": True, "address_id": address.id})
 
-    return JsonResponse({'success': False}, status=400)
+    return JsonResponse({"success": False}, status=400)
+
 
 @login_required
 def dashboard(request):
     orders = store_models.Order.objects.filter(customer=request.user)
-    total_spent = store_models.Order.objects.filter(customer=request.user).aggregate(total = models.Sum("total"))['total']
+    total_spent = store_models.Order.objects.filter(customer=request.user).aggregate(
+        total=models.Sum("total")
+    )["total"]
     notis = customer_models.Notifications.objects.filter(user=request.user, seen=False)
 
     breadcrumbs = [
@@ -60,6 +64,7 @@ def dashboard(request):
 
     return render(request, "customer/dashboard.html", context)
 
+
 @login_required
 def order_detail(request, order_id):
     order = store_models.Order.objects.get(customer=request.user, order_id=order_id)
@@ -75,6 +80,7 @@ def order_detail(request, order_id):
     }
 
     return render(request, "customer/order_detail.html", context)
+
 
 @login_required
 def wishlist(request):
@@ -93,39 +99,56 @@ def wishlist(request):
 
     return render(request, "customer/wishlist.html", context)
 
+
 def toggle_wishlist(request, id):
     if request.user.is_authenticated:
         product = store_models.Product.objects.get(id=id)
-        wishlist_item, created = customer_models.Wishlist.objects.get_or_create(product=product, user=request.user)
+        wishlist_item, created = customer_models.Wishlist.objects.get_or_create(
+            product=product, user=request.user
+        )
         if not created:
             wishlist_item.delete()
-            total_wishlist_items = customer_models.Wishlist.objects.filter(user=request.user).count()
-            return JsonResponse({
-                "status": "removed",
-                "message": "Продуктът е премахнат от любими",
-                "total_wishlist_items": total_wishlist_items
-            })
+            total_wishlist_items = customer_models.Wishlist.objects.filter(
+                user=request.user
+            ).count()
+            return JsonResponse(
+                {
+                    "status": "removed",
+                    "message": "Продуктът е премахнат от любими",
+                    "total_wishlist_items": total_wishlist_items,
+                }
+            )
         else:
-            total_wishlist_items = customer_models.Wishlist.objects.filter(user=request.user).count()
-            return JsonResponse({
-                "status": "added",
-                "message": "Продуктът е добавен в любими",
-                "total_wishlist_items": total_wishlist_items
-            })
+            total_wishlist_items = customer_models.Wishlist.objects.filter(
+                user=request.user
+            ).count()
+            return JsonResponse(
+                {
+                    "status": "added",
+                    "message": "Продуктът е добавен в любими",
+                    "total_wishlist_items": total_wishlist_items,
+                }
+            )
     else:
-        return JsonResponse({"status": "warning", "message": "Трябва да влезнете в профила си"})
+        return JsonResponse(
+            {"status": "warning", "message": "Трябва да влезнете в профила си"}
+        )
+
 
 @login_required
 def remove_from_wishlist(request, id):
     wishlist = customer_models.Wishlist.objects.get(user=request.user, id=id)
     wishlist.delete()
-    
+
     messages.success(request, "Продуктът е премахнат от любими.")
     return redirect("customer:wishlist")
 
+
 @login_required
 def notis(request):
-    notis_list = customer_models.Notifications.objects.filter(user=request.user, seen=False)
+    notis_list = customer_models.Notifications.objects.filter(
+        user=request.user, seen=False
+    )
     notis = paginate_queryset(request, notis_list, 10)
 
     breadcrumbs = [
@@ -140,6 +163,7 @@ def notis(request):
 
     return render(request, "customer/notis.html", context)
 
+
 @login_required
 def mark_noti_seen(request, id):
     noti = customer_models.Notifications.objects.get(user=request.user, id=id)
@@ -153,7 +177,7 @@ def mark_noti_seen(request, id):
 @login_required
 def addresses(request):
     addresses = customer_models.Address.objects.filter(user=request.user)
-    
+
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
         {"label": "Адреси", "url": ""},
@@ -165,10 +189,11 @@ def addresses(request):
 
     return render(request, "customer/addresses.html", context)
 
+
 @login_required
 def address_detail(request, id):
     address = customer_models.Address.objects.get(user=request.user, id=id)
-    
+
     if request.method == "POST":
         full_name = request.POST.get("full_name")
         mobile = request.POST.get("mobile")
@@ -186,7 +211,7 @@ def address_detail(request, id):
 
         messages.success(request, "Адресът е обновен успешно!")
         return redirect("customer:addresses")
-    
+
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
         {"label": "Адреси", "url": reverse("customer:addresses")},
@@ -198,6 +223,7 @@ def address_detail(request, id):
     }
 
     return render(request, "customer/address_detail.html", context)
+
 
 @login_required
 def address_create(request):
@@ -221,7 +247,7 @@ def address_create(request):
 
         messages.success(request, "Адресът е създаден успешно!")
         return redirect("customer:addresses")
-    
+
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
         {"label": "Адреси", "url": reverse("customer:addresses")},
@@ -233,11 +259,13 @@ def address_create(request):
 
     return render(request, "customer/address_create.html", context)
 
+
 def delete_address(request, id):
     address = customer_models.Address.objects.get(user=request.user, id=id)
     address.delete()
     messages.success(request, "Адресът е изтрит.")
     return redirect("customer:addresses")
+
 
 @login_required
 def profile(request):
@@ -247,7 +275,7 @@ def profile(request):
         image = request.FILES.get("image")
         full_name = request.POST.get("full_name")
         mobile = request.POST.get("mobile")
-    
+
         if image != None:
             profile.image = image
 
@@ -265,11 +293,12 @@ def profile(request):
         {"label": "Профил", "url": ""},
     ]
     context = {
-        'profile':profile,
-         "breadcrumbs": breadcrumbs,
+        "profile": profile,
+        "breadcrumbs": breadcrumbs,
     }
 
     return render(request, "customer/profile.html", context)
+
 
 @login_required
 def change_password(request):
@@ -281,7 +310,7 @@ def change_password(request):
         if confirm_new_password != new_password:
             messages.error(request, "Паролите не съвпадат.")
             return redirect("customer:change_password")
-        
+
         if check_password(old_password, request.user.password):
             request.user.set_password(new_password)
             request.user.save()

@@ -8,10 +8,7 @@
             <div class="position-relative">
                 <img class="img-fluid w-100 hero" style="height: 40vh; object-fit: cover;" src="{% static 'assets/img/cover.avif' %}" alt="Hero Cover" />
                 <div class="position-absolute" style="top: 90%; left: 50%; transform: translate(-50%, -50%);" class="text-center">
-                    <a href="{% url 'store:shop' %}"
-                        class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3 mb-3">
-                        Пазарувай сега
-                    </a>
+                    <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3 mb-3">Пазарувай сега</a>
                 </div>
             </div>
         </div>
@@ -29,22 +26,22 @@
             </div>
             <div class="row align-items-center justify-content-center">
                 {% for c in categories %}
-                <div class="col-xl-2 col-lg-2 col-md-3 col-sm-6 col-4">
-                    <div class="cats_side_wrap text-center mx-auto mb-3">
-                        <div class="sl_cat_01">
-                            <div class="d-inline-flex align-items-center justify-content-center p-4 circle mb-2 border">
-                                <a href="{{ c.get_absolute_url }}" class="d-block">
-                                    {% if c.image %}
-                                    <img src="{{c.image.url}}" class="img-fluid" width="80" alt="" />
-                                    {% endif %}
-                                </a>
+                    <div class="col-xl-2 col-lg-2 col-md-3 col-sm-6 col-4">
+                        <div class="cats_side_wrap text-center mx-auto mb-3">
+                            <div class="sl_cat_01">
+                                <div class="d-inline-flex align-items-center justify-content-center p-4 circle mb-2 border">
+                                    <a href="{{ c.get_absolute_url }}" class="d-block">
+                                        {% if c.image %}
+                                            <img src="{{ c.image.url }}" class="img-fluid" width="80" alt="" />
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="sl_cat_02" style="min-height: 40px;">
+                                <h6 class="m-0 ft-medium fs-sm"><a href="{{ c.get_absolute_url }}">{{ c.title }}</a></h6>
                             </div>
                         </div>
-                        <div class="sl_cat_02" style="min-height: 40px;">
-                            <h6 class="m-0 ft-medium fs-sm"><a href="{{ c.get_absolute_url }}">{{c.title}}</a></h6>
-                        </div>
                     </div>
-                </div>
                 {% endfor %}
             </div>
         </div>
@@ -76,4 +73,4 @@
             </div>
         </div>
     </section>
-{% endblock content %}
+{% endblock %}

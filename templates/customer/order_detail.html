@@ -1,8 +1,8 @@
-{% extends 'partials/base.html' %} 
+{% extends 'partials/base.html' %}
 {% load humanize %}
 
 {% block content %}
-    {% include "partials/_breadcrumbs.html" %}
+    {% include 'partials/_breadcrumbs.html' %}
 
     <section class="middle">
         <div class="container">
@@ -11,7 +11,7 @@
 
                 <div class="col-12 col-md-12 col-lg-8 col-xl-8">
                     <div class="row mb-4">
-                        <h4 class="mb-0 mb-2 fw-bold">Номер на поръчка: #{{order.order_id}}</h4>
+                        <h4 class="mb-0 mb-2 fw-bold">Номер на поръчка: #{{ order.order_id }}</h4>
                     </div>
 
                     <div class="order-data">
@@ -19,25 +19,25 @@
                             <div class="ord_list_body text-left">
                                 {% for item in order.order_items.all %}
                                     <div class="row align-items-center justify-content-center m-0 py-4 br-bottom">
-                                        <div class="col-xl-6 col-lg-5 col-md-5 col-12 ">
+                                        <div class="col-xl-6 col-lg-5 col-md-5 col-12">
                                             <div class="cart_single d-flex align-items-center mfliud-bot gap-3">
                                                 <div class="cart_selected_single_thumb">
-                                                    <a href="{{ item.product.get_absolute_url }}">
-                                                        <img src="{{item.product.image.url}}" width="100" class="img-fluid rounded" alt="" />
-                                                    </a>
+                                                    <a href="{{ item.product.get_absolute_url }}"><img src="{{ item.product.image.url }}" width="100" class="img-fluid rounded" alt="" /></a>
                                                 </div>
                                                 <div class="cart_single_caption pl-3">
-                                                    <h5 class="mb-1">
-                                                        <span class="fw-bold"></span>{{ item.product.name }}
-                                                    </h5>
+                                                    <h5 class="mb-1"><span class="fw-bold"></span>{{ item.product.name }}</h5>
                                                     <p class="mb-0 mt-0">
-                                                        <span class="fw-bold">Тип: </span>{{ item.product.category.title }}
+                                                        <span class="fw-bold">Тип:</span>{{ item.product.category.title }}
                                                     </p>
                                                     {% if item.size %}
-                                                        <p class="mb-0"><span class="fw-bold">Дължина:</span> {{ item.size }}</p>
+                                                        <p class="mb-0">
+                                                            <span class="fw-bold">Дължина:</span> {{ item.size }}
+                                                        </p>
                                                     {% endif %}
                                                     {% if item.model %}
-                                                        <p class="mb-0"><span class="fw-bold">Модел:</span> {{ item.model }}</p>
+                                                        <p class="mb-0">
+                                                            <span class="fw-bold">Модел:</span> {{ item.model }}
+                                                        </p>
                                                     {% endif %}
                                                 </div>
                                             </div>
@@ -58,17 +58,13 @@
                                         <div class="col-xl-2 col-lg-3 col-md-3 col-6 text-center">
                                             <p class="mb-1 p-0 text-muted">Статус</p>
                                             <div class="delv_status d-flex justify-content-center">
-                                                <span class="ft-medium text-warning bg-light-warning">
-                                                    {{ order.get_order_status_display }}
-                                                </span>
+                                                <span class="ft-medium text-warning bg-light-warning">{{ order.get_order_status_display }}</span>
                                             </div>
                                         </div>
                                         <div class="col-xl-2 col-lg-3 col-md-3 col-6 text-center">
                                             <p class="mb-1 p-0 text-muted">Платежен статус</p>
                                             <div class="d-flex justify-content-center">
-                                                <span class="ft-medium">
-                                                    {{ order.get_payment_status_display  }}
-                                                </span>
+                                                <span class="ft-medium">{{ order.get_payment_status_display }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -81,21 +77,13 @@
                                 <h5 class="mb-0">Проследяване на поръчка</h5>
                             </div>
                             <div class="card-body">
-                                <h6 class="fs-sm mb-2"><strong>ID за проследяване:</strong> {{ order.tracking_id|default:"Все още не е добавен" }}</h6>
-                                <h6 class="fs-sm mb-3"><strong>Куриерска услуга:</strong> {{ order.shipping_service|default:"Все още не е добавен" }}</h6>
+                                <h6 class="fs-sm mb-2"><strong>ID за проследяване:</strong> {{ order.tracking_id|default:'Все още не е добавен' }}</h6>
+                                <h6 class="fs-sm mb-3"><strong>Куриерска услуга:</strong> {{ order.shipping_service|default:'Все още не е добавен' }}</h6>
                                 {% if order.tracking_id and order.shipping_service %}
-                                    {% if order.shipping_service == "Econt" %}
-                                        <a target="_blank"
-                                           href="https://www.econt.com/services/track-shipment/{{ order.tracking_id }}"
-                                           class="btn btn-primary rounded btn-sm">
-                                            Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i>
-                                        </a>
-                                    {% elif order.shipping_service == "Speedy" %}
-                                        <a target="_blank"
-                                           href="https://www.speedy.bg/bg/track-shipment?shipmentNumber={{ order.tracking_id }}"
-                                           class="btn btn-primary rounded btn-sm">
-                                            Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i>
-                                        </a>
+                                    {% if order.shipping_service == 'Econt' %}
+                                        <a target="_blank" href="https://www.econt.com/services/track-shipment/{{ order.tracking_id }}" class="btn btn-primary rounded btn-sm">Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i></a>
+                                    {% elif order.shipping_service == 'Speedy' %}
+                                        <a target="_blank" href="https://www.speedy.bg/bg/track-shipment?shipmentNumber={{ order.tracking_id }}" class="btn btn-primary rounded btn-sm">Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i></a>
                                     {% endif %}
                                 {% endif %}
                             </div>
@@ -144,4 +132,4 @@
             </div>
         </div>
     </section>
-{% endblock content %}
+{% endblock %}

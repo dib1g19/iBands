@@ -113,6 +113,13 @@ class Category(models.Model):
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
 
+    @property
+    def root(self):
+        cat = self
+        while cat.parent:
+            cat = cat.parent
+        return cat
+
 
 class Product(models.Model):
     name = models.CharField(max_length=100)

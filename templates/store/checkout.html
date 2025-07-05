@@ -1,5 +1,17 @@
-{% extends 'partials/base.html' %}
+{% extends 'base.html' %}
 {% load humanize %}
+
+{% block robots %}
+    <meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block title %}
+    Завършване на поръчка – iBands
+{% endblock %}
+
+{% block meta_description %}
+    Попълнете вашите данни и финализирайте поръчката си в iBands. Сигурно пазаруване и бърза доставка.
+{% endblock %}
 
 {% block content %}
     <style>
@@ -26,7 +38,7 @@
                         {% for item in order.order_items.all %}
                             <div class="shadow rounded mb-3">
                                 <div class="row d-flex align-items-center text-center p-3">
-                                    {% include 'partials/_product_card.html' with item=item %}
+                                    {% include 'store/_product_card.html' with item=item %}
                                     <div class="col-xl-2">
                                         <p class="mb-0">Цена</p>
                                         {% if item.product.regular_price %}

@@ -1,6 +1,16 @@
-{% extends 'partials/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 {% load humanize %}
+
+{% block robots %}
+    <meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block title %}Количка – iBands{% endblock %}
+
+{% block meta_description %}
+    Прегледайте вашата количка в iBands и преминете към поръчка. Всички добавени продукти, количества и суми на едно място.
+{% endblock %}
 
 {% block content %}
     {% include 'partials/_breadcrumbs.html' %}
@@ -16,7 +26,7 @@
                             {% for item in items %}
                                 <div class="shadow rounded mb-3 item_div_{{ item.id }}">
                                     <div class="row d-flex align-items-center text-center p-3">
-                                        {% include 'partials/_product_card.html' with item=item %}
+                                        {% include 'store/_product_card.html' with item=item %}
                                         <div class="col-xl-2 mb-xl-3">
                                             {% if item.product.regular_price %}
                                                 <span class="text-decoration-line-through">{{ item.product.regular_price|intcomma }} лв.</span>

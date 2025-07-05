@@ -1,5 +1,13 @@
-{% extends 'partials/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
+
+{% block title %}
+    iBands – Аксесоари за Apple Watch, смарт часовници, iPhone, Samsung, AirTag, iPad, Galaxy SmartTag, AirPods и още
+{% endblock %}
+
+{% block meta_description %}
+    Добре дошли в iBands! Открийте богат избор от аксесоари за Apple Watch, всички видове смарт часовници, iPhone, Samsung, AirTag, iPad, Galaxy SmartTag, AirPods и други устройства. Гарантирано качество, нови колекции и отлично обслужване!
+{% endblock %}
 
 {% block content %}
     <!-- Hero Section -->
@@ -59,7 +67,7 @@
             </div>
 
             <div class="row align-items-center rows-products">
-                {% include 'partials/_product_list.html' %}
+                {% include 'store/_product_list.html' %}
             </div>
 
             {% include 'partials/_pagination.html' %}

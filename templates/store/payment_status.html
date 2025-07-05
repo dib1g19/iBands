@@ -1,4 +1,28 @@
-{% extends 'partials/base.html' %}
+{% extends 'base.html' %}
+
+{% block robots %}
+    <meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block title %}
+    {% if payment_status == 'paid' %}
+        Поръчката е завършена – iBands
+    {% elif payment_status == 'failed' %}
+        Плащането не бе успешно – iBands
+    {% else %}
+        Статус на плащането – iBands
+    {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+    {% if payment_status == 'paid' %}
+        Вашата поръчка беше успешно завършена. Благодарим ви, че избрахте iBands!
+    {% elif payment_status == 'failed' %}
+        Плащането на поръчката не бе успешно. Моля, опитайте отново или се свържете с нас за помощ.
+    {% else %}
+        Статус на вашето плащане в iBands.
+    {% endif %}
+{% endblock %}
 
 {% block content %}
     <section class="middle" style="margin-bottom: 600px;">

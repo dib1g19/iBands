@@ -1032,7 +1032,7 @@ def filter_products(request):
         products_page = paginator.page(paginator.num_pages)
 
     html = render_to_string(
-        "partials/_product_list.html",
+        "store/_product_list.html",
         {
             "products": products_page,
             "user_wishlist_products": get_user_wishlist_products(request),

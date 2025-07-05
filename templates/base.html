@@ -15,6 +15,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
         <!-- 🔍 SEO -->
+         {% block robots %}{% endblock %}
         <title>
             {% block title %}
                 iBands – Онлайн магазин за стилни аксесоари
@@ -97,7 +98,7 @@
                                 <li>
                                     <a href="javascript:void(0);">Категории</a>
                                     <ul class="nav-dropdown nav-submenu">
-                                        {% include 'store/category_menu_recursive.html' with categories=root_categories %}
+                                        {% include 'partials/_category_menu_recursive.html' with categories=root_categories %}
                                     </ul>
                                 </li>
                                 <li>

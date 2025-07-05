@@ -1,4 +1,16 @@
-{% extends 'partials/base.html' %}
+{% extends 'base.html' %}
+
+{% block robots %}
+    <meta name="robots" content="noindex, nofollow" />
+{% endblock %}
+
+{% block title %}
+    Вашите адреси – iBands
+{% endblock %}
+
+{% block meta_description %}
+    Прегледайте, редактирайте или изтрийте своите адреси за доставка в iBands. Управлявайте лесно вашите адреси за по-бързи поръчки.
+{% endblock %}
 
 {% block content %}
     {% include 'partials/_breadcrumbs.html' %}
@@ -6,7 +18,7 @@
     <section class="middle">
         <div class="container">
             <div class="row align-items-start justify-content-between">
-                {% include 'customer/sidebar.html' %}
+                {% include 'customer/_sidebar.html' %}
 
                 <div class="col-12 col-md-12 col-lg-8 col-xl-8">
                     <div class="mb-4 d-flex align-items-center justify-content-between">

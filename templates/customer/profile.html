@@ -1,4 +1,16 @@
-{% extends 'partials/base.html' %}
+{% extends 'base.html' %}
+
+{% block robots %}
+    <meta name="robots" content="noindex, nofollow" />
+{% endblock %}
+
+{% block title %}
+    Профил – iBands
+{% endblock %}
+
+{% block meta_description %}
+    Актуализирайте вашата информация, имейл, телефон и други лични данни във вашия профил в iBands.
+{% endblock %}
 
 {% block content %}
     {% include 'partials/_breadcrumbs.html' %}
@@ -6,7 +18,7 @@
     <section class="middle">
         <div class="container">
             <div class="row align-items-start justify-content-between">
-                {% include 'customer/sidebar.html' %}
+                {% include 'customer/_sidebar.html' %}
 
                 <div class="col-12 col-md-12 col-lg-8 col-xl-8">
                     <div class="row mb-4">

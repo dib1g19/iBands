@@ -30,16 +30,11 @@
                 <!-- Wishlist Icon -->
                 <a class="add_to_wishlist d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" data-product_id="{{ p.id }}">
                     <i class="fa-heart
-							{% if request.user.is_authenticated and p.id in user_wishlist_products %}
-                            
-								fs-4 fas text-danger
-
+                        {% if request.user.is_authenticated and p.id in user_wishlist_products %}
+                            fs-4 fas text-danger
                         {% else %}
-                            
-								fs-5 far text-dark
-
+                            fs-5 far text-dark
                         {% endif %}">
-
                     </i>
                 </a>
             </div>

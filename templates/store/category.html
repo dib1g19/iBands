@@ -1,6 +1,20 @@
-{% extends 'partials/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 {% load humanize %}
+
+{% block title %}
+    {{ category.get_full_name_path }}{% if category.meta_title %}
+        - {{ category.meta_title }}
+    {% endif %}
+{% endblock %}
+
+{% block meta_description %}
+    {% if category.meta_description %}
+        {{ category.meta_description }}
+    {% else %}
+        {{ category.title }}
+    {% endif %}
+{% endblock %}
 
 {% block content %}
     {% include 'partials/_breadcrumbs.html' %}
@@ -56,7 +70,7 @@
 
             <!-- Product List -->
             <div class="row align-items-center rows-products" id="products-list">
-                {% include 'partials/_product_list.html' %}
+                {% include 'store/_product_list.html' %}
             </div>
 
             {% include 'partials/_pagination.html' %}

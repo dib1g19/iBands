@@ -57,9 +57,7 @@ def index(request):
     )
     products = paginate_queryset(request, products_list, 20)
 
-    categories = store_models.Category.objects.filter(parent__isnull=True).order_by(
-        "id"
-    )
+    categories = store_models.Category.objects.filter(parent__isnull=True)
 
     context = {
         "products": products,

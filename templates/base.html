@@ -15,7 +15,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
         <!-- 🔍 SEO -->
-         {% block robots %}{% endblock %}
+        {% block robots %}{% endblock %}
+        {% block canonical %}
+            {% if request.GET.page == "1" %}
+                <link rel="canonical" href="{{ request.build_absolute_uri|cut:'?page=1' }}">
+            {% else %}
+                <link rel="canonical" href="{{ request.build_absolute_uri }}">
+            {% endif %}
+        {% endblock %}
         <title>
             {% block title %}
                 iBands – Онлайн магазин за стилни аксесоари

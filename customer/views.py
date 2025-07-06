@@ -71,7 +71,7 @@ def order_detail(request, order_id):
 
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": "Поръчки", "url": reverse("customer:orders")},
+        {"label": "Поръчки", "url": reverse("customer:dashboard")},
         {"label": f"Поръчка #{order.order_id}", "url": ""},
     ]
     context = {

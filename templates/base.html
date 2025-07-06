@@ -79,7 +79,7 @@
                                         <a href="{% url 'customer:dashboard' %}"><i class="fas fa-user"></i></a>
                                     </li>
                                     <li>
-                                        <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count.count }}</span></a>
+                                        <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count }}</span></a>
                                     </li>
                                     <li>
                                         <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-basket"></i><span class="dn-counter total_cart_items">{{ total_cart_items }}</span></a>
@@ -137,7 +137,7 @@
                                         <a href="{% url 'customer:dashboard' %}"><i class="fas fa-user text-white"></i></a>
                                     </li>
                                     <li>
-                                        <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart text-white"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count.count }}</span></a>
+                                        <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart text-white"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count }}</span></a>
                                     </li>
                                 {% endif %}
                                 <li>

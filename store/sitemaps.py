@@ -28,27 +28,27 @@ class CategorySitemap(Sitemap):
 class StaticViewSitemap(Sitemap):
     def items(self):
         return [
-            "index",
-            "shop",
-            "about",
-            "contact",
-            "faqs",
-            "privacy_policy",
-            "returns_and_exchanges",
-            "terms_conditions",
+            "store:index",
+            "store:shop",
+            "store:about",
+            "store:contact",
+            "store:faqs",
+            "store:privacy_policy",
+            "store:returns_and_exchanges",
+            "store:terms_conditions",
         ]
 
     def location(self, item):
         return reverse(item)
 
     def priority(self, item):
-        if item == "index":
+        if item == "store:index":
             return 1.0
-        if item == "shop":
+        if item == "store:shop":
             return 0.9
         return 0.5
 
     def changefreq(self, item):
-        if item in ("index", "shop"):
+        if item in ("store:index", "store:shop"):
             return "daily"
         return "yearly"

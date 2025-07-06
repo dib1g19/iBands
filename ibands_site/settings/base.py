@@ -70,7 +70,6 @@ INSTALLED_APPS = [
     'userauths',
     'store',
     'customer',
-    'blog',
     'storages',
 
     'django_ckeditor_5',
@@ -279,8 +278,7 @@ JAZZMIN_SETTINGS = {
         "userauths.user",
         "userauths.profile",
         "donations",
-        "blog",
-        'newsfeed',
+        "newsfeed",
         "contacts",
         "addon",
     ],

@@ -38,7 +38,7 @@ $(document).ready(function () {
         const cart_id = generateCartId();
 
         $.ajax({
-            url: "/add_to_cart/",
+            url: "/add-to-cart/",
             data: {
                 id: id,
                 qty: qty,
@@ -94,7 +94,7 @@ $(document).ready(function () {
         $(".item-qty-" + item_id).val(current_qty + change_by);
 
         $.ajax({
-            url: "/add_to_cart/",
+            url: "/add-to-cart/",
             data: {
                 item_id: item_id,
                 qty: change_by,
@@ -136,7 +136,7 @@ $(document).ready(function () {
         const cart_id = generateCartId();
 
         $.ajax({
-            url: "/delete_cart_item/",
+            url: "/delete-cart-item/",
             data: {
                 id: product_id,
                 item_id: item_id,
@@ -204,7 +204,7 @@ $(document).ready(function () {
         function () {
             let filters = getFilters();
             $.ajax({
-                url: "/filter_products/",
+                url: "/filter-products/",
                 method: "GET",
                 data: filters,
                 success: function (response) {
@@ -256,7 +256,7 @@ $(document).ready(function () {
         Toast.fire({ icon: "success", title: "Filter Reset Successfully" });
 
         $.ajax({
-            url: "/filter_products/",
+            url: "/filter-products/",
             method: "GET",
             data: filters,
             success: function (response) {
@@ -302,7 +302,7 @@ $(document).ready(function () {
         var filters = getFilters();
         filters.page = page;
         $.ajax({
-            url: "/filter_products/",
+            url: "/filter-products/",
             method: "GET",
             data: filters,
             success: function (response) {
@@ -323,7 +323,7 @@ $(document).ready(function () {
         const product_id = button.attr("data-product_id");
 
         $.ajax({
-            url: `/customer/toggle_wishlist/${product_id}/`,
+            url: `/customer/toggle-wishlist/${product_id}/`,
             success: function (response) {
                 if (response.status === "added") {
                     button.html(

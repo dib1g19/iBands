@@ -125,20 +125,13 @@ def category(request, category_path):
         category = get_object_or_404(Category, slug=slug, parent=parent)
         parent = category
 
-    show_sub_only = request.GET.get("filter") == "subcategories"
     child_categories_qs = Category.objects.filter(parent=category)
     child_categories = list(child_categories_qs)
     all_sub = category
     all_sub.is_all = True
     subcategories_with_all = [all_sub] + child_categories
 
-    if show_sub_only:
-        subcat_ids = [c.id for c in child_categories]
-        products_list = Product.objects.filter(
-            status="published", category_id__in=subcat_ids
-        )
-    else:
-        products_list = Product.objects.filter(status="published", category=category)
+    products_list = Product.objects.filter(status="published", category=category)
 
     query = request.GET.get("q")
     if query:

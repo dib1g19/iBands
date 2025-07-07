@@ -66,19 +66,17 @@ class Category(models.Model):
     image = models.FileField(
         upload_to="images", default="default/default-image.avif", null=True, blank=True
     )
-    hover_image = models.FileField(
-        upload_to="images",
-        blank=True,
-        null=True,
-        default="default/default-image-hover.avif",
-        verbose_name="Втора снимка (показва се при задържане)"
-    )
     marketing_image = models.FileField(
         upload_to="images",
         blank=True,
         null=True,
-        default="default/default-marketing.avif",
         verbose_name="Маркетинг снимка"
+    )
+    hover_image = models.FileField(
+        upload_to="images",
+        blank=True,
+        null=True,
+        verbose_name="Втора снимка (показва се при задържане)"
     )
     slug = models.SlugField()
     meta_title = models.CharField(max_length=150, blank=True, null=True)

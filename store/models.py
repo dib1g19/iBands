@@ -199,6 +199,12 @@ class Product(models.Model):
 
     def gallery(self):
         return Gallery.objects.filter(product=self)
+    @property
+    def discount_percent(self):
+        if self.regular_price and self.regular_price > self.price:
+            discount = ((self.regular_price - self.price) / self.regular_price) * 100
+            return int(discount)
+        return 0
 
     def save(self, *args, **kwargs):
         if self.pk:

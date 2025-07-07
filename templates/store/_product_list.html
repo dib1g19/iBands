@@ -5,11 +5,16 @@
             <!-- Product Image -->
             <div class="card-body p-0">
                 <div class="shop_thumb position-relative">
+                    {% if p.regular_price and p.regular_price > p.price %}
+                        <div class="discount-badge">
+                            -{{ p.discount_percent }}%
+                        </div>
+                    {% endif %}
                     <a class="card-img-top d-block overflow-hidden" href="{{ p.get_absolute_url }}">
-                        <div class="product-img-hover-wrapper">
-                            <img class="card-img-top main-img" style="width: 100%; height: 100%; object-fit: cover;" src="{{ p.image.url }}" alt="..." />
+                        <div class="product-img-hover-wrapper{% if p.gallery.first %} has-hover{% endif %}">
+                            <img class="card-img-top main-img" src="{{ p.image.url }}" alt="{{ p.name }}" style="width: 100%; height: 100%; object-fit: cover;" />
                             {% if p.gallery.first %}
-                                <img class="card-img-top hover-img" style="width: 100%; height: 100%; object-fit: cover;" src="{{ p.gallery.first.image.url }}" alt="..." />
+                                <img class="card-img-top hover-img" src="{{ p.gallery.first.image.url }}" alt="{{ p.name }}" style="width: 100%; height: 100%; object-fit: cover;" />
                             {% endif %}
                         </div>
                     </a>

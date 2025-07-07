@@ -1130,12 +1130,29 @@ html body .text-themecolor {
     pointer-events: none;
 }
 
-.product-img-hover-wrapper:hover .main-img {
+.product-img-hover-wrapper.has-hover:hover .main-img {
     opacity: 0;
 }
-.product-img-hover-wrapper:hover .hover-img {
+.product-img-hover-wrapper.has-hover:hover .hover-img {
     opacity: 1;
     pointer-events: auto;
+}
+
+.discount-badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0.5rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 0.5rem;
+    background: #dc3545;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    z-index: 99 !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.13);
+    pointer-events: none;
+    user-select: none;
 }
 
 /*-------------- Global Settings: Avaters Design ------------------*/

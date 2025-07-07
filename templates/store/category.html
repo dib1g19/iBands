@@ -68,6 +68,27 @@
                 <button type="submit" class="btn btn-primary rounded"><i class="fas fa-search"></i></button>
             </form>
 
+            {% if category.marketing_image or category.hover_image %}
+                <div class="category-page row mb-5 gx-4">
+                    <div class="col-12 col-md-6">
+                        <div class="category-img-wrapper w-100">
+                            <img src="{{ category.marketing_image.url }}" class="img-fluid main-img" alt="{{ category.title }}" />
+                            {% if category.hover_image %}
+                                <img src="{{ category.hover_image.url }}" class="img-fluid hover-img d-md-none" alt="{{ category.title }}" />
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if category.hover_image %}
+                        <!-- On desktop, show hover image separately, no hover effect -->
+                        <div class="col-md-6 d-none d-md-flex">
+                            <div class="category-img-wrapper w-100">
+                                <img src="{{ category.hover_image.url }}" class="img-fluid main-img" alt="{{ category.title }}" />
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
             <!-- Product List -->
             <div class="row align-items-center rows-products" id="products-list">
                 {% include 'store/_product_list.html' %}

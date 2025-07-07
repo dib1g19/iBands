@@ -55,6 +55,35 @@
         </div>
     </section>
 
+    <!-- Popular Categories Section -->
+    <section>
+        <div class="container">
+            <div class="row no-gutters">
+                {% for c in popular_categories %}
+                    <div class="col-12 col-sm-6 mb-4 d-flex">
+                        <div class="category-img-wrapper w-100 position-relative">
+                            <a href="{{ c.get_absolute_url }}" class="d-block" style="width:100%;height:100%;">
+                                {% if c.marketing_image %}
+                                    <img src="{{ c.marketing_image.url }}" class="img-fluid main-img" alt="Категория: {{ c.title }}" />
+                                {% endif %}
+                                {% if c.hover_image %}
+                                    <img src="{{ c.hover_image.url }}" class="img-fluid hover-img" alt="Категория: {{ c.title }} (hover)" />
+                                {% endif %}
+                            </a>
+                            <!-- Overlay at bottom, inside the image -->
+                            <div class="category-overlay position-absolute bottom-0 start-0 end-0 px-3 py-3">
+                                <div class="category-overlay-box p-3 rounded">
+                                    <h2 class="category-title mb-2">{{ c.title }}</h2>
+                                    <a href="{{ c.get_absolute_url }}" class="btn btn-light text-primary fw-bold shadow-sm">Купи сега</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
     <!-- Popular Products Section -->
     <section>
         <div class="container">

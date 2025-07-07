@@ -56,7 +56,6 @@ RATING = (
 class Category(models.Model):
     title = models.CharField(max_length=255)
     sku = models.CharField(max_length=50, unique=True, null=True, verbose_name="SKU")
-
     parent = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
@@ -67,9 +66,24 @@ class Category(models.Model):
     image = models.FileField(
         upload_to="images", default="default/default-image.avif", null=True, blank=True
     )
+    hover_image = models.FileField(
+        upload_to="images",
+        blank=True,
+        null=True,
+        default="default/default-image-hover.avif",
+        verbose_name="Втора снимка (показва се при задържане)"
+    )
+    marketing_image = models.FileField(
+        upload_to="images",
+        blank=True,
+        null=True,
+        default="default/default-marketing.avif",
+        verbose_name="Маркетинг снимка"
+    )
     slug = models.SlugField()
     meta_title = models.CharField(max_length=150, blank=True, null=True)
     meta_description = models.CharField(max_length=300, blank=True, null=True)
+    is_popular = models.BooleanField(default=False, verbose_name="Популярна категория")
 
     class Meta:
         verbose_name_plural = "Categories"

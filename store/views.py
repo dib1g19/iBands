@@ -58,10 +58,12 @@ def index(request):
     products = paginate_queryset(request, products_list, 20)
 
     categories = store_models.Category.objects.filter(parent__isnull=True)
+    popular_categories = store_models.Category.objects.filter(is_popular=True)
 
     context = {
         "products": products,
         "categories": categories,
+        "popular_categories": popular_categories,
         "user_wishlist_products": get_user_wishlist_products(request),
     }
     return render(request, "store/index.html", context)

@@ -5,7 +5,14 @@
             <!-- Product Image -->
             <div class="card-body p-0">
                 <div class="shop_thumb position-relative">
-                    <a class="card-img-top d-block overflow-hidden" href="{{ p.get_absolute_url }}"><img class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" src="{{ p.image.url }}" alt="..." /></a>
+                    <a class="card-img-top d-block overflow-hidden" href="{{ p.get_absolute_url }}">
+                        <div class="product-img-hover-wrapper">
+                            <img class="card-img-top main-img" style="width: 100%; height: 100%; object-fit: cover;" src="{{ p.image.url }}" alt="..." />
+                            {% if p.gallery.first %}
+                                <img class="card-img-top hover-img" style="width: 100%; height: 100%; object-fit: cover;" src="{{ p.gallery.first.image.url }}" alt="..." />
+                            {% endif %}
+                        </div>
+                    </a>
                 </div>
             </div>
             <!-- Product Info -->

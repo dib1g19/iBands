@@ -67,16 +67,13 @@ class Category(models.Model):
         upload_to="images", default="default/default-image.avif", null=True, blank=True
     )
     marketing_image = models.FileField(
-        upload_to="images",
-        blank=True,
-        null=True,
-        verbose_name="Маркетинг снимка"
+        upload_to="images", blank=True, null=True, verbose_name="Маркетинг снимка"
     )
     hover_image = models.FileField(
         upload_to="images",
         blank=True,
         null=True,
-        verbose_name="Втора снимка (показва се при задържане)"
+        verbose_name="Втора снимка (показва се при задържане)",
     )
     slug = models.SlugField()
     meta_title = models.CharField(max_length=150, blank=True, null=True)
@@ -199,6 +196,7 @@ class Product(models.Model):
 
     def gallery(self):
         return Gallery.objects.filter(product=self)
+
     @property
     def discount_percent(self):
         if self.regular_price and self.regular_price > self.price:
@@ -300,24 +298,31 @@ class Order(models.Model):
         related_name="customer",
         blank=True,
     )
-    sub_total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
-    shipping = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
-    total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
+    address = models.ForeignKey(
+        "customer.Address", on_delete=models.SET_NULL, null=True
+    )
+
+    order_id = ShortUUIDField(length=6, max_length=25, alphabet="1234567890")
+    date = models.DateTimeField(default=timezone.now)
+
+    order_status = models.CharField(
+        max_length=100, choices=ORDER_STATUS, default="received"
+    )
     payment_status = models.CharField(
         max_length=100, choices=PAYMENT_STATUS, default="processing"
     )
     payment_method = models.CharField(
         max_length=100, choices=PAYMENT_METHOD, default=None, null=True, blank=True
     )
-    order_status = models.CharField(
-        max_length=100, choices=ORDER_STATUS, default="received"
+
+    shipping_service = models.CharField(
+        max_length=100, choices=SHIPPING_SERVICE, default=None, null=True, blank=True
     )
-    initial_total = models.DecimalField(
-        default=0.00,
-        max_digits=12,
-        decimal_places=2,
-        help_text="The original total before discounts",
-    )
+    tracking_id = models.CharField(max_length=100, null=True, blank=True)
+
+    sub_total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
+    shipping = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
+    total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
     saved = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -326,17 +331,8 @@ class Order(models.Model):
         blank=True,
         help_text="Amount saved by customer",
     )
-    address = models.ForeignKey(
-        "customer.Address", on_delete=models.SET_NULL, null=True
-    )
     coupons = models.ManyToManyField(Coupon, blank=True)
-    order_id = ShortUUIDField(length=6, max_length=25, alphabet="1234567890")
     payment_id = models.CharField(null=True, blank=True, max_length=1000)
-    date = models.DateTimeField(default=timezone.now)
-    shipping_service = models.CharField(
-        max_length=100, choices=SHIPPING_SERVICE, default=None, null=True, blank=True
-    )
-    tracking_id = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "Order"
@@ -351,10 +347,6 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    order_status = models.CharField(
-        max_length=100, choices=ORDER_STATUS, default="received"
-    )
-
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     qty = models.IntegerField(default=0)
     model = models.CharField(max_length=100, null=True, blank=True)
@@ -369,19 +361,21 @@ class OrderItem(models.Model):
         blank=True,
         help_text="Amount saved by customer",
     )
-    coupon = models.ManyToManyField(Coupon, blank=True)
-    applied_coupon = models.BooleanField(default=False)
-    item_id = ShortUUIDField(length=6, max_length=25, alphabet="1234567890")
-    date = models.DateTimeField(default=timezone.now)
 
     def order_id(self):
         return f"{self.order.order_id}"
 
     def __str__(self):
-        return self.item_id
+        return str(self.id)
 
     class Meta:
-        ordering = ["-date"]
+        ordering = ["id"]
+
+    @property
+    def product_category_path(self):
+        if self.product and self.product.category:
+            return self.product.category.get_full_name_path()
+        return ""
 
 
 class Review(models.Model):

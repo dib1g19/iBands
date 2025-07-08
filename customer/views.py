@@ -9,7 +9,6 @@ from plugin.paginate_queryset import paginate_queryset
 from store import models as store_models
 from customer import models as customer_models
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
 
 
 @csrf_exempt

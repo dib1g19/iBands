@@ -96,25 +96,90 @@ class CouponAdmin(admin.ModelAdmin):
     search_fields = ["code"]
 
 
+class OrderItemInline(admin.TabularInline):
+    model = store_models.OrderItem
+    extra = 0
+    fields = ["product", "product_category_path", "model", "size", "qty", "price", "sub_total"]
+    readonly_fields = ["product", "product_category_path", "model", "size", "qty", "price", "sub_total"]
+
+
+from django.utils.html import format_html
+
 class OrderAdmin(admin.ModelAdmin):
     list_display = [
-        "order_id",
-        "customer",
+        "address",
         "total",
-        "payment_status",
         "order_status",
+        "shipping_service",
+        "tracking_id",
         "payment_method",
         "date",
     ]
-    list_editable = ["payment_status", "order_status", "payment_method"]
+    list_editable = [
+        "order_status",
+        "shipping_service",
+        "tracking_id",
+    ]
     search_fields = ["order_id", "customer__username"]
     list_filter = ["payment_status", "order_status"]
+    inlines = [OrderItemInline]
+    readonly_fields = [
+        "address_display",
+    ]
+    fields = [
+        "customer",
+        "address_display",
+        "order_status",
+        "shipping_service",
+        "tracking_id",
+        "total",
+        "sub_total",
+        "shipping",
+        "saved",
+        "payment_status",
+        "payment_method",
+        "coupons",
+        "order_id",
+        "payment_id",
+        "date",
+    ]
+
+    def address_display(self, obj):
+        if obj.address:
+            addr = obj.address
+            return format_html(
+                "<b>Име:</b> {}<br>"
+                "<b>Телефон:</b> {}<br>"
+                "<b>Email:</b> {}<br>"
+                "<b>Доставка:</b> {}<br>"
+                "<b>Град:</b> {}<br>"
+                "<b>Адрес:</b> {}",
+                addr.full_name or "-",
+                addr.mobile or "-",
+                addr.email or "-",
+                addr.get_delivery_method_display() if hasattr(addr, "get_delivery_method_display") else addr.delivery_method or "-",
+                addr.city or "-",
+                addr.address or "-"
+            )
+        return "-"
+    address_display.short_description = "Address"
 
 
 class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ["item_id", "order", "product", "qty", "price", "sub_total"]
-    search_fields = ["item_id", "order__order_id", "product__name"]
+    list_display = ["id", "order", "product", "product_category_path", "qty", "price", "sub_total"]
+    search_fields = ["id", "order__order_id", "product__name"]
     list_filter = ["order__date"]
+    readonly_fields = ["product_category_path"]
+    fields = [
+        "order",
+        "product",
+        "product_category_path",
+        "model",
+        "size",
+        "price",
+        "sub_total",
+        "saved",
+    ]
 
 
 class ReviewAdmin(admin.ModelAdmin):

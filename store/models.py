@@ -353,14 +353,6 @@ class OrderItem(models.Model):
     size = models.CharField(max_length=100, null=True, blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     sub_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    saved = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=0.00,
-        null=True,
-        blank=True,
-        help_text="Amount saved by customer",
-    )
 
     def order_id(self):
         return f"{self.order.order_id}"

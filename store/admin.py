@@ -20,6 +20,7 @@ class VariantItemInline(admin.TabularInline):
 
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ["title", "sku", "image", "parent"]
+    search_fields = ["title", "sku"]
     list_editable = ["sku", "image", "parent"]
     prepopulated_fields = {"slug": ("title",)}
 
@@ -178,7 +179,6 @@ class OrderItemAdmin(admin.ModelAdmin):
         "size",
         "price",
         "sub_total",
-        "saved",
     ]
 
 

@@ -618,7 +618,6 @@ def coupon_apply(request, order_id):
 
     try:
         order = store_models.Order.objects.get(order_id=order_id)
-        order_items = store_models.OrderItem.objects.filter(order=order)
     except store_models.Order.DoesNotExist:
         messages.error(request, "Order not found")
         return redirect("store:cart")
@@ -640,19 +639,7 @@ def coupon_apply(request, order_id):
             messages.warning(request, "Coupon already activated")
             return redirect("store:checkout", order.order_id)
         else:
-            # Coupon now applies globally to all items
-            total_discount = 0
-            for item in order_items:
-                if coupon not in item.coupon.all():
-                    item_discount = (
-                        item.sub_total * coupon.discount / 100
-                    )  # Discount for this item
-                    total_discount += item_discount
-                    item.coupon.add(coupon)
-                    item.saved += item_discount
-                    item.save()
-
-            # Apply total discount to the order after processing all items
+            total_discount = order.sub_total * coupon.discount / 100
             if total_discount > 0:
                 order.coupons.add(coupon)
                 order.total -= total_discount

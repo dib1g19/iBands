@@ -12,7 +12,7 @@ def send_simple_message():
     api_key = env("MAILGUN_API_KEY")
     domain = env("MAILGUN_SENDER_DOMAIN")
     sender = env("DEFAULT_FROM_EMAIL")
-    recipient = env("TEST_RECEIVER_EMAIL")
+    recipient = env("ORDER_NOTIFICATION_EMAIL")
 
     # Debug output
     print(f"DEBUG — Mailgun API Key: {api_key}")

@@ -713,6 +713,13 @@ def cod_payment(request, order_id):
             order=order,
             email_heading=f"Потвърдена поръчка #{order.order_id}",
             email_title="iBands: Приета поръчка",
+            to_email=order.address.email,
+        )
+        send_order_notification_email(
+            order=order,
+            email_heading=f"Потвърдена поръчка #{order.order_id}",
+            email_title="iBands: Приета поръчка",
+            to_email=settings.ORDER_NOTIFICATION_EMAIL,
         )
 
         if request.user.is_authenticated:
@@ -775,6 +782,13 @@ def stripe_payment_verify(request, order_id):
                 order=order,
                 email_heading=f"Потвърдена поръчка #{order.order_id}",
                 email_title="iBands: Приета поръчка",
+                to_email=order.address.email,
+            )
+            send_order_notification_email(
+                order=order,
+                email_heading=f"Потвърдена поръчка #{order.order_id}",
+                email_title="iBands: Приета поръчка",
+                to_email=settings.ORDER_NOTIFICATION_EMAIL,
             )
             customer_models.Notifications.objects.create(
                 type="New Order", user=request.user

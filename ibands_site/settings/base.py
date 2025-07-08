@@ -18,7 +18,7 @@ ALLOWED_HOSTS = [
     "ibands-production.up.railway.app",
     "ibands.onrender.com",
 ]
-ADMINS = [("Dimitar Bedachev", "order@ibands.online")]
+ADMINS = [("Dimitar Bedachev", "dimitarbedachev@gmail.com")]
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1",
     "https://ibands.online",
@@ -118,6 +118,7 @@ AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 EMAIL_BACKEND = env("EMAIL_BACKEND")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
 SERVER_EMAIL = env("SERVER_EMAIL")
+ORDER_NOTIFICATION_EMAIL =  env("ORDER_NOTIFICATION_EMAIL")
 ANYMAIL = {
     "MAILGUN_API_KEY": os.environ.get("MAILGUN_API_KEY"),
     "MAILGUN_SENDER_DOMAIN": os.environ.get("MAILGUN_SENDER_DOMAIN"),

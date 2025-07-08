@@ -17,10 +17,12 @@ def order_status_signal(sender, instance, **kwargs):
             instance,
             f"Поръчка #{instance.order_id} e изпратена",
             "iBands: Пратката е изпратена",
+            to_email=instance.address.email,
         )
     if previous.order_status != "delivered" and instance.order_status == "delivered":
         send_order_notification_email(
             instance,
             f"Поръчка #{instance.order_id} е доставена",
             "iBands: Пратката е доставена",
+            to_email=instance.address.email,
         )

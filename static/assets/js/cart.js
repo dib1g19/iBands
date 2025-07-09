@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 data.append(input.name, input.value);
             });
 
-            fetch("{% url 'customer:quick_add_address' %}", {
+            fetch("/customer/quick-add-address/", {
                 method: "POST",
                 body: data,
                 headers: {

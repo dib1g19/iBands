@@ -7,7 +7,6 @@ from django.db import models
 from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
-from django.core.mail import EmailMultiAlternatives
 from decimal import Decimal
 from .models import Category, Product
 import requests
@@ -26,6 +25,7 @@ from plugin.exchange_rate import (
 from customer.utils import get_user_wishlist_products
 from store.emails import send_order_notification_email
 from django.db.models import Q
+from decimal import Decimal
 
 
 def get_category_ancestors(category):
@@ -645,6 +645,14 @@ def coupon_apply(request, order_id):
                 order.total -= total_discount
                 order.saved += total_discount
                 order.save()
+                # Update each order item to reflect the discounted price and sub_total
+                for item in order.order_items():
+                    original_price = item.product.price
+                    discount = Decimal(str(coupon.discount)) / Decimal("100")
+                    discounted_price = (original_price * (Decimal("1") - discount)).quantize(Decimal("0.01"))
+                    item.price = discounted_price
+                    item.sub_total = discounted_price * item.qty
+                    item.save()
 
         messages.success(request, "Coupon Activated")
         return redirect("store:checkout", order.order_id)

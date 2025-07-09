@@ -92,9 +92,9 @@
                                 <h6 class="fs-sm mb-2"><strong>ID за проследяване:</strong> {{ order.tracking_id|default:'Все още не е добавен' }}</h6>
                                 <h6 class="fs-sm mb-3"><strong>Куриерска услуга:</strong> {{ order.shipping_service|default:'Все още не е добавен' }}</h6>
                                 {% if order.tracking_id and order.shipping_service %}
-                                    {% if order.shipping_service == 'Econt' %}
+                                    {% if order.shipping_service == 'econt' %}
                                         <a target="_blank" href="https://www.econt.com/services/track-shipment/{{ order.tracking_id }}" class="btn btn-primary rounded btn-sm">Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i></a>
-                                    {% elif order.shipping_service == 'Speedy' %}
+                                    {% elif order.shipping_service == 'speedy' %}
                                         <a target="_blank" href="https://www.speedy.bg/bg/track-shipment?shipmentNumber={{ order.tracking_id }}" class="btn btn-primary rounded btn-sm">Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i></a>
                                     {% endif %}
                                 {% endif %}

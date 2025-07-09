@@ -454,9 +454,9 @@
                                                                 <tr>
                                                                     <td align="center" style="padding:0;Margin:0">
                                                                         {% if order.tracking_id and order.shipping_service %}
-                                                                            {% if order.shipping_service == 'Econt' %}
+                                                                            {% if order.shipping_service == 'econt' %}
                                                                                 <a href="https://www.econt.com/services/track-shipment/{{ order.tracking_id }}" target="_blank" style="display: inline-block; background:#000; color: #fff !important; font-size: 18px; font-family: arial, 'helvetica neue', helvetica, sans-serif; font-weight: bold; padding: 12px 30px; border-radius: 30px; text-decoration: none !important; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.10); border: none; letter-spacing: 0.5px;">Проследи поръчката</a>
-                                                                            {% elif order.shipping_service == 'Speedy' %}
+                                                                            {% elif order.shipping_service == 'speedy' %}
                                                                                 <a href="https://www.speedy.bg/bg/track-shipment?shipmentNumber={{ order.tracking_id }}" target="_blank" style="display: inline-block; background:#000; color: #fff !important; font-size: 18px; font-family: arial, 'helvetica neue', helvetica, sans-serif; font-weight: bold; padding: 12px 30px; border-radius: 30px; text-decoration: none !important; box-shadow: 0 2px 8px rgba(13, 110, 253, 0.10); border: none; letter-spacing: 0.5px;">Проследи поръчката</a>
                                                                             {% endif %}
                                                                         {% else %}

@@ -1,20 +1,22 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block content %}
-  <section>
-    <div class="container d-flex align-items-center justify-content-center" style="min-height: 50vh;">
-      <div class="text-center">
-        <h1 class="ft-bold pt-3" style="font-size:2.2rem;">Моля, изчакайте…</h1>
-        <p class="fs-lg mb-3">Зареждаме страницата. Всичко ще бъде готово след секунда.</p>
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-          <span class="visually-hidden">Зареждане...</span>
+    <section>
+        <div class="container d-flex align-items-center justify-content-center" style="min-height: 50vh;">
+            <div class="text-center">
+                <h1 class="ft-bold pt-3" style="font-size:2.2rem;">Моля, изчакайте…</h1>
+                <p class="fs-lg mb-3">Зареждаме страницата. Всичко ще бъде готово след секунда.</p>
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Зареждане...</span>
+                </div>
+                <p class="text-muted mt-3" style="font-size:0.95rem;">
+                    Ако не се презареди автоматично, <a href="/">натиснете тук</a>.
+                </p>
+            </div>
         </div>
-        <p class="text-muted mt-3" style="font-size:0.95rem;">Ако не се презареди автоматично, <a href="/">натиснете тук</a>.</p>
-      </div>
-    </div>
-  </section>
-  <script>
-    setTimeout(function() {
-      window.location.reload();
-    }, 1000);
-  </script>
+    </section>
+    <script>
+        setTimeout(function () {
+            window.location.reload()
+        }, 1000)
+    </script>
 {% endblock %}

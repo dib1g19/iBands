@@ -173,24 +173,12 @@ $(document).ready(function () {
     function getFilters() {
         let filters = {
             categories: [],
-            rating: [],
-            colors: [],
-            sizes: [],
             prices: "",
             display: "",
             searchFilter: "",
         };
         $(".category-filter:checked").each(function () {
             filters.categories.push($(this).val());
-        });
-        $(".rating-filter:checked").each(function () {
-            filters.rating.push($(this).val());
-        });
-        $(".size-filter:checked").each(function () {
-            filters.sizes.push($(this).val());
-        });
-        $(".colors-filter:checked").each(function () {
-            filters.colors.push($(this).val());
         });
         filters.display = $("input[name='items-display']:checked").val();
         filters.prices = $("input[name='price-filter']:checked").val();
@@ -200,7 +188,7 @@ $(document).ready(function () {
 
     $(document).on(
         "change",
-        ".search-filter, .category-filter, .rating-filter, input[name='price-filter'], input[name='items-display'], .size-filter, .colors-filter",
+        ".search-filter, .category-filter, input[name='price-filter'], input[name='items-display']",
         function () {
             let filters = getFilters();
             $.ajax({

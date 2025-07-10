@@ -1,6 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const formDiv = document.getElementById("new-address-form");
-
     document.querySelectorAll("#save-address-btn").forEach(function (saveBtn) {
         saveBtn.addEventListener("click", function () {
             const parent = saveBtn.closest("#new-address-form");

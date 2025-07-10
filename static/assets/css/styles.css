@@ -1,8 +1,4 @@
 @import url(../css/plugins/animation.css);
-@import url(../css/plugins/snackbar.min.css);
-@import url(../css/plugins/light-box.css);
-@import url(../css/plugins/ion.rangeSlider.min.css);
-@import url(../css/plugins/slick.css);
 @import url(../css/plugins/slick-theme.css);
 @import url(../css/plugins/themify.css);
 @import url(../css/plugins/line-icons.css);
@@ -29,13 +25,6 @@ body {
     margin: 0;
     overflow-x: hidden !important;
     font-weight: 400;
-}
-
-.snackbar-container p,
-.tooltip {
-    font-family: "Roboto", sans-serif;
-    font-size: 14px !important;
-    font-weight: 500 !important;
 }
 
 html {
@@ -92,16 +81,8 @@ section {
     position: relative;
 }
 
-section.space {
-    padding: 60px 0 60px;
-}
-
 section.middle {
     padding: 50px 0 50px;
-}
-
-section.space.min {
-    padding: 60px 0 30px;
 }
 
 p {
@@ -363,14 +344,6 @@ html body .text-dark {
     color: #0d6efd;
     background-color: #e9ffeb;
     border-color: #e9ffeb;
-}
-
-.alert button.close {
-    background: transparent;
-    width: auto;
-    height: auto;
-    font-size: 16px;
-    opacity: 0.7;
 }
 
 /*-------------- Category Marketing Images ------------------*/
@@ -693,25 +666,6 @@ table.table tr th {
 }
 
 /*----------- Modal ---------------*/
-
-button.close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    font-size: 10px;
-    color: #121212;
-    opacity: 1;
-    background: #f4f5f7;
-    width: 26px;
-    height: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    justify-content: center;
-    border-radius: 50%;
-    z-index: 1;
-    cursor: pointer;
-}
 
 /*----------- GLobal Settings: Pagination ------------------*/
 
@@ -1493,11 +1447,6 @@ nav a {
     display: inline-block;
 }
 
-.header {
-    background: #fff;
-    z-index: 6;
-}
-
 .social-icons {
     float: right;
     margin-top: 0.7em;
@@ -1580,22 +1529,15 @@ nav a {
     top: 0px;
 }
 
-.header.header-fixed {
-        box-shadow: 0 5px 30px rgba(0, 22, 84, 0.1);
-        -webkit-box-shadow: 0 5px 30px rgba(0, 22, 84, 0.1);
-        background: #ffffff;
-        position: fixed;
-        z-index: 999;
-        width: 100%;
-        top: 0;
-        -webkit-transition: 0.2s ease-in;
-        -o-transition: 0.2s ease-in;
-        transition: 0.2s ease-in;
-        -webkit-animation-duration: 0.5s;
-        animation-duration: 0.5s;
-        -webkit-animation-name: slideInDown;
-        animation-name: slideInDown;
-    }
+.header {
+    box-shadow: 0 5px 30px rgba(0, 22, 84, 0.1);
+    -webkit-box-shadow: 0 5px 30px rgba(0, 22, 84, 0.1);
+    background: #ffffff;
+    position: fixed;
+    z-index: 999;
+    width: 100%;
+    top: 0;
+}
 
 /*----------Dark Menu --------*/
 
@@ -1685,27 +1627,6 @@ DROPDOWN STYLE
  Homes Banner
 ==================================================*/
 
-.home-slider .item {
-    transition: all 0.6s;
-    border-radius: 0;
-    position: relative;
-}
-
-.home-slider .item {
-    background-size: cover !important;
-    background-position: center !important;
-}
-
-.home-slider .item {
-    min-height: 520px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    text-align: left;
-}
-
 /*------------ New homes -----------------*/
 
 /*===================================================
@@ -1720,128 +1641,11 @@ DROPDOWN STYLE
 
 /*----------------- Modal Quick View Design -------------------*/
 
-.slick-dots {
-    bottom: 20px;
-}
-
 /*----------------- Sopping Cart ----------------------*/
 
 /*----------------- Price Range --------------------*/
 
-.irs-min,
-.irs-max {
-    display: none;
-}
-
 /*------------- Slick Slider Arrow -----------------*/
-
-.slick-next:before,
-.slick-prev:before {
-    font-family: "themify";
-    font-size: 14px;
-}
-
-.slick-prev::before {
-    content: "\e629";
-}
-
-.slick-next::before {
-    content: "\e628";
-}
-
-.home-slider .slick-next {
-    right: 40px;
-}
-
-.home-slider .slick-prev {
-    left: initial;
-    right: 100px;
-    z-index: 1;
-}
-
-.home-slider .slick-next,
-.home-slider .slick-prev {
-    top: 90%;
-    -webkit-transform: translate(0, -90%);
-    -ms-transform: translate(0, -90%);
-    transform: translate(0, -90%);
-}
-
-.home-slider .slick-next:before,
-.home-slider .slick-prev:before {
-    width: 50px;
-    height: 50px;
-    font-family: "themify";
-    display: inline-flex;
-    align-items: center;
-    background: transparent;
-    justify-content: center;
-    color: #151515;
-    border-radius: 50%;
-    border: 1px solid #121212;
-    transition: all ease 0.4s;
-    opacity: 0;
-}
-
-.home-slider:hover .slick-next:before,
-.home-slider:hover .slick-prev:before,
-.home-slider:focus .slick-next:before,
-.home-slider:focus .slick-prev:before {
-    opacity: 0.7 !important;
-}
-
-.home-slider .slick-next:hover:before,
-.home-slider .slick-prev:hover:before {
-    background: #151515;
-    border-color: #151515;
-    color: #ffffff;
-    opacity: 1 !important;
-}
-
-.home-slider .slick-dots {
-    bottom: 20px;
-}
-
-.home-slider .slick-dots li button {
-    width: auto;
-    height: auto;
-}
-
-.home-slider .slick-dots li {
-    margin: 0 25px;
-    width: auto;
-    height: auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.home-slider .slick-dots li button::before {
-    font-family: slick;
-    font-size: 6px;
-    line-height: 20px;
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 50px;
-    background: #000000;
-    height: 1px;
-    content: "";
-    text-align: center;
-    opacity: 0.5;
-    color: rgb(0, 0, 0);
-    -webkit-font-smoothing: antialiased;
-}
-
-.home-slider .slick-dots li.slick-active button::before {
-    background: #000000;
-    height: 3px;
-    opacity: 9;
-}
-
-.slick-dotted.slick-slider {
-    margin-bottom: 0px;
-}
 
 /*-------------- Dashboard Navigation ------------*/
 
@@ -2338,34 +2142,6 @@ select.form-control:focus {
 
 /*------------ pricing Box ----------------*/
 
-.slick-next:before,
-.slick-prev:before {
-    width: 30px;
-    height: 30px;
-    display: inline-flex;
-    align-items: center;
-    background: #ffffff;
-    border: 1px solid #ffffff;
-    justify-content: center;
-    color: #151515;
-    border-radius: 50%;
-}
-
-.slick-next,
-.slick-prev {
-    width: auto;
-    height: auto;
-    z-index: 1;
-}
-
-.slick-next {
-    right: -10px;
-}
-
-.slick-prev {
-    left: -10px;
-}
-
 /*--------------- tab Design ----------------*/
 
 .nav-link {
@@ -2655,23 +2431,11 @@ footer.skin-dark-footer .footer_widget ul li a:focus {
 }
 
 @media (min-width: 993px) {
-    .home-slider .item {
-        transition: all 0.6s;
-        border-radius: 0;
-        position: relative;
-        height: 600px;
-    }
     .miliods {
         padding-right: 2.5rem;
     }
     .submenu-indicator {
         display: none;
-    }
-}
-
-@media (min-width: 1200px) {
-    .home-slider .item {
-        height: 100vh;
     }
 }
 
@@ -2721,14 +2485,6 @@ footer.skin-dark-footer .footer_widget ul li a:focus {
     .navigation-portrait .nav-brand {
         margin-left: 19px;
     }
-    .home-slider .item {
-        min-height: 350px;
-        padding: 2rem 0;
-    }
-    .home-slider .btn {
-        padding: 12px 18px;
-        font-size: 14px;
-    }
     .accordion .card-header button {
         font-size: 15px;
     }
@@ -2775,29 +2531,6 @@ footer.skin-dark-footer .footer_widget ul li a:focus {
 /*====================================
  Bottom To top Scroll
 =====================================*/
-
-#back2Top {
-    width: 40px;
-    line-height: 40px;
-    overflow: hidden;
-    z-index: 999;
-    display: none;
-    cursor: pointer;
-    position: fixed;
-    bottom: 10px;
-    right: 20px;
-    text-align: center;
-    font-size: 15px;
-    border-radius: 4px;
-    text-decoration: none;
-    background: #333c56;
-    color: #ffffff;
-}
-
-#back2Top:hover {
-    background-color: #ffffff;
-    color: #333c56;
-}
 
 /* Hide number input spinner controls across different browsers */
 input[type="number"]::-webkit-inner-spin-button,

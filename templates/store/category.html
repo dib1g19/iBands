@@ -34,16 +34,22 @@
                                     {% if sub.is_all %}
                                         {% if category.parent %}
                                             {% if sub.image %}
-                                                <a href="{% url 'store:category_all_sub' category.parent.slug category.slug %}"><img src="{{ sub.image.url }}" class="card-img-top" alt="{{ sub.title }}" /></a>
+                                                <a href="{% url 'store:category_all_sub' category.parent.slug category.slug %}">
+                                                    {% include 'store/_hover_image.html' with image=sub.image hover_image=sub.marketing_image alt=sub.title %}
+                                                </a>
                                             {% endif %}
                                         {% else %}
                                             {% if sub.image %}
-                                                <a href="{% url 'store:category_all_sub_root' category.slug %}"><img src="{{ sub.image.url }}" class="card-img-top" alt="{{ sub.title }}" /></a>
+                                                <a href="{% url 'store:category_all_sub_root' category.slug %}">
+                                                    {% include 'store/_hover_image.html' with image=sub.image hover_image=sub.marketing_image alt=sub.title %}
+                                                </a>
                                             {% endif %}
                                         {% endif %}
                                     {% else %}
                                         {% if sub.image %}
-                                            <a href="{{ sub.get_absolute_url }}"><img src="{{ sub.image.url }}" class="card-img-top" alt="{{ sub.title }}" /></a>
+                                            <a href="{{ sub.get_absolute_url }}">
+                                                {% include 'store/_hover_image.html' with image=sub.image hover_image=sub.marketing_image alt=sub.title %}
+                                            </a>
                                         {% endif %}
                                     {% endif %}
                                     <div class="card-body text-center">

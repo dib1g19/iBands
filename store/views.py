@@ -1141,3 +1141,18 @@ def returns_and_exchanges(request):
     return render(
         request, "pages/returns_and_exchanges.html", {"breadcrumbs": breadcrumbs}
     )
+
+
+def is_bot_request(request):
+    user_agent = request.META.get("HTTP_USER_AGENT", "").lower()
+    bot_keywords = [
+        "bot", "crawl", "slurp", "spider", "mediapartners", "facebookexternalhit",
+        "meta-externalagent", "twitterbot", "bingpreview", "yandex", "duckduckbot"
+    ]
+    return any(bot in user_agent for bot in bot_keywords)
+
+def custom_server_error(request):
+    if is_bot_request(request):
+        return render(request, "500_bot.html", status=500)
+    else:
+        return render(request, "500.html", status=500)

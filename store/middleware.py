@@ -44,12 +44,12 @@ class ReconnectDBMiddleware:
             if is_bot_request(request):
                 ReconnectDBMiddleware.db_error_bot_count += 1
                 logger.error(
-                    f"DB error detected for bot request from {ip} (DB errors for bots: {ReconnectDBMiddleware.db_error_bot_count}, Total DB errors: {ReconnectDBMiddleware.db_error_count})"
+                    f"DB error detected for bot request from {ip} (DB errors for bots: {ReconnectDBMiddleware.db_error_bot_count}"
                 )
             else:
                 ReconnectDBMiddleware.db_error_user_count += 1
                 logger.error(
-                    f"DB error detected for user request from {ip} (DB errors for users: {ReconnectDBMiddleware.db_error_user_count}, Total DB errors: {ReconnectDBMiddleware.db_error_count})"
+                    f"DB error detected for user request from {ip} (DB errors for users: {ReconnectDBMiddleware.db_error_user_count}"
                 )
             connection.close()
             connection.connect()

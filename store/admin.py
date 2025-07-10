@@ -19,9 +19,9 @@ class VariantItemInline(admin.TabularInline):
 
 
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ["title", "sku", "image", "marketing_image", "hover_image", "parent"]
+    list_display = ["title", "sku", "image", "marketing_image", "hover_image", "is_popular", "parent"]
+    list_editable = ["sku", "image", "marketing_image", "hover_image", "is_popular", "parent"]
     search_fields = ["title", "sku"]
-    list_editable = ["sku", "image", "marketing_image", "hover_image", "parent"]
     prepopulated_fields = {"slug": ("title",)}
 
 
@@ -33,7 +33,6 @@ class ProductAdmin(admin.ModelAdmin):
         "image",
         "price",
         "regular_price",
-        "stock",
         "featured",
     ]
     list_editable = ["sku", "name", "image", "price", "regular_price", "featured"]

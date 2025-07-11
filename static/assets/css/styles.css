@@ -346,6 +346,14 @@ html body .text-dark {
     border-color: #e9ffeb;
 }
 
+#main-wrapper {
+    padding-top: 60px;
+}
+
+.alert {
+    margin-bottom: 0 !important;
+}
+
 /*-------------- Category Marketing Images ------------------*/
 
 /* Make popular category images fill the section, 2:1 ratio, and crop image */

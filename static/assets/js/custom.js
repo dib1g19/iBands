@@ -469,16 +469,5 @@ $(function () {
 
     // Product Preview
     $(".sp-wrap").smoothproducts();
-
-    // Script For Fix Header on Scroll
-    $(window).on("scroll", function () {
-        var scroll = $(window).scrollTop();
-
-        if (scroll >= 50) {
-            $(".header").addClass("header-fixed");
-        } else {
-            $(".header").removeClass("header-fixed");
-        }
-    });
     inlineCSS();
 });

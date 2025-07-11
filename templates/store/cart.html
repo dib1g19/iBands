@@ -33,15 +33,7 @@
                                             {% else %}
                                                 <span class="invisible d-none d-xl-inline">0 лв.</span>
                                             {% endif %}
-                                            <h4 class="fs-3 {% if item.product.regular_price %}
-                                                    
-                                                    fw-bold text-danger
-
-                                                {% else %}
-                                                    
-                                                    text-dark
-
-                                                {% endif %}">
+                                            <h4 class="fs-3 {% if item.product.regular_price %}fw-bold text-danger{% else %}text-dark{% endif %}">
                                                 {{ item.price|intcomma }} лв.
                                             </h4>
                                         </div>

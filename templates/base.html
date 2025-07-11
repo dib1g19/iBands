@@ -88,7 +88,7 @@
                                         <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count }}</span></a>
                                     </li>
                                     <li>
-                                        <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-basket"></i><span class="dn-counter total_cart_items">{{ total_cart_items }}</span></a>
+                                        <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-cart"></i><span class="dn-counter total_cart_items">{{ total_cart_items }}</span></a>
                                     </li>
                                 </ul>
                             </div>
@@ -147,7 +147,7 @@
                                     </li>
                                 {% endif %}
                                 <li>
-                                    <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-basket text-white"></i><span class="dn-counter total_cart_items">{{ total_cart_items }}</span></a>
+                                    <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-cart text-white"></i><span class="dn-counter total_cart_items">{{ total_cart_items }}</span></a>
                                 </li>
                                 {% if request.user.is_authenticated %}
                                     <li>

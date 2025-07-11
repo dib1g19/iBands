@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.models import Group
 from userauths import models as userauths_models
 
 
@@ -17,3 +18,4 @@ class ContactMessageAdmin(admin.ModelAdmin):
 admin.site.register(userauths_models.User, UserAdmin)
 admin.site.register(userauths_models.Profile, ProfileAdmin)
 admin.site.register(userauths_models.ContactMessage, ContactMessageAdmin)
+admin.site.unregister(Group)

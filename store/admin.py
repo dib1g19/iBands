@@ -1,6 +1,12 @@
 from django.contrib import admin
 from store import models as store_models
 from store.admin_forms import DuplicateProductForm
+from django.db import models
+from ibands_site.middleware import OperationalErrorCounterMiddleware
+from django.urls import path
+from django.template.response import TemplateResponse
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 
 class GalleryInline(admin.TabularInline):
@@ -187,6 +193,41 @@ class ReviewAdmin(admin.ModelAdmin):
     list_filter = ["active", "rating"]
 
 
+class MiddlewareStatsAdmin(admin.ModelAdmin):
+    # Redirect the changelist view (default admin page for this model) to the stats view.
+    def changelist_view(self, request, extra_context=None):
+        return HttpResponseRedirect(reverse('admin:middleware_stats'))
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('stats/', self.admin_site.admin_view(self.stats_view), name='middleware_stats'),
+        ]
+        return custom_urls + urls
+
+    def stats_view(self, request):
+        stats = {
+            "user_request_count": OperationalErrorCounterMiddleware.user_request_count,
+            "user_request_unique_count": OperationalErrorCounterMiddleware.user_request_unique_count,
+            "bot_request_count": OperationalErrorCounterMiddleware.bot_request_count,
+            "bot_request_unique_count": OperationalErrorCounterMiddleware.bot_request_unique_count,
+            "user_error_count": OperationalErrorCounterMiddleware.user_error_count,
+            "user_error_unique_count": OperationalErrorCounterMiddleware.user_error_unique_count,
+            "bot_error_count": OperationalErrorCounterMiddleware.bot_error_count,
+            "bot_error_unique_count": OperationalErrorCounterMiddleware.bot_error_unique_count,
+        }
+        context = dict(
+            self.admin_site.each_context(request),
+            stats=stats,
+        )
+        return TemplateResponse(request, "admin/middleware_stats.html", context)
+
+class MiddlewareStats(models.Model):
+    class Meta:
+        verbose_name = "Middleware Stats"
+        verbose_name_plural = "Middleware Stats"
+        managed = False  # No DB table
+
 admin.site.register(store_models.Category, CategoryAdmin)
 admin.site.register(store_models.Product, ProductAdmin)
 admin.site.register(store_models.Variant, VariantAdmin)
@@ -197,3 +238,4 @@ admin.site.register(store_models.Coupon, CouponAdmin)
 admin.site.register(store_models.Order, OrderAdmin)
 admin.site.register(store_models.OrderItem, OrderItemAdmin)
 admin.site.register(store_models.Review, ReviewAdmin)
+admin.site.register(MiddlewareStats, MiddlewareStatsAdmin)

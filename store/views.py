@@ -659,7 +659,7 @@ def coupon_apply(request, order_id):
             order.save()
             # Update each order item to reflect the discounted price and sub_total
             for item in order.order_items():
-                original_price = item.product.regular_price if item.product.regular_price and item.product.regular_price > 0 else item.product.price
+                original_price = item.product.price
                 discount = Decimal(str(coupon.discount)) / Decimal("100")
                 discounted_price = round2(original_price * (Decimal("1") - discount))
                 item.price = discounted_price

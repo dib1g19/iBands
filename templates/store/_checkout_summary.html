@@ -1,0 +1,32 @@
+{% load humanize %}
+
+<div id="order-summary-block">
+    <div class="shadow rounded p-3 mt-5">
+        <div>
+            <div class="d-flex justify-content-between align-items-center">
+                <p class="fw-semibold fs-6">Междинна сума</p>
+                <p class="fs-6">{{ order.sub_total }} лв.</p>
+            </div>
+            {% if order.saved %}
+                {% for coupon in order.coupons.all %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="fs-6 text-success fw-bold">{{ coupon.code }}</small>
+                        <small class="fs-6 text-success">-{{ coupon.discount|floatformat:2 }}%</small>
+                    </div>
+                {% endfor %}
+                <div class="d-flex justify-content-between align-items-center">
+                    <p class="fw-semibold fs-6">Отстъпка</p>
+                    <p class="fs-6">{{ order.saved }} лв.</p>
+                </div>
+            {% endif %}
+            <div class="d-flex justify-content-between align-items-center">
+                <p class="fw-semibold fs-6">Доставка ({{ order.address.get_delivery_method_display }})</p>
+                <p class="fs-6">{{ order.shipping|floatformat:2 }} лв.</p>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <p class="fw-bold text-dark fs-5">Общо</p>
+                <p class="fw-bold text-dark fs-5">{{ order.total }} лв.</p>
+            </div>
+        </div>
+    </div>
+</div>

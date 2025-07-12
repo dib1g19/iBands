@@ -350,4 +350,40 @@ $(document).ready(function () {
                 sessionStorage.setItem("freeShippingModalShown", "1");
             });
     }
+    // AJAX coupon form submission for checkout
+    $(document).on("submit", "#coupon-form", function (e) {
+        e.preventDefault();
+        var $form = $(this);
+        var couponCode = $form.find('input[name="coupon_code"]').val();
+        var actionUrl = $form.attr('action');
+        var csrfToken = $form.find('input[name="csrfmiddlewaretoken"]').val();
+        var $feedback = $("#coupon-feedback");
+
+        $.ajax({
+            url: actionUrl,
+            type: "POST",
+            data: {
+                coupon_code: couponCode,
+                csrfmiddlewaretoken: csrfToken
+            },
+            dataType: "json",
+            success: function (data) {
+                if (data.success) {
+                    $feedback.html('<div class="alert alert-success">' + data.message + '</div>');
+                    if (data.summary_html) {
+                        $('#order-summary-block').replaceWith(data.summary_html);
+                    }
+                    if (data.items_html) {
+                        $('#order-items-block').replaceWith(data.items_html);
+                    }
+                    // No reload!
+                } else {
+                    $feedback.html('<div class="alert alert-danger">' + data.message + '</div>');
+                }
+            },
+            error: function () {
+                $feedback.html('<div class="alert alert-danger">Възникна грешка при опита за прилагане на купон.</div>');
+            }
+        });
+    });
 });

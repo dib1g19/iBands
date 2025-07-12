@@ -7,7 +7,7 @@ from django.db import models
 from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from .models import Category, Product
 import requests
 import stripe
@@ -27,6 +27,8 @@ from store.emails import send_order_notification_email
 from django.db.models import Q
 from decimal import Decimal
 
+def round2(val):
+    return Decimal(val).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 def get_category_ancestors(category):
     ancestors = []
@@ -619,46 +621,71 @@ def coupon_apply(request, order_id):
     try:
         order = store_models.Order.objects.get(order_id=order_id)
     except store_models.Order.DoesNotExist:
-        messages.error(request, "Order not found")
+        msg = "Поръчката не беше намерена."
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': msg})
+        messages.error(request, msg)
         return redirect("store:cart")
 
     if request.method == "POST":
         coupon_code = request.POST.get("coupon_code")
 
         if not coupon_code:
-            messages.error(request, "No coupon entered")
+            msg = "Моля, въведете купон."
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': msg})
+            messages.error(request, msg)
             return redirect("store:checkout", order.order_id)
 
         try:
             coupon = store_models.Coupon.objects.get(code=coupon_code)
         except store_models.Coupon.DoesNotExist:
-            messages.error(request, "Coupon does not exist")
+            msg = "Купонът не съществува."
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': msg})
+            messages.error(request, msg)
             return redirect("store:checkout", order.order_id)
 
-        if coupon in order.coupons.all():
-            messages.warning(request, "Coupon already activated")
+        # Always clear any existing coupons and reset saved and total
+        order.coupons.clear()
+        order.saved = round2(0)
+        order.total = round2(order.sub_total + order.shipping)  # Reset to original total before discounts
+
+        total_discount = round2(order.sub_total * coupon.discount / 100)
+        if total_discount > 0:
+            order.coupons.add(coupon)
+            order.total = round2(order.total - total_discount)
+            order.saved = round2(order.saved + total_discount)
+            order.save()
+            # Update each order item to reflect the discounted price and sub_total
+            for item in order.order_items():
+                original_price = item.product.regular_price if item.product.regular_price and item.product.regular_price > 0 else item.product.price
+                discount = Decimal(str(coupon.discount)) / Decimal("100")
+                discounted_price = round2(original_price * (Decimal("1") - discount))
+                item.price = discounted_price
+                item.sub_total = round2(discounted_price * item.qty)
+                item.save()
+            msg = "Купонът е активиран."
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                # Render the updated summary and items HTML
+                summary_html = render_to_string("store/_checkout_summary.html", {"order": order})
+                items_html = render_to_string("store/_checkout_items.html", {"order": order})
+                return JsonResponse({
+                    'success': True,
+                    'message': msg,
+                    'summary_html': summary_html,
+                    'items_html': items_html,
+                })
+            messages.success(request, msg)
             return redirect("store:checkout", order.order_id)
         else:
-            total_discount = order.sub_total * coupon.discount / 100
-            if total_discount > 0:
-                order.coupons.add(coupon)
-                order.total -= total_discount
-                order.saved += total_discount
-                order.save()
-                # Update each order item to reflect the discounted price and sub_total
-                for item in order.order_items():
-                    original_price = item.product.price
-                    if not item.product.regular_price or item.product.regular_price == 0:
-                        item.product.regular_price = item.price
-                        item.product.save()
-                    discount = Decimal(str(coupon.discount)) / Decimal("100")
-                    discounted_price = (original_price * (Decimal("1") - discount)).quantize(Decimal("0.01"))
-                    item.price = discounted_price
-                    item.sub_total = discounted_price * item.qty
-                    item.save()
+            msg = "Отстъпката не е приложима."
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': msg})
+            messages.error(request, msg)
+            return redirect("store:checkout", order.order_id)
 
-        messages.success(request, "Coupon Activated")
-        return redirect("store:checkout", order.order_id)
+    return redirect("store:checkout", order_id)
 
 
 def checkout(request, order_id):

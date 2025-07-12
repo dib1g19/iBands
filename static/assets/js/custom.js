@@ -469,5 +469,4 @@ $(function () {
 
     // Product Preview
     $(".sp-wrap").smoothproducts();
-    inlineCSS();
 });

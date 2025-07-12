@@ -30,6 +30,9 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ["title", "sku"]
     prepopulated_fields = {"slug": ("title",)}
 
+    class Media:
+        js = ('admin/js/vendor/jquery/jquery.js', 'assets/js/admin_char_count.js',)
+
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = [
@@ -68,6 +71,9 @@ class ProductAdmin(admin.ModelAdmin):
         self.message_user(request, f"{count} product copies created successfully.")
 
     duplicate_product.short_description = "Duplicate selected Products"
+
+    class Media:
+        js = ('admin/js/vendor/jquery/jquery.js', 'assets/js/admin_char_count.js',)
 
 
 class VariantAdmin(admin.ModelAdmin):

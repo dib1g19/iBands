@@ -96,7 +96,9 @@
             </div>
 
             <div class="row align-items-center rows-products">
-                {% include 'store/_product_list.html' %}
+                {% for product in products %}
+                    {% include 'store/_product_list.html' with product=product %}
+                {% endfor %}
             </div>
 
             {% include 'partials/_pagination.html' %}

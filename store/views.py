@@ -1063,13 +1063,18 @@ def filter_products(request):
     except EmptyPage:
         products_page = paginator.page(paginator.num_pages)
 
-    html = render_to_string(
-        "store/_product_list.html",
-        {
-            "products": products_page,
-            "user_wishlist_products": get_user_wishlist_products(request),
-        },
-    )
+    user_wishlist_products = get_user_wishlist_products(request)
+    product_html_list = [
+        render_to_string(
+            "partials/_product_list.html",
+            {
+                "product": product,
+                "user_wishlist_products": user_wishlist_products,
+            }
+        )
+        for product in products_page
+    ]
+    html = ''.join(product_html_list)
     pagination_html = render_to_string(
         "partials/_pagination.html", {"products": products_page, "is_shop": True}
     )

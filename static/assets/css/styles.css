@@ -684,14 +684,11 @@ table.table tr th {
     margin: 20px auto 0 !important;
 }
 
-.pagination > li > a,
-.pagination > li > a,
-.pagination > li > span {
+.pagination .page-link {
     position: relative;
     font-weight: 500;
     margin: 0;
     float: left;
-    font-size: 16px;
     color: #151515;
     text-decoration: none;
     background-color: transparent;
@@ -702,6 +699,13 @@ table.table tr th {
     text-align: center;
     border: none;
     border-bottom: 1px solid #ecedf1;
+}
+
+@media (max-width: 576px) {
+  .pagination .page-link {
+    padding: 1rem 0.95rem;
+    font-size: 1rem;
+  }
 }
 
 .pagination > .active > a,

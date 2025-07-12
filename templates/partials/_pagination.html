@@ -11,17 +11,41 @@
                 </li>
             {% endif %}
 
-            {% for num in products.paginator.page_range %}
-                {% if products.number == num %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
-                {% else %}
-                    <li class="page-item">
-                        <a class="page-link" href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ num }}">{{ num }}</a>
-                    </li>
-                {% endif %}
-            {% endfor %}
+            {% comment %}
+                Smart pagination: shows first/last, 2 before/after current, ellipsis as needed.
+            {% endcomment %}
+            {% with total=products.paginator.num_pages current=products.number %}
+                {% for num in products.paginator.page_range %}
+                    {% if num == 1 or num == total %}
+                        {# Always show first/last page #}
+                        {% if num == current %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% elif num >= current|add:"-2" and num <= current|add:"2" %}
+                        {# Show pages within -2/+2 of current #}
+                        {% if num == current %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% elif num == current|add:"-3" or num == current|add:"3" %}
+                        {# Ellipsis if there is a gap #}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}
 
             {% if products.has_next %}
                 <li class="page-item">

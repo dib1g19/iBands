@@ -703,7 +703,7 @@ table.table tr th {
 
 @media (max-width: 576px) {
   .pagination .page-link {
-    padding: 1rem 0.95rem;
+    padding: 0.8rem 0.8rem;
     font-size: 1rem;
   }
 }

@@ -15,9 +15,7 @@
 
 {% block content %}
     <style>
-        .razorpay-payment-button {
-            display: none;
-        }
+        /* Payment button custom styles if needed */
     </style>
     {% include 'partials/_breadcrumbs.html' %}
 
@@ -96,68 +94,18 @@
                         <button type="button" id="stripe-payment" class="btn btn-primary mb-3 rounded w-100">Плащане с карта</button>
                         <button type="button" id="cod-payment" class="btn btn-primary mb-3 rounded w-100">Наложен платеж</button>
                     </div>
-
-                    <!--  <div class="w-100 mt-3">
-                        <button type="button" id="stripe-payment" class="btn rounded text-primary fw-bold w-100 mb-3 payment-btn-stripe" style="background-color: #bcb9f2b4;">
-                            <img style="width: 100px; height: 30px; object-fit: contain;" src="https://hostbillapp.com/appstore/payment_stripe/images/thumbnails/m_logo.png" alt="">
-                        </button>
-                        <button type="button" id="paystack-payment" onclick="payWithPaystack()" class="btn rounded text-primary fw-bold w-100 mb-3 payment-btn-paystack" style="background-color: #bce6f6;">
-                            <img style="width: 150px; height: 30px; object-fit: contain;" src="https://raw.githubusercontent.com/PaystackHQ/wordpress-payment-forms-for-paystack/master/icon.png" alt="">
-                        </button>
-                    
-
-                        <form method="POST" action="https://checkout.flutterwave.com/v3/hosted/pay">
-                            <input type="hidden" name="public_key" value="{{ flutterwave_public_key }}" />
-                            <input type="hidden" name="customer[email]" value="{{ order.address.email }}" />
-                            <input type="hidden" name="customer[name]" value="{{ order.address.full_name }}" />
-                            <input type="hidden" name="tx_ref" value="{{order.order_id}}" />
-                            <input type="hidden" name="amount" value="{{ amount_in_ngn }}" />
-                            <input type="hidden" name="currency" value="NGN" />
-                            <input type="hidden" name="redirect_url" value="https://fastcart.up.railway.app/flutterwave_payment_callback/{{ order.order_id }}/?payment_method=Flutterwave" />
-                            <input type="hidden" name="meta[source]" value="docs-html-test" />
-                            <button type="submit" id="start-payment-button" class="btn rounded text-primary fw-bold w-100 mb-3 payment-btn-flutterwave" style="background-color: #e8d3c4;">
-                                <img style="width: 250px; height: 40px; object-fit: contain;" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Flutterwave_Logo.png/1200px-Flutterwave_Logo.png" alt="">
-                            </button>
-                        </form>
-                        <button type="button" id="mangopay-payment" class="btn rounded text-primary fw-bold w-100 mb-3 payment-btn-mangopay" style="background-color: #2D0F37;">
-                            <img style="width: 250px; height: 50px; object-fit: contain;" src="https://media.licdn.com/dms/image/D5612AQGff40vpNeVSg/article-cover_image-shrink_600_2000/0/1721191178041?e=2147483647&v=beta&t=z-tiHP9B56nxiBTzO_ZBjFfgIg1_E7s1Bz18uN0bu7k" alt="">
-                        </button>
-                        <form action="{% url 'store:razorpay_payment_verify' order.order_id %}?payment_method=RazorPay" method="POST">
-                            {% csrf_token %}
-                            <script
-                                src="https://checkout.razorpay.com/v1/checkout.js"
-                                data-key="{{ razorpay_key_id }}"
-                                data-amount="{{ amount_in_inr }}"
-                                data-currency="INR"
-                                data-order_id="{{ razorpay_order_id }}"
-                                data-name="Your Company"
-                                data-description="E-commerce Order"
-                                data-image="https://your_logo_url.com/logo.png"
-                                data-theme.color="#F37254">
-                            </script>
-                            
-                            <button type="submit" id="stripe-payment" class="btn rounded text-primary w-100 mb-3" style="background-color: #c1c9e8;">
-                                <img style="width: 150px;" src="https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg" alt="">
-                            </button>
-
-                        </form>
-                        <div id="paypal-button-container"></div>
-
-                    </div>  -->
                 </div>
             </div>
         </div>
     </section>
 
-    <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=USD"></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+{% endblock %}
+
+{% block extra_scripts %}
     <script src="https://js.stripe.com/v3/"></script>
-    <script src="https://js.paystack.co/v1/inline.js"></script>
-    <script src="https://checkout.flutterwave.com/v3.js"></script>
     <script>
         var stripe = Stripe('{{stripe_public_key}}')
         var checkoutButton = document.getElementById('stripe-payment')
-        
         try {
             checkoutButton.addEventListener('click', function () {
                 var email = '{{order.address.email}}'
@@ -167,8 +115,6 @@
                     body: JSON.stringify({ email: email })
                 })
                     .then(function (response) {
-                        console.log(response)
-                        console.log(stripe)
                         return response.json()
                     })
                     .then(function (session) {
@@ -187,70 +133,6 @@
             console.log(error)
         }
     </script>
-
-    <script>
-        function initPayPalButton() {
-            paypal
-                .Buttons({
-                    style: {
-                        shape: 'rect',
-                        color: 'gold',
-                        layout: 'vertical',
-                        label: 'paypal'
-                    },
-        
-                    createOrder: function (data, actions) {
-                        return actions.order.create({
-                            purchase_units: [
-                                {
-                                    amount: {
-                                        currency_code: 'USD',
-                                        value: '{{order.total}}'
-                                    }
-                                }
-                            ]
-                        })
-                    },
-        
-                    onApprove: function (data, actions) {
-                        return actions.order.capture().then(function (orderData) {
-                            console.log('Capture result', orderData, JSON.stringify(orderData, null, 2))
-        
-                            const element = document.getElementById('paypal-button-container')
-                            element.innerHTML = ''
-                            element.innerHTML = '<h5>Verifying payment...</h5>'
-                            window.location.href = `/paypal_payment_verify/{{order.order_id}}/?transaction_id=${orderData.id}&payment_method=PayPal` // Replace with your actual order ID
-                        })
-                    },
-        
-                    onError: function (err) {
-                        console.log(err)
-                    }
-                })
-                .render('#paypal-button-container')
-        }
-        initPayPalButton()
-    </script>
-
-    <script type="text/javascript">
-        function payWithPaystack() {
-            var handler = PaystackPop.setup({
-                key: '{{ paystack_public_key }}',
-                email: '{{order.address.email}}',
-                amount: '{{amount_in_kobo}}',
-                currency: 'NGN',
-                ref: '' + Math.floor(Math.random() * 1000000000 + 1),
-                callback: function (response) {
-                    window.location.href = '/paystack_payment_verify/{{ order.order_id }}/?reference=' + response.reference + '&payment_method=Paystack'
-                },
-                onClose: function () {
-                    alert('Payment window closed')
-                }
-            })
-            handler.openIframe()
-        }
-    </script>
-
     <script>
         // Helper to get CSRF token from cookies
         function getCookie(name) {

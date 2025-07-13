@@ -5,7 +5,7 @@ from django.db import models
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.urls import reverse
-from plugin.paginate_queryset import paginate_queryset
+from store.utils import paginate_queryset
 from store import models as store_models
 from customer import models as customer_models
 from django.views.decorators.csrf import csrf_exempt
@@ -94,6 +94,7 @@ def wishlist(request):
         "wishlist": wishlist,
         "wishlist_list": wishlist_list,
         "breadcrumbs": breadcrumbs,
+        "products": wishlist,
     }
 
     return render(request, "customer/wishlist.html", context)

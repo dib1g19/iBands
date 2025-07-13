@@ -8,6 +8,7 @@ from django.template.response import TemplateResponse
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from store.utils import get_500_error_stats
+from django.utils.html import format_html
 
 
 class GalleryInline(admin.TabularInline):
@@ -115,8 +116,6 @@ class OrderItemInline(admin.TabularInline):
     fields = ["product", "product_category_path", "model", "size", "qty", "price", "sub_total"]
     readonly_fields = ["product", "product_category_path", "model", "size", "qty", "price", "sub_total"]
 
-
-from django.utils.html import format_html
 
 class OrderAdmin(admin.ModelAdmin):
     list_display = [

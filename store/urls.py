@@ -37,26 +37,6 @@ urlpatterns = [
         views.stripe_payment_verify,
         name="stripe_payment_verify",
     ),
-    path(
-        "paypal-payment-verify/<order_id>/",
-        views.paypal_payment_verify,
-        name="paypal_payment_verify",
-    ),
-    path(
-        "razorpay-payment-verify/<order_id>/",
-        views.razorpay_payment_verify,
-        name="razorpay_payment_verify",
-    ),
-    path(
-        "paystack-payment-verify/<order_id>/",
-        views.paystack_payment_verify,
-        name="paystack_payment_verify",
-    ),
-    path(
-        "flutterwave-payment-callback/<order_id>/",
-        views.flutterwave_payment_callback,
-        name="flutterwave_payment_callback",
-    ),
     path("order-tracker-page/", views.order_tracker_page, name="order_tracker_page"),
     path("about/", views.about, name="about"),
     path("contact/", views.contact, name="contact"),

@@ -34,33 +34,7 @@
                         {% endfor %}
                     </div>
 
-                    <ul class="pagination">
-                        {% if wishlist.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ wishlist.previous_page_number }}">Предишна</a>
-                            </li>
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">Предишна</span>
-                            </li>
-                        {% endif %}
-
-                        {% for num in wishlist.paginator.page_range %}
-                            <li class="page-item {% if wishlist.number == num %}active{% endif %}">
-                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                            </li>
-                        {% endfor %}
-
-                        {% if wishlist.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ wishlist.next_page_number }}">Следваща</a>
-                            </li>
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">Следваща</span>
-                            </li>
-                        {% endif %}
-                    </ul>
+                    {% include 'partials/_pagination.html' %}
                 </div>
             </div>
         </div>

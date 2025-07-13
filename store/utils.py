@@ -1,10 +1,18 @@
+from django.core.paginator import Paginator
 from django.core.cache import cache
+
+
+def paginate_queryset(request, queryset, per_page):
+    paginator = Paginator(queryset, per_page)
+    page_number = request.GET.get("page")
+    return paginator.get_page(page_number)
+
 
 def increment_500_error_count(is_bot=None, ip=None):
     # Total 500 errors
     key_total = "custom_500_error_count"
     cache.set(key_total, cache.get(key_total, 0) + 1, timeout=None)
-    
+
     if is_bot is not None and ip is not None:
         if is_bot:
             key = "custom_500_bot_error_count"
@@ -16,6 +24,7 @@ def increment_500_error_count(is_bot=None, ip=None):
         ip_set = set(cache.get(key_unique, []))
         ip_set.add(ip)
         cache.set(key_unique, list(ip_set), timeout=None)
+
 
 def get_500_error_stats():
     return {

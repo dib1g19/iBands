@@ -1,72 +1,37 @@
-from django.db import connection
-from django.db.utils import OperationalError
-
-class ReconnectDBMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        try:
-            response = self.get_response(request)
-        except OperationalError:
-            connection.close()
-            connection.connect()
-            response = self.get_response(request)
-        return response
-
-
-class OperationalErrorCounterMiddleware:
+class RequestCounterMiddleware:
+    """
+    Middleware for counting requests and unique IP addresses for users and bots.
+    """
     bot_request_count = 0
     user_request_count = 0
     bot_request_unique_count = 0
     user_request_unique_count = 0
-    bot_error_count = 0
-    user_error_count = 0
-    bot_error_unique_count = 0
-    user_error_unique_count = 0
 
     bot_ips = set()
     user_ips = set()
-    bot_error_ips = set()
-    user_error_ips = set()
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        """
+        Counts each request and unique IP address for bots and users.
+        """
         ip = self.get_client_ip(request)
         is_bot = self.is_bot_request(request)
 
-        # Track all requests
         if is_bot:
-            OperationalErrorCounterMiddleware.bot_request_count += 1
-            if ip not in OperationalErrorCounterMiddleware.bot_ips:
-                OperationalErrorCounterMiddleware.bot_request_unique_count += 1
-                OperationalErrorCounterMiddleware.bot_ips.add(ip)
+            RequestCounterMiddleware.bot_request_count += 1
+            if ip not in RequestCounterMiddleware.bot_ips:
+                RequestCounterMiddleware.bot_request_unique_count += 1
+                RequestCounterMiddleware.bot_ips.add(ip)
         else:
-            OperationalErrorCounterMiddleware.user_request_count += 1
-            if ip not in OperationalErrorCounterMiddleware.user_ips:
-                OperationalErrorCounterMiddleware.user_request_unique_count += 1
-                OperationalErrorCounterMiddleware.user_ips.add(ip)
+            RequestCounterMiddleware.user_request_count += 1
+            if ip not in RequestCounterMiddleware.user_ips:
+                RequestCounterMiddleware.user_request_unique_count += 1
+                RequestCounterMiddleware.user_ips.add(ip)
 
-        try:
-            response = self.get_response(request)
-        except OperationalError:
-            connection.close()
-            connection.connect()
-            # Track errors
-            if is_bot:
-                OperationalErrorCounterMiddleware.bot_error_count += 1
-                if ip not in OperationalErrorCounterMiddleware.bot_error_ips:
-                    OperationalErrorCounterMiddleware.bot_error_unique_count += 1
-                    OperationalErrorCounterMiddleware.bot_error_ips.add(ip)
-            else:
-                OperationalErrorCounterMiddleware.user_error_count += 1
-                if ip not in OperationalErrorCounterMiddleware.user_error_ips:
-                    OperationalErrorCounterMiddleware.user_error_unique_count += 1
-                    OperationalErrorCounterMiddleware.user_error_ips.add(ip)
-            response = self.get_response(request)
-        return response
+        return self.get_response(request)
 
     def get_client_ip(self, request):
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')

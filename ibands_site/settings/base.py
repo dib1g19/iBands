@@ -59,8 +59,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'ibands_site.middleware.ReconnectDBMiddleware',
-    'ibands_site.middleware.OperationalErrorCounterMiddleware',
+    'ibands_site.middleware.RequestCounterMiddleware',
 ]
 
 ROOT_URLCONF = "ibands_site.urls"
@@ -171,7 +170,7 @@ JAZZMIN_SETTINGS = {
         "store.gallery",
         "store.coupon",
         "store.review",
-        "store.middlewarestats",
+        "store.stats",
         "userauths",
         "userauths.user",
         "userauths.profile",
@@ -375,12 +374,5 @@ LOGGING = {
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
-    },
-    'loggers': {
-        'store.middleware': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
     },
 }

@@ -26,6 +26,7 @@ from customer.utils import get_user_wishlist_products
 from store.emails import send_order_notification_email
 from django.db.models import Q
 from decimal import Decimal
+from store.utils import increment_500_error_count
 
 def round2(val):
     return Decimal(val).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -1183,8 +1184,22 @@ def is_bot_request(request):
     ]
     return any(bot in user_agent for bot in bot_keywords)
 
+
+def get_client_ip(request):
+    # Prefer HTTP_X_FORWARDED_FOR if behind a proxy (e.g., nginx, cloudflare)
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        # Sometimes X-Forwarded-For can contain multiple IPs, use the first
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR', '')
+    return ip
+
 def custom_server_error(request):
-    if is_bot_request(request):
+    is_bot = is_bot_request(request)
+    ip = get_client_ip(request)
+    increment_500_error_count(is_bot=is_bot, ip=ip)
+    if is_bot:
         return render(request, "500_bot.html", status=500)
     else:
         return render(request, "500.html", status=500)

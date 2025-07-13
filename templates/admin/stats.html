@@ -1,0 +1,13 @@
+{% extends 'admin/base_site.html' %}
+{% block content %}
+    <h1>{{ title }}</h1>
+    <ul>
+        <li>Заявки от потребители: {{ stats.user_request_count }}</li>
+        <li>Уникални потребители (по IP): {{ stats.user_request_unique_count }}</li>
+        <li>Заявки от ботове: {{ stats.bot_request_count }}</li>
+        <li>Уникални ботове (по IP): {{ stats.bot_request_unique_count }}</li>
+        <li>Общ брой 500 грешки: {{ stats.total|default:"0" }}</li>
+        <li>500 грешки - потребители: {{ stats.user|default:"0" }} (уникални: {{ stats.user_unique|default:"0" }})</li>
+        <li>500 грешки - ботове: {{ stats.bot|default:"0" }} (уникални: {{ stats.bot_unique|default:"0" }})</li>
+    </ul>
+{% endblock %}

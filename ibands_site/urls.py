@@ -6,6 +6,7 @@ from django.contrib.auth import views as auth_views
 from django.contrib.sitemaps.views import sitemap
 from store.sitemaps import ProductSitemap, CategorySitemap, StaticViewSitemap
 from django.views.generic import TemplateView
+from store.views import custom_server_error
 
 sitemaps = {
     "products": ProductSitemap,
@@ -61,7 +62,5 @@ urlpatterns = [
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
-from store.views import custom_server_error
 
 handler500 = custom_server_error

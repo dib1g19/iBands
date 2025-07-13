@@ -214,10 +214,10 @@ class StatsAdmin(admin.ModelAdmin):
 
     def stats_view(self, request):
         stats = {
-            "user_request_count": RequestCounterMiddleware.user_request_count,
-            "user_request_unique_count": RequestCounterMiddleware.user_request_unique_count,
-            "bot_request_count": RequestCounterMiddleware.bot_request_count,
-            "bot_request_unique_count": RequestCounterMiddleware.bot_request_unique_count,
+            "user_request_count": RequestCounterMiddleware.get_user_request_count(),
+            "user_request_unique_count": RequestCounterMiddleware.get_user_request_unique_count(),
+            "bot_request_count": RequestCounterMiddleware.get_bot_request_count(),
+            "bot_request_unique_count": RequestCounterMiddleware.get_bot_request_unique_count(),
         }
         stats.update(get_500_error_stats())
         context = dict(

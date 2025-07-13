@@ -1,37 +1,52 @@
+from django.core.cache import cache
+
 class RequestCounterMiddleware:
     """
-    Middleware for counting requests and unique IP addresses for users and bots.
+    Middleware for counting requests and unique IP addresses for users and bots,
+    using Redis for persistence across restarts and multiple processes.
     """
-    bot_request_count = 0
-    user_request_count = 0
-    bot_request_unique_count = 0
-    user_request_unique_count = 0
-
-    bot_ips = set()
-    user_ips = set()
 
     def __init__(self, get_response):
         self.get_response = get_response
+        # Access the raw Redis client for set operations
+        self.redis = cache.client.get_client(write=True)
+
+    def safe_incr(self, key, amount=1):
+        if cache.get(key) is None:
+            cache.set(key, 0)
+        cache.incr(key, amount)
 
     def __call__(self, request):
-        """
-        Counts each request and unique IP address for bots and users.
-        """
         ip = self.get_client_ip(request)
         is_bot = self.is_bot_request(request)
 
         if is_bot:
-            RequestCounterMiddleware.bot_request_count += 1
-            if ip not in RequestCounterMiddleware.bot_ips:
-                RequestCounterMiddleware.bot_request_unique_count += 1
-                RequestCounterMiddleware.bot_ips.add(ip)
+            self.safe_incr("bot_request_count")
+            self.redis.sadd("bot_ips", ip)
         else:
-            RequestCounterMiddleware.user_request_count += 1
-            if ip not in RequestCounterMiddleware.user_ips:
-                RequestCounterMiddleware.user_request_unique_count += 1
-                RequestCounterMiddleware.user_ips.add(ip)
+            self.safe_incr("user_request_count")
+            self.redis.sadd("user_ips", ip)
 
         return self.get_response(request)
+
+    @staticmethod
+    def get_bot_request_count():
+        return cache.get("bot_request_count") or 0
+
+    @staticmethod
+    def get_user_request_count():
+        return cache.get("user_request_count") or 0
+
+    @staticmethod
+    def get_bot_request_unique_count():
+        # Use the Redis SCARD command for set cardinality
+        redis = cache.client.get_client(write=True)
+        return redis.scard("bot_ips") or 0
+
+    @staticmethod
+    def get_user_request_unique_count():
+        redis = cache.client.get_client(write=True)
+        return redis.scard("user_ips") or 0
 
     def get_client_ip(self, request):
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')

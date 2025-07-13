@@ -1,7 +1,6 @@
 from pathlib import Path
 from environs import Env
 import dj_database_url
-import os
 from django.contrib import messages
 
 env = Env()
@@ -82,6 +81,16 @@ TEMPLATES = [
     },
 ]
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env("REDIS_URL"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
 WSGI_APPLICATION = "ibands_site.wsgi.application"
 
 # --- Authentication ---
@@ -121,8 +130,8 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
 SERVER_EMAIL = env("SERVER_EMAIL")
 ORDER_NOTIFICATION_EMAIL =  env("ORDER_NOTIFICATION_EMAIL")
 ANYMAIL = {
-    "MAILGUN_API_KEY": os.environ.get("MAILGUN_API_KEY"),
-    "MAILGUN_SENDER_DOMAIN": os.environ.get("MAILGUN_SENDER_DOMAIN"),
+    "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
+    "MAILGUN_SENDER_DOMAIN": env("MAILGUN_SENDER_DOMAIN"),
     "MAILGUN_API_URL": "https://api.eu.mailgun.net/v3",
 }
 
@@ -186,7 +195,7 @@ JAZZMIN_SETTINGS = {
         "store.Gallery": "fas fa-images",
         "store.Coupon": "fas fa-ticket-alt",
         "store.Review": "fas fa-star fa-beat",
-        "store.MiddlewareStats": "fas fa-chart-bar",
+        "store.Stats": "fas fa-chart-bar",
         "userauths.User": "fas fa-user",
         "userauths.Profile": "fas fa-address-card",
         "userauths.ContactMessage": "fas fa-envelope-open-text",

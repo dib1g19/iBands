@@ -171,4 +171,23 @@
             console.log(error)
         }
     </script>
+    <script>
+        // Google Analytics: begin_checkout event
+        if (typeof gtag === "function") {
+            gtag('event', 'begin_checkout', {
+                "items": [
+                    {% for item in order.items.all %}
+                    {
+                        "id": "{{ item.product.id }}",
+                        "name": "{{ item.product.title|escapejs }}",
+                        "category": "{{ item.product.category.name|default_if_none:''|escapejs }}",
+                        "price": {{ item.price }},
+                        "quantity": {{ item.quantity }},
+                        "currency": "BGN"
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            });
+        }
+    </script>
 {% endblock %}

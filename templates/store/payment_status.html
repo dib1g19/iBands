@@ -61,4 +61,16 @@
             </div>
         </div>
     </section>
+    {% if payment_status == 'paid' %}
+        {% block extra_scripts %}
+            {{ block.super }}
+            <script>
+                gtag('event', 'purchase', {
+                    "transaction_id": "{{ order.order_id }}",
+                    "value": {{ order.get_total|floatformat:2 }},
+                    "currency": "BGN"
+                });
+            </script>
+        {% endblock %}
+    {% endif %}
 {% endblock %}

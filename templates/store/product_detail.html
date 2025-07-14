@@ -214,3 +214,19 @@
         </section>
     {% endif %}
 {% endblock %}
+
+{% block extra_scripts %}
+    {{ block.super }}
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      gtag('event', 'view_item', {
+        "items": [{
+          "id": "{{ product.id }}",
+          "name": "{{ product.name|escapejs }}",
+          "category": "{{ product.category.title|escapejs }}",
+          "price": {{ product.price|floatformat:2 }},
+          "currency": "BGN"
+        }]
+      });
+    </script>
+{% endblock %}

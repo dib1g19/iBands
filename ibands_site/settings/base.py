@@ -1,13 +1,11 @@
 from pathlib import Path
-from environs import Env
+import environ
 import dj_database_url
 from django.contrib import messages
 
-env = Env()
-env.read_env()
-
+env = environ.Env()
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
+env.read_env(str(BASE_DIR / ".env"))
 # --- Security & Host Settings ---
 SECRET_KEY = env("SECRET_KEY")
 ALLOWED_HOSTS = [
@@ -58,7 +56,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'ibands_site.middleware.RequestCounterMiddleware',
+    "ibands_site.middleware.RequestCounterMiddleware",
 ]
 
 ROOT_URLCONF = "ibands_site.urls"
@@ -87,7 +85,7 @@ CACHES = {
         "LOCATION": env("REDIS_URL"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     }
 }
 
@@ -128,7 +126,7 @@ AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 EMAIL_BACKEND = env("EMAIL_BACKEND")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
 SERVER_EMAIL = env("SERVER_EMAIL")
-ORDER_NOTIFICATION_EMAIL =  env("ORDER_NOTIFICATION_EMAIL")
+ORDER_NOTIFICATION_EMAIL = env("ORDER_NOTIFICATION_EMAIL")
 ANYMAIL = {
     "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
     "MAILGUN_SENDER_DOMAIN": env("MAILGUN_SENDER_DOMAIN"),
@@ -365,15 +363,15 @@ CKEDITOR_5_CONFIGS = {
 }
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
     },
 }

@@ -9,10 +9,10 @@ https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
 
 import os
 from django.core.wsgi import get_wsgi_application
-from environs import Env
+import environ
 
-env = Env()
-env.read_env()
+env = environ.Env()
+env.read_env(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
 
 ENVIRONMENT = env("ENVIRONMENT", default="dev")
 

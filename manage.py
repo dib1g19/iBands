@@ -2,12 +2,12 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-from environs import Env
+import environ
 
 
 def main():
     """Run administrative tasks."""
-    env = Env()
+    env = environ.Env()
     env.read_env()
 
     ENVIRONMENT = env("ENVIRONMENT", default="dev")
@@ -27,5 +27,5 @@ def main():
     execute_from_command_line(sys.argv)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

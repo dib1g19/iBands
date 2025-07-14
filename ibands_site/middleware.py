@@ -13,7 +13,7 @@ class RequestCounterMiddleware:
 
     def safe_incr(self, key, amount=1):
         if cache.get(key) is None:
-            cache.set(key, 0)
+            cache.set(key, 0, timeout=None)
         cache.incr(key, amount)
 
     def __call__(self, request):

@@ -39,7 +39,7 @@
                 <!-- Wishlist Icon -->
                 {% if show_remove_wishlist %}
                     <a href="{% url 'customer:remove_from_wishlist' wishlist_id %}" class="remove_from_wishlist d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" data-wishlist_id="{{ wishlist_id }}" title="Remove from wishlist">
-                        <i class="fa fa-trash fs-5 text-danger"></i>
+                        <i class="fa fa-trash fs-4 text-danger"></i>
                     </a>
                 {% else %}
                     <a class="add_to_wishlist d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" data-product_id="{{ product.id }}">

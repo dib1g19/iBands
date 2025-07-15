@@ -1,14 +1,25 @@
-from ibands_site.middleware import RequestCounterMiddleware
 from django.contrib import admin
+from django.db import models
+from django.http import HttpResponseRedirect
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
+from django.utils.html import format_html
+
+from ibands_site.middleware import RequestCounterMiddleware
 from store import models as store_models
 from store.admin_forms import DuplicateProductForm
-from django.db import models
-from django.urls import path
-from django.template.response import TemplateResponse
-from django.http import HttpResponseRedirect
-from django.urls import reverse
 from store.utils import get_500_error_stats
-from django.utils.html import format_html
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ["title", "sku", "image", "marketing_image", "hover_image", "is_popular", "parent"]
+    list_per_page = 20
+    list_editable = ["sku", "image", "marketing_image", "hover_image", "is_popular", "parent"]
+    search_fields = ["title", "sku"]
+    prepopulated_fields = {"slug": ("title",)}
+
+    class Media:
+        js = ('admin/js/vendor/jquery/jquery.js', 'assets/js/admin_char_count.js',)
 
 
 class GalleryInline(admin.TabularInline):
@@ -21,21 +32,6 @@ class VariantInline(admin.TabularInline):
     extra = 1
 
 
-class VariantItemInline(admin.TabularInline):
-    model = store_models.VariantItem
-    extra = 1
-
-
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ["title", "sku", "image", "marketing_image", "hover_image", "is_popular", "parent"]
-    list_editable = ["sku", "image", "marketing_image", "hover_image", "is_popular", "parent"]
-    search_fields = ["title", "sku"]
-    prepopulated_fields = {"slug": ("title",)}
-
-    class Media:
-        js = ('admin/js/vendor/jquery/jquery.js', 'assets/js/admin_char_count.js',)
-
-
 class ProductAdmin(admin.ModelAdmin):
     list_display = [
         "category",
@@ -46,6 +42,7 @@ class ProductAdmin(admin.ModelAdmin):
         "regular_price",
         "featured",
     ]
+    list_per_page = 20
     list_editable = ["sku", "name", "image", "price", "regular_price", "featured"]
     search_fields = ["name", "category__title"]
     list_filter = ["status", "featured", "category"]
@@ -78,14 +75,28 @@ class ProductAdmin(admin.ModelAdmin):
         js = ('admin/js/vendor/jquery/jquery.js', 'assets/js/admin_char_count.js',)
 
 
+class VariantItemInline(admin.TabularInline):
+    model = store_models.VariantItem
+    extra = 1
+
+
 class VariantAdmin(admin.ModelAdmin):
     list_display = ["name", "variant_type", "get_products"]
+    list_per_page = 20
     search_fields = ["products__name", "name"]
+    list_filter = ["variant_type"]
     inlines = [VariantItemInline]
 
     def get_products(self, obj):
-        return ", ".join([product.name for product in obj.products.all()])
-
+        products = [
+            format_html(
+                '<a href="{}">{}</a>',
+                reverse("admin:store_product_change", args=[product.pk]),
+                str(product)
+            )
+            for product in obj.products.all()
+        ]
+        return format_html("<br>".join(products))
     get_products.short_description = "Products"
 
 
@@ -110,11 +121,17 @@ class CouponAdmin(admin.ModelAdmin):
     search_fields = ["code"]
 
 
+class OrderItemAdmin(admin.ModelAdmin):
+    list_display = ["id", "order", "product", "qty", "price", "sub_total"]
+    search_fields = ["id", "order__order_id", "product__name"]
+    list_filter = ["order__date"]
+
+
 class OrderItemInline(admin.TabularInline):
     model = store_models.OrderItem
     extra = 0
-    fields = ["product", "product_category_path", "model", "size", "qty", "price", "sub_total"]
-    readonly_fields = ["product", "product_category_path", "model", "size", "qty", "price", "sub_total"]
+    fields = ["product", "model", "size", "qty", "price", "sub_total"]
+    readonly_fields = ["product", "model", "size", "qty", "price", "sub_total"]
 
 
 class OrderAdmin(admin.ModelAdmin):
@@ -177,22 +194,6 @@ class OrderAdmin(admin.ModelAdmin):
     address_display.short_description = "Address"
 
 
-class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ["id", "order", "product", "product_category_path", "qty", "price", "sub_total"]
-    search_fields = ["id", "order__order_id", "product__name"]
-    list_filter = ["order__date"]
-    readonly_fields = ["product_category_path"]
-    fields = [
-        "order",
-        "product",
-        "product_category_path",
-        "model",
-        "size",
-        "price",
-        "sub_total",
-    ]
-
-
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ["user", "product", "rating", "active", "date"]
     search_fields = ["user__username", "product__name"]
@@ -225,11 +226,13 @@ class StatsAdmin(admin.ModelAdmin):
         )
         return TemplateResponse(request, "admin/stats.html", context)
 
+
 class Stats(models.Model):
     class Meta:
         verbose_name = "Stats"
         verbose_name_plural = "Stats"
         managed = False  # No DB table
+
 
 admin.site.register(store_models.Category, CategoryAdmin)
 admin.site.register(store_models.Product, ProductAdmin)

@@ -427,11 +427,6 @@ def cart(request):
         sub_total=models.Sum("sub_total")
     )["sub_total"]
 
-    try:
-        addresses = customer_models.Address.objects.filter(user=request.user)
-    except:
-        addresses = None
-
     if not items:
         messages.warning(request, "Количката е празна")
         return redirect("store:index")
@@ -445,7 +440,6 @@ def cart(request):
     context = {
         "items": items,
         "cart_sub_total": cart_sub_total,
-        "addresses": addresses,
         "breadcrumbs": breadcrumbs,
     }
     return render(request, "store/cart.html", context)
@@ -488,37 +482,6 @@ def delete_cart_item(request):
 
 def create_order(request):
     if request.method == "POST":
-        address_id = request.POST.get("address")
-
-        # --- Handle guest address or direct form ---
-        address = None
-        if address_id and address_id.isdigit():
-            # Existing address (logged in user)
-            address = customer_models.Address.objects.filter(
-                user=request.user, id=address_id
-            ).first()
-        else:
-            # Guest or inline new address
-            guest_address_id = request.session.get("guest_address_id")
-            if guest_address_id:
-                address = customer_models.Address.objects.filter(
-                    id=guest_address_id
-                ).first()
-            else:
-                # Fallback: create a new address from POST (if data present)
-                address = customer_models.Address.objects.create(
-                    full_name=request.POST.get("full_name"),
-                    mobile=request.POST.get("mobile"),
-                    email=request.POST.get("email"),
-                    delivery_method=request.POST.get("delivery_method"),
-                    city=request.POST.get("city"),
-                    address=request.POST.get("address"),
-                )
-
-        if not address:
-            messages.warning(request, "Please provide or select an address to continue")
-            return redirect("store:cart")
-
         if "cart_id" in request.session:
             cart_id = request.session["cart_id"]
         else:
@@ -532,32 +495,8 @@ def create_order(request):
         order = store_models.Order()
         order.sub_total = cart_sub_total
         order.customer = request.user if request.user.is_authenticated else None
-        order.address = address
-
-        shipping_fee = 0
-        if address and address.delivery_method:
-            if address.delivery_method in [
-                "econt",
-                "econt_box",
-                "speedy",
-                "speedy_box",
-            ]:
-                if cart_sub_total >= 75:
-                    shipping_fee = 0
-                elif address.delivery_method == "econt":
-                    shipping_fee = 6.5
-                elif address.delivery_method == "econt_box":
-                    shipping_fee = 6
-                elif address.delivery_method == "speedy":
-                    shipping_fee = 6
-                elif address.delivery_method == "speedy_box":
-                    shipping_fee = 4
-            elif address.delivery_method == "personal":
-                shipping_fee = 9
-        from decimal import Decimal
-
-        order.shipping = Decimal(str(shipping_fee))
-        order.total = order.sub_total + order.shipping
+        order.shipping = 0
+        order.total = order.sub_total
         order.save()
 
         for i in items:

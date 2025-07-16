@@ -8,11 +8,7 @@ urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
     path("order-detail/<order_id>/", views.order_detail, name="order_detail"),
     path("wishlist/", views.wishlist, name="wishlist"),
-    path(
-        "remove-from-wishlist/<id>/",
-        views.remove_from_wishlist,
-        name="remove_from_wishlist",
-    ),
+    path("remove-from-wishlist/<id>/", views.remove_from_wishlist, name="remove_from_wishlist"),
     path("toggle-wishlist/<int:id>/", views.toggle_wishlist, name="toggle_wishlist"),
     path("addresses/", views.addresses, name="addresses"),
     path("notis/", views.notis, name="notis"),

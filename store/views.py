@@ -175,45 +175,16 @@ def get_descendant_category_ids(category):
     return ids
 
 
-def category_all_sub_root(request, slug):
-    category = get_object_or_404(store_models.Category, slug=slug, parent=None)
+def category_all_sub(request, category_path):
+    slugs = category_path.strip("/").split("/")
+    category = None
+    parent = None
+    for slug in slugs:
+        category = get_object_or_404(Category, slug=slug, parent=parent)
+        parent = category
+
     descendant_ids = get_descendant_category_ids(category)
-    products_list = store_models.Product.objects.filter(
-        status="published", category_id__in=descendant_ids
-    )
-    query = request.GET.get("q")
-    if query:
-        products_list = products_list.filter(
-            Q(name__icontains=query) |
-            Q(description__icontains=query) |
-            Q(category__title__icontains=query)
-        )
-    products = paginate_queryset(request, products_list, 12)
-
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": category.title, "url": category.get_absolute_url},
-        {"label": f"Всички {category.title}", "url": ""},
-    ]
-    context = {
-        "products": products,
-        "category": category,
-        "breadcrumbs": breadcrumbs,
-        "all_sub_mode": True,
-    }
-    querydict = request.GET.copy()
-    if "page" in querydict:
-        del querydict["page"]
-    querystring = querydict.urlencode()
-    context["querystring"] = querystring
-    return render(request, "store/category.html", context)
-
-
-def category_all_sub(request, parent_slug, slug):
-    parent = get_object_or_404(store_models.Category, slug=parent_slug)
-    category = get_object_or_404(store_models.Category, slug=slug, parent=parent)
-    descendant_ids = get_descendant_category_ids(category)
-    products_list = store_models.Product.objects.filter(
+    products_list = Product.objects.filter(
         status="published", category_id__in=descendant_ids
     )
     query = request.GET.get("q")
@@ -225,18 +196,17 @@ def category_all_sub(request, parent_slug, slug):
         )
     products = paginate_queryset(request, products_list, 12)
     ancestors = get_category_ancestors(category) if category else []
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-    ]
+
+    # Build breadcrumbs
+    breadcrumbs = [{"label": "Начална Страница", "url": reverse("store:index")}]
     for ancestor in ancestors:
         breadcrumbs.append({"label": ancestor.title, "url": ancestor.get_absolute_url})
     breadcrumbs.append({"label": category.title, "url": category.get_absolute_url})
-    breadcrumbs.append(
-        {
-            "label": f"Всички {category.title}",
-            "url": "",
-        }
-    )
+    breadcrumbs.append({
+        "label": f"Всички {category.title}",
+        "url": "",
+    })
+
     context = {
         "products": products,
         "category": category,

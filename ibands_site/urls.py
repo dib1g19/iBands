@@ -16,48 +16,16 @@ sitemaps = {
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path(
-        "sitemap.xml",
-        sitemap,
-        {"sitemaps": sitemaps},
-        name="django.contrib.sitemaps.views.sitemap",
-    ),
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
     path("", include("store.urls")),
     path("auth/", include("userauths.urls")),
     path("customer/", include("customer.urls")),
-    path(
-        "password-reset/",
-        auth_views.PasswordResetView.as_view(
-            template_name="userauths/password/password_reset.html"
-        ),
-        name="password_reset",
-    ),
-    path(
-        "password-reset/done/",
-        auth_views.PasswordResetDoneView.as_view(
-            template_name="userauths/password/password_reset_done.html"
-        ),
-        name="password_reset_done",
-    ),
-    path(
-        "password-reset/<uidb64>/<token>/",
-        auth_views.PasswordResetConfirmView.as_view(
-            template_name="userauths/password/password_reset_confirmation.html"
-        ),
-        name="password_reset_confirm",
-    ),
-    path(
-        "password-reset-complete/",
-        auth_views.PasswordResetCompleteView.as_view(
-            template_name="userauths/password/password_reset_complete.html"
-        ),
-        name="password_reset_complete",
-    ),
+    path("password-reset/", auth_views.PasswordResetView.as_view(template_name="userauths/password/password_reset.html"), name="password_reset"),
+    path("password-reset/done/", auth_views.PasswordResetDoneView.as_view(template_name="userauths/password/password_reset_done.html"), name="password_reset_done"),
+    path("password-reset/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(template_name="userauths/password/password_reset_confirmation.html"), name="password_reset_confirm"),
+    path("password-reset-complete/", auth_views.PasswordResetCompleteView.as_view(template_name="userauths/password/password_reset_complete.html"), name="password_reset_complete"),
     path("ckeditor5/", include("django_ckeditor_5.urls")),
-    path(
-        "robots.txt",
-        TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
-    ),
+    path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

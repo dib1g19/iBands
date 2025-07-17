@@ -20,6 +20,7 @@ from store.emails import send_order_notification_email
 from django.db.models import Q
 from decimal import Decimal
 from store.utils import increment_500_error_count
+from urllib.parse import urlencode
 
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
@@ -661,19 +662,14 @@ def checkout(request, order_id):
     for item in order.order_items():
         cart_total_weight += 0.1 * item.qty  # Use real item weight if available
 
-    SHOP_ID = 8661607  # Your Econt shop ID
-    SHOP_CURRENCY = "BGN"
-    SHIPPMENT_CALC_URL = "https://delivery.econt.com/customer_info.php"
-
-    from urllib.parse import urlencode
     econt_params = {
-        "id_shop": SHOP_ID,
+        "id_shop": settings.ECONT_SHOP_ID,
         "order_total": float(order.total) or 0,
-        "order_currency": SHOP_CURRENCY,
+        "order_currency": "BGN", 
         "order_weight": cart_total_weight,
         "confirm_txt": "Потвърди",
     }
-    econt_url = f"{SHIPPMENT_CALC_URL}?{urlencode(econt_params)}"
+    econt_url = f"{settings.ECONT_SHIPPMENT_CALC_URL}?{urlencode(econt_params)}"
 
     context = {
         "order": order,

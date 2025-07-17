@@ -20,12 +20,19 @@
                 </div>
             {% endif %}
             <div class="d-flex justify-content-between align-items-center">
-                <p class="fw-semibold fs-6">Доставка ({{ order.address.get_delivery_method_display }})</p>
-                <p class="fs-6">{{ order.shipping|floatformat:2 }} лв.</p>
+                <p class="fw-semibold fs-6">Доставка</p>
+                <p id="shipping-summary-value" class="fs-6">
+                    {{ order.shipping|default:"-"|floatformat:2 }} лв.
+                    {# This field is dynamically updated by JS when shipping method and payment method are selected #}
+                </p>
             </div>
             <div class="d-flex justify-content-between align-items-center mt-3">
                 <p class="fw-bold text-dark fs-5">Общо</p>
-                <p class="fw-bold text-dark fs-5">{{ order.total }} лв.</p>
+                <span id="backend-order-total" data-value="{{ order.total|floatformat:2 }}" style="display:none;"></span>
+                <p id="total-summary-value" class="fw-bold text-dark fs-5">
+                    {{ order.total|default:"-" }} лв.
+                    {# This field is dynamically updated by JS #}
+                </p>
             </div>
         </div>
     </div>

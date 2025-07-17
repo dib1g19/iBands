@@ -15,7 +15,15 @@
 
 {% block content %}
     <style>
-        /* Payment button custom styles if needed */
+    .collapsible-section {
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
+        max-height: 0;
+        will-change: max-height;
+    }
+    .collapsible-section.open {
+        max-height: 2000px;
+    }
     </style>
     {% include 'partials/_breadcrumbs.html' %}
 
@@ -37,38 +45,74 @@
                     </div>
 
                     <div class="p-3">
+                        <div class="shadow rounded p-3">
+                            <h4 class="fw-bold mb-3">Начин на плащане</h4>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment-card" value="card">
+                                <label class="form-check-label" for="payment-card">Плащане с карта</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment-cod" value="cod">
+                                <label class="form-check-label" for="payment-cod">Наложен платеж</label>
+                            </div>
+                        </div>
+
+                        <!-- Shipping Method Card -->
+                        <div class="card-wrap shadow rounded mb-4 mt-4">
+                            <div class="card-wrap-header px-3 py-2 br-bottom d-flex align-items-center justify-content-between">
+                                <div class="card-header-flex">
+                                    <h4 class="fs-md ft-bold mb-3">Метод на доставка</h4>
+                                </div>
+                            </div>
+                            <div class="card-wrap-body px-3 py-3">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="shipping_method" id="shipping-econt" value="econt">
+                                    <label class="form-check-label" for="shipping-econt">
+                                        Econt (до офис/адрес)
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="shipping_method" id="shipping-speedy" value="speedy">
+                                    <label class="form-check-label" for="shipping-speedy">
+                                        Speedy (до офис/адрес)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                         <div class="row">
-                            <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
-                                <div class="card-wrap border rounded mb-4">
+                            <div class="col">
+                            <div id="econt-shipping-block" class="collapsible-section">
+                                <div class="card-wrap shadow rounded mb-4">
                                     <div class="card-wrap-header px-3 py-2 br-bottom d-flex align-items-center justify-content-between">
                                         <div class="card-header-flex">
-                                            <h4 class="fs-md ft-bold mb-1">Адрес за доставка</h4>
+                                            <h4 class="fs-md ft-bold mb-1">Еконт доставка</h4>
                                         </div>
                                     </div>
                                     <div class="card-wrap-body px-3 py-3">
-                                        <p class="mb-0">
-                                            <span class="fw-bold">Пълно Име:</span>{{ order.address.full_name }}
-                                        </p>
-                                        <p class="mb-0">
-                                            <span class="fw-bold">Имейл:</span>{{ order.address.email }}
-                                        </p>
-                                        <p class="mb-0">
-                                            <span class="fw-bold">Телефон:</span>{{ order.address.mobile }}
-                                        </p>
-                                        <p class="mb-0">
-                                            <span class="fw-bold">Метод на доставка:</span>{{ order.address.get_delivery_method_display }}
-                                        </p>
-                                        <p class="mb-0">
-                                            <span class="fw-bold">Град:</span> {{ order.address.city }}
-                                        </p>
-                                        <p class="mb-3">
-                                            <span class="fw-bold">Адрес:</span>{{ order.address.address }}
-                                        </p>
-                                        {% if request.user.is_authenticated %}
-                                            <a href="{% url 'store:cart' %}" class="mt-3 text-primary">Промени адреса за доставка <i class="fas fa-edit ms-1"></i></a>
-                                        {% endif %}
+                                        <div class="mb-2">
+                                            <div class="alert alert-info">
+                                                Моля, попълнете вашите данни за доставка чрез формата на Еконт по-долу. След като попълните и потвърдите, ще използваме тази информация за изпращане на вашата поръчка.
+                                            </div>
+                                        </div>
+                                        <iframe
+                                            id="econt-delivery-iframe"
+                                            src="{{ econt_url }}"
+                                            width="100%"
+                                            height="550"
+                                            frameborder="0"
+                                            style="border:1px solid #ddd; border-radius: 4px;"
+                                            allowfullscreen
+                                        ></iframe>
+                                        <input type="hidden" id="econt_customer_name" name="econt_customer_name">
+                                        <input type="hidden" id="econt_customer_phone" name="econt_customer_phone">
+                                        <input type="hidden" id="econt_customer_email" name="econt_customer_email">
+                                        <input type="hidden" id="econt_customer_city" name="econt_customer_city">
+                                        <input type="hidden" id="econt_customer_address" name="econt_customer_address">
+                                        <input type="hidden" id="econt_customer_office_name" name="econt_customer_office_name">
+                                        <div id="shipping-price-block" class="mt-2"></div>
                                     </div>
                                 </div>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -89,10 +133,20 @@
                         <div id="coupon-feedback"></div>
                     </div>
 
-                    <div class="shadow rounded p-3 mt-3">
-                        <h4 class="fw-bold">Начин на плащане</h4>
-                        <button type="button" id="stripe-payment" class="btn btn-primary mb-3 rounded w-100">Плащане с карта</button>
-                        <button type="button" id="cod-payment" class="btn btn-primary mb-3 rounded w-100">Наложен платеж</button>
+                    <div class="alert alert-success text-dark text-center mt-3 mb-4" role="alert" style="font-size: 1.1rem;">
+                        <i class="fas fa-shipping-fast"></i>
+                        <b>Безплатна доставка</b> до офис или автомат на <b>Спиди</b> и <b>Еконт</b> за поръчки над <b>75 лв.</b>!
+                    </div>
+                    <div class="alert alert-info text-dark text-center mb-4" role="alert" style="font-size: 1.1rem;">
+                        <i class="fas fa-credit-card"></i>
+                        <b>50% отстъпка от доставката</b> при плащане с карта!
+                        Платете с карта онлайн и получете 50% намаление на цената за доставка до офис или адрес на <b>Спиди</b> и <b>Еконт</b>.
+                    </div>
+
+                    <div class="p-3 mt-3">
+                        <button type="button" id="continue-payment" class="btn btn-primary w-100" style="display:none;">Завърши поръчка</button>
+                        <button id="stripe-payment" style="display:none;" type="button"></button>
+                        <button id="cod-payment" style="display:none;" type="button"></button>
                     </div>
                 </div>
             </div>
@@ -102,18 +156,55 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    <script src="https://js.stripe.com/v3/"></script>
-    <script>
-        var stripe = Stripe('{{stripe_public_key}}')
-        var checkoutButton = document.getElementById('stripe-payment')
-        try {
-            checkoutButton.addEventListener('click', function () {
-                var email = '{{order.address.email}}'
-                checkoutButton.innerHTML = 'Плащане с карта <i class="fas fa-spinner fa-spin ms-2"></i>'
-                fetch('/stripe-payment/{{order.order_id}}/', {
-                    method: 'POST',
-                    body: JSON.stringify({ email: email })
-                })
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    // Stripe payment logic (address must be saved before payment)
+    var stripe = Stripe('{{stripe_public_key}}')
+    var checkoutButton = document.getElementById('stripe-payment')
+    try {
+        checkoutButton.addEventListener('click', function () {
+            var officeName = document.getElementById('econt_customer_office_name')?.value;
+            var regularAddress = document.getElementById('econt_customer_address').value;
+
+            var finalAddress = '';
+            if (officeName) {
+                finalAddress = "Офис: " + officeName;
+            } else {
+                finalAddress = regularAddress;
+            }
+
+            var addressData = {
+                name: document.getElementById('econt_customer_name').value,
+                phone: document.getElementById('econt_customer_phone').value,
+                email: document.getElementById('econt_customer_email').value,
+                city: document.getElementById('econt_customer_city').value,
+                address: finalAddress,
+                shipping_price: (selectedPayment === 'card')
+                    ? (lastEcontShipping.shipping_price_cod ? (parseFloat(lastEcontShipping.shipping_price_cod) * 0.5).toFixed(2) : null)
+                    : lastEcontShipping.shipping_price_cod
+            };
+
+            if (!addressData.email || !addressData.address) {
+                alert('Моля, попълнете и потвърдете адреса за доставка чрез формата на Еконт!');
+                return;
+            }
+
+            checkoutButton.innerHTML = 'Плащане с карта <i class="fas fa-spinner fa-spin ms-2"></i>';
+
+            // First, save address
+            fetch('/save-econt-address/{{ order.order_id }}/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+                body: JSON.stringify(addressData)
+            })
+            .then(function (resp) { return resp.json(); })
+            .then(function (respData) {
+                if (respData.success) {
+                    // Address saved, now initiate Stripe
+                    fetch('/stripe-payment/{{order.order_id}}/', {
+                        method: 'POST',
+                        body: JSON.stringify({ email: addressData.email })
+                    })
                     .then(function (response) {
                         return response.json()
                     })
@@ -128,66 +219,278 @@
                     .catch(function (error) {
                         console.log('Error: ', error)
                     })
+                } else {
+                    alert(respData.message || "Моля, попълнете коректно адреса за доставка!");
+                    checkoutButton.innerHTML = 'Плащане с карта';
+                }
             })
-        } catch (error) {
-            console.log(error)
-        }
-    </script>
-    <script>
-        // Helper to get CSRF token from cookies
-        function getCookie(name) {
-            let cookieValue = null
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';')
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim()
-                    if (cookie.startsWith(name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
-                        break
-                    }
+            .catch(function (error) {
+                alert('Грешка при запазване на адреса.');
+                checkoutButton.innerHTML = 'Плащане с карта';
+            });
+        })
+    } catch (error) {
+        console.log(error)
+    }
+</script>
+<script>
+    // Helper to get CSRF token from cookies
+    function getCookie(name) {
+        let cookieValue = null
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';')
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim()
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
+                    break
                 }
             }
-            return cookieValue
         }
-        const csrftoken = getCookie('csrftoken')
-        var codButton = document.getElementById('cod-payment')
-        try {
-            codButton.addEventListener('click', function () {
-                codButton.innerHTML = 'Наложен платеж <i class="fas fa-spinner fa-spin"></i>'
-                fetch("{% url 'store:cod_payment' order.order_id %}", {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': csrftoken }
-                })
+        return cookieValue
+    }
+    const csrftoken = getCookie('csrftoken')
+    var codButton = document.getElementById('cod-payment')
+    try {
+        codButton.addEventListener('click', function () {
+            var officeName = document.getElementById('econt_customer_office_name')?.value;
+            var regularAddress = document.getElementById('econt_customer_address').value;
+
+            var finalAddress = '';
+            if (officeName) {
+                finalAddress = "Офис: " + officeName;
+            } else {
+                finalAddress = regularAddress;
+            }
+
+            var addressData = {
+                name: document.getElementById('econt_customer_name').value,
+                phone: document.getElementById('econt_customer_phone').value,
+                email: document.getElementById('econt_customer_email').value,
+                city: document.getElementById('econt_customer_city').value,
+                address: finalAddress,
+                shipping_price: (selectedPayment === 'card')
+                    ? (lastEcontShipping.shipping_price_cod ? (parseFloat(lastEcontShipping.shipping_price_cod) * 0.5).toFixed(2) : null)
+                    : lastEcontShipping.shipping_price_cod
+            };
+            if (!addressData.email || !addressData.address) {
+                alert('Моля, попълнете и потвърдете адреса за доставка чрез формата на Еконт!');
+                return;
+            }
+            codButton.innerHTML = 'Наложен платеж <i class="fas fa-spinner fa-spin"></i>';
+            fetch('/save-econt-address/{{ order.order_id }}/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+                body: JSON.stringify(addressData)
+            })
+            .then(function (resp) {
+                return resp.json();
+            })
+            .then(function (respData) {
+                if (respData.success) {
+                    fetch("{% url 'store:cod_payment' order.order_id %}", {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrftoken }
+                    })
                     .then(function (response) {
                         if (response.redirected) {
-                            window.location.href = response.url
+                            window.location.href = response.url;
                         }
-                    })
-                    .catch(function (error) {
-                        console.error('Error:', error)
-                    })
+                    });
+                } else {
+                    alert(respData.message || "Моля, попълнете коректно адреса за доставка!");
+                    codButton.innerHTML = 'Наложен платеж';
+                }
             })
-        } catch (error) {
-            console.log(error)
+            .catch(function (error) {
+                alert('Грешка при запазване на адреса.');
+                codButton.innerHTML = 'Наложен платеж';
+            });
+        })
+    } catch (error) {
+        console.log(error)
+    }
+</script>
+<script>
+    // Collapsible shipping block logic
+    document.addEventListener('DOMContentLoaded', function() {
+        var econtRadio = document.getElementById('shipping-econt');
+        var speedyRadio = document.getElementById('shipping-speedy');
+        var econtBlock = document.getElementById('econt-shipping-block');
+        function updateShippingBlock() {
+            if (econtRadio.checked) {
+                econtBlock.classList.add('open');
+            } else {
+                econtBlock.classList.remove('open');
+            }
         }
-    </script>
-    <script>
-        // Google Analytics: begin_checkout event
-        if (typeof gtag === "function") {
-            gtag('event', 'begin_checkout', {
-                "items": [
-                    {% for item in order.items.all %}
-                    {
-                        "id": "{{ item.product.id }}",
-                        "name": "{{ item.product.title|escapejs }}",
-                        "category": "{{ item.product.category.name|default_if_none:''|escapejs }}",
-                        "price": {{ item.price }},
-                        "quantity": {{ item.quantity }},
-                        "currency": "BGN"
-                    }{% if not forloop.last %},{% endif %}
-                    {% endfor %}
-                ]
+        if (econtRadio && speedyRadio && econtBlock) {
+            econtRadio.addEventListener('change', updateShippingBlock);
+            speedyRadio.addEventListener('change', updateShippingBlock);
+            updateShippingBlock();
+        }
+    });
+</script>
+<script>
+    // --- SHIPPING & PAYMENT METHOD LOGIC ---
+    let selectedPayment = null;
+    let selectedShipping = null;
+    let lastEcontShipping = { shipping_price: null, shipping_price_cod: null, currency_sign: "лв." };
+
+    function updateSummaryForPayment() {
+        const shippingSummaryElem = document.getElementById('shipping-summary-value');
+        const totalSummaryElem = document.getElementById('total-summary-value');
+        let shipping = null;
+        let showShipping = false;
+        let shippingText = "-";
+        let shippingVal = 0;
+
+        if (selectedShipping === 'econt' && selectedPayment) {
+            if (selectedPayment === 'cod') {
+                if (lastEcontShipping.shipping_price_cod !== undefined && lastEcontShipping.shipping_price_cod !== null) {
+                    shipping = lastEcontShipping.shipping_price_cod;
+                    showShipping = true;
+                    shippingText = shipping + ' ' + (lastEcontShipping.currency_sign || "лв.");
+                    shippingVal = parseFloat(shipping);
+                }
+            } else if (selectedPayment === 'card') {
+                if (lastEcontShipping.shipping_price_cod !== undefined && lastEcontShipping.shipping_price_cod !== null) {
+                    shipping = (parseFloat(lastEcontShipping.shipping_price_cod) * 0.5).toFixed(2);
+                    showShipping = true;
+                    shippingText = shipping + ' ' + (lastEcontShipping.currency_sign || "лв.") + " (50% отстъпка)";
+                    shippingVal = parseFloat(shipping);
+                }
+            }
+        }
+
+        // [Extend here for Speedy if needed]
+        if (shippingSummaryElem) {
+            if (showShipping) {
+                shippingSummaryElem.textContent = shippingText;
+            } else {
+                shippingSummaryElem.textContent = '-';
+            }
+        }
+
+        // Get backend-calculated total from the DOM
+        let backendTotal = 0;
+        const backendTotalElem = document.getElementById('backend-order-total');
+        if (backendTotalElem) {
+            backendTotal = parseFloat(backendTotalElem.dataset.value);
+        }
+        let total = backendTotal;
+
+        // Free delivery logic
+        let freeDeliveryThreshold = 75;
+        if (backendTotal >= freeDeliveryThreshold && showShipping) {
+            if (shippingSummaryElem) {
+                shippingSummaryElem.textContent = "Безплатна доставка";
+            }
+            if (totalSummaryElem) {
+                totalSummaryElem.textContent = backendTotal.toFixed(2) + ' ' + (lastEcontShipping.currency_sign || "лв.");
+            }
+        } else {
+            if (showShipping) {
+                total = backendTotal + shippingVal;
+            }
+            if (shippingSummaryElem) {
+                if (showShipping) {
+                    shippingSummaryElem.textContent = shippingText;
+                } else {
+                    shippingSummaryElem.textContent = '-';
+                }
+            }
+            if (totalSummaryElem) {
+                if (total !== null && !isNaN(total)) {
+                    totalSummaryElem.textContent = total.toFixed(2) + ' ' + (lastEcontShipping.currency_sign || "лв.");
+                } else {
+                    totalSummaryElem.textContent = '-';
+                }
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentCardRadio = document.getElementById('payment-card');
+        const paymentCodRadio = document.getElementById('payment-cod');
+        const continueBtn = document.getElementById('continue-payment');
+        const shippingEcontRadio = document.getElementById('shipping-econt');
+        const shippingSpeedyRadio = document.getElementById('shipping-speedy');
+
+        // Ensure no payment method is preselected
+        if (paymentCardRadio) paymentCardRadio.checked = false;
+        if (paymentCodRadio) paymentCodRadio.checked = false;
+
+        function showContinueIfReady() {
+            if ((shippingEcontRadio.checked || shippingSpeedyRadio.checked)
+                && (paymentCardRadio.checked || paymentCodRadio.checked)) {
+                continueBtn.style.display = 'block';
+            } else {
+                continueBtn.style.display = 'none';
+            }
+        }
+
+        function updateShippingSelection() {
+            selectedShipping = shippingEcontRadio.checked ? 'econt' :
+                (shippingSpeedyRadio.checked ? 'speedy' : null);
+            updateSummaryForPayment();
+            showContinueIfReady();
+        }
+
+        if (paymentCardRadio && paymentCodRadio) {
+            paymentCardRadio.addEventListener('change', function() {
+                selectedPayment = 'card';
+                updateSummaryForPayment();
+                showContinueIfReady();
+            });
+            paymentCodRadio.addEventListener('change', function() {
+                selectedPayment = 'cod';
+                updateSummaryForPayment();
+                showContinueIfReady();
             });
         }
-    </script>
+        if (shippingEcontRadio && shippingSpeedyRadio) {
+            shippingEcontRadio.addEventListener('change', updateShippingSelection);
+            shippingSpeedyRadio.addEventListener('change', updateShippingSelection);
+        }
+        // Set summary on load (no shipping/payment selected)
+        updateSummaryForPayment();
+    });
+
+    // Econt iframe postMessage
+    window.addEventListener('message', function(event) {
+        var data = event.data;
+        let shippingChanged = false;
+        if (data && (data.shipping_price !== undefined || data.shipping_price_cod !== undefined)) {
+            lastEcontShipping = {
+                shipping_price: data.shipping_price,
+                shipping_price_cod: data.shipping_price_cod,
+                currency_sign: data.shipping_price_currency_sign || "лв."
+            };
+            shippingChanged = true;
+        }
+        if (data && data.id) {
+            document.getElementById('econt_customer_name').value = data.name || '';
+            document.getElementById('econt_customer_phone').value = data.phone || '';
+            document.getElementById('econt_customer_email').value = data.email || '';
+            document.getElementById('econt_customer_city').value = data.city_name || '';
+            document.getElementById('econt_customer_address').value = data.address || '';
+            document.getElementById('econt_customer_office_name').value = data.office_name || '';
+        }
+        if (shippingChanged) {
+            updateSummaryForPayment();
+        }
+    });
+
+    // "Continue" button triggers hidden payment button
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('continue-payment').addEventListener('click', function() {
+            if (selectedPayment === 'cod') {
+                document.getElementById('cod-payment').click();
+            } else if (selectedPayment === 'card') {
+                document.getElementById('stripe-payment').click();
+            }
+        });
+    });
+</script>
 {% endblock %}

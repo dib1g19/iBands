@@ -389,6 +389,9 @@ $(document).ready(function () {
                         $('#order-items-block').replaceWith(data.items_html);
                     }
                     // No reload!
+                    if (typeof updateSummaryForPayment === "function") {
+                        updateSummaryForPayment();
+                    }
                 } else {
                     $feedback.html('<div class="alert alert-danger">' + data.message + '</div>');
                 }

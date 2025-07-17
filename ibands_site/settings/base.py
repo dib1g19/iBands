@@ -145,6 +145,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MESSAGE_TAGS = {messages.ERROR: "danger"}
 GRAPH_MODELS = {"all_applications": True, "graph_models": True}
 
+# --- Econt Integration ---
+ECONT_SHOP_ID = env("ECONT_SHOP_ID")
+ECONT_SHIPPMENT_CALC_URL = env("ECONT_SHIPPMENT_CALC_URL")
+
 # --- Jazzmin Admin Theme ---
 JAZZMIN_SETTINGS = {
     "site_title": "iBands",

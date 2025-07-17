@@ -1,3 +1,4 @@
+
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
@@ -19,6 +20,86 @@ from store.emails import send_order_notification_email
 from django.db.models import Q
 from decimal import Decimal
 from store.utils import increment_500_error_count
+from urllib.parse import urlencode
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def apply_coupon_discount(order):
+    """
+    Helper to recalculate coupon discount, saved, and total for an order.
+    Also updates order item prices.
+    """
+    coupons = order.coupons.all()
+    shipping = Decimal(str(order.shipping or 0))
+    if coupons.exists():
+        coupon = coupons.first()
+        total_discount = round2(order.sub_total * coupon.discount / 100)
+        order.saved = round2(total_discount)
+        order.total = round2(order.sub_total + shipping - total_discount)
+        apply_item_discounts(order, coupon)
+    else:
+        order.saved = round2(0)
+        order.total = round2(order.sub_total + shipping)
+        apply_item_discounts(order, None)
+    order.save()
+
+
+def apply_item_discounts(order, coupon=None):
+    """
+    Apply coupon discounts to each order item if coupon is provided.
+    """
+    if not coupon:
+        coupons = order.coupons.all()
+        coupon = coupons.first() if coupons.exists() else None
+    for item in order.order_items():
+        if coupon:
+            discount = Decimal(str(coupon.discount)) / Decimal("100")
+            discounted_price = round2(item.product.price * (Decimal("1") - discount))
+            item.price = discounted_price
+            item.sub_total = round2(discounted_price * item.qty)
+        else:
+            item.price = item.product.price
+            item.sub_total = round2(item.product.price * item.qty)
+        item.save()
+
+
+@csrf_exempt
+def save_econt_address(request, order_id):
+    if request.method == "POST":
+        try:
+            order = store_models.Order.objects.get(order_id=order_id)
+            data = json.loads(request.body)
+
+            shipping_price = data.get('shipping_price')
+            try:
+                shipping_price = float(shipping_price)
+            except (TypeError, ValueError):
+                shipping_price = 0.0
+
+            address = customer_models.Address.objects.create(
+                full_name=data.get('name', ''),
+                mobile=data.get('phone', ''),
+                email=data.get('email', ''),
+                delivery_method="econt",
+                city=data.get('city', ''),
+                address=data.get('address', ''),
+            )
+            order.address = address
+            order.shipping = shipping_price
+            # Coupon logic: recalculate discount and totals if coupon is applied
+            apply_coupon_discount(order)
+            return JsonResponse({"success": True})
+        except Exception as e:
+            logger.exception("Exception while saving address:")
+            return JsonResponse({"success": False, "message": f"Error: {e}"})
+    logger.warning("Invalid request method for save_econt_address.")
+    return JsonResponse({"success": False, "message": "Invalid request"})
 
 
 def round2(val):
@@ -427,11 +508,6 @@ def cart(request):
         sub_total=models.Sum("sub_total")
     )["sub_total"]
 
-    try:
-        addresses = customer_models.Address.objects.filter(user=request.user)
-    except:
-        addresses = None
-
     if not items:
         messages.warning(request, "Количката е празна")
         return redirect("store:index")
@@ -445,7 +521,6 @@ def cart(request):
     context = {
         "items": items,
         "cart_sub_total": cart_sub_total,
-        "addresses": addresses,
         "breadcrumbs": breadcrumbs,
     }
     return render(request, "store/cart.html", context)
@@ -488,76 +563,18 @@ def delete_cart_item(request):
 
 def create_order(request):
     if request.method == "POST":
-        address_id = request.POST.get("address")
-
-        # --- Handle guest address or direct form ---
-        address = None
-        if address_id and address_id.isdigit():
-            # Existing address (logged in user)
-            address = customer_models.Address.objects.filter(
-                user=request.user, id=address_id
-            ).first()
-        else:
-            # Guest or inline new address
-            guest_address_id = request.session.get("guest_address_id")
-            if guest_address_id:
-                address = customer_models.Address.objects.filter(
-                    id=guest_address_id
-                ).first()
-            else:
-                # Fallback: create a new address from POST (if data present)
-                address = customer_models.Address.objects.create(
-                    full_name=request.POST.get("full_name"),
-                    mobile=request.POST.get("mobile"),
-                    email=request.POST.get("email"),
-                    delivery_method=request.POST.get("delivery_method"),
-                    city=request.POST.get("city"),
-                    address=request.POST.get("address"),
-                )
-
-        if not address:
-            messages.warning(request, "Please provide or select an address to continue")
-            return redirect("store:cart")
-
-        if "cart_id" in request.session:
-            cart_id = request.session["cart_id"]
-        else:
-            cart_id = None
-
+        cart_id = request.session.get("cart_id")
         items = store_models.Cart.objects.filter(cart_id=cart_id)
         cart_sub_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(
             sub_total=models.Sum("sub_total")
         )["sub_total"]
 
+        shipping = 0.00
         order = store_models.Order()
         order.sub_total = cart_sub_total
         order.customer = request.user if request.user.is_authenticated else None
-        order.address = address
-
-        shipping_fee = 0
-        if address and address.delivery_method:
-            if address.delivery_method in [
-                "econt",
-                "econt_box",
-                "speedy",
-                "speedy_box",
-            ]:
-                if cart_sub_total >= 75:
-                    shipping_fee = 0
-                elif address.delivery_method == "econt":
-                    shipping_fee = 6.5
-                elif address.delivery_method == "econt_box":
-                    shipping_fee = 6
-                elif address.delivery_method == "speedy":
-                    shipping_fee = 6
-                elif address.delivery_method == "speedy_box":
-                    shipping_fee = 4
-            elif address.delivery_method == "personal":
-                shipping_fee = 9
-        from decimal import Decimal
-
-        order.shipping = Decimal(str(shipping_fee))
-        order.total = order.sub_total + order.shipping
+        order.shipping = shipping
+        order.total = (order.sub_total or 0) + (order.shipping or 0)
         order.save()
 
         for i in items:
@@ -608,41 +625,25 @@ def coupon_apply(request, order_id):
         # Always clear any existing coupons and reset saved and total
         order.coupons.clear()
         order.saved = round2(0)
-        order.total = round2(order.sub_total + order.shipping)  # Reset to original total before discounts
+        order.total = round2(order.sub_total + (order.shipping or 0))
 
-        total_discount = round2(order.sub_total * coupon.discount / 100)
-        if total_discount > 0:
-            order.coupons.add(coupon)
-            order.total = round2(order.total - total_discount)
-            order.saved = round2(order.saved + total_discount)
-            order.save()
-            # Update each order item to reflect the discounted price and sub_total
-            for item in order.order_items():
-                original_price = item.product.price
-                discount = Decimal(str(coupon.discount)) / Decimal("100")
-                discounted_price = round2(original_price * (Decimal("1") - discount))
-                item.price = discounted_price
-                item.sub_total = round2(discounted_price * item.qty)
-                item.save()
-            msg = "Купонът е активиран."
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                # Render the updated summary and items HTML
-                summary_html = render_to_string("store/_checkout_summary.html", {"order": order})
-                items_html = render_to_string("store/_checkout_items.html", {"order": order})
-                return JsonResponse({
-                    'success': True,
-                    'message': msg,
-                    'summary_html': summary_html,
-                    'items_html': items_html,
-                })
-            messages.success(request, msg)
-            return redirect("store:checkout", order.order_id)
-        else:
-            msg = "Отстъпката не е приложима."
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': msg})
-            messages.error(request, msg)
-            return redirect("store:checkout", order.order_id)
+        # Apply coupon, recalculate everything in one place!
+        order.coupons.add(coupon)
+        apply_coupon_discount(order)
+
+        msg = "Купонът е активиран."
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # Render the updated summary and items HTML
+            summary_html = render_to_string("store/_checkout_summary.html", {"order": order})
+            items_html = render_to_string("store/_checkout_items.html", {"order": order})
+            return JsonResponse({
+                'success': True,
+                'message': msg,
+                'summary_html': summary_html,
+                'items_html': items_html,
+            })
+        messages.success(request, msg)
+        return redirect("store:checkout", order.order_id)
 
     return redirect("store:checkout", order_id)
 
@@ -657,10 +658,24 @@ def checkout(request, order_id):
         {"label": "Поръчка", "url": ""},
     ]
 
+    cart_total_weight = 0
+    for item in order.order_items():
+        cart_total_weight += 0.1 * item.qty  # Use real item weight if available
+
+    econt_params = {
+        "id_shop": settings.ECONT_SHOP_ID,
+        "order_total": float(order.total) or 0,
+        "order_currency": "BGN", 
+        "order_weight": cart_total_weight,
+        "confirm_txt": "Потвърди",
+    }
+    econt_url = f"{settings.ECONT_SHIPPMENT_CALC_URL}?{urlencode(econt_params)}"
+
     context = {
         "order": order,
         "stripe_public_key": settings.STRIPE_PUBLIC_KEY,
         "breadcrumbs": breadcrumbs,
+        "econt_url": econt_url,
     }
 
     return render(request, "store/checkout.html", context)
@@ -757,8 +772,8 @@ def stripe_payment_verify(request, order_id):
                 type="New Order", user=request.user
             )
             clear_cart_items(request)
-            return redirect(f"/payment_status/{order.order_id}/?payment_status=paid")
-    return redirect(f"/payment_status/{order.order_id}/?payment_status=failed")
+            return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=paid")
+    return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
 
 
 def payment_status(request, order_id):

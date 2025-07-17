@@ -82,14 +82,20 @@ def save_econt_address(request, order_id):
             except (TypeError, ValueError):
                 shipping_price = 0.0
 
-            address = customer_models.Address.objects.create(
+            user = request.user if request.user.is_authenticated else None
+            address_kwargs = dict(
                 full_name=data.get('name', ''),
                 mobile=data.get('phone', ''),
                 email=data.get('email', ''),
-                delivery_method="econt",
+                delivery_method=data.get('delivery_method', ''),
                 city=data.get('city', ''),
                 address=data.get('address', ''),
             )
+            if user:
+                # Save for user only if they don't already have an address
+                if not customer_models.Address.objects.filter(user=user).exists():
+                    address_kwargs['user'] = user
+            address = customer_models.Address.objects.create(**address_kwargs)
             order.address = address
             order.shipping = shipping_price
             # Coupon logic: recalculate discount and totals if coupon is applied
@@ -662,12 +668,19 @@ def checkout(request, order_id):
     for item in order.order_items():
         cart_total_weight += 0.1 * item.qty  # Use real item weight if available
 
+    address = None
+    if request.user.is_authenticated:
+        address = customer_models.Address.objects.filter(user=request.user).order_by('-id').first()
     econt_params = {
         "id_shop": settings.ECONT_SHOP_ID,
         "order_total": float(order.total) or 0,
         "order_currency": "BGN", 
         "order_weight": cart_total_weight,
-        "confirm_txt": "Потвърди",
+        "customer_name": address.full_name if address and address.full_name else "",
+        "customer_phone": address.mobile if address and address.mobile else "",
+        "customer_email": address.email if address and address.email else "",
+        "customer_city_name": address.city if address and address.city else "",
+        "customer_address": address.address if address and address.address else "",
     }
     econt_url = f"{settings.ECONT_SHIPPMENT_CALC_URL}?{urlencode(econt_params)}"
 

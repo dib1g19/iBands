@@ -184,6 +184,7 @@
             name: document.getElementById('econt_customer_name').value,
             phone: document.getElementById('econt_customer_phone').value,
             email: document.getElementById('econt_customer_email').value,
+            delivery_method: officeName ? 'econt' : 'personal',
             city: document.getElementById('econt_customer_city').value,
             address: finalAddress,
             shipping_price: (selectedPayment === 'card')
@@ -336,6 +337,8 @@
         let shippingText = "-";
         let shippingVal = 0;
 
+        let officeName = document.getElementById('econt_customer_office_name')?.value || '';
+
         if (selectedShipping === 'econt' && selectedPayment) {
             if (selectedPayment === 'cod') {
                 if (lastEcontShipping.shipping_price_cod !== undefined && lastEcontShipping.shipping_price_cod !== null) {
@@ -371,11 +374,11 @@
         }
         let total = backendTotal;
 
-        // Free delivery logic
+        // Free delivery only if order >= 75 and Econt office is selected
         let freeDeliveryThreshold = 75;
-        if (backendTotal >= freeDeliveryThreshold && showShipping) {
+        if (backendTotal >= freeDeliveryThreshold && showShipping && officeName) {
             if (shippingSummaryElem) {
-                shippingSummaryElem.textContent = "Безплатна доставка";
+                shippingSummaryElem.textContent = "Безплатна доставка до офис";
             }
             if (totalSummaryElem) {
                 totalSummaryElem.textContent = backendTotal.toFixed(2) + ' ' + (lastEcontShipping.currency_sign || "лв.");

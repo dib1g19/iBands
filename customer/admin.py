@@ -3,7 +3,7 @@ from customer import models as customer_models
 
 
 class AddressAdmin(admin.ModelAdmin):
-    list_display = ["user", "full_name"]
+    list_display = ["user", "name"]
 
 
 class WishlistAdmin(admin.ModelAdmin):

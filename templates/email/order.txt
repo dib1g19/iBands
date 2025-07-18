@@ -1,6 +1,6 @@
 Поръчка #{{ order.order_id }} е {{ email_heading }}
 
-Здравейте {{ order.address.full_name }},
+Здравейте {{ order.address.name }},
 
 Благодарим Ви за поръчка #{{ order.order_id }}! По-долу ще намерите детайли за продукта и доставката.
 
@@ -24,8 +24,8 @@
 Общо: {{ order.total }} лв.
 
 Адрес за доставка:
-- Име: {{ order.address.full_name }}
-- Телефон: {{ order.address.mobile }}
+- Име: {{ order.address.name }}
+- Телефон: {{ order.address.phone }}
 - Начин на доставка: {{ order.address.get_delivery_method_display }}
 - Град: {{ order.address.city }}
 - Адрес: {{ order.address.address }}

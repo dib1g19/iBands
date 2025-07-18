@@ -84,8 +84,8 @@ def save_econt_address(request, order_id):
 
             user = request.user if request.user.is_authenticated else None
             address_kwargs = dict(
-                full_name=data.get('name', ''),
-                mobile=data.get('phone', ''),
+                name=data.get('name', ''),
+                phone=data.get('phone', ''),
                 email=data.get('email', ''),
                 delivery_method=data.get('delivery_method', ''),
                 city=data.get('city', ''),
@@ -670,14 +670,19 @@ def checkout(request, order_id):
 
     address = None
     if request.user.is_authenticated:
-        address = customer_models.Address.objects.filter(user=request.user).order_by('-id').first()
+        # Prefer main address for autofill; fallback to most recent if no main exists
+        main_address = customer_models.Address.objects.filter(user=request.user, is_main=True).first()
+        if main_address:
+            address = main_address
+        else:
+            address = customer_models.Address.objects.filter(user=request.user).order_by('-id').first()
     econt_params = {
         "id_shop": settings.ECONT_SHOP_ID,
         "order_total": float(order.total) or 0,
         "order_currency": "BGN", 
         "order_weight": cart_total_weight,
-        "customer_name": address.full_name if address and address.full_name else "",
-        "customer_phone": address.mobile if address and address.mobile else "",
+        "customer_name": address.name if address and getattr(address, "name", None) else "",
+        "customer_phone": address.phone if address and getattr(address, "phone", None) else "",
         "customer_email": address.email if address and address.email else "",
         "customer_city_name": address.city if address and address.city else "",
         "customer_address": address.address if address and address.address else "",
@@ -738,7 +743,7 @@ def stripe_payment(request, order_id):
             {
                 "price_data": {
                     "currency": "BGN",
-                    "product_data": {"name": order.address.full_name},
+                    "product_data": {"name": order.address.name},
                     "unit_amount": int(order.total * 100),
                 },
                 "quantity": 1,

@@ -2,43 +2,13 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.db import models
+from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.urls import reverse
 from store.utils import paginate_queryset
 from store import models as store_models
 from customer import models as customer_models
-from django.views.decorators.csrf import csrf_exempt
-
-
-@csrf_exempt
-def quick_add_address(request):
-    if request.method == "POST":
-        full_name = request.POST.get("full_name")
-        mobile = request.POST.get("mobile")
-        email = request.POST.get("email")
-        delivery_method = request.POST.get("delivery_method")
-        city = request.POST.get("city")
-        address_str = request.POST.get("address")
-
-        user = request.user if request.user.is_authenticated else None
-        address = customer_models.Address.objects.create(
-            user=user,
-            full_name=full_name,
-            mobile=mobile,
-            email=email,
-            delivery_method=delivery_method,
-            city=city,
-            address=address_str,
-        )
-
-        # For guests: store the address ID in session for the current checkout
-        if not user:
-            request.session["guest_address_id"] = address.id
-
-        return JsonResponse({"success": True, "address_id": address.id})
-
-    return JsonResponse({"success": False}, status=400)
 
 
 @login_required
@@ -176,7 +146,7 @@ def mark_noti_seen(request, id):
 
 @login_required
 def addresses(request):
-    addresses = customer_models.Address.objects.filter(user=request.user)
+    addresses = customer_models.Address.objects.filter(user=request.user).order_by('id')
 
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
@@ -195,14 +165,14 @@ def address_detail(request, id):
     address = customer_models.Address.objects.get(user=request.user, id=id)
 
     if request.method == "POST":
-        full_name = request.POST.get("full_name")
-        mobile = request.POST.get("mobile")
+        name = request.POST.get("name")
+        phone = request.POST.get("phone")
         email = request.POST.get("email")
         delivery_method = request.POST.get("delivery_method")
         city = request.POST.get("city")
         address_location = request.POST.get("address")
-        address.full_name = full_name
-        address.mobile = mobile
+        address.name = name
+        address.phone = phone
         address.email = email
         address.delivery_method = delivery_method
         address.city = city
@@ -228,8 +198,8 @@ def address_detail(request, id):
 @login_required
 def address_create(request):
     if request.method == "POST":
-        full_name = request.POST.get("full_name")
-        mobile = request.POST.get("mobile")
+        name = request.POST.get("name")
+        phone = request.POST.get("phone")
         email = request.POST.get("email")
         delivery_method = request.POST.get("delivery_method")
         city = request.POST.get("city")
@@ -237,8 +207,8 @@ def address_create(request):
 
         customer_models.Address.objects.create(
             user=request.user,
-            full_name=full_name,
-            mobile=mobile,
+            name=name,
+            phone=phone,
             email=email,
             delivery_method=delivery_method,
             city=city,
@@ -258,6 +228,19 @@ def address_create(request):
     }
 
     return render(request, "customer/address_create.html", context)
+
+
+@login_required
+@require_POST
+def set_main_address(request, id):
+    # Unset all addresses for the user
+    customer_models.Address.objects.filter(user=request.user, is_main=True).update(is_main=False)
+    # Set this address as main
+    address = customer_models.Address.objects.get(user=request.user, id=id)
+    address.is_main = True
+    address.save()
+    messages.success(request, "Основният адрес е обновен успешно!")
+    return redirect("customer:addresses")
 
 
 def delete_address(request, id):

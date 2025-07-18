@@ -29,27 +29,26 @@ class Wishlist(models.Model):
 
 class Address(models.Model):
     DELIVERY_CHOICES = [
-        ("econt", "Еконт"),
-        ("econt_box", "Еконтомат"),
-        ("speedy", "Спиди"),
-        ("speedy_box", "Спидомат"),
-        ("personal", "Личен адрес"),
+        ("econt_office", "Еконт офис"),
+        ("econt", "Еконт адрес"),
+        ("speedy_office", "Спиди офис"),
+        ("speedy", "Спиди адрес"),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    full_name = models.CharField(max_length=200, null=True, blank=True, default=None)
-    mobile = models.CharField(max_length=50, null=True, blank=True, default=None)
+    name = models.CharField(max_length=200, null=True, blank=True, default=None)
+    phone = models.CharField(max_length=50, null=True, blank=True, default=None)
     email = models.CharField(max_length=100, null=True, blank=True, default=None)
     delivery_method = models.CharField(
-        max_length=10, choices=DELIVERY_CHOICES, null=True, blank=True
+        max_length=16, choices=DELIVERY_CHOICES, null=True, blank=True
     )
     city = models.CharField(max_length=100, null=True, blank=True, default=None)
     address = models.CharField(max_length=100, null=True, blank=True, default=None)
-
+    is_main = models.BooleanField(default=False, verbose_name="Основен адрес")
     class Meta:
         verbose_name_plural = "Customer Addresses"
 
     def __str__(self):
-        return self.full_name
+        return self.name
 
 
 class Notifications(models.Model):

@@ -183,8 +183,8 @@ class OrderAdmin(admin.ModelAdmin):
                 "<b>Доставка:</b> {}<br>"
                 "<b>Град:</b> {}<br>"
                 "<b>Адрес:</b> {}",
-                addr.full_name or "-",
-                addr.mobile or "-",
+                addr.name or "-",
+                addr.phone or "-",
                 addr.email or "-",
                 addr.get_delivery_method_display() if hasattr(addr, "get_delivery_method_display") else addr.delivery_method or "-",
                 addr.city or "-",

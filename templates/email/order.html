@@ -426,7 +426,7 @@
                                                                 <tr>
                                                                     <td align="center" style="padding:0;Margin:0;padding-top:5px;padding-bottom:5px">
                                                                         <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#000000;font-size:14px">
-                                                                            Здравейте {{ order.address.full_name }},<br />
+                                                                            Здравейте {{ order.address.name }},<br />
                                                                             Благодарим Ви за поръчка #{{ order.order_id }}! По-долу ще намерите детайли за продукта и доставката.
                                                                         </p>
                                                                     </td>
@@ -626,10 +626,10 @@
                                                                 <tr>
                                                                     <td align="left" style="padding:0;Margin:0">
                                                                         <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
-                                                                            <strong>Име:</strong> {{ order.address.full_name }}
+                                                                            <strong>Име:</strong> {{ order.address.name }}
                                                                         </p>
                                                                         <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
-                                                                            <strong>Телефон:</strong> {{ order.address.mobile }}
+                                                                            <strong>Телефон:</strong> {{ order.address.phone }}
                                                                         </p>
                                                                         <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
                                                                             <strong>Начин на доставка:</strong> {{ order.address.get_delivery_method_display }}

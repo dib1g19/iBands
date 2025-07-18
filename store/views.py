@@ -746,6 +746,11 @@ def checkout(request, order_id):
         "customer_email": address.email if address and address.email else "",
         "customer_city_name": address.city if address and address.city else "",
     }
+    if address:
+        if address.delivery_method == "econt_office" and address.office_code:
+            econt_params["customer_office_code"] = address.office_code
+        elif address.delivery_method == "econt" and address.address:
+            econt_params["customer_address"] = address.address
     econt_url = f"{settings.ECONT_SHIPPMENT_CALC_URL}?{urlencode(econt_params)}"
 
     context = {

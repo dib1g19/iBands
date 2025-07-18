@@ -60,7 +60,7 @@
                                 <label class="form-check-label" for="payment-card">Плащане с карта</label>
                             </div>
                             <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="payment_method" id="payment-cod" value="cod">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment-cod" value="cash_on_delivery">
                                 <label class="form-check-label" for="payment-cod">Наложен платеж</label>
                             </div>
                         </div>
@@ -239,7 +239,7 @@
                     .catch(function (error) {
                         console.log('Error: ', error)
                     });
-                } else if (paymentType === 'cod') {
+                } else if (paymentType === 'cash_on_delivery') {
                     // COD payment
                     fetch("{% url 'store:cod_payment' order.order_id %}", {
                         method: 'POST',
@@ -297,7 +297,7 @@
     var codButton = document.getElementById('cod-payment');
     try {
         codButton.addEventListener('click', function () {
-            handleEcontPayment(codButton, 'cod');
+            handleEcontPayment(codButton, 'cash_on_delivery');
         });
     } catch (error) {
         console.log(error)
@@ -340,7 +340,7 @@
         let officeName = document.getElementById('econt_customer_office_name')?.value || '';
 
         if (selectedShipping === 'econt' && selectedPayment) {
-            if (selectedPayment === 'cod') {
+            if (selectedPayment === 'cash_on_delivery') {
                 if (lastEcontShipping.shipping_price_cod !== undefined && lastEcontShipping.shipping_price_cod !== null) {
                     shipping = lastEcontShipping.shipping_price_cod;
                     showShipping = true;
@@ -428,7 +428,7 @@
                 updateSummaryForPayment();
             });
             paymentCodRadio.addEventListener('change', function() {
-                selectedPayment = 'cod';
+                selectedPayment = 'cash_on_delivery';
                 updateSummaryForPayment();
             });
         }
@@ -492,7 +492,7 @@
                 }
                 return;
             }
-            if (selectedPayment === 'cod') {
+            if (selectedPayment === 'cash_on_delivery') {
                 document.getElementById('cod-payment').click();
             } else if (selectedPayment === 'card') {
                 document.getElementById('stripe-payment').click();

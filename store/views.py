@@ -50,7 +50,7 @@ def send_order_to_econt(order):
         "orderNumber": order.order_id,
         "status": "pending",
         "orderSum": float(order.total),
-        "cod": (order.payment_method == "cod"),
+        "cod": float(order.total) if order.payment_method in ["cash_on_delivery"] else 0,
         "currency": "BGN",
         "shipmentDescription": f"iBands.bg поръчка #{order.order_id}",
         "customerInfo": {
@@ -764,6 +764,13 @@ def cod_payment(request, order_id):
         order.payment_method = "cash_on_delivery"
         order.payment_status = "cash_on_delivery"
         # Econt integration: send order to Econt after saving as paid
+        awb = None
+        try:
+            econt_response = send_order_to_econt(order)
+            if econt_response and econt_response.get("shipmentNumber"):
+                awb = econt_response["shipmentNumber"]
+        except Exception as e:
+            pass
         order.shipping_service = "econt"
         order.save()
         send_order_notification_email(
@@ -835,6 +842,13 @@ def stripe_payment_verify(request, order_id):
             order.payment_status = "paid"
             order.payment_method = "card"
             # Econt integration: send order to Econt after Stripe payment is confirmed
+            awb = None
+            try:
+                econt_response = send_order_to_econt(order)
+                if econt_response and econt_response.get("shipmentNumber"):
+                    awb = econt_response["shipmentNumber"]
+            except Exception as e:
+                pass
             order.shipping_service = "econt"
             order.save()
             send_order_notification_email(

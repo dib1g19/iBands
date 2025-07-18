@@ -171,12 +171,21 @@ def address_detail(request, id):
         delivery_method = request.POST.get("delivery_method")
         city = request.POST.get("city")
         address_location = request.POST.get("address")
+        office_name = request.POST.get("office_name")
+
         address.name = name
         address.phone = phone
         address.email = email
         address.delivery_method = delivery_method
         address.city = city
-        address.address = address_location
+
+        if delivery_method in ["econt_office", "speedy_office"]:
+            address.address = ""
+            address.office_name = office_name
+        else:
+            address.address = address_location
+            address.office_name = ""
+
         address.save()
 
         messages.success(request, "Адресът е обновен успешно!")
@@ -203,7 +212,17 @@ def address_create(request):
         email = request.POST.get("email")
         delivery_method = request.POST.get("delivery_method")
         city = request.POST.get("city")
+
+        # Get both address fields, only save one depending on delivery method
         address = request.POST.get("address")
+        office_name = request.POST.get("office_name")
+
+        if delivery_method in ["econt_office", "speedy_office"]:
+            address_to_save = ""
+            office_name_to_save = office_name
+        else:
+            address_to_save = address
+            office_name_to_save = ""
 
         customer_models.Address.objects.create(
             user=request.user,
@@ -212,7 +231,8 @@ def address_create(request):
             email=email,
             delivery_method=delivery_method,
             city=city,
-            address=address,
+            address=address_to_save,
+            office_name=office_name_to_save,
         )
 
         messages.success(request, "Адресът е създаден успешно!")

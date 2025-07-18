@@ -8,7 +8,7 @@
     <input type="email" name="email" class="form-control mb-2" placeholder="Имейл" value="{{ address.email|default:'' }}" required />
 </div>
 <div class="form-group mb-2">
-    <select name="delivery_method" class="form-control rounded" required>
+    <select name="delivery_method" id="delivery-method-select" class="form-control rounded" required>
         <option value="">Изберете метод на доставка</option>
         <option value="econt_office" {% if address.delivery_method == "econt_office" or delivery_method == "econt_office" %}selected{% endif %}>Еконт офис</option>
         <option value="econt" {% if address.delivery_method == "econt" or delivery_method == "econt" %}selected{% endif %}>Еконт адрес</option>
@@ -22,3 +22,26 @@
 <div class="form-group mb-2">
     <input type="text" name="address" class="form-control mb-2" placeholder="Адрес" value="{{ address.address|default:'' }}" required />
 </div>
+<div class="form-group mb-2" id="econt-office-fields" style="display: none;">
+    <input type="text" name="office_name" class="form-control mb-2" placeholder="Офис на Еконт/Спиди" value="{{ address.office_name|default:'' }}" />
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function toggleFields() {
+        var method = document.getElementById('delivery-method-select').value;
+        var addressField = document.querySelector('[name="address"]').closest('.form-group');
+        var officeField = document.getElementById('econt-office-fields');
+
+        if (method === 'econt_office' || method === 'speedy_office') {
+            officeField.style.display = '';
+            addressField.style.display = 'none';
+        } else {
+            officeField.style.display = 'none';
+            addressField.style.display = '';
+        }
+    }
+    document.getElementById('delivery-method-select').addEventListener('change', toggleFields);
+    // Call once to set the correct initial state
+    toggleFields();
+});
+</script>

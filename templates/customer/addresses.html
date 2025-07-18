@@ -65,9 +65,15 @@
                                         <p class="mb-0">
                                             <span class="fw-bold">Метод на доставка:</span> {{ address.get_delivery_method_display }}
                                         </p>
-                                        <p class="mb-0">
-                                            <span class="fw-bold">Адрес:</span> {{ address.address }}
-                                        </p>
+                                        {% if address.delivery_method == 'econt_office' or address.delivery_method == 'speedy_office' %}
+                                            <p class="mb-0">
+                                                <span class="fw-bold">Офис:</span> {{ address.office_name }}
+                                            </p>
+                                        {% else %}
+                                            <p class="mb-0">
+                                                <span class="fw-bold">Адрес:</span> {{ address.address }}
+                                            </p>
+                                        {% endif %}
                                         <p class="mb-0">
                                             <span class="fw-bold">Град:</span> {{ address.city }}
                                         </p>

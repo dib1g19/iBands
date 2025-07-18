@@ -118,6 +118,7 @@
                                         <input type="hidden" id="econt_customer_city" name="econt_customer_city">
                                         <input type="hidden" id="econt_customer_address" name="econt_customer_address">
                                         <input type="hidden" id="econt_customer_office_name" name="econt_customer_office_name">
+                                        <input type="hidden" id="econt_customer_office_code" name="econt_customer_office_code">
                                         <div id="shipping-price-block" class="mt-2"></div>
                                     </div>
                                 </div>
@@ -176,9 +177,6 @@
     // Unified Econt payment handler
     function handleEcontPayment(button, paymentType) {
         var officeName = document.getElementById('econt_customer_office_name')?.value;
-        var regularAddress = document.getElementById('econt_customer_address').value;
-
-        var finalAddress = officeName ? ("Офис: " + officeName) : regularAddress;
 
         var addressData = {
             name: document.getElementById('econt_customer_name').value,
@@ -186,7 +184,9 @@
             email: document.getElementById('econt_customer_email').value,
             delivery_method: officeName ? 'econt_office' : 'econt',
             city: document.getElementById('econt_customer_city').value,
-            address: finalAddress,
+            address: document.getElementById('econt_customer_address').value,
+            office_code: document.getElementById('econt_customer_office_code')?.value,
+            office_name: officeName,
             shipping_price: (selectedPayment === 'card')
                 ? (lastEcontShipping.shipping_price_cod ? (parseFloat(lastEcontShipping.shipping_price_cod) * 0.5).toFixed(2) : null)
                 : lastEcontShipping.shipping_price_cod
@@ -195,7 +195,7 @@
         var econtErrorBlock = document.getElementById('econt-error-block');
         if (econtErrorBlock) econtErrorBlock.innerHTML = '';
 
-        if (!addressData.email || !addressData.address) {
+        if (!addressData.phone || (!addressData.office_name && !addressData.address)) {
             if (econtErrorBlock) {
                 econtErrorBlock.innerHTML = '<div class="alert alert-danger mb-2">Моля, попълнете и потвърдете адреса за доставка чрез формата на Еконт!</div>';
                 econtErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -459,6 +459,7 @@
             document.getElementById('econt_customer_city').value = data.city_name || '';
             document.getElementById('econt_customer_address').value = data.address || '';
             document.getElementById('econt_customer_office_name').value = data.office_name || '';
+            document.getElementById('econt_customer_office_code').value = data.office_code || '';
         }
         if (shippingChanged) {
             updateSummaryForPayment();

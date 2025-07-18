@@ -147,7 +147,9 @@ GRAPH_MODELS = {"all_applications": True, "graph_models": True}
 
 # --- Econt Integration ---
 ECONT_SHOP_ID = env("ECONT_SHOP_ID")
-ECONT_SHIPPMENT_CALC_URL = env("ECONT_SHIPPMENT_CALC_URL")
+ECONT_SHIPPMENT_CALC_URL = env("ECONT_SHIPPMENT_CALC_URL", default="https://delivery.econt.com/customer_info.php")
+ECONT_UPDATE_ORDER_ENDPOINT = env("ECONT_UPDATE_ORDER_ENDPOINT", default="https://delivery.econt.com/services/OrdersService.updateOrder.json")
+ECONT_PRIVATE_KEY = env("ECONT_PRIVATE_KEY")
 
 # --- Jazzmin Admin Theme ---
 JAZZMIN_SETTINGS = {

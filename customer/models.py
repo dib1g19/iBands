@@ -42,6 +42,8 @@ class Address(models.Model):
         max_length=16, choices=DELIVERY_CHOICES, null=True, blank=True
     )
     city = models.CharField(max_length=100, null=True, blank=True, default=None)
+    office_code = models.CharField(max_length=32, null=True, blank=True)
+    office_name = models.CharField(max_length=255, null=True, blank=True)
     address = models.CharField(max_length=100, null=True, blank=True, default=None)
     is_main = models.BooleanField(default=False, verbose_name="Основен адрес")
     class Meta:

@@ -67,7 +67,7 @@
             <script>
                 gtag('event', 'purchase', {
                     "transaction_id": "{{ order.order_id }}",
-                    "value": {{ order.get_total|floatformat:2 }},
+                    "value": {{ order.total|default_if_none:"0"|floatformat:2 }},
                     "currency": "BGN"
                 });
             </script>

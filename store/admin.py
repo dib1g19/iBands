@@ -176,6 +176,13 @@ class OrderAdmin(admin.ModelAdmin):
     def address_display(self, obj):
         if obj.address:
             addr = obj.address
+            address = None
+            if getattr(addr, "office_name", None):
+                address = addr.office_name
+            elif getattr(addr, "address", None):
+                address = addr.address
+            if not address:
+                address = "-"
             return format_html(
                 "<b>Име:</b> {}<br>"
                 "<b>Телефон:</b> {}<br>"
@@ -188,7 +195,7 @@ class OrderAdmin(admin.ModelAdmin):
                 addr.email or "-",
                 addr.get_delivery_method_display() if hasattr(addr, "get_delivery_method_display") else addr.delivery_method or "-",
                 addr.city or "-",
-                addr.address or "-"
+                address
             )
         return "-"
     address_display.short_description = "Address"

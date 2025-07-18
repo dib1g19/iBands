@@ -25,10 +25,68 @@ from urllib.parse import urlencode
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
-import logging
 
-logger = logging.getLogger(__name__)
+import requests
 
+def send_order_to_econt(order):
+    url = settings.ECONT_UPDATE_ORDER_ENDPOINT
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": settings.ECONT_PRIVATE_KEY,
+        "X-ID-Shop": str(settings.ECONT_SHOP_ID),
+    }
+    items = []
+    for item in order.order_items():
+        items.append({
+            "name": item.product.name,
+            "SKU": getattr(item.product, "sku", ""),
+            "count": item.qty,
+            "totalPrice": float(item.sub_total),
+            "totalWeight": float(getattr(item.product, "weight", 0.1)) * item.qty,
+        })
+    address = order.address
+    data = {
+        "id": "",
+        "orderNumber": order.order_id,
+        "status": "pending",
+        "orderSum": float(order.total),
+        "cod": (order.payment_method == "cod"),
+        "currency": "BGN",
+        "shipmentDescription": f"iBands.bg поръчка #{order.order_id}",
+        "customerInfo": {
+            "name": address.name,
+            "phone": address.phone,
+            "email": address.email,
+            "countryCode": "BG",
+            "cityName": address.city,
+            "address": address.address,
+            "officeCode": address.office_code,
+        },
+        "items": items,
+    }
+    response = requests.post(url, headers=headers, json=data, timeout=10)
+    if response.status_code == 200:
+        try:
+            resp_json = response.json()
+        except Exception:
+            return None
+
+        # Now, call the createAWB endpoint to generate the AWB/label
+        create_awb_url = url.replace("OrdersService.updateOrder", "OrdersService.createAWB")
+        try:
+            awb_response = requests.post(create_awb_url, headers=headers, json=data, timeout=10)
+            if awb_response.status_code == 200:
+                awb_json = awb_response.json()
+                shipment_number = awb_json.get("shipmentNumber")
+                if shipment_number:
+                    order.tracking_id = shipment_number
+                    order.save(update_fields=["tracking_id"])
+                return awb_json
+        except Exception:
+            pass
+        return None
+    else:
+        return None
 
 def apply_coupon_discount(order):
     """
@@ -83,13 +141,17 @@ def save_econt_address(request, order_id):
                 shipping_price = 0.0
 
             user = request.user if request.user.is_authenticated else None
+            office_name = data.get('office_name', '')
+            delivery_method = 'econt_office' if office_name else 'econt'
             address_kwargs = dict(
                 name=data.get('name', ''),
                 phone=data.get('phone', ''),
                 email=data.get('email', ''),
-                delivery_method=data.get('delivery_method', ''),
+                delivery_method=delivery_method,
                 city=data.get('city', ''),
                 address=data.get('address', ''),
+                office_code=data.get('office_code', ''),
+                office_name=office_name,
             )
             if user:
                 # Save for user only if they don't already have an address
@@ -102,9 +164,7 @@ def save_econt_address(request, order_id):
             apply_coupon_discount(order)
             return JsonResponse({"success": True})
         except Exception as e:
-            logger.exception("Exception while saving address:")
             return JsonResponse({"success": False, "message": f"Error: {e}"})
-    logger.warning("Invalid request method for save_econt_address.")
     return JsonResponse({"success": False, "message": "Invalid request"})
 
 
@@ -685,7 +745,6 @@ def checkout(request, order_id):
         "customer_phone": address.phone if address and getattr(address, "phone", None) else "",
         "customer_email": address.email if address and address.email else "",
         "customer_city_name": address.city if address and address.city else "",
-        "customer_address": address.address if address and address.address else "",
     }
     econt_url = f"{settings.ECONT_SHIPPMENT_CALC_URL}?{urlencode(econt_params)}"
 
@@ -704,6 +763,8 @@ def cod_payment(request, order_id):
         order = store_models.Order.objects.get(order_id=order_id)
         order.payment_method = "cash_on_delivery"
         order.payment_status = "cash_on_delivery"
+        # Econt integration: send order to Econt after saving as paid
+        order.shipping_service = "econt"
         order.save()
         send_order_notification_email(
             order=order,
@@ -773,6 +834,8 @@ def stripe_payment_verify(request, order_id):
         if order.payment_status == "processing":
             order.payment_status = "paid"
             order.payment_method = "card"
+            # Econt integration: send order to Econt after Stripe payment is confirmed
+            order.shipping_service = "econt"
             order.save()
             send_order_notification_email(
                 order=order,

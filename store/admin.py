@@ -37,13 +37,15 @@ class ProductAdmin(admin.ModelAdmin):
         "category",
         "sku",
         "name",
+        "description",
+        "meta_description",
         "image",
         "price",
         "regular_price",
         "featured",
     ]
     list_per_page = 20
-    list_editable = ["sku", "name", "image", "price", "regular_price", "featured"]
+    list_editable = ["sku", "name", "description", "meta_description", "image", "price", "regular_price", "featured"]
     search_fields = ["name", "category__title"]
     list_filter = ["status", "featured", "category"]
     inlines = [GalleryInline, VariantInline]

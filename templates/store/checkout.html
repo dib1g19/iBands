@@ -119,6 +119,7 @@
                                         <input type="hidden" id="econt_customer_address" name="econt_customer_address">
                                         <input type="hidden" id="econt_customer_office_name" name="econt_customer_office_name">
                                         <input type="hidden" id="econt_customer_office_code" name="econt_customer_office_code">
+                                        <input type="hidden" id="econt_customer_face" name="econt_customer_face">
                                         <div id="shipping-price-block" class="mt-2"></div>
                                     </div>
                                 </div>
@@ -187,6 +188,7 @@
             address: document.getElementById('econt_customer_address').value,
             office_code: document.getElementById('econt_customer_office_code')?.value,
             office_name: officeName,
+            face: document.getElementById('econt_customer_face').value,
             shipping_price: (selectedPayment === 'card')
                 ? (lastEcontShipping.shipping_price_cod ? (parseFloat(lastEcontShipping.shipping_price_cod) * 0.5).toFixed(2) : null)
                 : lastEcontShipping.shipping_price_cod
@@ -460,6 +462,7 @@
             document.getElementById('econt_customer_address').value = data.address || '';
             document.getElementById('econt_customer_office_name').value = data.office_name || '';
             document.getElementById('econt_customer_office_code').value = data.office_code || '';
+            document.getElementById('econt_customer_face').value = data.face || '';
         }
         if (shippingChanged) {
             updateSummaryForPayment();

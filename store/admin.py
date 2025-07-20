@@ -243,6 +243,16 @@ class Stats(models.Model):
         managed = False  # No DB table
 
 
+class ColorGroupAdmin(admin.ModelAdmin):
+    list_display = ["name_en", "name_bg", "hex_code"]
+    list_editable = ["name_bg", "hex_code"]
+
+
+class ColorAdmin(admin.ModelAdmin):
+    list_display = ["group", "name_en", "name_bg"]
+    list_editable = ["name_en", "name_bg"]
+
+
 admin.site.register(store_models.Category, CategoryAdmin)
 admin.site.register(store_models.Product, ProductAdmin)
 admin.site.register(store_models.Variant, VariantAdmin)
@@ -254,3 +264,5 @@ admin.site.register(store_models.Order, OrderAdmin)
 admin.site.register(store_models.OrderItem, OrderItemAdmin)
 admin.site.register(store_models.Review, ReviewAdmin)
 admin.site.register(Stats, StatsAdmin)
+admin.site.register(store_models.Color, ColorAdmin)
+admin.site.register(store_models.ColorGroup, ColorGroupAdmin)

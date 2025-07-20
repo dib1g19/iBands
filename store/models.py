@@ -55,6 +55,7 @@ RATING = (
 
 class Category(models.Model):
     title = models.CharField(max_length=255)
+    description = CKEditor5Field(config_name="extends", blank=True)
     sku = models.CharField(max_length=50, unique=True, null=True, verbose_name="SKU")
     parent = models.ForeignKey(
         "self",
@@ -135,7 +136,7 @@ class Product(models.Model):
     image = models.FileField(
         upload_to="images", blank=True, null=True, default="default/default-image.avif"
     )
-    description = CKEditor5Field("Text", config_name="extends")
+    description = CKEditor5Field(config_name="extends")
     meta_description = models.CharField(
         max_length=300, blank=True, null=True, help_text="Meta description for SEO"
     )
@@ -178,6 +179,7 @@ class Product(models.Model):
     slug = models.SlugField(null=True, blank=True)
     date = models.DateTimeField(default=timezone.now)
     variants = models.ManyToManyField("Variant", blank=True, related_name="products")
+    colors = models.ManyToManyField("Color", blank=True, related_name="products")
 
     class Meta:
         ordering = ["sku"]
@@ -385,3 +387,21 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user.username} review on {self.product.name}"
+
+
+class ColorGroup(models.Model):
+    name_bg = models.CharField(max_length=100, unique=True)
+    name_en = models.CharField(max_length=100, unique=True)
+    hex_code = models.CharField(max_length=7)
+
+    def __str__(self):
+        return f"{self.name_bg} ({self.name_en})"
+
+
+class Color(models.Model):
+    name_bg = models.CharField(max_length=100)
+    name_en = models.CharField(max_length=100)
+    group = models.ForeignKey(ColorGroup, on_delete=models.CASCADE, related_name="colors")
+
+    def __str__(self):
+        return f"{self.name_bg} ({self.group.name_bg})"

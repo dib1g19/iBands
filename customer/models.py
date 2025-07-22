@@ -45,6 +45,8 @@ class Address(models.Model):
     office_code = models.CharField(max_length=32, null=True, blank=True)
     office_name = models.CharField(max_length=255, null=True, blank=True)
     address = models.CharField(max_length=100, null=True, blank=True, default=None)
+    post_code = models.CharField(max_length=10, blank=True, null=True)
+    face = models.CharField(max_length=255, blank=True, null=True)
     is_main = models.BooleanField(default=False, verbose_name="Основен адрес")
     class Meta:
         verbose_name_plural = "Customer Addresses"

@@ -27,7 +27,7 @@ import json
 
 import requests
 
-def send_order_to_econt(order, face=None):
+def send_order_to_econt(order):
     url = settings.ECONT_UPDATE_ORDER_ENDPOINT
     headers = {
         "Content-Type": "application/json",
@@ -58,9 +58,10 @@ def send_order_to_econt(order, face=None):
             "email": address.email,
             "countryCode": "BG",
             "cityName": address.city,
+            "postCode": address.post_code,
             "officeCode": address.office_code,
             "address": address.address,
-            "face": face or "",
+            "face": address.face,
         },
         "items": items,
     }
@@ -134,8 +135,6 @@ def save_econt_address(request, order_id):
             order = store_models.Order.objects.get(order_id=order_id)
             data = json.loads(request.body)
 
-            # Save the face value to the session (do not add to address/db)
-            request.session['econt_customer_face'] = data.get('face', '')
 
             shipping_price = data.get('shipping_price')
             try:
@@ -155,6 +154,8 @@ def save_econt_address(request, order_id):
                 address=data.get('address', ''),
                 office_code=data.get('office_code', ''),
                 office_name=office_name,
+                post_code=data.get('post_code', ''),
+                face=data.get('face', ''),
             )
             if user:
                 # Save for user only if they don't already have an address
@@ -774,14 +775,11 @@ def cod_payment(request, order_id):
         # Econt integration: send order to Econt after saving as paid
         awb = None
         try:
-            econt_response = send_order_to_econt(order, face=request.session.get('econt_customer_face', ''))
+            econt_response = send_order_to_econt(order)
             if econt_response and econt_response.get("shipmentNumber"):
                 awb = econt_response["shipmentNumber"]
         except Exception as e:
             pass
-        # Clear the face from the session after sending to Econt
-        if 'econt_customer_face' in request.session:
-            del request.session['econt_customer_face']
         order.shipping_service = "econt"
         order.save()
         send_order_notification_email(
@@ -855,14 +853,11 @@ def stripe_payment_verify(request, order_id):
             # Econt integration: send order to Econt after Stripe payment is confirmed
             awb = None
             try:
-                econt_response = send_order_to_econt(order, face=request.session.get('econt_customer_face', ''))
+                econt_response = send_order_to_econt(order)
                 if econt_response and econt_response.get("shipmentNumber"):
                     awb = econt_response["shipmentNumber"]
             except Exception as e:
                 pass
-            # Clear the face from the session after sending to Econt
-            if 'econt_customer_face' in request.session:
-                del request.session['econt_customer_face']
             order.shipping_service = "econt"
             order.save()
             send_order_notification_email(

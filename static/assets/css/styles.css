@@ -1720,28 +1720,6 @@ small {
     margin-right: 0.25rem;
 }
 
-.form-option .form-check-input {
-    border: 0;
-    background: none;
-}
-
-.form-check .form-check-input {
-    float: left;
-    margin-left: -1.5em;
-}
-
-.form-check-inline + .form-check-inline {
-    margin-left: 0rem;
-}
-
-.form-check-input[type="radio"] {
-    border-radius: 50%;
-}
-
-.form-check-input:checked[type="radio"] {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%23fff'/%3e%3c/svg%3e");
-}
-
 .form-option-label {
     position: relative !important;
     min-width: 2.2rem;
@@ -1760,44 +1738,32 @@ small {
     line-height: 1.75rem !important;
     cursor: pointer;
 }
-
-.size-option.small .form-option-label {
-    position: relative !important;
-    min-width: 2.2rem;
-    height: 2.2rem;
-    margin-bottom: 0;
-    padding-top: 0.0725rem;
-    padding-right: 0.475rem;
-    padding-left: 0.475rem !important;
-    transition: color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-    border: 1px solid #e3e9ef;
-    border-radius: 0.25rem;
-    color: #4b566b;
-    font-size: 0.75rem;
-    font-weight: 500;
-    text-align: center;
-    line-height: 1.75rem !important;
-    cursor: pointer;
+@media (min-width: 576px) {
+    .form-option-label {
+        position: relative !important;
+        min-width: 3rem;
+        height: 3rem;
+        margin-bottom: 4px;
+        margin-right: 2px;
+        padding-top: 0.6rem;
+        padding-right: 0.5rem;
+        padding-left: 0.5rem !important;
+        transition: color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        border: 1px solid #e3e9ef;
+        border-radius: 0.25rem;
+        color: #4b566b;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.75rem !important;
+        cursor: pointer;
+    }
 }
 
-.size-option .form-option-label {
-    position: relative !important;
-    min-width: 3rem;
-    height: 3rem;
-    margin-bottom: 4px;
-    margin-right: 2px;
-    padding-top: 0.6rem;
-    padding-right: 0.5rem;
-    padding-left: 0.5rem !important;
-    transition: color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-    border: 1px solid #e3e9ef;
-    border-radius: 0.25rem;
-    color: #4b566b;
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-align: center;
-    line-height: 1.75rem !important;
-    cursor: pointer;
+.form-option-label:hover {
+    background: #f0f4ff;
+    color: #2c3e50;
+    transition: background 0.2s, color 0.2s;
 }
 
 .form-check-input:checked ~ .form-option-label {
@@ -1814,12 +1780,6 @@ small {
 .btn:focus {
     outline: 0;
     box-shadow: none;
-}
-
-.form-option-label.small {
-    min-width: 1.2rem;
-    height: 1.2rem;
-    line-height: 1.1rem !important;
 }
 
 /*---------------- Grocery Product Design -------------------*/

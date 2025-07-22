@@ -19,7 +19,7 @@
     <section class="middle">
         <div class="container">
             <div class="row">
-                <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+                <div class="col-lg-6 col-md-12">
                     <div class="sp-loading">
                         <img src="{{ product.image.url }}" alt="" /><br />Зареждане на изображения...
                     </div>
@@ -30,80 +30,62 @@
                         {% endfor %}
                     </div>
                 </div>
-                <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
-                    <div class="prd_details">
-                        <div class="prt_01 mb-1">
-                            <a href="{{ product.get_absolute_url }}"></a>
+                <div class="col-lg-6 col-md-12">
+                    <div class="mb-3">
+                        <h1 class="ft-bold mb-2">{{ product.category.title }} - {{ product.name }}</h1>
+                        <div class="mb-3">
+                            {% if product.regular_price %}
+                                <span class="ft-medium line-through fs-md me-3">{{ product.regular_price }} лв.</span>
+                                <span class="ft-bold text-danger fs-lg me-3">{{ product.price }} лв.</span>
+                            {% else %}
+                                <span class="ft-bold fs-lg me-3">{{ product.price }} лв.</span>
+                            {% endif %}
+                            <span class="ft-regular text-light bg-success py-1 px-2 fs-sm">
+                                {% if product.stock > 0 %}
+                                    В наличност
+                                {% else %}
+                                    Няма наличност
+                                {% endif %}
+                            </span>
                         </div>
-                        <div class="prt_02 mb-3">
-                            <h1 class="ft-bold mb-1">{{ product.category.title }} - {{ product.name }}</h1>
-                            <div class="text-left">
-                                <div class="elis_rty mt-3">
-                                    {% if product.regular_price %}
-                                        <span class="ft-medium line-through fs-md me-3">{{ product.regular_price }} лв.</span>
-                                        <span class="ft-bold text-danger fs-lg me-3">{{ product.price }} лв.</span>
-                                    {% else %}
-                                        <span class="ft-bold fs-lg me-3">{{ product.price }} лв.</span>
-                                    {% endif %}
-                                    <span class="ft-regular text-light bg-success py-1 px-2 fs-sm">
-                                        {% if product.stock > 0 %}
-                                             В наличност
-                                        {% else %}
-                                            Няма наличност
-                                        {% endif %}
+                        {% if product.colors.exists %}
+                            <div class="d-flex gap-2 align-items-center">
+                                <span class="fw-bold">Цвят:</span>
+                                {% for color in product.colors.all %}
+                                    <span class="badge" style="background: {{ color.group.hex_code }}; color: #fff; font-weight: 500; font-size: 1em; padding: 0.5em 1em; border-radius: 10px;">
+                                        {{ color.name_bg }}
                                     </span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% for variant in product.variants.all %}
+                        {% if variant.variant_type == 'size' or variant.variant_type == 'model' %}
+                            <div class="mb-3">
+                                <p class="d-flex align-items-center mb-0 text-dark ft-medium">
+                                    {% if variant.variant_type == 'size' %}Размер:{% elif variant.variant_type == 'model' %}Модел:{% endif %}
+                                </p>
+                                <div class="pt-2">
+                                    {% for s in variant.items.all %}
+                                        <div class="form-check form-option form-check-inline mb-2">
+                                            <input class="form-check-input" value="{{ s.title }}" type="radio" name="{{ variant.variant_type }}" id="{{ s.content }}" />
+                                            <label class="form-option-label" for="{{ s.content }}">{{ s.content }}</label>
+                                        </div>
+                                    {% endfor %}
                                 </div>
                             </div>
-                        </div>
-                        {% for variant in product.variants.all %}
-                            {% if variant.variant_type == 'size' %}
-                                <div class="prt_04 mb-4">
-                                    <p class="d-flex align-items-center mb-0 text-dark ft-medium">Размер:</p>
-                                    <div class="text-left pb-0 pt-2">
-                                        {% for s in variant.items.all %}
-                                            <div class="form-check size-option form-option form-check-inline mb-2">
-                                                <input class="form-check-input" value="{{ s.title }}" type="radio" name="size" id="{{ s.content }}" />
-                                                <label class="form-option-label" for="{{ s.content }}">{{ s.content }}</label>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-
-                        {% for variant in product.variants.all %}
-                            {% if variant.variant_type == 'model' %}
-                                <div class="prt_04 mb-4">
-                                    <p class="d-flex align-items-center mb-0 text-dark ft-medium">Модел:</p>
-                                    <div class="text-left pb-0 pt-2">
-                                        {% for s in variant.items.all %}
-                                            <div class="form-check size-option form-option form-check-inline mb-2">
-                                                <input class="form-check-input" value="{{ s.title }}" type="radio" name="model" id="{{ s.content }}" />
-                                                <label class="form-option-label" for="{{ s.content }}">{{ s.content }}</label>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-
-                        <div class="prt_05 mb-4">
-                            <div class="d-flex gap-3 mb-7 align-items-center">
-                                <div class="">
-                                    <select class="form-select quantity" name="quantity" id="quantity">
-                                        {% for qty in product_stock_range %}
-                                            <option class="stock-{{ qty }}" value="{{ qty }}">{{ qty }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div>
-                                    <button type="button" class="btn btn-primary rounded add_to_cart fs-md py-2 px-3 px-md-4" data-id="{{ product.id }}">Добави в количка <i class="fas fa-shopping-cart ms-2"></i></button>
-                                </div>
-                                <a class="add_to_wishlist d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" data-product_id="{{ product.id }}">
-                                    <i class="fa-heart {% if request.user.is_authenticated and product.id in user_wishlist_products %}fs-4 fas text-danger{% else %}fs-5 far text-dark{% endif %}"></i>
-                                </a>
-                            </div>
-                        </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="d-flex gap-3 align-items-center">
+                        <select class="form-select w-auto quantity" name="quantity" id="quantity">
+                            {% for qty in product_stock_range %}
+                                <option class="stock-{{ qty }}" value="{{ qty }}">{{ qty }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="btn btn-primary rounded add_to_cart fs-md py-2 px-3 px-md-4" data-id="{{ product.id }}">Добави в количка <i class="fas fa-shopping-cart ms-2"></i></button>
+                        <a class="add_to_wishlist d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" data-product_id="{{ product.id }}">
+                            <i class="fa-heart {% if request.user.is_authenticated and product.id in user_wishlist_products %}fs-4 fas text-danger{% else %}fs-5 far text-dark{% endif %}"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -114,76 +96,74 @@
     <section class="middle">
         <div class="container">
             <div class="row align-items-center justify-content-center">
-                <div class="col-xl-11 col-lg-12 col-md-12 col-sm-12">
-                    <ul class="nav nav-tabs b-0 d-flex align-items-center justify-content-center simple_tab_links mb-4" id="myTab" role="tablist">
+                <ul class="nav nav-tabs b-0 d-flex align-items-center justify-content-center simple_tab_links mb-4" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="description-tab" href="#description" data-bs-toggle="tab" role="tab" aria-controls="description" aria-selected="true">Описание</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="#information" id="information-tab" data-bs-toggle="tab" role="tab" aria-controls="information" aria-selected="false">Характеристики</a>
+                    </li>
+                    {% if has_length_variant %}
                         <li class="nav-item" role="presentation">
-                            <a class="nav-link active" id="description-tab" href="#description" data-bs-toggle="tab" role="tab" aria-controls="description" aria-selected="true">Описание</a>
+                            <a class="nav-link" href="#length" id="length-tab" data-bs-toggle="tab" role="tab" aria-controls="length" aria-selected="false">Дължина</a>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" href="#information" id="information-tab" data-bs-toggle="tab" role="tab" aria-controls="information" aria-selected="false">Характеристики</a>
-                        </li>
-                        {% if has_length_variant %}
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link" href="#length" id="length-tab" data-bs-toggle="tab" role="tab" aria-controls="length" aria-selected="false">Дължина</a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                    <div class="tab-content" id="myTabContent">
-                        <!-- Description Tab -->
-                        <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
-                            <div class="description_info">
-                                <p class="p-0 mb-2">{{ product.description|safe }}</p>
-                            </div>
+                    {% endif %}
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <!-- Description Tab -->
+                    <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
+                        <div class="description_info">
+                            <p class="p-0 mb-2">{{ product.description|safe }}</p>
                         </div>
-                        <!-- Specification Tab -->
-                        <div class="tab-pane fade" id="information" role="tabpanel" aria-labelledby="information-tab">
-                            <div class="additionals">
-                                <table class="table">
-                                    <tbody>
-                                        {% for variant in product.variants.all %}
-                                            {% if variant.variant_type == 'specification' %}
-                                                {% for s in variant.items.all %}
-                                                    <tr>
-                                                        <th class="ft-medium text-dark">{{ s.title }}</th>
-                                                        <td>{{ s.content }}</td>
-                                                    </tr>
-                                                {% endfor %}
-                                            {% endif %}
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                    </div>
+                    <!-- Specification Tab -->
+                    <div class="tab-pane fade" id="information" role="tabpanel" aria-labelledby="information-tab">
+                        <div class="additionals">
+                            <table class="table">
+                                <tbody>
+                                    {% for variant in product.variants.all %}
+                                        {% if variant.variant_type == 'specification' %}
+                                            {% for s in variant.items.all %}
+                                                <tr>
+                                                    <th class="ft-medium text-dark">{{ s.title }}</th>
+                                                    <td>{{ s.content }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-                        <!-- Length Tab -->
-                        <div class="tab-pane fade" id="length" role="tabpanel" aria-labelledby="length-tab">
-                            <div class="additionals">
-                                <table class="table table-sm align-middle text-center">
-                                    <tbody>
-                                        {% for variant in product.variants.all %}
-                                            {% if variant.variant_type == 'length' %}
-                                                {% for s in variant.items.all %}
-                                                    <tr>
-                                                        <td>
-                                                            {% if forloop.first %}
-                                                                <span class="fw-bold">{{ s.title }}</span>
-                                                            {% else %}
-                                                                {{ s.title }}
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>
-                                                            {% if forloop.first %}
-                                                                <span class="fw-bold">{{ s.content }}</span>
-                                                            {% else %}
-                                                                {{ s.content }}
-                                                            {% endif %}
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                            {% endif %}
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                    </div>
+                    <!-- Length Tab -->
+                    <div class="tab-pane fade" id="length" role="tabpanel" aria-labelledby="length-tab">
+                        <div class="additionals">
+                            <table class="table align-middle text-center">
+                                <tbody>
+                                    {% for variant in product.variants.all %}
+                                        {% if variant.variant_type == 'length' %}
+                                            {% for s in variant.items.all %}
+                                                <tr>
+                                                    <td>
+                                                        {% if forloop.first %}
+                                                            <span class="fw-bold">{{ s.title }}</span>
+                                                        {% else %}
+                                                            {{ s.title }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if forloop.first %}
+                                                            <span class="fw-bold">{{ s.content }}</span>
+                                                        {% else %}
+                                                            {{ s.content }}
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -196,10 +176,8 @@
         <section class="middle pt-0">
             <div class="container">
                 <div class="row justify-content-center">
-                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                        <div class="sec_title position-relative text-center">
-                            <h3 class="ft-bold pt-3">Подобни продукти</h3>
-                        </div>
+                    <div class="sec_title position-relative text-center">
+                        <h3 class="ft-bold pt-3">Подобни продукти</h3>
                     </div>
                 </div>
                 <!-- Product List -->

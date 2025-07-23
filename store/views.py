@@ -276,15 +276,6 @@ def category(request, category_path):
     subcategories_with_all = [all_sub] + child_categories
 
     products_list = Product.objects.filter(status="published", category=category)
-
-    query = request.GET.get("q")
-    if query:
-        products_list = products_list.filter(
-            Q(name__icontains=query) |
-            Q(description__icontains=query) |
-            Q(category__title__icontains=query)
-        )
-
     products = paginate_queryset(request, products_list, 12)
 
     # Build breadcrumbs (all ancestors)

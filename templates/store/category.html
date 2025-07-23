@@ -22,8 +22,11 @@
     <section class="middle">
         <div class="container">
             <!-- Category Title -->
-            <h1 class="fw-bold mb-5">{{ category.title }}</h1>
+            <h1 class="fw-bold mb-4">{{ category.title }}</h1>
             <!-- Subcategories Section -->
+            {% if category.description %}
+                <div class="mb-3 fs-sm">{{ category.description|safe }}</div>
+            {% endif %}
             {% if subcategories|length > 1 and not all_sub_mode %}
                 <div class="mb-5">
                     <h3 class="fw-bold">Колекции</h3>
@@ -59,12 +62,6 @@
                     </div>
                 </div>
             {% endif %}
-
-            <!-- Search Bar -->
-            <form class="mb-5 d-flex justify-content-between align-items-center gap-2">
-                <input type="text" class="form-control rounded" placeholder="Търси продукти..." name="q" id="" />
-                <button type="submit" class="btn btn-primary rounded"><i class="fas fa-search"></i></button>
-            </form>
 
             {% if category.marketing_image or category.hover_image %}
                 <div class="category-page row mb-5 gx-4">

@@ -401,6 +401,7 @@ class ColorGroup(models.Model):
 class Color(models.Model):
     name_bg = models.CharField(max_length=100)
     name_en = models.CharField(max_length=100)
+    hex_code = models.CharField(max_length=7)
     group = models.ForeignKey(ColorGroup, on_delete=models.CASCADE, related_name="colors")
 
     def __str__(self):

@@ -11,6 +11,15 @@ from store.admin_forms import DuplicateProductForm
 from store.utils import get_500_error_stats
 
 
+class ColorSwatchMixin:
+    def color_swatch(self, obj):
+        return format_html(
+            '<span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:{};border:1px solid #bbb;box-shadow:0 1px 4px rgba(0,0,0,0.08);"></span>',
+            obj.hex_code or "#fff"
+        )
+    color_swatch.short_description = "Цвят"
+
+
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ["title", "sku", "image", "marketing_image", "hover_image", "is_popular", "parent"]
     list_per_page = 20
@@ -243,14 +252,14 @@ class Stats(models.Model):
         managed = False  # No DB table
 
 
-class ColorGroupAdmin(admin.ModelAdmin):
-    list_display = ["name_en", "name_bg", "hex_code"]
+class ColorGroupAdmin(ColorSwatchMixin, admin.ModelAdmin):
+    list_display = ["name_en", "name_bg", "hex_code", "color_swatch"]
     list_editable = ["name_bg", "hex_code"]
 
 
-class ColorAdmin(admin.ModelAdmin):
-    list_display = ["group", "name_en", "name_bg"]
-    list_editable = ["name_en", "name_bg"]
+class ColorAdmin(ColorSwatchMixin, admin.ModelAdmin):
+    list_display = ["group", "name_en", "name_bg", "hex_code", "color_swatch"]
+    list_editable = ["name_en", "name_bg", "hex_code"]
 
 
 admin.site.register(store_models.Category, CategoryAdmin)

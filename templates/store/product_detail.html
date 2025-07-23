@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load color_filters %}
 
 {% block title %}
     {{ product.category.get_full_name_path }} - {{ product.name }}
@@ -50,7 +51,7 @@
                             <div class="d-flex gap-2 align-items-center">
                                 <span class="fw-bold">Цвят:</span>
                                 {% for color in product.colors.all %}
-                                    <span class="badge color-badge" style="background: {{ color.group.hex_code }};">
+                                    <span class="badge color-badge" style="background: {{ color.hex_code }}; color: {{ color.hex_code|contrast_text }};">
                                         {{ color.name_bg }}
                                     </span>
                                 {% endfor %}

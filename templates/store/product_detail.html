@@ -19,18 +19,18 @@
     <section class="middle">
         <div class="container">
             <div class="row">
-                <div class="col-lg-6 col-md-12">
+                <div class="col-lg-6">
                     <div class="sp-loading">
-                        <img src="{{ product.image.url }}" alt="" /><br />Зареждане на изображения...
+                        <img src="{{ product.image.url }}" alt="{{ product.category.title }} - {{ product.name }}" /><br />Зареждане на изображения...
                     </div>
                     <div class="sp-wrap">
-                        <a href="{{ product.image.url }}"><img style="height: 100%; width: 100%; object-fit: cover; border-radius: 20px;" src="{{ product.image.url }}" alt="" /></a>
+                        <a href="{{ product.image.url }}"><img class="product-main-image" src="{{ product.image.url }}" alt="{{ product.category.title }} - {{ product.name }}" /></a>
                         {% for image in product.gallery.all %}
-                            <a href="{{ image.image.url }}"><img src="{{ image.image.url }}" alt="" /></a>
+                            <a href="{{ image.image.url }}"><img src="{{ image.image.url }}" alt="{{ product.category.title }} - {{ product.name }} - Реална - {{ forloop.counter }}" /></a>
                         {% endfor %}
                     </div>
                 </div>
-                <div class="col-lg-6 col-md-12">
+                <div class="col-lg-6">
                     <div class="mb-3">
                         <h1 class="ft-bold mb-2">{{ product.category.title }} - {{ product.name }}</h1>
                         <div class="mb-3">
@@ -40,19 +40,17 @@
                             {% else %}
                                 <span class="ft-bold fs-lg me-3">{{ product.price }} лв.</span>
                             {% endif %}
-                            <span class="ft-regular text-light bg-success py-1 px-2 fs-sm">
-                                {% if product.stock > 0 %}
-                                    В наличност
-                                {% else %}
-                                    Няма наличност
-                                {% endif %}
-                            </span>
+                            {% if product.stock > 0 %}
+                                <span class="text-light bg-success py-1 px-2 fs-sm ft-medium">В наличност</span>
+                            {% else %}
+                                <span class="text-light bg-danger py-1 px-2 fs-sm ft-medium">Няма наличност</span>
+                            {% endif %}
                         </div>
                         {% if product.colors.exists %}
                             <div class="d-flex gap-2 align-items-center">
                                 <span class="fw-bold">Цвят:</span>
                                 {% for color in product.colors.all %}
-                                    <span class="badge" style="background: {{ color.group.hex_code }}; color: #fff; font-weight: 500; font-size: 1em; padding: 0.5em 1em; border-radius: 10px;">
+                                    <span class="badge color-badge" style="background: {{ color.group.hex_code }};">
                                         {{ color.name_bg }}
                                     </span>
                                 {% endfor %}

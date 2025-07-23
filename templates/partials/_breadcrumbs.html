@@ -1,21 +1,17 @@
-<div class="gray py-3">
+<div class="gray py-2 py-sm-3">
     <div class="container">
-        <div class="row">
-            <div class="col-xl-12 col-lg-12 col-md-12">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        {% for crumb in breadcrumbs %}
-                            {% if not forloop.last and crumb.url %}
-                                <li class="breadcrumb-item">
-                                    <a href="{{ crumb.url }}">{{ crumb.label }}</a>
-                                </li>
-                            {% else %}
-                                <li class="breadcrumb-item active" aria-current="page">{{ crumb.label }}</li>
-                            {% endif %}
-                        {% endfor %}
-                    </ol>
-                </nav>
-            </div>
-        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                {% for crumb in breadcrumbs %}
+                    {% if not forloop.last and crumb.url %}
+                        <li class="breadcrumb-item">
+                            <a href="{{ crumb.url }}">{{ crumb.label }}</a>
+                        </li>
+                    {% else %}
+                        <li class="breadcrumb-item active" aria-current="page">{{ crumb.label }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
     </div>
 </div>

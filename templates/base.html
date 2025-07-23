@@ -131,23 +131,26 @@
                                     </ul>
                                 </li>
                                 <li>
-                                    <a href="{% url 'store:order_tracker_page' %}">Проследи поръчка <i class="fas fa-shipping-fast ms-1"></i></a>
+                                    <a href="{% url 'store:order_tracker_page' %}">
+                                        <span class="d-none d-xl-inline">Проследи поръчка <i class="fas fa-shipping-fast ms-1"></i></span>
+                                        <span class="d-inline d-xl-none">Проследи <i class="fas fa-shipping-fast ms-1"></i></span>
+                                    </a>
                                 </li>
                             </ul>
                             <ul class="nav-menu nav-menu-social align-to-right">
-                                <li>
-                                    <a href="{% url 'store:shop' %}"><i class="fas fa-search text-white"></i></a>
+                                <li class="d-none d-xl-inline-block">
+                                    <a href="{% url 'store:shop' %}"><i class="fas fa-search"></i></a>
                                 </li>
                                 {% if request.user.is_authenticated %}
                                     <li>
-                                        <a href="{% url 'customer:dashboard' %}"><i class="fas fa-user text-white"></i></a>
+                                        <a href="{% url 'customer:dashboard' %}"><i class="fas fa-user"></i></a>
                                     </li>
                                     <li>
-                                        <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart text-white"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count }}</span></a>
+                                        <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count }}</span></a>
                                     </li>
                                 {% endif %}
                                 <li>
-                                    <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-cart text-white"></i><span class="dn-counter total_cart_items">{{ total_cart_items }}</span></a>
+                                    <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-cart"></i><span class="dn-counter total_cart_items">{{ total_cart_items }}</span></a>
                                 </li>
                                 {% if request.user.is_authenticated %}
                                     <li>

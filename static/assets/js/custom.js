@@ -355,15 +355,6 @@ $(function () {
                                       }
                                   })
                             : n(t)
-                                  .find(".nav-menu")
-                                  .find("li")
-                                  .on(l, function () {
-                                      u.showSubmenu(this, u.settings.effect),
-                                          C();
-                                  })
-                                  .on(c, function () {
-                                      u.hideSubmenu(this, u.settings.effect);
-                                  }),
                         u.settings.hideSubWhenGoOut && b();
                 },
                 D = function () {
@@ -466,6 +457,45 @@ $(function () {
         $(document).ready(function () {
             $("#navigation").navigation();
         });
+
+// Recursive hover for all levels of nav-submenu (desktop only)
+if ($(window).width() > 992) {
+    var closeTimeout;
+    var $navMenu = $("#navigation .nav-menu");
+
+    // First level hover
+    $navMenu.children("li").on("mouseenter", function () {
+        clearTimeout(closeTimeout);
+        $navMenu.children("li").children(".nav-submenu").hide();
+        $(this).children(".nav-submenu").show();
+    });
+
+    // Second level hover
+    $navMenu.find(".nav-submenu > li").on("mouseenter", function () {
+        $(this).siblings("li").children(".nav-submenu").hide();
+        $(this).children(".nav-submenu").show();
+    });
+
+    // Third level hover (if you have sub-subcategories)
+    $navMenu.find(".nav-submenu .nav-submenu > li").on("mouseenter", function () {
+        $(this).siblings("li").children(".nav-submenu").hide();
+        $(this).children(".nav-submenu").show();
+    });
+
+    // Hide all submenus when leaving the nav menu
+    $navMenu.on("mouseleave", function () {
+        closeTimeout = setTimeout(function () {
+            $navMenu.find(".nav-submenu").hide();
+        }, 400);
+    });
+
+    $navMenu.on("mouseenter", function () {
+        if (closeTimeout) {
+            clearTimeout(closeTimeout);
+            closeTimeout = null;
+        }
+    });
+}
 
     // Product Preview
     $(".sp-wrap").smoothproducts();

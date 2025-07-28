@@ -16,7 +16,6 @@ $(function () {
                     submenuIndicator: !0,
                     hideSubWhenGoOut: !0,
                     visibleSubmenusOnMobile: !1,
-                    fixed: !1,
                     overlay: !0,
                     overlayColor: "rgba(0, 0, 0, 0.5)",
                     hidden: !1,
@@ -26,8 +25,6 @@ $(function () {
                     onHideOffCanvas: function () {},
                 },
                 u = this,
-                r = Number.MAX_VALUE,
-                d = 1,
                 f = "click.nav touchstart.nav",
                 l = "mouseenter.nav",
                 c = "mouseleave.nav";
@@ -38,13 +35,6 @@ $(function () {
                 .prepend(
                     "<span class='nav-menus-wrapper-close-button'>✕</span>"
                 ),
-                n(t).find(".nav-search").length > 0 &&
-                    n(t)
-                        .find(".nav-search")
-                        .find("form")
-                        .prepend(
-                            "<span class='nav-search-close-button'>✕</span>"
-                        ),
                 (u.init = function () {
                     (u.settings = n.extend({}, o, s)),
                         "right" == u.settings.offCanvasSide &&
@@ -52,10 +42,8 @@ $(function () {
                                 .find(".nav-menus-wrapper")
                                 .addClass("nav-menus-wrapper-right"),
                         u.settings.hidden &&
-                            (n(t).addClass("navigation-hidden"),
-                            (u.settings.mobileBreakpoint = 99999)),
+                            (u.settings.mobileBreakpoint = 99999),
                         v(),
-                        u.settings.fixed && n(t).addClass("navigation-fixed"),
                         n(t)
                             .find(".nav-toggle")
                             .on("click touchstart", function (n) {
@@ -70,23 +58,10 @@ $(function () {
                                 u.hideOffcanvas(),
                                     s !== a && u.callback("onHideOffCanvas");
                             }),
-                        n(t)
-                            .find(".nav-search-button")
-                            .on("click touchstart", function (n) {
-                                n.stopPropagation(),
-                                    n.preventDefault(),
-                                    u.toggleSearch();
-                            }),
-                        n(t)
-                            .find(".nav-search-close-button")
-                            .on("click touchstart", function () {
-                                u.toggleSearch();
-                            }),
                         n(t).find(".megamenu-tabs").length > 0 && y(),
                         n(e).resize(function () {
-                            m(), C();
+                            C();
                         }),
-                        m(),
                         s !== a && u.callback("onInit");
                 });
             var v = function () {
@@ -96,8 +71,7 @@ $(function () {
                         n(this).children(".nav-dropdown,.megamenu-panel")
                             .length > 0 &&
                             (n(this)
-                                .children(".nav-dropdown,.megamenu-panel")
-                                .addClass("nav-submenu"),
+                                .children(".nav-dropdown,.megamenu-panel"),
                             u.settings.submenuIndicator &&
                                 n(this)
                                     .children("a")
@@ -107,37 +81,31 @@ $(function () {
                     });
             };
             (u.showSubmenu = function (e, i) {
-                g() > u.settings.mobileBreakpoint &&
-                    n(t).find(".nav-search").find("form").slideUp(),
+                g() > u.settings.mobileBreakpoint
                     "fade" == i
                         ? n(e)
-                              .children(".nav-submenu")
+                              .children(".nav-dropdown")
                               .stop(!0, !0)
                               .delay(u.settings.showDelayDuration)
                               .fadeIn(u.settings.showDuration)
                         : n(e)
-                              .children(".nav-submenu")
+                              .children(".nav-dropdown")
                               .stop(!0, !0)
                               .delay(u.settings.showDelayDuration)
-                              .slideDown(u.settings.showDuration),
-                    n(e).addClass("nav-submenu-open");
+                              .slideDown(u.settings.showDuration);
             }),
                 (u.hideSubmenu = function (e, i) {
                     "fade" == i
                         ? n(e)
-                              .find(".nav-submenu")
+                              .find(".nav-dropdown")
                               .stop(!0, !0)
                               .delay(u.settings.hideDelayDuration)
                               .fadeOut(u.settings.hideDuration)
                         : n(e)
-                              .find(".nav-submenu")
+                              .find(".nav-dropdown")
                               .stop(!0, !0)
                               .delay(u.settings.hideDelayDuration)
-                              .slideUp(u.settings.hideDuration),
-                        n(e)
-                            .removeClass("nav-submenu-open")
-                            .find(".nav-submenu-open")
-                            .removeClass("nav-submenu-open");
+                              .slideUp(u.settings.hideDuration);
                 });
             var h = function () {
                     n("body").addClass("no-scroll"),
@@ -201,42 +169,11 @@ $(function () {
                               s !== a && u.callback("onHideOffCanvas"))
                             : (u.showOffcanvas(),
                               s !== a && u.callback("onShowOffCanvas")));
-                }),
-                (u.toggleSearch = function () {
-                    "none" ==
-                    n(t).find(".nav-search").find("form").css("display")
-                        ? (n(t).find(".nav-search").find("form").slideDown(),
-                          n(t).find(".nav-submenu").fadeOut(200))
-                        : n(t).find(".nav-search").find("form").slideUp();
                 });
-            var m = function () {
-                    u.settings.responsive
-                        ? (g() <= u.settings.mobileBreakpoint &&
-                              r > u.settings.mobileBreakpoint &&
-                              (n(t)
-                                  .addClass("navigation-portrait")
-                                  .removeClass("navigation-landscape"),
-                              D()),
-                          g() > u.settings.mobileBreakpoint &&
-                              d <= u.settings.mobileBreakpoint &&
-                              (n(t)
-                                  .addClass("navigation-landscape")
-                                  .removeClass("navigation-portrait"),
-                              k(),
-                              p(),
-                              u.hideOffcanvas()),
-                          (r = g()),
-                          (d = g()))
-                        : k();
-                },
-                b = function () {
+            var b = function () {
                     n("body").on("click.body touchstart.body", function (e) {
                         0 === n(e.target).closest(".navigation").length &&
-                            (n(t).find(".nav-submenu").fadeOut(),
-                            n(t)
-                                .find(".nav-submenu-open")
-                                .removeClass("nav-submenu-open"),
-                            n(t).find(".nav-search").find("form").slideUp());
+                            (n(t).find(".nav-dropdown").fadeOut());
                     });
                 },
                 g = function () {
@@ -255,7 +192,7 @@ $(function () {
                         n(t)
                             .find(".nav-menu")
                             .children("li")
-                            .children(".nav-submenu")
+                            .children(".nav-dropdown")
                             .each(function () {
                                 n(this).parent().position().left +
                                     n(this).outerWidth() >
@@ -265,34 +202,9 @@ $(function () {
                             });
                     }
                 },
-                y = function () {
-                    function e(e) {
-                        var i = n(e)
-                                .children(".megamenu-tabs-nav")
-                                .children("li"),
-                            a = n(e).children(".megamenu-tabs-pane");
-                        n(i).on("click.tabs touchstart.tabs", function (e) {
-                            e.stopPropagation(),
-                                e.preventDefault(),
-                                n(i).removeClass("active"),
-                                n(this).addClass("active"),
-                                n(a).hide(0).removeClass("active"),
-                                n(a[n(this).index()])
-                                    .show(0)
-                                    .addClass("active");
-                        });
-                    }
-                    if (n(t).find(".megamenu-tabs").length > 0)
-                        for (
-                            var i = n(t).find(".megamenu-tabs"), a = 0;
-                            a < i.length;
-                            a++
-                        )
-                            e(i[a]);
-                },
                 k = function () {
                     w(),
-                        n(t).find(".nav-submenu").hide(0),
+                        n(t).find(".nav-dropdown").hide(0),
                         navigator.userAgent.match(/Mobi/i) ||
                         navigator.maxTouchPoints > 0 ||
                         "click" == u.settings.submenuTrigger
@@ -311,9 +223,9 @@ $(function () {
                                           n(this)
                                               .closest(".nav-menu")
                                               .siblings(".nav-menu")
-                                              .find(".nav-submenu")
+                                              .find(".nav-dropdown")
                                               .fadeOut(u.settings.hideDuration),
-                                          n(this).siblings(".nav-submenu")
+                                          n(this).siblings(".nav-dropdown")
                                               .length > 0)
                                       ) {
                                           if (
@@ -321,7 +233,7 @@ $(function () {
                                               i.preventDefault(),
                                               "none" ==
                                                   n(this)
-                                                      .siblings(".nav-submenu")
+                                                      .siblings(".nav-dropdown")
                                                       .css("display"))
                                           )
                                               return (
@@ -359,10 +271,10 @@ $(function () {
                 },
                 D = function () {
                     w(),
-                        n(t).find(".nav-submenu").hide(0),
+                        n(t).find(".nav-dropdown").hide(0),
                         u.settings.visibleSubmenusOnMobile
-                            ? n(t).find(".nav-submenu").show(0)
-                            : (n(t).find(".nav-submenu").hide(0),
+                            ? n(t).find(".nav-dropdown").show(0)
+                            : (n(t).find(".nav-dropdown").hide(0),
                               n(t)
                                   .find(".submenu-indicator")
                                   .removeClass("submenu-indicator-up"),
@@ -390,7 +302,7 @@ $(function () {
                                                 "none" ==
                                                 n(this)
                                                     .parent("a")
-                                                    .siblings(".nav-submenu")
+                                                    .siblings(".nav-dropdown")
                                                     .css("display")
                                                     ? (n(this).addClass(
                                                           "submenu-indicator-up"
@@ -444,6 +356,18 @@ $(function () {
                 s[n] !== a && s[n].call(t);
             }),
                 u.init();
+                if (window.innerWidth <= u.settings.mobileBreakpoint) {
+                    D();
+                } else {
+                    k();
+                }
+                $(window).on("resize", function() {
+                    if (window.innerWidth <= u.settings.mobileBreakpoint) {
+                        D();
+                    } else {
+                        k();
+                    }
+                });
         }),
             (n.fn.navigation = function (e) {
                 return this.each(function () {
@@ -458,7 +382,7 @@ $(function () {
             $("#navigation").navigation();
         });
 
-// Recursive hover for all levels of nav-submenu (desktop only)
+// Recursive hover for all levels of nav-dropdown (desktop only)
 if ($(window).width() > 992) {
     var closeTimeout;
     var $navMenu = $("#navigation .nav-menu");
@@ -466,26 +390,26 @@ if ($(window).width() > 992) {
     // First level hover
     $navMenu.children("li").on("mouseenter", function () {
         clearTimeout(closeTimeout);
-        $navMenu.children("li").children(".nav-submenu").hide();
-        $(this).children(".nav-submenu").show();
+        $navMenu.children("li").children(".nav-dropdown").hide();
+        $(this).children(".nav-dropdown").show();
     });
 
     // Second level hover
-    $navMenu.find(".nav-submenu > li").on("mouseenter", function () {
-        $(this).siblings("li").children(".nav-submenu").hide();
-        $(this).children(".nav-submenu").show();
+    $navMenu.find(".nav-dropdown > li").on("mouseenter", function () {
+        $(this).siblings("li").children(".nav-dropdown").hide();
+        $(this).children(".nav-dropdown").show();
     });
 
     // Third level hover (if you have sub-subcategories)
-    $navMenu.find(".nav-submenu .nav-submenu > li").on("mouseenter", function () {
-        $(this).siblings("li").children(".nav-submenu").hide();
-        $(this).children(".nav-submenu").show();
+    $navMenu.find(".nav-dropdown .nav-dropdown > li").on("mouseenter", function () {
+        $(this).siblings("li").children(".nav-dropdown").hide();
+        $(this).children(".nav-dropdown").show();
     });
 
     // Hide all submenus when leaving the nav menu
     $navMenu.on("mouseleave", function () {
         closeTimeout = setTimeout(function () {
-            $navMenu.find(".nav-submenu").hide();
+            $navMenu.find(".nav-dropdown").hide();
         }, 400);
     });
 

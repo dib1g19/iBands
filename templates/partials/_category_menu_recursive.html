@@ -2,7 +2,7 @@
     <li>
         <a href="{{ category.get_absolute_url }}">{{ category.title }}</a>
         {% if category.subcategories.all %}
-            <ul class="nav-dropdown nav-submenu">
+            <ul class="nav-dropdown">
                 <li>
                     <a href="{{ category.get_absolute_url }}">Всички {{ category.title }}</a>
                 </li>

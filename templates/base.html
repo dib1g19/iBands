@@ -68,37 +68,46 @@
     <body>
         <div id="main-wrapper">
             <div class="header">
-                <div class="container">
-                    <nav id="navigation" class="navigation">
+                <div class="container-fluid">
+                    <nav id="main-nav">
                         <div class="nav-header">
                             <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-nav-menu">
                                 <span></span>
                                 <span></span>
                                 <span></span>
                             </button>
-                            <a class="nav-brand" href="{% url 'store:index' %}">
+                            <a class="nav-logo" href="{% url 'store:index' %}">
                                 <picture>
-                                    <source srcset="{% static 'assets/img/logo-white.avif' %}" media="(max-width: 992px)">
+                                    <source srcset="{% static 'assets/img/logo-white.avif' %}" media="(max-width: 991.98px)">
                                     <img src="{% static 'assets/img/logo-black.avif' %}" alt="iBands logo" />
                                 </picture>
                             </a>
                         </div>
-                        <div class="nav-menus-wrapper">
+                        <div class="nav-menu-wrapper">
                             <ul class="nav-menu">
                                 <li>
-                                    <a href="/"><i class="fas fa-home"></i></a>
+                                    <a href="/">
+                                        <span class="d-inline d-lg-none me-1">Начална страница</span>
+                                        <i class="fas fa-home"></i>
+                                    </a>
                                 </li>
                                 <li>
                                     <a href="{% url 'store:shop' %}">Всички продукти</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);">Категории</a>
+                                    <a href="javascript:void(0);">
+                                        Категории
+                                        <span class="submenu-indicator"><span class="submenu-indicator-chevron"></span></span>
+                                    </a>
                                     <ul class="nav-dropdown">
                                         {% include 'partials/_category_menu_recursive.html' with categories=root_categories %}
                                     </ul>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0);">Помощ</a>
+                                    <a href="javascript:void(0);">
+                                        Помощ
+                                        <span class="submenu-indicator"><span class="submenu-indicator-chevron"></span></span>
+                                    </a>
                                     <ul class="nav-dropdown">
                                         <li>
                                             <a href="{% url 'store:about' %}"><i class="fas fa-info-circle me-1"></i> За нас</a>
@@ -132,7 +141,7 @@
                                 </li>
                             </ul>
                         </div>
-                        <ul class="nav-menu nav-menu-social">
+                        <ul class="nav-menu-social">
                             <li class="d-inline d-lg-none d-xl-inline">
                                 <a href="{% url 'store:shop' %}"><i class="fas fa-search"></i></a>
                             </li>
@@ -148,15 +157,15 @@
                                 <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-cart"></i><span class="dn-counter total_cart_items">{{ total_cart_items }}</span></a>
                             </li>
                             {% if request.user.is_authenticated %}
-                                <li class="d-none d-lg-inline">
-                                    <a href="{% url 'userauths:sign-out' %}" class="btn btn-primary py-2 px-4 rounded"><i class="fas fa-sign-out-alt me-1"></i> Излез</a>
+                                <li class="d-none d-sm-inline">
+                                    <a href="{% url 'userauths:sign-out' %}" class="btn btn-primary rounded"><i class="fas fa-sign-out-alt me-1"></i> Излез</a>
                                 </li>
                             {% else %}
-                                <li class="d-none d-lg-inline">
-                                    <a href="{% url 'userauths:sign-in' %}" class="btn btn-primary py-2 px-4 rounded">Влез <i class="fas fa-sign-in-alt ms-1"></i></a>
+                                <li>
+                                    <a href="{% url 'userauths:sign-in' %}" class="btn btn-primary rounded">Влез <i class="fas fa-sign-in-alt ms-1"></i></a>
                                 </li>
-                                <li class="d-none d-lg-inline">
-                                    <a href="{% url 'userauths:sign-up' %}" class="btn btn-primary py-2 px-4 rounded">Регистрирай се <i class="fas fa-user-plus ms-1"></i></a>
+                                <li class="d-none d-md-inline">
+                                    <a href="{% url 'userauths:sign-up' %}" class="btn btn-primary rounded">Регистрирай се <i class="fas fa-user-plus ms-1"></i></a>
                                 </li>
                             {% endif %}
                         </ul>

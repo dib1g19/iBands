@@ -71,13 +71,17 @@
                 <div class="container">
                     <nav id="navigation" class="navigation">
                         <div class="nav-header">
+                            <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-nav-menu">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </button>
                             <a class="nav-brand" href="{% url 'store:index' %}">
                                 <picture>
                                     <source srcset="{% static 'assets/img/logo-white.avif' %}" media="(max-width: 992px)">
                                     <img src="{% static 'assets/img/logo-black.avif' %}" alt="iBands logo" />
                                 </picture>
                             </a>
-                            <div class="nav-toggle"></div>
                         </div>
                         <div class="nav-menus-wrapper">
                             <ul class="nav-menu">

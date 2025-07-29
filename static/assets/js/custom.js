@@ -30,11 +30,6 @@ $(function () {
                 c = "mouseleave.nav";
             u.settings = {};
             var t = (n(t), t);
-            n(t)
-                .find(".nav-menus-wrapper")
-                .prepend(
-                    "<span class='nav-menus-wrapper-close-button'>✕</span>"
-                ),
                 (u.init = function () {
                     (u.settings = n.extend({}, o, s)),
                         "right" == u.settings.offCanvasSide &&
@@ -44,20 +39,6 @@ $(function () {
                         u.settings.hidden &&
                             (u.settings.mobileBreakpoint = 99999),
                         v(),
-                        n(t)
-                            .find(".nav-toggle")
-                            .on("click touchstart", function (n) {
-                                n.stopPropagation(),
-                                    n.preventDefault(),
-                                    u.showOffcanvas(),
-                                    s !== a && u.callback("onShowOffCanvas");
-                            }),
-                        n(t)
-                            .find(".nav-menus-wrapper-close-button")
-                            .on("click touchstart", function () {
-                                u.hideOffcanvas(),
-                                    s !== a && u.callback("onHideOffCanvas");
-                            }),
                         n(t).find(".megamenu-tabs").length > 0 && y(),
                         n(e).resize(function () {
                             C();
@@ -423,4 +404,38 @@ if ($(window).width() > 992) {
 
     // Product Preview
     $(".sp-wrap").smoothproducts();
+
+    // Hamburger menu toggle logic (open/close mobile nav)
+    $(document).on("click", ".nav-toggle", function (e) {
+        var $wrapper = $(".nav-menus-wrapper");
+        var $toggle = $(this);
+        var isOpen = $wrapper.hasClass("nav-menus-wrapper-open");
+
+        if (!isOpen) {
+            // Opening: animate both at the same time
+            $wrapper.addClass("nav-menus-wrapper-open");
+            $("body").addClass("no-scroll");
+            $toggle.attr("aria-expanded", "true").addClass("active");
+        } else {
+            // Closing: remove .active immediately so X animates back *with* menu
+            $wrapper.removeClass("nav-menus-wrapper-open");
+            $("body").removeClass("no-scroll");
+            $toggle.attr("aria-expanded", "false").removeClass("active");
+        }
+    });
+
+    // Click outside nav-menus-wrapper closes the menu (mobile/off-canvas only)
+    $(document).on("mousedown touchstart", function (e) {
+        var $wrapper = $(".nav-menus-wrapper");
+        var $toggle = $(".nav-toggle");
+        if (
+            $wrapper.hasClass("nav-menus-wrapper-open") &&
+            !$(e.target).closest(".nav-menus-wrapper, .nav-toggle").length
+        ) {
+            $wrapper.removeClass("nav-menus-wrapper-open");
+            $("body").removeClass("no-scroll");
+            $toggle.attr("aria-expanded", "false").removeClass("active");
+        }
+    });
+
 });

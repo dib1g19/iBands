@@ -31,7 +31,6 @@ a {
     color: #111111;
     text-decoration: none;
     background-color: transparent;
-    -webkit-text-decoration-skip: objects;
 }
 
 a:hover,
@@ -375,16 +374,16 @@ html body .text-primary {
 
 /* Disable hover on desktop for category images only on category-page */
 @media (min-width: 768px) {
-  .category-page .category-img-wrapper:hover .main-img,
-  .category-page .category-img-wrapper:focus-within .main-img,
-  .category-page .category-img-wrapper a:hover .main-img {
-      opacity: 1 !important;
-  }
-  .category-page .category-img-wrapper:hover .hover-img,
-  .category-page .category-img-wrapper:focus-within .hover-img,
-  .category-page .category-img-wrapper a:hover .hover-img {
-      opacity: 0 !important;
-  }
+    .category-page .category-img-wrapper:hover .main-img,
+    .category-page .category-img-wrapper:focus-within .main-img,
+    .category-page .category-img-wrapper a:hover .main-img {
+        opacity: 1 !important;
+    }
+    .category-page .category-img-wrapper:hover .hover-img,
+    .category-page .category-img-wrapper:focus-within .hover-img,
+    .category-page .category-img-wrapper a:hover .hover-img {
+        opacity: 0 !important;
+    }
 }
 
 .category-img-wrapper .hover-img {
@@ -464,7 +463,10 @@ html body .text-primary {
 .product-img-hover-wrapper .main-img,
 .product-img-hover-wrapper .hover-img {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     transition: opacity 0.25s;
 }
@@ -497,7 +499,7 @@ html body .text-primary {
     font-weight: 700;
     font-size: 0.95rem;
     z-index: 99 !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.13);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.13);
     pointer-events: none;
     user-select: none;
 }
@@ -507,7 +509,7 @@ html body .text-primary {
     border-radius: 10px;
     font-weight: 500;
     font-size: 1em;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 /*-------------- GLobal Settings: Background Colors ----------------*/
@@ -616,7 +618,6 @@ table.table tr th {
     color: #6e81a0;
 }
 
-
 .btn-light:focus {
     background: #0d6efd;
     border: 1px solid #0d6efd;
@@ -654,10 +655,10 @@ table.table tr th {
 }
 
 @media (max-width: 576px) {
-  .pagination .page-link {
-    padding: 0.8rem 0.8rem;
-    font-size: 1rem;
-  }
+    .pagination .page-link {
+        padding: 0.8rem 0.8rem;
+        font-size: 1rem;
+    }
 }
 
 .pagination > .active > a,
@@ -740,331 +741,305 @@ table.table tr th {
     top: 3px;
     left: 3px;
     border-radius: 100%;
-    -webkit-transition: all 0.2s ease;
     transition: all 0.2s ease;
 }
 
 [type="radio"]:not(:checked) + label:after {
     opacity: 0;
-    -webkit-transform: scale(0);
     transform: scale(0);
 }
 
 [type="radio"]:checked + label:after {
     opacity: 1;
-    -webkit-transform: scale(1);
     transform: scale(1);
 }
 
 /**************************************
 	Header Navigation Styles
 ***************************************/
-
-.nav-brand,
-.nav-brand:focus,
-.nav-brand:hover,
-.nav-menu > li > a {
-    color: #000;
-}
-
-.nav-dropdown,
-.nav-menu,
-ul {
-    list-style: none;
-}
-
-.navigation,
-.navigation * {
-    -webkit-tap-highlight-color: transparent;
-}
-
-.navigation,
-.navigation * {
-    box-sizing: border-box;
-}
-
-.navigation {
-    width: 100%;
-    display: table;
-    position: relative;
-    font-size: 14px;
-}
-
-.nav-toggle,
-.navigation-hidden .nav-header {
-    display: none;
-}
-
-.navigation-portrait {
+#main-nav {
     height: 60px;
     display: flex;
-    align-items: center;
-    width: 100%;
+    justify-content: space-between;
 }
 
-.navigation-fixed {
+.header {
+    box-shadow: 0 5px 30px rgba(0, 22, 84, 0.1);
+    background: #fff;
     position: fixed;
+    z-index: 999;
+    width: 100%;
     top: 0;
-    left: 0;
-}
-
-.navigation-hidden {
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.align-to-right {
-    float: right;
-    letter-spacing: 0.5px;
 }
 
 .nav-header {
     display: flex;
     align-items: center;
-    float: left;
 }
 
-.nav-brand {
+.nav-logo {
     padding: 13px 15px;
-    font-size: 24px;
-    margin-right: 1rem;
-    padding-left: 0;
-    text-decoration: none !important;
+    margin-left: 24px;
 }
 
-
-.logo h1 a,
-.nav-dropdown > li > a,
-.nav-menu > li > a,
-nav a {
-    text-decoration: none;
+.nav-logo img {
+    max-width: 150px;
 }
 
-.navigation-portrait .nav-brand {
-    font-size: 18px;
-    line-height: 2.2;
-}
-
-nav a,
-nav a:focus,
-nav a:hover {
-    outline: 0;
-}
-
+/* Styles the hamburger button (nav-toggle) for mobile navigation */
 .nav-toggle {
-    width: 30px;
-    height: 18px;
-    padding: 0px 0px 0;
-    position: absolute;
-    top: 50%;
-    left: 0;
-    cursor: pointer;
-    transform: translateY(-50%);
-    -webkit-transform: translateY(-50%);
-}
-
-.nav-toggle:before {
-    content: "";
-    position: absolute;
-    width: 24px;
-    height: 2px;
-    background-color: #031424;
-    border-radius: 10px;
-    box-shadow: 0 0.5em 0 0 #f33066, 0 1em 0 0 #031424;
-}
-
-.navigation-portrait .nav-toggle {
     display: block;
+    background: none;
+    border: none;
+    width: 48px;
+    height: 48px;
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    cursor: pointer;
+    z-index: 1020;
+    transition: left 0.8s cubic-bezier(.76,0,.24,1);
 }
 
-.navigation-portrait .nav-menus-wrapper {
+/* When the nav is open, move nav-toggle right by sidebar width (e.g. 320px) */
+.nav-toggle.active {
+    left: 272px;
+}
+
+/* Hamburger lines (unchanged, but keep for X animation) */
+.nav-toggle span {
+    display: block;
+    width: 24px;
+    height: 3px;
+    margin: 5px auto;
+    background: #031424;
+    border-radius: 2px;
+    transition: all 0.8s cubic-bezier(.76,0,.24,1);
+    position: relative;
+}
+
+/* X animation */
+.nav-toggle.active span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+.nav-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+.nav-toggle.active span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Off-canvas sidebar styles for nav (hamburger opens this) */
+.nav-menu-wrapper {
     width: 320px;
     height: 100%;
-    top: 0;
-    left: -400px;
     position: fixed;
-    background-color: #fff;
-    z-index: 20000;
+    padding-top: 40px;
+    left: -320px;
+    background: #fff;
+    z-index: 1000;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    transition-duration: 0.8s;
-    transition-timing-function: ease;
+    transition: left 0.8s cubic-bezier(.76,0,.24,1);
 }
 
-.navigation-portrait .nav-menus-wrapper.nav-menus-wrapper-right {
-    left: auto;
-    right: -400px;
-}
-
-.nav-menus-wrapper.nav-menus-wrapper-open {
+/* When the off-canvas nav is open (slide in from left) */
+.nav-menu-wrapper.nav-menu-wrapper-open {
     left: 0;
 }
 
-.nav-menus-wrapper.nav-menus-wrapper-right.nav-menus-wrapper-open {
-    right: 0;
+/* Mobile nav menu items: stack vertically, full width, border between items */
+.nav-menu-wrapper .nav-menu > li {
+    width: 100%;
+    position: relative;
 }
 
-.nav-menus-wrapper-close-button {
-    width: 35px;
-    height: 35px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin: 10px 7px;
-    display: none;
-    float: right;
-    color: #f33066;
-    background: #f6dde4;
-    font-size: 16px;
-    cursor: pointer;
+/* Inner padding for the sidebar nav */
+.nav-menu-wrapper .nav-menu > li > a {
+    padding: 15px 18px !important;
 }
 
-.navigation-portrait .nav-menus-wrapper-close-button {
-    display: flex;
-}
-
+/* Removes default list styling from main nav menus (horizontal or vertical) */
 .nav-menu {
-    margin: 0;
-    padding: 0;
     line-height: normal;
 }
 
-.navigation-portrait .nav-menu {
-    width: 100%;
+.nav-menu-social,
+.nav-dropdown {
+    list-style: none;
 }
 
+.nav-menu-social,
+.nav-menu {
+    padding: 0;
+    margin: 0;
+}
+
+/* Main navigation menu items: display horizontally on desktop */
 .nav-menu > li {
     display: inline-block;
-    float: left;
-    text-align: left;
 }
 
-.navigation-portrait .nav-menu > li {
-    width: 100%;
-    position: relative;
-    border-top: solid 1px #f0f0f0;
-}
-
-.navigation-portrait .nav-menu > li:last-child {
-    border-bottom: solid 1px #f0f0f0;
-}
-
-.nav-menu + .nav-menu > li:first-child {
-    border-top: none;
-}
-
+/* Main navigation links styling */
 .nav-menu > li > a {
+    width: 100%;
     padding: 22px 12px;
     display: inline-block;
-    font-weight: 400;
-    font-size: 16px;
-    color: #2c2c2c;
+    font-size: 17px;
 }
 
-.navigation-portrait .nav-menu > li > a {
-    height: auto;
-    width: 100%;
-    padding: 12px 15px 12px 26px;
-}
-
-@media (min-width: 993px) {
-    .nav-menu > .active > a,
-    .nav-menu > .focus > a,
-    .nav-menu > li:hover > a {
-        color: #cccccc !important;
-        transition: color 0.2s ease;
-    }
-}
-
-@media (max-width: 992px) {
-    .nav-menu > li:hover > a {
-        color: #0d6efd !important;
-        transition: color 0.2s ease;
-    }
-}
-
+/* Style for navigation menu icons (i.e., <i> inside links): fixes size & scales up icons a bit */
+.nav-menu-social > li > a i,
 .nav-menu > li > a i {
-    width: 18px;
-    height: 16px;
-    line-height: 16px;
-    transform: scale(1.2);
-    position: relative;
+    font-size: 22px;
 }
 
-.navigation-portrait .nav-menu.nav-menu-social {
-    width: 100%;
-    text-align: center;
+.nav-menu > li .nav-dropdown {
+    padding: 0px;
 }
 
-.nav-menu.nav-menu-social > li {
-    text-align: center;
-    float: none;
-    border: none !important;
-}
-
-.nav-menu.nav-menu-social > li:last-child a {
-    padding-right: 0;
-}
-
-.navigation-portrait .nav-menu.nav-menu-social > li {
-    width: auto;
-}
-
-.navigation-portrait .nav-menu.nav-menu-social > li > a {
-    padding: 15px;
-}
-
-.submenu-indicator {
-    margin-left: 6px;
-    margin-top: 6px;
-    float: right;
-    transition: all 0.3s;
-}
-
-.navigation-portrait .submenu-indicator {
-    width: 100%;
-    height: 44px;
-    margin-top: 0;
-    position: absolute;
-    text-align: center;
-    z-index: 20000;
-}
-
-.submenu-indicator-chevron {
-    height: 6px;
-    width: 6px;
-    display: block;
-    border-style: solid;
-    border-width: 0 1px 1px 0;
-    border-color: transparent #506377 #506377 transparent;
-    transform: rotate(45deg);
-    transition: border 0.3s;
-}
-
-.navigation-portrait .submenu-indicator-chevron {
-    position: absolute;
-    top: 18px;
-    right: 24px;
-}
-
+/* Change chevron color for active, focus, or hovered menu items */
 .nav-menu > .active > a .submenu-indicator-chevron,
 .nav-menu > .focus > a .submenu-indicator-chevron,
-.nav-menu > li:hover > a .submenu-indicator-chevron {
+.nav-menu > li:hover > a .submenu-indicator-chevron,
+.nav-dropdown > .focus > a .submenu-indicator-chevron,
+.nav-dropdown > li:hover > a .submenu-indicator-chevron {
     border-color: transparent #0d6efd #0d6efd transparent;
 }
 
-.navigation-portrait .submenu-indicator.submenu-indicator-up {
-    transform: rotate(0deg);
+/* Dropdown menu: hidden by default, absolutely positioned */
+.nav-dropdown {
+    min-width: 250px;
+    margin: 0;
+    display: none;
+    position: static;
+    z-index: 98;
+    white-space: nowrap;
 }
 
-.navigation-portrait
-    .submenu-indicator.submenu-indicator-up
-    .submenu-indicator-chevron {
+/* Nested dropdowns: position at right edge of parent dropdown */
+.nav-dropdown .nav-dropdown {
+    left: 100%;
+}
+
+/* Dropdown menu list items (vertical) */
+.nav-dropdown > li {
+    width: 100%;
+    float: left;
+    clear: both;
+    position: relative;
+    text-align: left;
+}
+
+/* Dropdown menu links: full width, with padding and border */
+.nav-dropdown > li > a {
+    width: 100%;
+    padding: 12px 20px 12px 30px;
+    font-size: 15px;
+    border-bottom: 1px solid #e4e8ec;
+    display: block;
+    float: left;
+    color: #333c56;
+    transition: all 0.3s ease 0s;
+}
+
+/* Hover/focus/JS-active state for dropdown links: blue color */
+.nav-dropdown > li > a:hover,
+.nav-dropdown > li > a:focus,
+.nav-dropdown > li:hover > a,
+.nav-dropdown > .focus > a,
+.nav-menu > li:hover > a {
+    color: #0d6efd;
+    transition: color 0.2s ease;
+}
+
+/* Remove border for last dropdown item */
+.nav-dropdown > li:last-child > a {
+    border-bottom: none;
+}
+
+.submenu-indicator {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 44px;
+    height: 44px;
+    text-align: center;
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+/* Chevron arrow */
+.submenu-indicator-chevron {
+    height: 8px;
+    width: 8px;
+    display: inline-block;
+    border-style: solid;
+    border-width: 0 2px 2px 0;
+    border-color: transparent #506377 #506377 transparent;
+    transform: rotate(45deg);
+    transition: transform 0.3s, border-color 0.3s;
+    margin-top: 2px;
+}
+
+/* Rotate chevron when open */
+.submenu-indicator-up .submenu-indicator-chevron {
     transform: rotate(225deg);
 }
 
+/* ------------------------------
+   Social/Menu Icons (Right side)
+   ------------------------------ */
+.nav-menu-social {
+    display: flex;               /* Arrange <li> horizontally (row) */
+    align-items: center;         /* Vertically center icons inside their li's */
+    gap: 6px;                   /* Space between icons/buttons */
+    height: 60px;                /* Match main nav bar height */
+}
+
+/* Ensures social menu items are centered */
+.nav-menu-social > li {
+    min-width: 44px;             /* Ensures all icons have enough space */
+    height: 48px; 
+}
+
+/* Style each social icon link (<a> inside <li>) */
+.nav-menu-social > li > a {
+    display: flex;               /* Flex makes centering easy */
+    align-items: center;         /* Vertically center icon/text in <a> */
+    justify-content: center;     /* Horizontally center icon/text in <a> */
+    font-size: 17px;
+    height: 100%;
+}
+
+/* ---------------------------
+   Counter Badge for Icons
+   --------------------------- */
+.dn-counter {
+    background-color: #2c2c2c; 
+    color: #fff;
+    font-size: 10px;
+    display: inline-block;
+    line-height: 17px; 
+    min-width: 17px; 
+    min-height: 17px;
+    border-radius: 50%;
+    position: relative;
+    margin-left: -5px;
+    top: -4px; 
+    text-align: center;
+    transition: all 0.5s; 
+    padding: 0 2px;              /* A little padding for 2+ digit numbers */
+}
+
+.nav-menu-social > li > a.btn {
+    padding: 10px 12px;
+}
+
+/* Full-screen overlay for mobile nav (darkens page, shows when menu is open) */
 .nav-overlay-panel {
     width: 100%;
     height: 100%;
@@ -1075,368 +1050,99 @@ nav a:hover {
     z-index: 19999;
 }
 
+/* Utility: disables scroll when overlay or mobile nav is open */
 .no-scroll {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+    overflow: hidden !important;
 }
 
-.nav-search {
-    height: 70px;
-    float: right;
-    z-index: 19998;
-}
-
-.navigation-portrait .nav-search {
-    height: 48px;
-    padding: 0 10px;
-    margin-right: 52px;
-}
-
-.navigation-hidden .nav-search {
-    display: none;
-}
-
-.nav-search-button {
-    width: 70px;
-    height: 70px;
-    line-height: 70px;
-    text-align: center;
-    cursor: pointer;
-    background-color: #fbfcfd;
-}
-
-.navigation-portrait .nav-search-button {
-    width: 50px;
-    height: 48px;
-    line-height: 46px;
-    font-size: 22px;
-}
-
-.nav-search > form {
-    width: 100%;
-    height: 100%;
-    padding: 0 auto;
-    display: none;
-    position: absolute;
-    left: 0;
-    top: 0;
-    background-color: #fff;
-    z-index: 99;
-}
-
-.nav-search-close-button {
-    width: 28px;
-    height: 28px;
-    display: block;
-    position: absolute;
-    right: 20px;
-    top: 20px;
-    line-height: normal;
-    color: #70798b;
-    font-size: 20px;
-    cursor: pointer;
-    text-align: center;
-}
-
-.navigation-portrait .nav-search-close-button {
-    top: 10px;
-    right: 14px;
-}
-
-.nav-dropdown {
-    min-width: 250px;
-    margin: 0;
-    padding: 0;
-    display: none;
-    position: absolute;
-    z-index: 98;
-    white-space: nowrap;
-}
-
-.navigation-portrait .nav-dropdown {
-    width: 100%;
-    position: static;
-    left: 0;
-}
-
-.nav-dropdown .nav-dropdown {
-    left: 100%;
-}
-
-.nav-menu > li .nav-dropdown {
-    border: none;
-    padding: 15px;
-    background: #ffffff;
-    border-radius: 0.5rem;
-    box-shadow: 0px 0px 42px 0px rgba(32, 32, 32, 0.15);
-    -webkit-box-shadow: 0px 0px 42px 0px rgba(32, 32, 32, 0.15);
-}
-
-.nav-menu > li > .nav-dropdown:before {
-    background-color: #ffffff;
-    content: "";
-    width: 22px;
-    height: 22px;
-    left: 27px;
-    top: -12px;
-    position: absolute;
-    -webkit-transform: rotate(45deg);
-    -o-transform: rotate(45deg);
-    transform: rotate(45deg);
-    -o-transition: all 0.2s ease 0s;
-    transition: all 0.2s ease 0s;
-    -webkit-transition: all 0.2s ease 0s;
-}
-
-.nav-dropdown > li {
-    width: 100%;
-    float: left;
-    clear: both;
-    position: relative;
-    text-align: left;
-}
-
-.nav-dropdown > li > a {
-    width: 100%;
-    padding: 7px 20px 7px 10px;
-    border-bottom: 1px solid #e4e8ec;
-    display: inline-block;
-    float: left;
-    color: #333c56;
-    -webkit-transition: all 0.3s ease 0s;
-    -o-transition: all 0.3s ease 0s;
-    transition: all 0.3s ease 0s;
-}
-
-.nav-dropdown > li:last-child > a {
-    border-bottom: none;
-}
-
-.nav-dropdown > li > a:hover,
-.nav-dropdown > li > a:focus {
-    padding-left: 20px;
-    color: #0d6efd;
-}
-
-
-.social-icons a i {
-    width: 32px;
-    height: 32px;
-    display: inline-block;
-    border-radius: 16px;
-}
-
-.nav-dropdown > .focus > a,
-.nav-dropdown > li:hover > a {
-    color: #0d6efd;
-}
-
-.navigation-portrait .nav-dropdown > li > a {
-    padding: 12px 20px 12px 30px;
-}
-
-.navigation-portrait .nav-dropdown > li > ul > li > a {
-    padding-left: 50px;
-}
-
-.navigation-portrait .nav-dropdown > li > ul > li > ul > li > a {
-    padding-left: 70px;
-}
-
-.navigation-portrait .nav-dropdown > li > ul > li > ul > li > ul > li > a {
-    padding-left: 90px;
-}
-
-.navigation-portrait
-    .nav-dropdown
-    > li
-    > ul
-    > li
-    > ul
-    > li
-    > ul
-    > li
-    > ul
-    > li
-    > a {
-    padding-left: 110px;
-}
-
-.nav-dropdown .submenu-indicator {
-    right: 15px;
-    top: 16px;
-    position: absolute;
-}
-
-
-nav a {
-    position: relative;
-}
-
-.navigation-portrait .submenu-indicator {
-    right: 0;
-    top: 0;
-}
-
-.nav-dropdown .submenu-indicator .submenu-indicator-chevron {
-    transform: rotate(-45deg);
-}
-
-.navigation-portrait
-    .nav-dropdown
-    .submenu-indicator
-    .submenu-indicator-chevron {
-    transform: rotate(45deg);
-}
-
-.navigation-portrait
-    .nav-dropdown
-    .submenu-indicator.submenu-indicator-up
-    .submenu-indicator-chevron {
-    transform: rotate(225deg);
-}
-
-.nav-dropdown > .focus > a .submenu-indicator-chevron,
-.nav-dropdown > li:hover > a .submenu-indicator-chevron {
-    border-color: transparent #006cff #006cff transparent;
-}
-
-nav a {
-    display: inline-block;
-}
-
-.social-icons {
-    float: right;
-    margin-top: 0.7em;
-}
-
-.logo h1 a {
-    color: #fff;
-    font-size: 1.3em;
-}
-
-.logo span {
-    display: block;
-    font-size: 0.32em;
-    letter-spacing: 4px;
-}
-
-.nav-brand img {
-    max-width: 120px;
-    position: relative;
-    top: 0px;
-}
-
-/*--------- Dashboard Dropdown ----------*/
-
-.dn-counter {
-    background-color: #2c2c2c;
-    color: #fff;
-    font-size: 10px;
-    display: inline-block;
-    line-height: 17px;
-    min-width: 17px;
-    min-height: 17px;
-    border-radius: 50%;
-    position: relative;
-    margin-left: -5px;
-    top: -4px;
-    text-align: center;
-    -webkit-transition: all 0.5s;
-    transition: all 0.5s;
-    padding: 0 2px;
-}
-
-.navigation.navigation-portrait .dn-counter {
-    top: 0px;
-}
-
-.header {
-    box-shadow: 0 5px 30px rgba(0, 22, 84, 0.1);
-    -webkit-box-shadow: 0 5px 30px rgba(0, 22, 84, 0.1);
-    background: #ffffff;
-    position: fixed;
-    z-index: 999;
-    width: 100%;
-    top: 0;
-}
-
-/*----------Dark Menu --------*/
-
-@media (min-width: 993px) {
-    .logo.mobile-logo {
-        display: none;
+@media (max-width: 424.98px) {
+    .nav-menu-social > li > a.btn {
+        padding: 10px 5px;
     }
-    .header.header-dark {
-        background-color: #000000;
+    .nav-menu-social {
+        gap: 0;
     }
-    .header.header-dark .nav-brand,
-    .header.header-dark .nav-brand:focus,
-    .header.header-dark .nav-brand:hover,
-    .header.header-dark .nav-menu > li > a {
-        color: #ffffff;
-    }
-    .header.header-dark .nav-menu > li > .nav-dropdown:before {
-        display: none;
-    }
-    /*------ transparent --------*/
-    .dark-text .nav-brand {
-        color: #404656;
-    }
-    .mobile_nav {
-        display: none;
+    .nav-logo {
+        padding-right: 0px;
     }
 }
 
-@media (max-width: 992px) {
-    .logo.desktop-logo {
-        display: none;
+@media (max-width: 991.98px) {
+    .nav-menu > li:last-child {
+        border-bottom: solid 1px #f0f0f0;
     }
-    .navigation-portrait .nav-brand {
-        margin-left: 25px;
+
+    /* Deeper dropdowns: increase left padding for indentation effect */
+    .nav-dropdown ul li > a { padding-left: 50px; }
+    .nav-dropdown ul ul li > a { padding-left: 70px; }
+}
+
+@media (min-width: 992px) {
+    .header {
+        background-color: #000;
     }
-    .mobile_nav {
-        margin-top: 4px;
-    }
-    .nav-brand img {
-        max-width: 110px;
-        position: relative;
-        top: 0px;
-    }
-    .nav-brand {
-        padding: 0px 15px;
-        padding-right: 0;
-    }
-    .nav-header {
-        width: 100%;
-    }
-    .navigation-portrait .nav-brand {
-        flex: 1;
-    }
-    .mobile_nav ul {
-        display: inline-block;
-        margin: 0;
-        padding: 0;
-    }
-    .mobile_nav ul li {
-        display: inline-block;
-        padding-left: 12px;
-    }
-    .mobile_nav ul li:first-child {
+
+    .nav-logo {
+        margin-left: 0;
         padding-left: 0;
     }
-    .mobile_nav ul li a {
-        display: inline-flex;
-        font-size: 17px;
-        font-weight: 600;
-        color: #293544;
+    .nav-toggle {
+        display: none;
     }
-    .mobile_nav ul li i.fas {
-        position: relative;
-        top: 3px;
+    .nav-menu-social > li > a,
+    .nav-menu > li > a {
+        color: #fff;
+        width: auto;
     }
-    .navigation-portrait .nav-menu.nav-menu-social {
+
+    .nav-menu-social {
+        margin-left: auto;   /* This pushes social icons to the far right */
+        gap: 10px;
+    }
+
+    .nav-menu-wrapper {
+        position: static;
+        width: auto;
+        height: auto;
+        display: flex;
+        align-items: center;
+        padding-top: 0;
+        background: transparent;
+        overflow: visible;
+    }
+    .nav-menu-wrapper .nav-menu > li {
+        width: auto;
+    }
+    .nav-menu-wrapper .nav-menu > li > a {
+        padding: 22px 12px !important;
+    }
+
+    .nav-dropdown {
+        position: absolute;
+    }
+
+    /* Dropdown content styles (desktop only, mobile handled by media queries) */
+    .nav-menu > li .nav-dropdown {
+        padding: 15px;
+        background: #fff;
+        border-radius: 0.5rem;
+        box-shadow: 0px 0px 42px 0px rgba(32, 32, 32, 0.15);
+    }
+
+    .nav-dropdown > li > a {
+        padding: 7px 20px 7px 10px;
+    }
+
+    /* Lighten nav menu link color when active, focused, or hovered (desktop only) */
+    .nav-menu > .active > a,
+    .nav-menu > .focus > a,
+    .nav-menu > li:hover > a {
+        color: #ccc !important;
+        transition: color 0.2s ease;
+    }
+
+    /* Hide submenu indicator chevrons/arrows (desktop only) */
+    .submenu-indicator {
         display: none;
     }
 }
@@ -1658,8 +1364,6 @@ select.form-control:focus {
     display: inline-flex;
     background-size: cover;
     background-position: center;
-    -webkit-transition: all 0.2s ease-out;
-    -o-transition: all 0.2s ease-out;
     transition: all 0.2s ease-out;
     align-items: center;
     justify-content: center;
@@ -1705,7 +1409,6 @@ select.form-control:focus {
     position: absolute;
     left: -50%;
     top: -50%;
-    cursor: -webkit-zoom-in;
     cursor: zoom-in;
     display: none;
 }
@@ -1942,7 +1645,6 @@ button:focus {
     padding-top: 0px;
 }
 
-
 .accordion .btn-link:before {
     content: "";
     width: 14px;
@@ -1969,11 +1671,9 @@ button:focus {
     transition: all 0.3s;
 }
 
-
 .accordion .btn-link[aria-expanded="true"]:after {
     transform: rotate(90deg) translateX(1px);
 }
-
 
 .accordion .btn-link[aria-expanded="true"]:before {
     transform: rotate(180deg);
@@ -1988,7 +1688,6 @@ button:focus {
     margin-bottom: 10px;
     border: 1px solid #e9ecef;
 }
-
 
 .accordion .card-header h5 {
     text-transform: capitalize;
@@ -2105,16 +1804,13 @@ footer.skin-dark-footer .footer_widget ul li a:focus {
 /*--------------------------------------------------
 	Responsiveness Start
 ---------------------------------------------------*/
-@media (min-width: 993px) {
+@media (min-width: 992px) {
     .miliods {
         padding-right: 2.5rem;
     }
-    .submenu-indicator {
-        display: none;
-    }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 991.98px) {
     #countdown ul li {
         margin: 0 0.2rem;
         padding: 0.5rem 0.6rem;
@@ -2128,38 +1824,9 @@ footer.skin-dark-footer .footer_widget ul li a:focus {
         color: #d2976b;
         line-height: 1;
     }
-    .nav-menu > li > .nav-dropdown:before {
-        display: none;
-    }
-    .nav-menu > li .nav-dropdown {
-        border: none;
-        padding: 0px;
-        background: #ffffff;
-        border-radius: 0;
-        box-shadow: none;
-        -webkit-box-shadow: none;
-    }
-    .nav-dropdown > li > a {
-        font-size: 15px;
-    }
-    .header.header-dark .nav-menu > li > a {
-        padding: 15px 18px !important;
-    }
-    .nav-toggle.text-light:before {
-        background-color: #ffffff;
-        box-shadow: 0 0.5em 0 0 #ffffff, 0 1em 0 0 #ffffff;
-    }
 }
 
 @media (max-width: 767px) {
-    .nav-brand img {
-        max-width: 85px;
-        position: relative;
-        top: -2px;
-    }
-    .navigation-portrait .nav-brand {
-        margin-left: 19px;
-    }
     .accordion .card-header button {
         font-size: 15px;
     }

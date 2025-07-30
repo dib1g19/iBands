@@ -1,8 +1,13 @@
 {% for category in categories %}
     <li>
-        <a href="{{ category.get_absolute_url }}">{{ category.title }}</a>
+        <a href="{{ category.get_absolute_url }}">
+            {{ category.title }}
+            {% if category.subcategories.exists %}
+                <span class="submenu-indicator"><span class="submenu-indicator-chevron"></span></span>
+            {% endif %}
+        </a>
         {% if category.subcategories.all %}
-            <ul class="nav-dropdown nav-submenu">
+            <ul class="nav-dropdown">
                 <li>
                     <a href="{{ category.get_absolute_url }}">Всички {{ category.title }}</a>
                 </li>

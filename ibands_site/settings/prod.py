@@ -10,6 +10,9 @@ DEFAULT_FILE_STORAGE = "ibands_site.storages.MediaStorage"
 
 DATABASES = {
     "default": dj_database_url.parse(
-        env("DATABASE_URL"), conn_max_age=600, ssl_require=True
+        env("DATABASE_URL"),
+        conn_max_age=290
     )
 }
+
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True

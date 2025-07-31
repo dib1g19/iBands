@@ -405,4 +405,4 @@ class Color(models.Model):
     group = models.ForeignKey(ColorGroup, on_delete=models.CASCADE, related_name="colors")
 
     def __str__(self):
-        return f"{self.name_bg} ({self.group.name_bg})"
+        return f"{self.name_bg} ({self.name_en})"

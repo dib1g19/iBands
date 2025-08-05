@@ -55,16 +55,31 @@ $(document).ready(function () {
                         '<br><a href="/cart/" class="btn btn-sm btn-primary mt-2 w-100">Виж количката</a>',
                 });
                 if (typeof gtag === "function") {
-                    gtag('event', 'add_to_cart', {
+                    const gtagData = {
                         "items": [{
                             "id": id,
-                            "name": $(".ft-bold.mb-1").text().replace(/^.* - /, ""),
-                            "category": $(".ft-bold.mb-1").text().split(" - ")[0],
-                            "price": parseFloat($(".ft-bold.text-danger.fs-lg.me-3").text() || $(".ft-bold.fs-lg.me-3").text()),
+                            "name": button_el.attr("data-name") || "",
+                            "category": button_el.attr("data-category") || "",
+                            "price": parseFloat(button_el.attr("data-price")),
                             "quantity": parseInt(qty),
                             "currency": "BGN"
                         }]
-                    });
+                    };
+                    gtag('event', 'add_to_cart', gtagData);
+                }
+                if (typeof fbq === "function") {
+                    const fbqData = {
+                        content_ids: [id],
+                        content_name: button_el.attr("data-name") || "",
+                        content_category: button_el.attr("data-category") || "",
+                        value: parseFloat(button_el.attr("data-price")),
+                        currency: "BGN",
+                        contents: [{
+                            id: id,
+                            quantity: parseInt(qty)
+                        }]
+                    };
+                    fbq('track', 'AddToCart', fbqData);
                 }
                 $(".total_cart_items").text(response.total_cart_items);
             },

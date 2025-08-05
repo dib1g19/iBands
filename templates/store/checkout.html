@@ -506,4 +506,40 @@
         });
     });
 </script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    gtag('event', 'begin_checkout', {
+    "items": [
+        {% for item in order.order_items %}
+        {
+            "id": "{{ item.product.id }}",
+            "name": "{{ item.product.name|escapejs }}",
+            "category": "{{ item.product.category.title|escapejs }}",
+            "price": {{ item.price|floatformat:2 }},
+            "quantity": {{ item.qty }},
+            "currency": "BGN"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ],
+    "value": {{ order.total|floatformat:2 }},
+    "currency": "BGN"
+    });
+</script>
+<script>
+    if (typeof fbq === "function") {
+    fbq('track', 'InitiateCheckout', {
+        content_ids: [{% for item in order.order_items %}"{{ item.product.id }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+        contents: [
+        {% for item in order.order_items %}
+            {
+            id: "{{ item.product.id }}",
+            quantity: {{ item.qty }}
+            }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+        ],
+        value: {{ order.total|floatformat:2 }},
+        currency: "BGN"
+    });
+    }
+</script>
 {% endblock %}

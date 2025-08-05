@@ -61,16 +61,24 @@
             </div>
         </div>
     </section>
+{% endblock %}
+{% block extra_scripts %}
     {% if payment_status == 'paid' %}
-        {% block extra_scripts %}
-            {{ block.super }}
-            <script>
-                gtag('event', 'purchase', {
-                    "transaction_id": "{{ order.order_id }}",
-                    "value": {{ order.total|default_if_none:"0"|floatformat:2 }},
-                    "currency": "BGN"
+        <script>
+            gtag('event', 'purchase', {
+                "transaction_id": "{{ order.order_id }}",
+                "value": {{ order.total|default_if_none:"0"|floatformat:2 }},
+                "currency": "BGN"
+            });
+        </script>
+        <script>
+            if (typeof fbq === "function") {
+                fbq('track', 'Purchase', {
+                    content_ids: ['{{ order.order_id }}'],
+                    value: {{ order.total|default_if_none:"0"|floatformat:2 }},
+                    currency: "BGN"
                 });
-            </script>
-        {% endblock %}
+            }
+        </script>
     {% endif %}
 {% endblock %}

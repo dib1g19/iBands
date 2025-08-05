@@ -81,7 +81,13 @@
                                 <option class="stock-{{ qty }}" value="{{ qty }}">{{ qty }}</option>
                             {% endfor %}
                         </select>
-                        <button type="button" class="btn btn-primary rounded add_to_cart fs-md py-2 px-3 px-md-4" data-id="{{ product.id }}">Добави в количка <i class="fas fa-shopping-cart ms-2"></i></button>
+                        <button type="button" class="btn btn-primary rounded add_to_cart fs-md py-2 px-3 px-md-4"
+                          data-id="{{ product.id }}"
+                          data-name="{{ product.name|escapejs }}"
+                          data-category="{{ product.category.title|escapejs }}"
+                          data-price="{{ product.price }}">
+                          Добави в количка <i class="fas fa-shopping-cart ms-2"></i>
+                        </button>
                         <a class="add_to_wishlist d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" data-product_id="{{ product.id }}">
                             <i class="fa-heart {% if request.user.is_authenticated and product.id in user_wishlist_products %}fs-4 fas text-danger{% else %}fs-5 far text-dark{% endif %}"></i>
                         </a>
@@ -205,5 +211,16 @@
           "currency": "BGN"
         }]
       });
+    </script>
+    <script>
+      if (typeof fbq === "function") {
+        fbq('track', 'ViewContent', {
+          content_ids: ['{{ product.id }}'],
+          content_name: "{{ product.name|escapejs }}",
+          content_category: "{{ product.category.title|escapejs }}",
+          value: {{ product.price|floatformat:2 }},
+          currency: "BGN"
+        });
+      }
     </script>
 {% endblock %}

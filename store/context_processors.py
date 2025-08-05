@@ -1,12 +1,19 @@
+from django.core.cache import cache
 from .models import Category, Cart
 from customer.models import Wishlist
 
 
 def navigation_context(request):
     # All categories
-    categories = Category.objects.all()
+    categories = cache.get("all_categories")
+    if categories is None:
+        categories = list(Category.objects.all())
+        cache.set("all_categories", categories, timeout=None)
     # Root categories
-    root_categories = Category.objects.filter(parent__isnull=True)
+    root_categories = cache.get("root_categories")
+    if root_categories is None:
+        root_categories = list(Category.objects.filter(parent__isnull=True))
+        cache.set("root_categories", root_categories, timeout=None)
     # Cart item count
     try:
         cart_id = request.session["cart_id"]

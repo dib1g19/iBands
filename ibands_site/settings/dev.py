@@ -17,3 +17,9 @@ DEFAULT_FILE_STORAGE = "ibands_site.storages.MediaStorage"
 DATABASES = {
     "default": dj_database_url.parse(env("DEVELOPMENT_DATABASE_URL"), conn_max_age=600)
 }
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
+]
+INSTALLED_APPS += ["debug_toolbar"]
+MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]

@@ -26,7 +26,7 @@
                     </div>
                     <div class="sp-wrap">
                         <a href="{{ product.image.url }}"><img class="product-main-image" src="{{ product.image.url }}" alt="{{ product.category.title }} - {{ product.name }}" /></a>
-                        {% for image in product.gallery.all %}
+                        {% for image in product.gallery_images.all %}
                             <a href="{{ image.image.url }}"><img src="{{ image.image.url }}" alt="{{ product.category.title }} - {{ product.name }} - Реална - {{ forloop.counter }}" /></a>
                         {% endfor %}
                     </div>
@@ -65,7 +65,7 @@
                                     {% if variant.variant_type == 'size' %}Размер:{% elif variant.variant_type == 'model' %}Модел:{% endif %}
                                 </p>
                                 <div class="pt-2">
-                                    {% for s in variant.items.all %}
+                                    {% for s in variant.variant_items.all %}
                                         <div class="form-check form-option form-check-inline mb-2">
                                             <input class="form-check-input" value="{{ s.title }}" type="radio" name="{{ variant.variant_type }}" id="{{ s.content }}" />
                                             <label class="form-option-label" for="{{ s.content }}">{{ s.content }}</label>
@@ -128,7 +128,7 @@
                                 <tbody>
                                     {% for variant in product.variants.all %}
                                         {% if variant.variant_type == 'specification' %}
-                                            {% for s in variant.items.all %}
+                                            {% for s in variant.variant_items.all %}
                                                 <tr>
                                                     <th class="ft-medium text-dark">{{ s.title }}</th>
                                                     <td>{{ s.content }}</td>
@@ -147,7 +147,7 @@
                                 <tbody>
                                     {% for variant in product.variants.all %}
                                         {% if variant.variant_type == 'length' %}
-                                            {% for s in variant.items.all %}
+                                            {% for s in variant.variant_items.all %}
                                                 <tr>
                                                     <td>
                                                         {% if forloop.first %}

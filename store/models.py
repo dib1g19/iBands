@@ -198,9 +198,6 @@ class Product(models.Model):
     def reviews(self):
         return Review.objects.filter(product=self)
 
-    def gallery(self):
-        return Gallery.objects.filter(product=self)
-
     @property
     def discount_percent(self):
         if self.regular_price and self.regular_price > self.price:
@@ -234,9 +231,6 @@ class Variant(models.Model):
         verbose_name="Variant Type",
     )
 
-    def items(self):
-        return VariantItem.objects.filter(variant=self)
-
     def __str__(self):
         return f"{self.get_variant_type_display()}: {self.name}"
 
@@ -257,7 +251,7 @@ class VariantItem(models.Model):
 
 
 class Gallery(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, related_name='gallery_images')
     image = models.FileField(upload_to="images", default="gallery.jpg")
     gallery_id = ShortUUIDField(length=6, max_length=10, alphabet="1234567890")
 

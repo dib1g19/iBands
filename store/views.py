@@ -372,19 +372,27 @@ def product_detail(request, category_path, product_slug):
         category = get_object_or_404(Category, slug=slug, parent=parent)
         parent = category
 
-    # Find the product within this category
+    # Fetch the product with all related data to minimize queries
     product = get_object_or_404(
-        Product, slug=product_slug, category=category, status="published"
+        Product.objects
+            .select_related('category')
+            .prefetch_related('gallery_images', 'colors', 'variants__variant_items'),
+        slug=product_slug, category=category, status="published"
     )
 
     # Prepare related products (from the same category, exclude self)
-    related_products_list = Product.objects.filter(category=category).exclude(
-        id=product.id
+    related_products_list = (
+        Product.objects.filter(category=category)
+        .exclude(id=product.id)
+        .select_related('category')
+        .prefetch_related('gallery_images')
     )
     related_products = paginate_queryset(request, related_products_list, 12)
 
-    # Stock/variant details
-    has_length_variant = product.variants.filter(variant_type="length").exists()
+    # Stock/variant details (all preloaded)
+    has_length_variant = any(
+        v.variant_type == "length" for v in product.variants.all()
+    )
     product_stock_range = range(1, product.stock + 1)
 
     # Breadcrumbs (use full path)

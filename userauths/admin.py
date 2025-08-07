@@ -15,7 +15,12 @@ class ContactMessageAdmin(admin.ModelAdmin):
     list_display = ["full_name", "email", "subject", "date"]
 
 
+class NewsletterSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ['email', 'date_subscribed', 'is_active']
+    search_fields = ['email']
+
 admin.site.register(userauths_models.User, UserAdmin)
 admin.site.register(userauths_models.Profile, ProfileAdmin)
 admin.site.register(userauths_models.ContactMessage, ContactMessageAdmin)
+admin.site.register(userauths_models.NewsletterSubscription, NewsletterSubscriptionAdmin)
 admin.site.unregister(Group)

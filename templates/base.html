@@ -206,7 +206,7 @@
                     <div class="container">
                         <div class="row">
                             <!-- Contact Info -->
-                            <div class="col-xl-4 col-lg-4 col-md-3 col-sm-12">
+                            <div class="col-md-4">
                                 <div class="footer_widget">
                                     <img src="{% static 'assets/img/logo-black.avif' %}" class="img-footer small mb-2" alt="" />
                                     <div class="address mt-3">
@@ -232,7 +232,7 @@
                                 </div>
                             </div>
                             <!-- Help Links -->
-                            <div class="col-xl-4 col-lg-4 col-md-2 col-sm-12">
+                            <div class="col-md-4">
                                 <div class="footer_widget">
                                     <ul class="footer-menu">
                                         <li>
@@ -260,17 +260,20 @@
                                 </div>
                             </div>
                             <!-- Subscribe Box -->
-                            <div class="col-xl-4 col-lg-4 col-md-3 col-sm-12">
+                            <div class="col-md-4">
                                 <div class="footer_widget">
                                     <h4 class="widget_title">Присъедини се към iBands club</h4>
                                     <p>Получавай индивидуални отстъпки, достъп до лимитирани колекции, подаръци и изненади преди всички останали</p>
                                     <div class="foot-news-last">
                                         <div class="input-group">
-                                            <input type="text" class="form-control" placeholder="Имейл адрес" />
+                                            <input id="newsletter-email" type="email" class="form-control" placeholder="Имейл адрес" />
                                             <div class="input-group-append">
-                                                <button type="button" class="input-group-text b-0 text-light"><i class="fas fa-arrow-right"></i></button>
+                                                <button id="newsletter-submit" type="button" class="input-group-text b-0 text-light">
+                                                    <i class="fas fa-arrow-right"></i>
+                                                </button>
                                             </div>
                                         </div>
+                                        <div id="newsletter-message" class="small mt-2"></div>
                                     </div>
                                 </div>
                             </div>
@@ -304,6 +307,25 @@
         <script src="{% static 'assets/js/custom.js' %}"></script>
         <script src="{% static 'assets/js/function.js' %}"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('newsletter-submit').onclick = function() {
+                    var email = document.getElementById('newsletter-email').value;
+                    fetch("{% url 'store:subscribe_newsletter' %}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        body: "email=" + encodeURIComponent(email)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('newsletter-message').innerText = data.message;
+                    });
+                };
+            });
+            </script>
         {% block extra_scripts %}
         {% endblock %}
     </body>

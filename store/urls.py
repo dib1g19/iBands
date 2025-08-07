@@ -28,4 +28,5 @@ urlpatterns = [
     path("privacy-policy/", views.privacy_policy, name="privacy_policy"),
     path("terms-conditions/", views.terms_conditions, name="terms_conditions"),
     path("returns-and-exchanges/", views.returns_and_exchanges, name="returns_and_exchanges"),
+    path('subscribe-newsletter/', views.subscribe_newsletter, name='subscribe_newsletter'),
 ]

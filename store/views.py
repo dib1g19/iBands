@@ -21,12 +21,11 @@ from django.db.models import Q
 from decimal import Decimal
 from store.utils import increment_500_error_count
 from urllib.parse import urlencode
-
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
 import json
-
 import requests
+from django.views.decorators.http import require_POST
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 def send_order_to_econt(order):
     url = settings.ECONT_UPDATE_ORDER_ENDPOINT
@@ -1112,6 +1111,21 @@ def returns_and_exchanges(request):
     return render(
         request, "pages/returns_and_exchanges.html", {"breadcrumbs": breadcrumbs}
     )
+
+
+@require_POST
+def subscribe_newsletter(request):
+    email = request.POST.get("email")
+    try:
+        validate_email(email)
+        # Prevent duplicates
+        obj, created = userauths_models.NewsletterSubscription.objects.get_or_create(email=email)
+        if created:
+            return JsonResponse({"success": True, "message": "Успешно се абонирахте!"})
+        else:
+            return JsonResponse({"success": False, "message": "Този имейл вече е абониран."})
+    except ValidationError:
+        return JsonResponse({"success": False, "message": "Невалиден имейл адрес."})
 
 
 def is_bot_request(request):

@@ -199,6 +199,7 @@ JAZZMIN_SETTINGS = {
         "userauths.User": "fas fa-user",
         "userauths.Profile": "fas fa-address-card",
         "userauths.ContactMessage": "fas fa-envelope-open-text",
+        "userauths.NewsletterSubscription": "fas fa-newspaper",
         "customer.Address": "fas fa-location-arrow",
         "customer.Notifications": "fas fa-bell",
         "customer.Wishlist": "fas fa-heart",

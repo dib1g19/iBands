@@ -51,3 +51,15 @@ class ContactMessage(models.Model):
 
     class Meta:
         ordering = ["-date"]
+
+
+class NewsletterSubscription(models.Model):
+    email = models.EmailField(unique=True)
+    date_subscribed = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.email
+
+    class Meta:
+        ordering = ["-date_subscribed"]

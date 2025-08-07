@@ -278,13 +278,8 @@ def category(request, category_path):
     products_list = Product.objects.filter(status="published", category=category)
     products = paginate_queryset(request, products_list, 12)
 
-    # Build breadcrumbs (all ancestors)
-    ancestors = []
-    cat = category
-    while cat.parent:
-        ancestors.append(cat.parent)
-        cat = cat.parent
-    ancestors = ancestors[::-1]
+    # Build breadcrumbs using get_category_ancestors
+    ancestors = get_category_ancestors(category)
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
     ]
@@ -375,7 +370,7 @@ def product_detail(request, category_path, product_slug):
     # Fetch the product with all related data to minimize queries
     product = get_object_or_404(
         Product.objects
-            .select_related('category')
+            .select_related('category', 'category__parent', 'category__parent__parent')
             .prefetch_related('gallery_images', 'colors', 'variants__variant_items'),
         slug=product_slug, category=category, status="published"
     )
@@ -384,7 +379,7 @@ def product_detail(request, category_path, product_slug):
     related_products_list = (
         Product.objects.filter(category=category)
         .exclude(id=product.id)
-        .select_related('category')
+        .select_related('category', 'category__parent', 'category__parent__parent')
         .prefetch_related('gallery_images')
     )
     related_products = paginate_queryset(request, related_products_list, 12)
@@ -395,18 +390,12 @@ def product_detail(request, category_path, product_slug):
     )
     product_stock_range = range(1, product.stock + 1)
 
-    # Breadcrumbs (use full path)
-    ancestors = []
-    cat = category
-    while cat.parent:
-        ancestors.append(cat.parent)
-        cat = cat.parent
-    ancestors = ancestors[::-1]
-
+    # Breadcrumbs (use full path, using select_related category for zero extra queries)
+    ancestors = get_category_ancestors(product.category)
     breadcrumbs = [{"label": "Начална Страница", "url": reverse("store:index")}]
     for ancestor in ancestors:
         breadcrumbs.append({"label": ancestor.title, "url": ancestor.get_absolute_url})
-    breadcrumbs.append({"label": category.title, "url": category.get_absolute_url})
+    breadcrumbs.append({"label": product.category.title, "url": product.category.get_absolute_url})
     breadcrumbs.append({"label": product.name, "url": ""})
 
     context = {

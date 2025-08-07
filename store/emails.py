@@ -5,7 +5,7 @@ from django.conf import settings
 def send_order_notification_email(order, email_heading, email_title, to_email):
     context = {
         "order": order,
-        "order_items": order.order_items,
+        "order_items": order.order_items.all,
         "email_heading": email_heading,
         "email_title": email_title,
     }

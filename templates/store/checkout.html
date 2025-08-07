@@ -510,7 +510,7 @@
     window.dataLayer = window.dataLayer || [];
     gtag('event', 'begin_checkout', {
     "items": [
-        {% for item in order.order_items %}
+        {% for item in order.order_items.all %}
         {
             "id": "{{ item.product.id }}",
             "name": "{{ item.product.name|escapejs }}",
@@ -528,9 +528,9 @@
 <script>
     if (typeof fbq === "function") {
     fbq('track', 'InitiateCheckout', {
-        content_ids: [{% for item in order.order_items %}"{{ item.product.id }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+        content_ids: [{% for item in order.order_items.all %}"{{ item.product.id }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
         contents: [
-        {% for item in order.order_items %}
+        {% for item in order.order_items.all %}
             {
             id: "{{ item.product.id }}",
             quantity: {{ item.qty }}

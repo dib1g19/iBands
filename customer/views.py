@@ -13,7 +13,22 @@ from customer import models as customer_models
 
 @login_required
 def dashboard(request):
-    orders = store_models.Order.objects.filter(customer=request.user)
+    # Prefetch order items and select_related product, category, and category parents
+    orders = (
+        store_models.Order.objects
+        .filter(customer=request.user)
+        .prefetch_related(
+            models.Prefetch(
+                "order_items",
+                queryset=store_models.OrderItem.objects.select_related(
+                    "product",
+                    "product__category",
+                    "product__category__parent",
+                    "product__category__parent__parent"
+                ),
+            )
+        )
+    )
     total_spent = store_models.Order.objects.filter(customer=request.user).aggregate(
         total=models.Sum("total")
     )["total"]
@@ -36,7 +51,21 @@ def dashboard(request):
 
 @login_required
 def order_detail(request, order_id):
-    order = store_models.Order.objects.get(customer=request.user, order_id=order_id)
+    order = (
+        store_models.Order.objects
+        .prefetch_related(
+            models.Prefetch(
+                "order_items",
+                queryset=store_models.OrderItem.objects.select_related(
+                    "product",
+                    "product__category",
+                    "product__category__parent",
+                    "product__category__parent__parent"
+                ),
+            )
+        )
+        .get(customer=request.user, order_id=order_id)
+    )
 
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
@@ -53,7 +82,9 @@ def order_detail(request, order_id):
 
 @login_required
 def wishlist(request):
-    wishlist_list = customer_models.Wishlist.objects.filter(user=request.user)
+    wishlist_list = customer_models.Wishlist.objects.filter(user=request.user).select_related(
+        "product__category", "product__category__parent", "product__category__parent__parent"
+    )
     wishlist = paginate_queryset(request, wishlist_list, 6)
 
     breadcrumbs = [

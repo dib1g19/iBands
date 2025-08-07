@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
@@ -35,7 +36,7 @@ def send_order_to_econt(order):
         "X-ID-Shop": str(settings.ECONT_SHOP_ID),
     }
     items = []
-    for item in order.order_items():
+    for item in order.order_items.all():
         items.append({
             "name": item.product.name,
             "SKU": getattr(item.product, "sku", ""),
@@ -116,7 +117,7 @@ def apply_item_discounts(order, coupon=None):
     if not coupon:
         coupons = order.coupons.all()
         coupon = coupons.first() if coupons.exists() else None
-    for item in order.order_items():
+    for item in order.order_items.all():
         if coupon:
             discount = Decimal(str(coupon.discount)) / Decimal("100")
             discounted_price = round2(item.product.price * (Decimal("1") - discount))
@@ -194,13 +195,19 @@ def clear_cart_items(request):
 
 
 def index(request):
-    products_list = store_models.Product.objects.filter(
-        status="published", featured=True
+    products_list = (
+        store_models.Product.objects.filter(status="published", featured=True)
+        .select_related('category', 'category__parent', 'category__parent__parent')
     )
     products = paginate_queryset(request, products_list, 20)
 
     categories = store_models.Category.objects.filter(parent__isnull=True)
-    popular_categories = store_models.Category.objects.filter(is_popular=True)
+    popular_categories = (
+        store_models.Category.objects
+            .filter(is_popular=True)
+            .select_related('parent', 'parent__parent')
+    )
+
 
     context = {
         "products": products,
@@ -212,13 +219,15 @@ def index(request):
 
 
 def shop(request):
-    products_list = store_models.Product.objects.filter(status="published")
+    products_list = (
+        store_models.Product.objects.filter(status="published")
+        .select_related('category', 'category__parent', 'category__parent__parent')
+    )
     products = paginate_queryset(request, products_list, 20)
 
     categories = (
         store_models.Category.objects.filter(parent__isnull=True)
         .prefetch_related("subcategories__subcategories")
-        .order_by("id")
     )
 
     item_display = [
@@ -269,13 +278,18 @@ def category(request, category_path):
         category = get_object_or_404(Category, slug=slug, parent=parent)
         parent = category
 
-    child_categories_qs = Category.objects.filter(parent=category)
+    category = Category.objects.select_related('parent', 'parent__parent').get(pk=category.pk)
+
+    child_categories_qs = Category.objects.filter(parent=category).select_related('parent', 'parent__parent')
     child_categories = list(child_categories_qs)
     all_sub = category
     all_sub.is_all = True
     subcategories_with_all = [all_sub] + child_categories
 
-    products_list = Product.objects.filter(status="published", category=category)
+    products_list = (
+        Product.objects.filter(status="published", category=category)
+        .select_related('category', 'category__parent', 'category__parent__parent')
+    )
     products = paginate_queryset(request, products_list, 12)
 
     # Build breadcrumbs using get_category_ancestors
@@ -302,13 +316,24 @@ def category(request, category_path):
     return render(request, "store/category.html", context)
 
 
-def get_descendant_category_ids(category):
-    """Recursively find all descendant category ids for a given category."""
+# Utility functions for category tree traversal (for zero-query descendant lookup)
+def find_category_node(tree, cat_id):
+    """Find a node in the tree by ID."""
+    for node in tree:
+        if node.id == cat_id:
+            return node
+        found = find_category_node(getattr(node, "children", []), cat_id)
+        if found:
+            return found
+    return None
+
+
+def collect_descendant_ids(node):
+    """Recursively collect all descendant IDs from a tree node."""
     ids = []
-    children = store_models.Category.objects.filter(parent=category)
-    for child in children:
+    for child in getattr(node, "children", []):
         ids.append(child.id)
-        ids += get_descendant_category_ids(child)
+        ids += collect_descendant_ids(child)
     return ids
 
 
@@ -320,9 +345,17 @@ def category_all_sub(request, category_path):
         category = get_object_or_404(Category, slug=slug, parent=parent)
         parent = category
 
-    descendant_ids = get_descendant_category_ids(category)
-    products_list = Product.objects.filter(
-        status="published", category_id__in=descendant_ids
+    # Get descendant ids from the cached category tree (zero queries)
+    category_tree = cache.get("category_tree")
+    node = find_category_node(category_tree, category.id)
+    if node:
+        descendant_ids = [node.id] + collect_descendant_ids(node)
+    else:
+        descendant_ids = [category.id]
+
+    products_list = (
+        Product.objects.filter(status="published", category_id__in=descendant_ids)
+        .select_related('category', 'category__parent', 'category__parent__parent')
     )
     query = request.GET.get("q")
     if query:
@@ -561,7 +594,12 @@ def cart(request):
     else:
         cart_id = None
 
-    items = store_models.Cart.objects.filter(cart_id=cart_id)
+    items = store_models.Cart.objects.filter(cart_id=cart_id).select_related(
+        "product",
+        "product__category",
+        "product__category__parent",
+        "product__category__parent__parent"
+    )
     cart_sub_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(
         sub_total=models.Sum("sub_total")
     )["sub_total"]
@@ -707,7 +745,21 @@ def coupon_apply(request, order_id):
 
 
 def checkout(request, order_id):
-    order = store_models.Order.objects.get(order_id=order_id)
+    order = (
+        store_models.Order.objects
+        .prefetch_related(
+            models.Prefetch(
+                "order_items",
+                queryset=store_models.OrderItem.objects.select_related(
+                    "product",
+                    "product__category",
+                    "product__category__parent",
+                    "product__category__parent__parent"
+                ),
+            )
+        )
+        .get(order_id=order_id)
+    )
 
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
@@ -717,8 +769,8 @@ def checkout(request, order_id):
     ]
 
     cart_total_weight = 0
-    for item in order.order_items():
-        cart_total_weight += 0.1 * item.qty  # Use real item weight if available
+    for item in order.order_items.all():
+        cart_total_weight += 0.1 * item.qty
 
     address = None
     if request.user.is_authenticated:
@@ -891,15 +943,17 @@ def filter_products(request):
 
     # Apply category filtering
     if categories:
+        # Use the cached category tree for descendant lookup
+        category_tree = cache.get("category_tree")
         all_category_ids = []
         for cid in categories:
             try:
                 cid_int = int(cid)
-                all_category_ids.append(cid_int)
-                category = store_models.Category.objects.get(id=cid_int)
-                descendant_ids = get_descendant_category_ids(category)
-                all_category_ids.extend(descendant_ids)
-            except:
+                node = find_category_node(category_tree, cid_int)
+                if node:
+                    all_category_ids.append(node.id)
+                    all_category_ids.extend(collect_descendant_ids(node))
+            except Exception:
                 continue
         products = products.filter(category__id__in=all_category_ids)
 

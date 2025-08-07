@@ -3,31 +3,46 @@ from .models import Category, Cart
 from customer.models import Wishlist
 
 
+def build_category_tree(categories):
+    """Recursively build a category tree from a flat list."""
+    category_dict = {cat.id: cat for cat in categories}
+    # Add an empty children list to each category
+    for cat in categories:
+        cat.children = []
+    tree = []
+    for cat in categories:
+        if cat.parent_id:
+            parent = category_dict.get(cat.parent_id)
+            if parent:
+                parent.children.append(cat)
+        else:
+            tree.append(cat)
+    # Attach absolute url to each category (while parent is loaded)
+    for cat in categories:
+        cat.url = cat.get_absolute_url()
+    return tree
+
 def navigation_context(request):
-    # All categories
-    categories = cache.get("all_categories")
-    if categories is None:
-        categories = list(Category.objects.all())
-        cache.set("all_categories", categories, timeout=None)
-    # Root categories
-    root_categories = cache.get("root_categories")
-    if root_categories is None:
-        root_categories = list(Category.objects.filter(parent__isnull=True))
-        cache.set("root_categories", root_categories, timeout=None)
-    # Cart item count
+    # Fetch category tree from cache
+    category_tree = cache.get("category_tree")
+    if category_tree is None:
+        categories = list(Category.objects.all().select_related('parent'))
+        category_tree = build_category_tree(categories)
+        cache.set("category_tree", category_tree, timeout=None)
+
     try:
-        cart_id = request.session["cart_id"]
+        cart_id = request.session.get("cart_id")
         total_cart_items = Cart.objects.filter(cart_id=cart_id).count()
     except Exception:
         total_cart_items = 0
-    # Wishlist count
+
     if request.user.is_authenticated:
         wishlist_count = Wishlist.objects.filter(user=request.user).count()
     else:
         wishlist_count = 0
+
     return {
-        "categories": categories,
-        "root_categories": root_categories,
+        "category_tree": category_tree,
         "total_cart_items": total_cart_items,
         "wishlist_count": wishlist_count,
     }

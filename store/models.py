@@ -186,8 +186,6 @@ class Product(models.Model):
         verbose_name_plural = "Products"
 
     def __str__(self):
-        if self.category:
-            return f"{self.category.get_full_name_path()} - {self.name}"
         return self.name
 
     def average_rating(self):

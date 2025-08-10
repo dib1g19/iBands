@@ -1,79 +1,60 @@
 from django.contrib import admin
 from django.db import models
 from django.http import HttpResponseRedirect
-from django.template.response import TemplateResponse
-from django.urls import path, reverse
 from django.utils.html import format_html
-
-from ibands_site.middleware import RequestCounterMiddleware
+from ibands_site.admin import iBandsModelAdmin
 from store import models as store_models
 from store.admin_forms import DuplicateProductForm
-from store.utils import get_500_error_stats
+from store.admin_helpers import product_path_label
 
 
 class ColorSwatchMixin:
+    @admin.display(description="Цвят")
     def color_swatch(self, obj):
         return format_html(
             '<span style="display:inline-block;width:32px;height:32px;border-radius:50%;background:{};border:1px solid #bbb;box-shadow:0 1px 4px rgba(0,0,0,0.08);"></span>',
             obj.hex_code or "#fff"
         )
-    color_swatch.short_description = "Цвят"
-
-
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ["title", "sku", "image", "marketing_image", "hover_image", "is_popular", "parent"]
-    list_per_page = 20
-    list_editable = ["sku", "image", "marketing_image", "hover_image", "is_popular", "parent"]
-    search_fields = ["title", "sku"]
-    prepopulated_fields = {"slug": ("title",)}
-
-    class Media:
-        js = ('admin/js/vendor/jquery/jquery.js', 'assets/js/admin_char_count.js',)
 
 
 class GalleryInline(admin.TabularInline):
     model = store_models.Gallery
-    extra = 1
+    extra = 0
 
 
-class VariantInline(admin.TabularInline):
-    model = store_models.Product.variants.through
-    extra = 1
-
-
-class ProductAdmin(admin.ModelAdmin):
-    list_display = [
-        "category",
-        "sku",
-        "name",
-        "description",
-        "meta_description",
-        "image",
-        "price",
-        "regular_price",
-        "featured",
-    ]
-    list_per_page = 20
-    list_editable = ["sku", "name", "description", "meta_description", "image", "price", "regular_price", "featured"]
-    search_fields = ["name", "category__title"]
+@admin.register(store_models.Product)
+class ProductAdmin(iBandsModelAdmin):
+    list_display = ["category", "sku", "name", "image", "price", "regular_price", "featured"]
+    list_editable = ["sku", "name", "image", "price", "regular_price", "featured"]
     list_filter = ["status", "featured", "category"]
-    inlines = [GalleryInline, VariantInline]
-    prepopulated_fields = {"slug": ("name",)}
+    search_fields = ["name", "category__title"]
+    list_select_related = ["category"]
 
+    inlines = [GalleryInline]
+    prepopulated_fields = {"slug": ("name",)}
+    
     action_form = DuplicateProductForm
     actions = ["duplicate_product"]
 
     def duplicate_product(self, request, queryset):
         number = int(request.POST.get("number_of_copies", 1))
+        qs = queryset.select_related("category").prefetch_related("variants")
         count = 0
 
-        for product in queryset:
+        for product in qs:
             for i in range(number):
-                new_product = store_models.Product.objects.get(pk=product.pk)
-                new_product.id = None
-                new_product.name = f"{product.name} (Copy {i+1})"
-                new_product.slug = None
-                new_product.sku = f"{product.sku}-copy-{i+1}-{count}"
+                new_product = store_models.Product(
+                    category=product.category,
+                    sku=f"{product.sku}-copy-{i+1}-{count}",
+                    name=f"{product.name} (Copy {i+1})",
+                    description=product.description,
+                    meta_description=product.meta_description,
+                    image=product.image,
+                    price=product.price,
+                    regular_price=product.regular_price,
+                    featured=product.featured,
+                    status=product.status,
+                )
                 new_product.save()
                 new_product.variants.set(product.variants.all())
                 count += 1
@@ -83,89 +64,63 @@ class ProductAdmin(admin.ModelAdmin):
     duplicate_product.short_description = "Duplicate selected Products"
 
     class Media:
-        js = ('admin/js/vendor/jquery/jquery.js', 'assets/js/admin_char_count.js',)
+        js = ('assets/js/admin_char_count.js',)
 
 
-class VariantItemInline(admin.TabularInline):
-    model = store_models.VariantItem
-    extra = 1
+@admin.register(store_models.Category)
+class CategoryAdmin(iBandsModelAdmin):
+    list_display = ["title", "sku", "image", "marketing_image", "hover_image", "is_popular", "parent"]
+    list_editable = ["sku", "image", "marketing_image", "hover_image", "is_popular"]
+    list_filter = ["parent"]
+    search_fields = ["title", "sku"]
+    list_select_related = ["parent"]
+
+    prepopulated_fields = {"slug": ("title",)}
+
+    class Media:
+        js = ('assets/js/admin_char_count.js',)
 
 
-class VariantAdmin(admin.ModelAdmin):
-    list_display = ["name", "variant_type", "get_products"]
-    list_per_page = 20
-    search_fields = ["products__name", "name"]
-    list_filter = ["variant_type"]
-    inlines = [VariantItemInline]
-
-    def get_products(self, obj):
-        products = [
-            format_html(
-                '<a href="{}">{}</a>',
-                reverse("admin:store_product_change", args=[product.pk]),
-                str(product)
-            )
-            for product in obj.products.all()
-        ]
-        return format_html("<br>".join(products))
-    get_products.short_description = "Products"
-
-
-class VariantItemAdmin(admin.ModelAdmin):
-    list_display = ["variant", "title", "content"]
-    search_fields = ["variant__name", "title"]
-
-
-class GalleryAdmin(admin.ModelAdmin):
-    list_display = ["product", "gallery_id"]
-    search_fields = ["product__name", "gallery_id"]
-
-
-class CartAdmin(admin.ModelAdmin):
-    list_display = ["cart_id", "product", "user", "qty", "price", "sub_total", "date"]
+@admin.register(store_models.Cart)
+class CartAdmin(iBandsModelAdmin):
+    list_display = ["cart_id", "product_path", "model", "size", "qty", "price", "sub_total", "user", "date"]
+    list_filter = ["date"]
     search_fields = ["cart_id", "product__name", "user__username"]
-    list_filter = ["date", "product"]
+    list_select_related = ["user", "product__category__parent__parent"]
 
-
-class CouponAdmin(admin.ModelAdmin):
-    list_display = ["code", "discount"]
-    search_fields = ["code"]
-
-
-class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ["id", "order", "product", "qty", "price", "sub_total"]
-    search_fields = ["id", "order__order_id", "product__name"]
-    list_filter = ["order__date"]
+    @admin.display(description="Product")
+    def product_path(self, obj):
+        return product_path_label(obj.product, link=True)
 
 
 class OrderItemInline(admin.TabularInline):
     model = store_models.OrderItem
+    fields = ["product_path", "model", "size", "qty", "price", "sub_total"]
+    readonly_fields = fields
     extra = 0
-    fields = ["product", "model", "size", "qty", "price", "sub_total"]
-    readonly_fields = ["product", "model", "size", "qty", "price", "sub_total"]
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("product__category__parent__parent")
+        )
+        
+    @admin.display(description="Product")
+    def product_path(self, obj):
+        return product_path_label(obj.product, link=True)
 
 
-class OrderAdmin(admin.ModelAdmin):
-    list_display = [
-        "address",
-        "total",
-        "order_status",
-        "shipping_service",
-        "tracking_id",
-        "payment_method",
-        "date",
-    ]
-    list_editable = [
-        "order_status",
-        "shipping_service",
-        "tracking_id",
-    ]
-    search_fields = ["order_id", "customer__username"]
+@admin.register(store_models.Order)
+class OrderAdmin(iBandsModelAdmin):
+    list_display = ["address", "total", "order_status", "shipping_service", "tracking_id", "payment_method", "date"]
+    list_editable = [ "order_status", "shipping_service", "tracking_id"]
     list_filter = ["payment_status", "order_status"]
+    search_fields = ["order_id", "customer__username"]
+    list_select_related = ["address"]
+
     inlines = [OrderItemInline]
-    readonly_fields = [
-        "address_display",
-    ]
+    readonly_fields = ["address_display",]
     fields = [
         "customer",
         "address_display",
@@ -212,66 +167,78 @@ class OrderAdmin(admin.ModelAdmin):
     address_display.short_description = "Address"
 
 
-class ReviewAdmin(admin.ModelAdmin):
+@admin.register(store_models.OrderItem)
+class OrderItemAdmin(iBandsModelAdmin):
+    list_display = ["order", "product_path", "model", "size" ,"qty", "price", "sub_total"]
+    list_filter = ["order__date"]
+    search_fields = ["order__order_id", "product__name"]
+    list_select_related = ["order", "product__category__parent__parent"]
+
+    @admin.display(description="Product")
+    def product_path(self, obj):
+        return product_path_label(obj.product, link=True)
+
+
+class VariantItemInline(admin.TabularInline):
+    model = store_models.VariantItem
+    extra = 0
+
+
+@admin.register(store_models.Variant)
+class VariantAdmin(iBandsModelAdmin):
+    list_display = ["name", "variant_type", "products_path"]
+    list_filter = ["variant_type"]
+    search_fields = ["products__name", "name"]
+    inlines = [VariantItemInline]
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("products__category__parent__parent")
+        )
+
+    @admin.display(description="Products")
+    def products_path(self, obj):
+        return format_html("<br>".join(
+            product_path_label(product, link=True) 
+            for product in obj.products.all()
+        ))
+
+
+@admin.register(store_models.VariantItem)
+class VariantItemAdmin(iBandsModelAdmin):
+    list_display = ["variant", "title", "content"]
+    search_fields = ["variant__name", "title"]
+
+
+@admin.register(store_models.Gallery)
+class GalleryAdmin(iBandsModelAdmin):
+    list_display = ["product", "gallery_id"]
+    search_fields = ["product__name", "gallery_id"]
+    list_select_related = ["product"]
+
+
+@admin.register(store_models.Coupon)
+class CouponAdmin(iBandsModelAdmin):
+    list_display = ["code", "discount"]
+    search_fields = ["code"]
+
+
+@admin.register(store_models.Review)
+class ReviewAdmin(iBandsModelAdmin):
     list_display = ["user", "product", "rating", "active", "date"]
     search_fields = ["user__username", "product__name"]
     list_filter = ["active", "rating"]
 
 
-class StatsAdmin(admin.ModelAdmin):
-    # Redirect the changelist view (default admin page for this model) to the stats view.
-    def changelist_view(self, request, extra_context=None):
-        return HttpResponseRedirect(reverse('admin:stats'))
-
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('stats/', self.admin_site.admin_view(self.stats_view), name='stats'),
-        ]
-        return custom_urls + urls
-
-    def stats_view(self, request):
-        stats = {
-            "user_request_count": RequestCounterMiddleware.get_user_request_count(),
-            "user_request_unique_count": RequestCounterMiddleware.get_user_request_unique_count(),
-            "bot_request_count": RequestCounterMiddleware.get_bot_request_count(),
-            "bot_request_unique_count": RequestCounterMiddleware.get_bot_request_unique_count(),
-        }
-        stats.update(get_500_error_stats())
-        context = dict(
-            self.admin_site.each_context(request),
-            stats=stats,
-        )
-        return TemplateResponse(request, "admin/stats.html", context)
-
-
-class Stats(models.Model):
-    class Meta:
-        verbose_name = "Stats"
-        verbose_name_plural = "Stats"
-        managed = False  # No DB table
-
-
-class ColorGroupAdmin(ColorSwatchMixin, admin.ModelAdmin):
+@admin.register(store_models.ColorGroup)
+class ColorGroupAdmin(ColorSwatchMixin, iBandsModelAdmin):
     list_display = ["name_en", "name_bg", "hex_code", "color_swatch"]
     list_editable = ["name_bg", "hex_code"]
 
 
-class ColorAdmin(ColorSwatchMixin, admin.ModelAdmin):
+@admin.register(store_models.Color)
+class ColorAdmin(ColorSwatchMixin, iBandsModelAdmin):
     list_display = ["group", "name_en", "name_bg", "hex_code", "color_swatch"]
     list_editable = ["name_en", "name_bg", "hex_code"]
-
-
-admin.site.register(store_models.Category, CategoryAdmin)
-admin.site.register(store_models.Product, ProductAdmin)
-admin.site.register(store_models.Variant, VariantAdmin)
-admin.site.register(store_models.VariantItem, VariantItemAdmin)
-admin.site.register(store_models.Gallery, GalleryAdmin)
-admin.site.register(store_models.Cart, CartAdmin)
-admin.site.register(store_models.Coupon, CouponAdmin)
-admin.site.register(store_models.Order, OrderAdmin)
-admin.site.register(store_models.OrderItem, OrderItemAdmin)
-admin.site.register(store_models.Review, ReviewAdmin)
-admin.site.register(Stats, StatsAdmin)
-admin.site.register(store_models.Color, ColorAdmin)
-admin.site.register(store_models.ColorGroup, ColorGroupAdmin)

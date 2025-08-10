@@ -166,8 +166,8 @@ JAZZMIN_SETTINGS = {
     "order_with_respect_to": [
         "store",
         "store.product",
-        "store.cart",
         "store.category",
+        "store.cart",
         "store.order",
         "store.orderitem",
         "store.variant",
@@ -175,8 +175,8 @@ JAZZMIN_SETTINGS = {
         "store.gallery",
         "store.coupon",
         "store.review",
-        "store.color",
         "store.colorgroup",
+        "store.color",
         "store.stats",
         "userauths",
         "userauths.user",
@@ -184,8 +184,8 @@ JAZZMIN_SETTINGS = {
     ],
     "icons": {
         "store.Product": "fas fa-th",
-        "store.Cart": "fas fa-cart-plus",
         "store.Category": "fas fa-tag",
+        "store.Cart": "fas fa-cart-plus",
         "store.Order": "fas fa-clipboard-list",
         "store.OrderItem": "fas fa-box-open",
         "store.Variant": "fas fa-layer-group",
@@ -193,8 +193,8 @@ JAZZMIN_SETTINGS = {
         "store.Gallery": "fas fa-images",
         "store.Coupon": "fas fa-ticket-alt",
         "store.Review": "fas fa-star fa-beat",
-        "store.Color": "fas fa-eye-dropper",
         "store.ColorGroup": "fas fa-palette",
+        "store.Color": "fas fa-eye-dropper",
         "store.Stats": "fas fa-chart-bar",
         "userauths.User": "fas fa-user",
         "userauths.Profile": "fas fa-address-card",
@@ -203,6 +203,11 @@ JAZZMIN_SETTINGS = {
         "customer.Address": "fas fa-location-arrow",
         "customer.Notifications": "fas fa-bell",
         "customer.Wishlist": "fas fa-heart",
+    },
+    "custom_links": {
+        "store": [
+            {"name": "Stats", "url": "admin-stats", "icon": "fas fa-chart-bar"},
+        ]
     },
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-arrow-circle-right",

@@ -1,19 +1,25 @@
 from django.contrib import admin
+from ibands_site.admin import iBandsModelAdmin
 from customer import models as customer_models
+from store.admin_helpers import product_path_label
 
 
-class AddressAdmin(admin.ModelAdmin):
-    list_display = ["user", "name"]
+@admin.register(customer_models.Address)
+class AddressAdmin(iBandsModelAdmin):
+    list_display = ["name", "user"]
 
 
-class WishlistAdmin(admin.ModelAdmin):
-    list_display = ["user", "product"]
+@admin.register(customer_models.Wishlist)
+class WishlistAdmin(iBandsModelAdmin):
+    list_display = ["user", "product_path"]
+    list_select_related = ["user", "product__category__parent__parent"]
+
+    @admin.display(description="Product")
+    def product_path(self, obj):
+        return product_path_label(obj.product, link=True)
 
 
-class NotificationAdmin(admin.ModelAdmin):
+@admin.register(customer_models.Notifications)
+class NotificationAdmin(iBandsModelAdmin):
     list_display = ["user", "type", "seen", "date"]
-
-
-admin.site.register(customer_models.Address, AddressAdmin)
-admin.site.register(customer_models.Wishlist, WishlistAdmin)
-admin.site.register(customer_models.Notifications, NotificationAdmin)
+    list_select_related = ["user"]

@@ -7,6 +7,8 @@ from django.contrib.sitemaps.views import sitemap
 from store.sitemaps import ProductSitemap, CategorySitemap, StaticViewSitemap
 from django.views.generic import TemplateView
 from store.views import custom_server_error
+from store.admin_views import stats_view
+
 
 sitemaps = {
     "products": ProductSitemap,
@@ -15,6 +17,7 @@ sitemaps = {
 }
 
 urlpatterns = [
+    path("admin/stats/", admin.site.admin_view(stats_view), name="admin-stats"),
     path("admin/", admin.site.urls),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
     path("", include("store.urls")),

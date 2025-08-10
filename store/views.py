@@ -18,7 +18,6 @@ from userauths import models as userauths_models
 from customer.utils import get_user_wishlist_products
 from store.emails import send_order_notification_email
 from django.db.models import Q
-from decimal import Decimal
 from store.utils import increment_500_error_count
 from urllib.parse import urlencode
 import json
@@ -157,11 +156,32 @@ def save_econt_address(request, order_id):
                 post_code=data.get('post_code', ''),
                 face=data.get('face', ''),
             )
+            # Check if this exact address already exists for this user
             if user:
-                # Save for user only if they don't already have an address
-                if not customer_models.Address.objects.filter(user=user).exists():
+                existing_address = customer_models.Address.objects.filter(
+                    user=user,
+                    name=data.get('name', ''),
+                    phone=data.get('phone', ''),
+                    email=data.get('email', ''),
+                    delivery_method=delivery_method,
+                    city=data.get('city', ''),
+                    address=data.get('address', ''),
+                    office_code=data.get('office_code', ''),
+                    office_name=office_name,
+                    post_code=data.get('post_code', ''),
+                    face=data.get('face', ''),
+                ).first()
+            else:
+                existing_address = None
+            
+            if existing_address:
+                # Use existing address for this user
+                address = existing_address
+            else:
+                # Create new address and associate with user if available
+                if user:
                     address_kwargs['user'] = user
-            address = customer_models.Address.objects.create(**address_kwargs)
+                address = customer_models.Address.objects.create(**address_kwargs)
             order.address = address
             order.shipping = shipping_price
             # Coupon logic: recalculate discount and totals if coupon is applied

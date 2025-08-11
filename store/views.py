@@ -248,6 +248,8 @@ def shop(request):
         store_models.Category.objects.filter(parent__isnull=True)
         .prefetch_related("subcategories__subcategories")
     )
+    # Color groups for color filter
+    color_groups = store_models.ColorGroup.objects.all()
 
     item_display = [
         {"id": "12", "value": 12},
@@ -279,6 +281,7 @@ def shop(request):
         "products": products,
         "products_list": products_list,
         "categories": categories,
+        "color_groups": color_groups,
         "item_display": item_display,
         "ratings": ratings,
         "prices": prices,
@@ -984,11 +987,16 @@ def filter_products(request):
     if sizes:
         products = products.filter(variant__variant_items__content__in=sizes).distinct()
 
-    # Apply color filtering
+    # Apply color filtering by selected color group ids
     if colors:
-        products = products.filter(
-            variant__variant_items__content__in=colors
-        ).distinct()
+        try:
+            color_group_ids = [int(cid) for cid in colors]
+        except Exception:
+            color_group_ids = []
+        if color_group_ids:
+            products = products.filter(
+                colors__group__id__in=color_group_ids
+            ).distinct()
 
     # Apply price ordering
     if price_order == "lowest":

@@ -84,6 +84,21 @@
                             {% endfor %}
                         </div>
                     </div>
+                    <!-- Color Filter -->
+                    <div class="border rounded p-3 mb-3">
+                        <h4>Цвят</h4>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for group in color_groups %}
+                                <div class="form-check d-flex align-items-center" title="{{ group.name_bg }}">
+                                    <input type="checkbox" class="form-check-input colors-filter me-2" value="{{ group.id }}" id="colorGroup{{ group.id }}" />
+                                    <label for="colorGroup{{ group.id }}" class="d-flex align-items-center gap-2 mb-0">
+                                        <span class="rounded-circle color-swatch" data-hex="{{ group.hex_code }}" style="display:inline-block;width:18px;height:18px;border:1px solid #bbb;"></span>
+                                        <span class="fs-6">{{ group.name_bg }}</span>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                     <!-- Display Filter -->
                     <div class="border rounded p-3 mb-3">
                         <h4>Резултати на страница</h4>

@@ -200,12 +200,16 @@ $(document).ready(function () {
     function getFilters() {
         let filters = {
             categories: [],
+            colors: [],
             prices: "",
             display: "",
             searchFilter: "",
         };
         $(".category-filter:checked").each(function () {
             filters.categories.push($(this).val());
+        });
+        $(".colors-filter:checked").each(function () {
+            filters.colors.push($(this).val());
         });
         filters.display = $("input[name='items-display']:checked").val();
         filters.prices = $("input[name='price-filter']:checked").val();
@@ -215,7 +219,7 @@ $(document).ready(function () {
 
     $(document).on(
         "change",
-        ".search-filter, .category-filter, input[name='price-filter'], input[name='items-display']",
+        ".search-filter, .category-filter, .colors-filter, input[name='price-filter'], input[name='items-display']",
         function () {
             let filters = getFilters();
             $.ajax({
@@ -286,6 +290,14 @@ $(document).ready(function () {
                 console.log("Error fetching filtered products:", error);
             },
         });
+    });
+
+    // Initialize color swatches background from data-hex to avoid template/css linters choking on inline interpolation
+    $(".color-swatch").each(function(){
+        const hex = $(this).attr("data-hex");
+        if (hex) {
+            $(this).css("background-color", hex);
+        }
     });
 
     // Pagination click handler for AJAX (only on shop/filtered pages)

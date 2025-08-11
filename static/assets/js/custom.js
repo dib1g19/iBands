@@ -75,31 +75,46 @@ $(function () {
             $toggle.attr("aria-expanded", "false").removeClass("active");
         }
     });
-    // Unified handler for mobile submenu toggling (all levels)
-    $(document).on("click", ".nav-menu > li > a, .nav-dropdown > li > a", function (e) {
-        if (window.innerWidth <= 992) {
-            var $parentLi = $(this).parent();
-            var $submenu = $parentLi.children(".nav-dropdown");
-            var $indicator = $(this).find(".submenu-indicator");
 
-            if ($submenu.length) {
-                e.preventDefault();
+    $(document).on('click', '.shop-chevron-toggle, .header-chevron-toggle', function (e) {
+        var $clicked = $(this);
+        var $button, $chevron, targetId, $submenu;
 
-                var isOpen = $submenu.is(":visible");
-                if (isOpen) {
-                    // Closing: close all descendant submenus and reset indicators
-                    $submenu.find(".nav-dropdown").slideUp(300);
-                    $submenu.find(".submenu-indicator").removeClass("submenu-indicator-up");
-                }
-
-                // Toggle current submenu and indicator
-                $submenu.slideToggle(300);
-                $indicator.toggleClass("submenu-indicator-up");
-
-                // Close sibling submenus at this level and reset their indicators
-                $parentLi.siblings().children(".nav-dropdown:visible").slideUp(300);
-                $parentLi.siblings().find(".submenu-indicator").removeClass("submenu-indicator-up");
+        // Shop sidebar chevron - works on all screen sizes
+        if ($clicked.hasClass('shop-chevron-toggle')) {
+            e.preventDefault();
+            $button = $clicked;
+            $chevron = $button.find('.submenu-indicator-chevron');
+            targetId = $button.attr('data-bs-target') || $button.attr('data-target');
+            $submenu = $(targetId);
+        } else {
+            // Header chevron link - only intercept on mobile; on desktop allow normal navigation
+            if (window.innerWidth > 992) {
+                return; // desktop: use hover and native links
             }
+            e.preventDefault();
+            $button = $clicked;
+            $chevron = $clicked.find('.submenu-indicator');
+            $submenu = $clicked.parent().children('.nav-dropdown');
+        }
+
+        if ($submenu && $submenu.length) {
+            var isOpen = $submenu.is(':visible');
+
+            if (isOpen) {
+                // Closing: also collapse descendants and clear indicators
+                $submenu.find('.subcategories, .nav-dropdown').slideUp(300);
+                $submenu.find('.submenu-indicator-chevron, .submenu-indicator').closest('button, a').removeClass('submenu-indicator-up');
+            }
+
+            // Toggle current submenu and rotate indicator
+            $submenu.slideToggle(300);
+            $chevron.closest('button, a').toggleClass('submenu-indicator-up');
+
+            // Close visible siblings at this level and reset their indicators
+            var $parentLi = $button.closest('li');
+            $parentLi.siblings().children('.subcategories:visible, .nav-dropdown:visible').slideUp(300);
+            $parentLi.siblings().find('.submenu-indicator-chevron, .submenu-indicator').closest('button, a').removeClass('submenu-indicator-up');
         }
     });
 });

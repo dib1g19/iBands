@@ -1874,3 +1874,47 @@ input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
+
+/* ==========================
+   Shop (sidebar filters)
+   ========================== */
+.shop-filter-row {
+    display: grid;
+    grid-template-columns: 1fr 24px; /* label + chevron */
+    align-items: center;
+    gap: 6px;
+}
+
+.shop-filter-chevron {
+    width: 24px;
+    height: 24px;
+    padding: 10px 15px; /* increase hit area */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Use header chevron visuals but static positioning in shop */
+.shop-filter-chevron .submenu-indicator {
+    position: static;
+    display: flex;
+}
+
+/* Collapse lists by default */
+.subcategories {
+    display: none;
+    list-style: none;
+}
+
+/* Indent inner filter options uniformly */
+.shop-filter-offset {
+    margin-left: -18px;
+}
+
+/* Color swatch base appearance; color is applied via JS data-hex */
+.color-swatch {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #bbb;
+}

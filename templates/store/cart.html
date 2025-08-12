@@ -28,12 +28,12 @@
                                     <div class="row d-flex align-items-center text-center p-3">
                                         {% include 'store/_product_card.html' with item=item %}
                                         <div class="col-xl-2 mb-xl-3">
-                                            {% if item.product.regular_price %}
-                                                <span class="text-decoration-line-through">{{ item.product.regular_price|intcomma }} лв.</span>
+                                            {% if item.product.sale_price and item.product.sale_price < item.product.price %}
+                                                <span class="text-decoration-line-through">{{ item.product.price|intcomma }} лв.</span>
                                             {% else %}
                                                 <span class="invisible d-none d-xl-inline">0 лв.</span>
                                             {% endif %}
-                                            <h4 class="fs-3 {% if item.product.regular_price %}fw-bold text-danger{% else %}text-dark{% endif %}">
+                                            <h4 class="fs-3 {% if item.product.sale_price and item.product.sale_price < item.product.price %}fw-bold text-danger{% else %}text-dark{% endif %}">
                                                 {{ item.price|intcomma }} лв.
                                             </h4>
                                         </div>

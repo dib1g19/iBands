@@ -116,14 +116,15 @@ def apply_item_discounts(order, coupon=None):
         coupons = order.coupons.all()
         coupon = coupons.first() if coupons.exists() else None
     for item in order.order_items.all():
+        base_price = Decimal(str(item.product.effective_price or 0))
         if coupon:
             discount = Decimal(str(coupon.discount)) / Decimal("100")
-            discounted_price = round2(item.product.price * (Decimal("1") - discount))
+            discounted_price = round2(base_price * (Decimal("1") - discount))
             item.price = discounted_price
             item.sub_total = round2(discounted_price * item.qty)
         else:
-            item.price = item.product.price
-            item.sub_total = round2(item.product.price * item.qty)
+            item.price = base_price
+            item.sub_total = round2(base_price * item.qty)
         item.save()
 
 
@@ -214,11 +215,18 @@ def clear_cart_items(request):
 
 
 def index(request):
+    # Featured products
     products_list = (
         store_models.Product.objects.filter(status="published", featured=True)
         .select_related('category', 'category__parent', 'category__parent__parent')
     )
     products = paginate_queryset(request, products_list, 20)
+
+    # Sale products (manually marked)
+    sale_products = (
+        store_models.Product.objects.filter(status="published", on_sale=True)
+        .select_related('category', 'category__parent', 'category__parent__parent')[:12]
+    )
 
     categories = store_models.Category.objects.filter(parent__isnull=True)
     popular_categories = (
@@ -230,6 +238,7 @@ def index(request):
 
     context = {
         "products": products,
+        "sale_products": sale_products,
         "categories": categories,
         "popular_categories": popular_categories,
         "user_wishlist_products": get_user_wishlist_products(request),
@@ -290,6 +299,60 @@ def shop(request):
     }
     context["is_shop"] = True
     return render(request, "store/shop.html", context)
+
+
+def sale(request):
+    products_list = (
+        store_models.Product.objects.filter(status="published", on_sale=True)
+        .select_related('category', 'category__parent', 'category__parent__parent')
+    )
+    products = paginate_queryset(request, products_list, 20)
+
+    categories = (
+        store_models.Category.objects.filter(parent__isnull=True)
+        .prefetch_related("subcategories__subcategories")
+    )
+    color_groups = store_models.ColorGroup.objects.all()
+
+    item_display = [
+        {"id": "12", "value": 12},
+        {"id": "20", "value": 20},
+        {"id": "40", "value": 40},
+        {"id": "60", "value": 60},
+        {"id": "100", "value": 100},
+    ]
+
+    ratings = [
+        {"id": "1", "value": "★☆☆☆☆"},
+        {"id": "2", "value": "★★☆☆☆"},
+        {"id": "3", "value": "★★★☆☆"},
+        {"id": "4", "value": "★★★★☆"},
+        {"id": "5", "value": "★★★★★"},
+    ]
+
+    prices = [
+        {"id": "lowest", "value": "Най-висока към най-ниска"},
+        {"id": "highest", "value": "Най-ниска към най-висока"},
+    ]
+
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Разпродажба", "url": ""},
+    ]
+
+    context = {
+        "products": products,
+        "products_list": products_list,
+        "categories": categories,
+        "color_groups": color_groups,
+        "item_display": item_display,
+        "ratings": ratings,
+        "prices": prices,
+        "user_wishlist_products": get_user_wishlist_products(request),
+        "breadcrumbs": breadcrumbs,
+    }
+    context["is_shop"] = True
+    return render(request, "store/sale.html", context)
 
 
 def category(request, category_path):
@@ -502,8 +565,8 @@ def add_to_cart(request):
                 }
             )
         cart_item.qty = new_qty
-        cart_item.price = cart_item.product.price
-        cart_item.sub_total = Decimal(cart_item.product.price) * Decimal(cart_item.qty)
+        cart_item.price = cart_item.product.effective_price
+        cart_item.sub_total = Decimal(cart_item.product.effective_price) * Decimal(cart_item.qty)
         cart_item.user = request.user if request.user.is_authenticated else None
         cart_item.cart_id = cart_id
         cart_item.save()
@@ -566,8 +629,8 @@ def add_to_cart(request):
                 }
             )
         cart_item.qty = new_qty
-        cart_item.price = product.price
-        cart_item.sub_total = Decimal(product.price) * Decimal(cart_item.qty)
+        cart_item.price = product.effective_price
+        cart_item.sub_total = Decimal(product.effective_price) * Decimal(cart_item.qty)
         cart_item.user = request.user if request.user.is_authenticated else None
         cart_item.cart_id = cart_id
         cart_item.size = size
@@ -582,10 +645,10 @@ def add_to_cart(request):
         cart = store_models.Cart()
         cart.product = product
         cart.qty = qty
-        cart.price = product.price
+        cart.price = product.effective_price
         cart.model = model
         cart.size = size
-        cart.sub_total = Decimal(product.price) * Decimal(qty)
+        cart.sub_total = Decimal(product.effective_price) * Decimal(qty)
         cart.user = request.user if request.user.is_authenticated else None
         cart.cart_id = cart_id
         cart.save()
@@ -998,11 +1061,22 @@ def filter_products(request):
                 colors__group__id__in=color_group_ids
             ).distinct()
 
-    # Apply price ordering
-    if price_order == "lowest":
-        products = products.order_by("-price")
-    elif price_order == "highest":
-        products = products.order_by("price")
+    # Apply price ordering (by effective price: sale_price if lower, else price)
+    if price_order in {"lowest", "highest"}:
+        products = products.annotate(
+            effective_price=models.Case(
+                models.When(
+                    models.Q(sale_price__isnull=False) & models.Q(sale_price__lt=models.F("price")),
+                    then=models.F("sale_price"),
+                ),
+                default=models.F("price"),
+                output_field=models.DecimalField(max_digits=12, decimal_places=2),
+            )
+        )
+        if price_order == "lowest":
+            products = products.order_by("-effective_price")
+        else:
+            products = products.order_by("effective_price")
 
     # Apply search filter
     if search_filter:

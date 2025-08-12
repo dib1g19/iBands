@@ -148,21 +148,23 @@ class Product(models.Model):
         blank=True,
         related_name="products",
     )
+    # Regular/base price for the product
     price = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         default=0.00,
         null=True,
         blank=True,
-        verbose_name="Sale Price",
+        verbose_name="Price",
     )
-    regular_price = models.DecimalField(
+    # Optional sale price; when present and lower than price, it is used for purchase
+    sale_price = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         default=0.00,
         null=True,
         blank=True,
-        verbose_name="Regular Price",
+        verbose_name="Sale Price",
     )
     stock = models.PositiveIntegerField(default=0, null=True, blank=True)
     shipping = models.DecimalField(
@@ -180,6 +182,7 @@ class Product(models.Model):
     date = models.DateTimeField(default=timezone.now)
     variants = models.ManyToManyField("Variant", blank=True, related_name="products")
     colors = models.ManyToManyField("Color", blank=True, related_name="products")
+    on_sale = models.BooleanField(default=False, db_index=True)
 
     class Meta:
         ordering = ["sku"]
@@ -197,9 +200,16 @@ class Product(models.Model):
         return Review.objects.filter(product=self)
 
     @property
+    def effective_price(self):
+        """Price used for purchase: sale_price if valid, otherwise price."""
+        if self.sale_price and self.price and self.sale_price < self.price:
+            return self.sale_price
+        return self.price
+
+    @property
     def discount_percent(self):
-        if self.regular_price and self.regular_price > self.price:
-            discount = ((self.regular_price - self.price) / self.regular_price) * 100
+        if self.price and self.sale_price and self.sale_price < self.price:
+            discount = ((self.price - self.sale_price) / self.price) * 100
             return int(discount)
         return 0
 

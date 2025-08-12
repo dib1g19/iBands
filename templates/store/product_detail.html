@@ -35,9 +35,9 @@
                     <div class="mb-3">
                         <h1 class="ft-bold mb-2">{{ product.category.title }} - {{ product.name }}</h1>
                         <div class="mb-3">
-                            {% if product.regular_price %}
-                                <span class="ft-medium line-through fs-md me-3">{{ product.regular_price }} лв.</span>
-                                <span class="ft-bold text-danger fs-lg me-3">{{ product.price }} лв.</span>
+                            {% if product.sale_price and product.sale_price < product.price %}
+                                <span class="ft-medium line-through fs-md me-3">{{ product.price }} лв.</span>
+                                <span class="ft-bold text-danger fs-lg me-3">{{ product.sale_price }} лв.</span>
                             {% else %}
                                 <span class="ft-bold fs-lg me-3">{{ product.price }} лв.</span>
                             {% endif %}
@@ -85,7 +85,7 @@
                           data-id="{{ product.id }}"
                           data-name="{{ product.name|escapejs }}"
                           data-category="{{ product.category.title|escapejs }}"
-                          data-price="{{ product.price }}">
+                          data-price="{{ product.effective_price }}">
                           Добави в количка <i class="fas fa-shopping-cart ms-2"></i>
                         </button>
                         <a class="add_to_wishlist d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" data-product_id="{{ product.id }}">
@@ -207,7 +207,7 @@
           "id": "{{ product.id }}",
           "name": "{{ product.name|escapejs }}",
           "category": "{{ product.category.title|escapejs }}",
-          "price": {{ product.price|floatformat:2 }},
+          "price": {{ product.effective_price|floatformat:2 }},
           "currency": "BGN"
         }]
       });
@@ -218,7 +218,7 @@
           content_ids: ['{{ product.id }}'],
           content_name: "{{ product.name|escapejs }}",
           content_category: "{{ product.category.title|escapejs }}",
-          value: {{ product.price|floatformat:2 }},
+          value: {{ product.effective_price|floatformat:2 }},
           currency: "BGN"
         });
       }

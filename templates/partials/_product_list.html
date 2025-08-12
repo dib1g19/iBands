@@ -4,7 +4,7 @@
             <!-- Product Image -->
             <div class="card-body p-0">
                 <div class="shop_thumb position-relative">
-                    {% if product.regular_price and product.regular_price > product.price %}
+                    {% if product.sale_price and product.sale_price < product.price %}
                         <div class="discount-badge">
                             -{{ product.discount_percent }}%
                         </div>
@@ -27,9 +27,9 @@
                     <div class="d-flex align-items-center justify-content-start gap-2">
                         <!-- Price -->
                         <div class="elis_rty mb-2">
-                            {% if product.regular_price %}
-                                <span class="ft-medium line-through fs-xs me-2">{{ product.regular_price }} лв.</span>
-                                <span class="ft-bold text-danger fs-xs">{{ product.price }} лв.</span>
+                            {% if product.sale_price and product.sale_price < product.price %}
+                                <span class="ft-medium line-through fs-xs me-2">{{ product.price }} лв.</span>
+                                <span class="ft-bold text-danger fs-xs">{{ product.sale_price }} лв.</span>
                             {% else %}
                                 <span class="ft-bold fs-xs">{{ product.price }} лв.</span>
                             {% endif %}

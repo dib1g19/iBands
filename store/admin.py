@@ -24,9 +24,9 @@ class GalleryInline(admin.TabularInline):
 
 @admin.register(store_models.Product)
 class ProductAdmin(iBandsModelAdmin):
-    list_display = ["category", "sku", "name", "image", "price", "regular_price", "featured"]
-    list_editable = ["sku", "name", "image", "price", "regular_price", "featured"]
-    list_filter = ["status", "featured", "category"]
+    list_display = ["category", "sku", "name", "image", "price", "sale_price", "on_sale", "featured"]
+    list_editable = ["sku", "name", "image", "price", "sale_price", "on_sale", "featured"]
+    list_filter = ["status", "featured", "on_sale", "category"]
     search_fields = ["name", "category__title"]
     list_select_related = ["category"]
 
@@ -51,7 +51,7 @@ class ProductAdmin(iBandsModelAdmin):
                     meta_description=product.meta_description,
                     image=product.image,
                     price=product.price,
-                    regular_price=product.regular_price,
+                    sale_price=product.sale_price,
                     featured=product.featured,
                     status=product.status,
                 )

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Разпродажба – Намалени продукти
+{% endblock %}
+
+{% block meta_description %}
+    Разпродажба в iBands: намалени каишки и аксесоари. Вижте всички продукти с активна отстъпка.
+{% endblock %}
+
+{% block content %}
+    {% include 'partials/_breadcrumbs.html' %}
+
+    <section class="middle">
+        <div class="container">
+            <h1 class="fw-bold mb-4">Разпродажба</h1>
+            <div class="row align-items-center rows-products" id="products-list">
+                {% for product in products %}
+                    {% include 'partials/_product_list.html' with product=product %}
+                {% empty %}
+                    <p>В момента няма продукти в разпродажба.</p>
+                {% endfor %}
+            </div>
+            {% include 'partials/_pagination.html' %}
+        </div>
+    </section>
+{% endblock %}

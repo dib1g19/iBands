@@ -57,9 +57,9 @@
                                         <div class="col-xl-2 col-lg-3 col-md-3 col-6 text-center">
                                             <p class="mb-1 p-0 text-muted">Цена</p>
                                             <div class="delv_status d-flex justify-content-center">
-                                                {% if item.product.regular_price %}
+                                                {% if item.product.sale_price and item.product.sale_price < item.product.price %}
                                                     <div class="d-flex flex-column lh-1">
-                                                        <span class="text-muted text-decoration-line-through">{{ item.product.regular_price|intcomma }} лв.</span>
+                                                        <span class="text-muted text-decoration-line-through">{{ item.product.price|intcomma }} лв.</span>
                                                         <h4 class="fs-sm ft-bold mb-0">{{ item.price|intcomma }} лв.</h4>
                                                     </div>
                                                 {% else %}

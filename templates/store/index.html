@@ -84,6 +84,35 @@
         </div>
     </section>
 
+    <!-- Sale Products Section -->
+    <section>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+                    <div class="sec_title position-relative text-center">
+                        <h2 class="ft-bold pt-3">Разпродажба</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row align-items-center rows-products">
+                {% for product in sale_products %}
+                    {% include 'partials/_product_list.html' with product=product %}
+                {% empty %}
+                    <p class="text-center">В момента няма намалени продукти.</p>
+                {% endfor %}
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+                    <div class="position-relative text-center">
+                        <a href="{% url 'store:sale' %}" class="btn btn-dark rounded btn-mл mt-5">Виж всички намаления <i class="fas fa-arrow-right ms-2"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Popular Products Section -->
     <section>
         <div class="container">

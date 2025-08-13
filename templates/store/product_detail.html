@@ -33,18 +33,18 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="mb-3">
-                        <h1 class="ft-bold mb-2">{{ product.category.title }} - {{ product.name }}</h1>
+                        <h1 class="fw-semibold mb-2">{{ product.category.title }} - {{ product.name }}</h1>
                         <div class="mb-3">
                             {% if product.sale_price and product.sale_price < product.price %}
-                                <span class="ft-medium line-through fs-md me-3">{{ product.price }} лв.</span>
-                                <span class="ft-bold text-danger fs-lg me-3">{{ product.sale_price }} лв.</span>
+                                <span class="fw-medium text-decoration-line-through fs-md me-1">{{ product.price }} лв.</span>
+                                <span class="fw-semibold text-danger fs-lg me-3">{{ product.sale_price }} лв.</span>
                             {% else %}
-                                <span class="ft-bold fs-lg me-3">{{ product.price }} лв.</span>
+                                <span class="fw-semibold fs-lg me-3">{{ product.price }} лв.</span>
                             {% endif %}
                             {% if product.stock > 0 %}
-                                <span class="text-light bg-success py-1 px-2 fs-sm ft-medium">В наличност</span>
+                                <span class="text-light bg-success py-1 px-2 fs-sm fw-medium">В наличност</span>
                             {% else %}
-                                <span class="text-light bg-danger py-1 px-2 fs-sm ft-medium">Няма наличност</span>
+                                <span class="text-light bg-danger py-1 px-2 fs-sm fw-medium">Няма наличност</span>
                             {% endif %}
                         </div>
                         {% if product.colors.exists %}
@@ -61,12 +61,12 @@
                     {% for variant in product.variants.all %}
                         {% if variant.variant_type == 'size' or variant.variant_type == 'model' %}
                             <div class="mb-3">
-                                <p class="d-flex align-items-center mb-0 text-dark ft-medium">
+                                <p class="d-flex align-items-center mb-0 text-dark fw-medium">
                                     {% if variant.variant_type == 'size' %}Размер:{% elif variant.variant_type == 'model' %}Модел:{% endif %}
                                 </p>
                                 <div class="pt-2">
                                     {% for s in variant.variant_items.all %}
-                                        <div class="form-check form-option form-check-inline mb-2">
+                                        <div class="form-option mb-2">
                                             <input class="form-check-input" value="{{ s.title }}" type="radio" name="{{ variant.variant_type }}" id="{{ s.content }}" />
                                             <label class="form-option-label" for="{{ s.content }}">{{ s.content }}</label>
                                         </div>
@@ -76,7 +76,7 @@
                         {% endif %}
                     {% endfor %}
                     <div class="d-flex gap-3 align-items-center">
-                        <select class="form-select w-auto quantity" name="quantity" id="quantity">
+                        <select class="form-select w-auto quantity" name="quantity">
                             {% for qty in product_stock_range %}
                                 <option class="stock-{{ qty }}" value="{{ qty }}">{{ qty }}</option>
                             {% endfor %}
@@ -88,7 +88,7 @@
                           data-price="{{ product.effective_price }}">
                           Добави в количка <i class="fas fa-shopping-cart ms-2"></i>
                         </button>
-                        <a class="add_to_wishlist d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" data-product_id="{{ product.id }}">
+                        <a class="add_to_wishlist wishlist-action" data-product_id="{{ product.id }}" aria-label="Добави в любими">
                             <i class="fa-heart {% if request.user.is_authenticated and product.id in user_wishlist_products %}fs-4 fas text-danger{% else %}fs-5 far text-dark{% endif %}"></i>
                         </a>
                     </div>
@@ -101,7 +101,7 @@
     <section class="middle">
         <div class="container">
             <div class="row align-items-center justify-content-center">
-                <ul class="nav nav-tabs b-0 d-flex align-items-center justify-content-center simple_tab_links mb-4" id="myTab" role="tablist">
+                <ul class="nav nav-tabs border-0 d-flex align-items-center justify-content-center simple_tab_links mb-4" id="myTab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <a class="nav-link active" id="description-tab" href="#description" data-bs-toggle="tab" role="tab" aria-controls="description" aria-selected="true">Описание</a>
                     </li>
@@ -130,7 +130,7 @@
                                         {% if variant.variant_type == 'specification' %}
                                             {% for s in variant.variant_items.all %}
                                                 <tr>
-                                                    <th class="ft-medium text-dark">{{ s.title }}</th>
+                                                    <th class="fw-medium text-dark">{{ s.title }}</th>
                                                     <td>{{ s.content }}</td>
                                                 </tr>
                                             {% endfor %}
@@ -182,7 +182,7 @@
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="sec_title position-relative text-center">
-                        <h3 class="ft-bold pt-3">Подобни продукти</h3>
+                        <h3 class="fw-semibold pt-3">Подобни продукти</h3>
                     </div>
                 </div>
                 <!-- Product List -->

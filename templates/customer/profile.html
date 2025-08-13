@@ -29,28 +29,28 @@
                             {% csrf_token %}
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
-                                    <label class="small text-dark ft-medium">Аватар</label>
+                                    <label class="small fw-medium">Аватар</label>
                                     <input type="file" name="image" class="form-control rounded" />
                                 </div>
                             </div>
 
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
-                                    <label class="small text-dark ft-medium">Пълно име</label>
+                                    <label class="small fw-medium">Пълно име</label>
                                     <input type="text" name="full_name" class="form-control rounded" value="{{ profile.full_name }}" />
                                 </div>
                             </div>
 
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
-                                    <label class="small text-dark ft-medium">Имейл</label>
+                                    <label class="small fw-medium">Имейл</label>
                                     <input type="email" name="email" class="form-control rounded bg-light" readonly value="{{ profile.user.email }}" />
                                 </div>
                             </div>
 
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
-                                    <label class="small text-dark ft-medium">Мобилен телефон</label>
+                                    <label class="small fw-medium">Мобилен телефон</label>
                                     <input type="text" name="mobile" class="form-control rounded" value="{{ profile.mobile }}" />
                                 </div>
                             </div>

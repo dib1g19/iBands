@@ -57,19 +57,17 @@
                     <div class="col-lg-3">
                         <h4 class="fw-bold">Обобщение на поръчката</h4>
                         <div class="shadow rounded p-3 mt-5">
-                            <div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <p class="fw-semibold fs-6 mb-0">Доставката и купоните се начисляват на следващата стъпка</p>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mt-3">
-                                    <p class="fw-bold text-dark fs-5">Общо</p>
-                                    <p class="fw-bold text-dark fs-5">
-                                        <span class="cart_sub_total">{{ cart_sub_total|intcomma }}</span> лв.
-                                    </p>
-                                </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <p class="fw-medium text-dark fs-6 mb-0">Доставката и купоните се начисляват на следващата стъпка</p>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <p class="fw-bold fs-5">Общо</p>
+                                <p class="fw-bold fs-5">
+                                    <span class="cart_sub_total">{{ cart_sub_total|intcomma }}</span> лв.
+                                </p>
                             </div>
                         </div>
-                        <div class="alert alert-success text-dark text-center mt-3 mb-4" role="alert" style="font-size: 1.1rem;">
+                        <div class="alert alert-success text-dark text-center mt-3" role="alert" style="font-size: 1.1rem;">
                             <i class="fas fa-shipping-fast"></i>
                             <b>Безплатна доставка</b> до офис или автомат на <b>Спиди</b> и <b>Еконт</b> за поръчки над <b>75 лв.</b>!
                         </div>

@@ -1,6 +1,6 @@
     <!-- Single Product Card -->
     <div class="{{ col_class|default:'col-6 col-md-4 col-lg-3' }}">
-        <div class="product_grid card b-0 rounded-3 shadow m-2 p-2">
+        <div class="card border-0 rounded-3 shadow m-2 p-2">
             <!-- Product Image -->
             <div class="card-body p-0">
                 <div class="shop_thumb position-relative">
@@ -15,34 +15,32 @@
                 </div>
             </div>
             <!-- Product Info -->
-            <div class="card-footer b-0 p-0 pt-2 bg-white d-flex align-items-end justify-content-between">
+            <div class="border-0 p-0 pt-2 d-flex align-items-end justify-content-between">
                 <div class="text-left">
-                    <div class="elso_titl">
-                        {% if product.category.root != product.category %}
-                            <span class="small text-muted">{{ product.category.root.title }}</span>
-                        {% endif %}
-                        <span class="small">{{ product.category.title }}</span>
-                    </div>
+                    {% if product.category.root != product.category %}
+                        <span class="small text-muted">{{ product.category.root.title }}</span>
+                    {% endif %}
+                    <span class="small">{{ product.category.title }}</span>
                     <h5 class="fs-md mb-0"><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h5>
                     <div class="d-flex align-items-center justify-content-start gap-2">
                         <!-- Price -->
                         <div class="elis_rty mb-2">
                             {% if product.sale_price and product.sale_price < product.price %}
-                                <span class="ft-medium line-through fs-xs me-2">{{ product.price }} лв.</span>
-                                <span class="ft-bold text-danger fs-xs">{{ product.sale_price }} лв.</span>
+                                <span class="fw-medium text-decoration-line-through fs-xs me-1">{{ product.price }} лв.</span>
+                                <span class="fw-semibold text-danger fs-xs">{{ product.sale_price }} лв.</span>
                             {% else %}
-                                <span class="ft-bold fs-xs">{{ product.price }} лв.</span>
+                                <span class="fw-semibold fs-xs">{{ product.price }} лв.</span>
                             {% endif %}
                         </div>
                     </div>
                 </div>
                 <!-- Wishlist Icon -->
                 {% if show_remove_wishlist %}
-                    <a href="{% url 'customer:remove_from_wishlist' wishlist_id %}" class="remove_from_wishlist d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" data-wishlist_id="{{ wishlist_id }}" title="Remove from wishlist">
+                    <a href="{% url 'customer:remove_from_wishlist' wishlist_id %}" class="remove_from_wishlist wishlist-action" data-wishlist_id="{{ wishlist_id }}" title="Remove from wishlist" aria-label="Премахни от любими">
                         <i class="fa fa-trash fs-4 text-danger"></i>
                     </a>
                 {% else %}
-                    <a class="add_to_wishlist d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" data-product_id="{{ product.id }}">
+                    <a class="add_to_wishlist wishlist-action" data-product_id="{{ product.id }}" aria-label="Добави в любими">
                         <i class="fa-heart
                             {% if request.user.is_authenticated and product.id in user_wishlist_products %}
                                 fs-4 fas text-danger

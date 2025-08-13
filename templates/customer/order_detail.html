@@ -27,12 +27,12 @@
                     </div>
 
                     <div class="order-data">
-                        <div class="ord_list_wrap border mb-4 mfliud">
+                        <div class="ord_list_wrap border mb-4">
                             <div class="ord_list_body text-left">
                                 {% for item in order.order_items.all %}
-                                    <div class="row align-items-center justify-content-center m-0 py-4 br-bottom">
+                                    <div class="row align-items-center justify-content-center m-0 py-4 border-bottom">
                                         <div class="col-xl-6 col-lg-5 col-md-5 col-12">
-                                            <div class="cart_single d-flex align-items-center mfliud-bot gap-3">
+                                            <div class="cart_single d-flex align-items-center gap-3">
                                                 <div class="cart_selected_single_thumb">
                                                     <a href="{{ item.product.get_absolute_url }}"><img src="{{ item.product.image.url }}" width="100" class="img-fluid rounded" alt="" /></a>
                                                 </div>
@@ -60,23 +60,23 @@
                                                 {% if item.product.sale_price and item.product.sale_price < item.product.price %}
                                                     <div class="d-flex flex-column lh-1">
                                                         <span class="text-muted text-decoration-line-through">{{ item.product.price|intcomma }} лв.</span>
-                                                        <h4 class="fs-sm ft-bold mb-0">{{ item.price|intcomma }} лв.</h4>
+                                                        <h4 class="fs-sm fw-semibold mb-0">{{ item.price|intcomma }} лв.</h4>
                                                     </div>
                                                 {% else %}
-                                                    <h4 class="fs-sm ft-bold mb-0 lh-1">{{ item.price|intcomma }} лв.</h4>
+                                                    <h4 class="fs-sm fw-semibold mb-0 lh-1">{{ item.price|intcomma }} лв.</h4>
                                                 {% endif %}
                                             </div>
                                         </div>
                                         <div class="col-xl-2 col-lg-3 col-md-3 col-6 text-center">
                                             <p class="mb-1 p-0 text-muted">Статус</p>
                                             <div class="delv_status d-flex justify-content-center">
-                                                <span class="ft-medium text-warning bg-light-warning">{{ order.get_order_status_display }}</span>
+                                                <span class="fw-medium text-warning bg-light-warning">{{ order.get_order_status_display }}</span>
                                             </div>
                                         </div>
                                         <div class="col-xl-2 col-lg-3 col-md-3 col-6 text-center">
                                             <p class="mb-1 p-0 text-muted">Платежен статус</p>
                                             <div class="d-flex justify-content-center">
-                                                <span class="ft-medium">{{ order.get_payment_status_display }}</span>
+                                                <span class="fw-medium">{{ order.get_payment_status_display }}</span>
                                             </div>
                                         </div>
                                     </div>

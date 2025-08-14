@@ -1,5 +1,6 @@
 from django.core.paginator import Paginator
 from django.core.cache import cache
+from decimal import Decimal, ROUND_FLOOR
 
 
 def paginate_queryset(request, queryset, per_page):
@@ -34,3 +35,12 @@ def get_500_error_stats():
         "user_unique": len(cache.get("custom_500_user_error_unique_ips", [])),
         "bot_unique": len(cache.get("custom_500_bot_error_unique_ips", [])),
     }
+
+
+def floor_to_cent(amount):
+    """Round down to 2 decimals (e.g., 9.995 -> 9.99). Returns Decimal."""
+    try:
+        dec = Decimal(str(amount))
+    except Exception:
+        return amount
+    return dec.quantize(Decimal("0.01"), rounding=ROUND_FLOOR)

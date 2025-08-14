@@ -5,6 +5,8 @@ from slugify import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 from userauths import models as user_models
 from django.urls import reverse
+from decimal import Decimal
+from store.utils import floor_to_cent
 
 STATUS = (
     ("published", "Published"),
@@ -204,7 +206,21 @@ class Product(models.Model):
 
     @property
     def effective_price(self):
-        """Price used for purchase: sale_price if valid, otherwise price."""
+        """Price used for purchase: applies Band of the Day 50% discount if active,
+        otherwise uses sale_price if valid, otherwise price.
+        """
+        # Apply Band of the Day discount (50% of base price) if this product is today's band
+        BandOfTheDay = globals().get("BandOfTheDay")
+        if BandOfTheDay and self.price:
+            try:
+                today_deal = BandOfTheDay.get_today()
+                if today_deal and today_deal.product_id == self.id:
+                    half_price = self.price * Decimal("0.5")
+                    return floor_to_cent(half_price)
+            except Exception:
+                pass
+
+        # Fallback to regular sale logic
         if self.sale_price and self.price and self.sale_price < self.price:
             return self.sale_price
         return self.price
@@ -411,3 +427,23 @@ class Color(models.Model):
 
     def __str__(self):
         return f"{self.name_bg} ({self.name_en})"
+
+
+class BandOfTheDay(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="daily_deals")
+    date = models.DateField(db_index=True, unique=True)
+
+    class Meta:
+        verbose_name = "Band of the Day"
+        verbose_name_plural = "Band of the Day"
+        ordering = ["-date"]
+
+    def __str__(self):
+        return f"{self.date} - {self.product.name}"
+
+    @classmethod
+    def get_today(cls):
+        try:
+            return cls.objects.select_related("product").get(date=timezone.localdate())
+        except cls.DoesNotExist:
+            return None

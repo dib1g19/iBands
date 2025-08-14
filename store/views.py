@@ -8,10 +8,12 @@ from django.db import models
 from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
+from datetime import date as dt_date, datetime as dt_datetime
+import calendar as pycal
 from decimal import Decimal, ROUND_HALF_UP
-from .models import Category, Product
+from .models import Category, Product, BandOfTheDay
 import stripe
-from store.utils import paginate_queryset
+from store.utils import paginate_queryset, floor_to_cent
 from store import models as store_models
 from customer import models as customer_models
 from userauths import models as userauths_models
@@ -236,14 +238,127 @@ def index(request):
     )
 
 
+    # Band of the Day (50% off)
+    band_of_the_day = BandOfTheDay.get_today()
+    band_product = getattr(band_of_the_day, "product", None)
+    band_override_price = None
+    band_discount_percent = None
+    if band_product and band_product.price:
+        half = band_product.price * Decimal("0.5")
+        band_override_price = floor_to_cent(half)
+        band_discount_percent = 50
+
+    band_of_the_day_url = reverse("store:band_of_the_day") if band_product else None
+    band_date = getattr(band_of_the_day, "date", None)
+
     context = {
         "products": products,
         "sale_products": sale_products,
         "categories": categories,
         "popular_categories": popular_categories,
         "user_wishlist_products": get_user_wishlist_products(request),
+        "band_of_the_day": band_product,
+        "band_price": band_override_price,
+        "band_discount_percent": band_discount_percent,
+        "band_of_the_day_url": band_of_the_day_url,
+        "band_date": band_date,
     }
     return render(request, "store/index.html", context)
+
+
+def band_of_the_day(request):
+    # Parse selected date from query (?date=YYYY-MM-DD). Default to today.
+    date_str = request.GET.get("date")
+    try:
+        selected_date = dt_datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else dt_date.today()
+    except Exception:
+        selected_date = dt_date.today()
+
+    # Get deal for selected date; fallback to today's if requested date has no deal
+    deal = BandOfTheDay.objects.filter(date=selected_date).select_related("product__category").first()
+    if not deal:
+        deal = BandOfTheDay.get_today()
+        selected_date = deal.date if deal else selected_date
+    product = getattr(deal, "product", None) if deal else None
+    if not product:
+        messages.info(request, "Няма избрана каишка за тази дата.")
+        return redirect("store:index")
+
+    # Refetch product with related data for efficient template rendering
+    product = (
+        Product.objects
+        .select_related('category', 'category__parent', 'category__parent__parent')
+        .prefetch_related('gallery_images', 'colors', 'variants__variant_items')
+        .get(pk=product.pk)
+    )
+
+    # Prepare breadcrumbs
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Каишка на деня", "url": ""},
+    ]
+
+    # Explicit price values for display and override sale display to -50% (only for today)
+    original_price = product.price
+    half = product.price * Decimal("0.5") if product and product.price else None
+    discounted_price = floor_to_cent(half) if half is not None else product.effective_price
+    # For today's deal: show discounted price. For past days: show regular price
+    if deal.date == dt_date.today():
+        product.sale_price = discounted_price
+    else:
+        product.sale_price = None
+    product_stock_range = range(1, (product.stock or 0) + 1)
+    has_length_variant = any(v.variant_type == "length" for v in product.variants.all())
+
+    # Build month calendar for history
+    first_day = selected_date.replace(day=1)
+    # Compute next month start safely
+    if first_day.month == 12:
+        next_month_start = first_day.replace(year=first_day.year + 1, month=1, day=1)
+    else:
+        next_month_start = first_day.replace(month=first_day.month + 1, day=1)
+    month_end = next_month_start
+    month_deals = BandOfTheDay.objects.filter(date__gte=first_day, date__lt=month_end).select_related("product__category")
+    deals_by_day = {d.date.day: d for d in month_deals}
+    cal = pycal.Calendar(firstweekday=0)
+    weeks = cal.monthdayscalendar(first_day.year, first_day.month)  # list of weeks, 0=pad
+    # Build template-friendly structure: each cell has {day, deal}
+    weeks_data = []
+    for wk in weeks:
+        row = []
+        for d in wk:
+            row.append({
+                "day": d,
+                "deal": deals_by_day.get(d) if d else None,
+            })
+        weeks_data.append(row)
+
+    # Prev/next month params for navigation
+    if first_day.month == 1:
+        prev_month = first_day.replace(year=first_day.year - 1, month=12, day=1)
+    else:
+        prev_month = first_day.replace(month=first_day.month - 1, day=1)
+    next_month = next_month_start
+
+    context = {
+        "product": product,
+        "original_price": original_price,
+        "discounted_price": discounted_price,
+        "product_stock_range": product_stock_range,
+        "has_length_variant": has_length_variant,
+        "breadcrumbs": breadcrumbs,
+        "user_wishlist_products": get_user_wishlist_products(request),
+        "deal_date": deal.date,
+        "is_today": (deal.date == dt_date.today()),
+        # Calendar context
+        "calendar_weeks": weeks,
+        "weeks_data": weeks_data,
+        "calendar_month": first_day,
+        "prev_month": prev_month,
+        "next_month": next_month,
+        "selected_date": selected_date,
+    }
+    return render(request, "store/band_of_the_day.html", context)
 
 
 def shop(request):

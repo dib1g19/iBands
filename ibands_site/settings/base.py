@@ -166,6 +166,7 @@ JAZZMIN_SETTINGS = {
     "order_with_respect_to": [
         "store",
         "store.product",
+        "store.BandOfTheDay",
         "store.category",
         "store.cart",
         "store.order",
@@ -184,6 +185,7 @@ JAZZMIN_SETTINGS = {
     ],
     "icons": {
         "store.Product": "fas fa-th",
+        "store.BandOfTheDay": "fas fa-calendar-alt",
         "store.Category": "fas fa-tag",
         "store.Cart": "fas fa-cart-plus",
         "store.Order": "fas fa-clipboard-list",

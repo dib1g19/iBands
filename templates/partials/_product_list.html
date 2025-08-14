@@ -4,12 +4,16 @@
             <!-- Product Image -->
             <div class="card-body p-0">
                 <div class="shop_thumb position-relative">
-                    {% if product.sale_price and product.sale_price < product.price %}
+                    {% if band_discount_percent and band_of_the_day and product.id == band_of_the_day.id %}
+                        <div class="discount-badge">
+                            -{{ band_discount_percent }}%
+                        </div>
+                    {% elif product.sale_price and product.sale_price < product.price %}
                         <div class="discount-badge">
                             -{{ product.discount_percent }}%
                         </div>
                     {% endif %}
-                    <a class="card-img-top d-block overflow-hidden" href="{{ product.get_absolute_url }}">
+                    <a class="card-img-top d-block overflow-hidden" href="{{ product_url|default:product.get_absolute_url }}">
                         {% include 'store/_hover_image.html' with image=product.image hover_image=product.gallery.first.image alt=product.name %}
                     </a>
                 </div>
@@ -21,11 +25,14 @@
                         <span class="small text-muted">{{ product.category.root.title }}</span>
                     {% endif %}
                     <span class="small">{{ product.category.title }}</span>
-                    <h5 class="fs-md mb-0"><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h5>
+                    <h5 class="fs-md mb-0"><a href="{{ product_url|default:product.get_absolute_url }}">{{ product.name }}</a></h5>
                     <div class="d-flex align-items-center justify-content-start gap-2">
                         <!-- Price -->
                         <div class="elis_rty mb-2">
-                            {% if product.sale_price and product.sale_price < product.price %}
+                            {% if band_discount_percent and band_of_the_day and product.id == band_of_the_day.id %}
+                                <span class="fw-medium text-decoration-line-through fs-xs me-1">{{ product.price }} лв.</span>
+                                <span class="fw-semibold text-danger fs-xs">{{ band_price }} лв.</span>
+                            {% elif product.sale_price and product.sale_price < product.price %}
                                 <span class="fw-medium text-decoration-line-through fs-xs me-1">{{ product.price }} лв.</span>
                                 <span class="fw-semibold text-danger fs-xs">{{ product.sale_price }} лв.</span>
                             {% else %}

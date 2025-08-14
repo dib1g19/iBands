@@ -242,3 +242,34 @@ class ColorGroupAdmin(ColorSwatchMixin, iBandsModelAdmin):
 class ColorAdmin(ColorSwatchMixin, iBandsModelAdmin):
     list_display = ["group", "name_en", "name_bg", "hex_code", "color_swatch"]
     list_editable = ["name_en", "name_bg", "hex_code"]
+
+
+@admin.register(store_models.BandOfTheDay)
+class BandOfTheDayAdmin(iBandsModelAdmin):
+    list_display = ["date", "product_path"]
+    list_filter = ["date"]
+    search_fields = ["product__name", "product__sku"]
+    list_select_related = ["product__category__parent__parent"]
+    
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "product":
+            kwargs["queryset"] = store_models.Product.objects.select_related(
+                "category", "category__parent", "category__parent__parent"
+            )
+            formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+            def label_from_instance(obj):
+                try:
+                    category_path = obj.category.get_full_name_path()
+                except Exception:
+                    category_path = getattr(obj.category, "title", "")
+                return f"{category_path} — {obj.name}"
+
+            formfield.label_from_instance = label_from_instance
+            return formfield
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    @admin.display(description="Product")
+    def product_path(self, obj):
+        return product_path_label(obj.product, link=True)

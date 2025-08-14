@@ -108,20 +108,14 @@
                         </div>
                         <div class="nav-menu-wrapper">
                             <ul class="nav-menu">
-                                <li>
+                                <li class="home-toplink">
                                     <a href="/">
-                                        <span class="d-inline d-lg-none me-1">Начална страница</span>
                                         <i class="fas fa-home"></i>
+                                        <span class="d-inline d-lg-none ms-1">Начална страница</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{% url 'store:shop' %}">Всички продукти</a>
-                                </li>
-                                <li>
-                                    <a href="{% url 'store:band_of_the_day' %}"><i class="fas fa-bolt me-1"></i> Каишка на деня</a>
-                                </li>
-                                <li>
-                                    <a href="{% url 'store:sale' %}"><i class="fas fa-tags me-1"></i> Разпродажба</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);" class="header-chevron-toggle">
@@ -129,8 +123,17 @@
                                         <span class="submenu-indicator"><span class="submenu-indicator-chevron"></span></span>
                                     </a>
                                     <ul class="nav-dropdown">
+                                        <li class="sale-in-categories">
+                                            <a href="{% url 'store:sale' %}"><i class="fas fa-tags me-1"></i> Разпродажба</a>
+                                        </li>
                                         {% include 'partials/_category_menu_recursive.html' with categories=category_tree %}
                                     </ul>
+                                </li>
+                                <li>
+                                    <a href="{% url 'store:band_of_the_day' %}"><i class="fas fa-bolt me-1"></i> Каишка на деня</a>
+                                </li>
+                                <li class="sale-toplink">
+                                    <a href="{% url 'store:sale' %}"><i class="fas fa-tags me-1"></i> Разпродажба</a>
                                 </li>
                                 <li>
                                     <a href="javascript:void(0);" class="header-chevron-toggle">
@@ -138,6 +141,9 @@
                                         <span class="submenu-indicator"><span class="submenu-indicator-chevron"></span></span>
                                     </a>
                                     <ul class="nav-dropdown">
+                                        <li class="d-none d-lg-inline">
+                                            <a href="{% url 'store:order_tracker_page' %}"><i class="fas fa-shipping-fast me-1"></i>Проследи поръчка</a>
+                                        </li>
                                         <li>
                                             <a href="{% url 'store:about' %}"><i class="fas fa-info-circle me-1"></i> За нас</a>
                                         </li>
@@ -158,15 +164,8 @@
                                         </li>
                                     </ul>
                                 </li>
-                                <li>
-                                    <a href="{% url 'store:order_tracker_page' %}">
-                                        <span class="d-inline d-lg-none d-xl-inline">
-                                            Проследи поръчка <i class="fas fa-shipping-fast ms-1"></i>
-                                        </span>
-                                        <span class="d-none d-lg-inline d-xl-none">
-                                            <i class="fas fa-shipping-fast ms-1"></i>
-                                        </span>
-                                    </a>
+                                <li class="d-inline d-lg-none">
+                                    <a href="{% url 'store:order_tracker_page' %}"><i class="fas fa-shipping-fast me-1"></i>Проследи поръчка</a>
                                 </li>
                             </ul>
                         </div>

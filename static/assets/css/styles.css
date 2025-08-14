@@ -516,6 +516,16 @@ h6 {
     transform: translateY(-8px) rotate(-45deg);
 }
 
+.sale-in-categories { display: none; }
+@media (min-width: 992px) and (max-width: 1261.98px) {
+    .sale-toplink { display: none !important; }
+    .sale-in-categories { display: inline; }
+}
+
+@media (min-width: 992px) and (max-width: 1041.98px) {
+    .home-toplink { display: none !important; }
+}
+
 /* Off-canvas sidebar styles for nav (hamburger opens this) */
 .nav-menu-wrapper {
     width: 320px;

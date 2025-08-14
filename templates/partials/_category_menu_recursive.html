@@ -1,6 +1,6 @@
 {% for category in categories %}
     <li>
-        <a href="{{ category.url }}">
+        <a href="{{ category.url }}" class="header-chevron-toggle">
             {{ category.title }}
             {% if category.children %}
                 <span class="submenu-indicator"><span class="submenu-indicator-chevron"></span></span>

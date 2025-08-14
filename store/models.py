@@ -199,6 +199,9 @@ class Product(models.Model):
     def reviews(self):
         return Review.objects.filter(product=self)
 
+    def gallery(self):
+        return Gallery.objects.filter(product=self)
+
     @property
     def effective_price(self):
         """Price used for purchase: sale_price if valid, otherwise price."""

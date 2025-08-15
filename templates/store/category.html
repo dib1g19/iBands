@@ -35,15 +35,15 @@
                             <div class="col-6 col-md-4 col-lg-3">
                                 <div class="card mb-3">
                                     {% if sub.is_all %}
-                                        {% if sub.image %}
+                                        {% if sub.marketing_image %}
                                             <a href="{% url 'store:category_all_sub' category.get_full_path %}">
-                                                {% include 'store/_hover_image.html' with image=sub.image hover_image=sub.marketing_image alt=sub.title %}
+                                                {% include 'store/_hover_image.html' with image=sub.marketing_image hover_image=sub.hover_image alt=sub.title %}
                                             </a>
                                         {% endif %}
                                     {% else %}
-                                        {% if sub.image %}
+                                        {% if sub.marketing_image %}
                                             <a href="{{ sub.get_absolute_url }}">
-                                                {% include 'store/_hover_image.html' with image=sub.image hover_image=sub.marketing_image alt=sub.title %}
+                                                {% include 'store/_hover_image.html' with image=sub.marketing_image hover_image=sub.hover_image alt=sub.title %}
                                             </a>
                                         {% endif %}
                                     {% endif %}

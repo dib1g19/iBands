@@ -41,7 +41,9 @@
                     <!-- Image -->
                     <div class="col-12 col-lg-6">
                         <div class="h-100 w-100 bg-light p-3 p-lg-4">
-                            {% include 'store/_hover_image.html' with image=band_of_the_day.image hover_image=band_of_the_day.gallery_images.first.image alt=band_of_the_day.name %}
+                            <a href="{% url 'store:band_of_the_day' %}" class="d-block">
+                                {% include 'store/_hover_image.html' with image=band_of_the_day.image hover_image=band_of_the_day.gallery_images.first.image alt=band_of_the_day.name %}
+                            </a>
                         </div>
                     </div>
                     <!-- Content -->
@@ -98,39 +100,6 @@
                                     <h2 class="category-title mb-2">{{ c.title }}</h2>
                                     <a href="{{ c.get_absolute_url }}" class="btn fw-bold shadow-sm">Купи сега</a>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
-
-    <!-- Categories Section -->
-    <section>
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                    <div class="sec_title position-relative text-center">
-                        <h1 class="fw-semibold pt-3">Категории</h1>
-                    </div>
-                </div>
-            </div>
-            <div class="row align-items-center justify-content-center">
-                {% for c in categories %}
-                    <div class="col-xl-2 col-lg-2 col-md-3 col-sm-6 col-4">
-                        <div class="cats_side_wrap text-center mx-auto mb-3">
-                            <div class="sl_cat_01">
-                                <div class="d-inline-flex align-items-center justify-content-center p-4 rounded-circle mb-2 border">
-                                    <a href="{{ c.get_absolute_url }}" class="d-block">
-                                        {% if c.image %}
-                                            <img src="{{ c.image.url }}" class="img-fluid" width="120" alt="Категория: {{ c.title }}" />
-                                        {% endif %}
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="sl_cat_02" style="min-height: 40px;">
-                                <h6 class="m-0 fw-medium fs-sm"><a href="{{ c.get_absolute_url }}">{{ c.title }}</a></h6>
                             </div>
                         </div>
                     </div>

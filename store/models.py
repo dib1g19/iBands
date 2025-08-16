@@ -10,7 +10,6 @@ from store.utils import floor_to_cent
 
 STATUS = (
     ("published", "Published"),
-    ("draft", "Draft"),
     ("disabled", "Disabled"),
 )
 
@@ -27,6 +26,7 @@ PAYMENT_METHOD = (
 )
 
 ORDER_STATUS = (
+    ("initiated", "Незавършена"),
     ("received", "Приета"),
     ("shipped", "Изпратена"),
     ("delivered", "Доставена"),
@@ -331,7 +331,7 @@ class Order(models.Model):
     date = models.DateTimeField(default=timezone.now)
 
     order_status = models.CharField(
-        max_length=100, choices=ORDER_STATUS, default="received"
+        max_length=100, choices=ORDER_STATUS, default="initiated"
     )
     payment_status = models.CharField(
         max_length=100, choices=PAYMENT_STATUS, default="processing"

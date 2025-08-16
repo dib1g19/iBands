@@ -332,6 +332,8 @@
     let selectedPayment = null;
     let selectedShipping = null;
     let lastEcontShipping = { shipping_price: null, shipping_price_cod: null, currency_sign: "лв." };
+    // Track last saved address to avoid redundant autosaves
+    let lastSavedAddressKey = null;
 
     function updateSummaryForPayment() {
         const shippingSummaryElem = document.getElementById('shipping-summary-value');
@@ -466,6 +468,54 @@
             document.getElementById('econt_customer_office_code').value = data.office_code || '';
             document.getElementById('econt_customer_face').value = data.face || '';
             document.getElementById('econt_customer_post_code').value = data.post_code || '';
+
+            // Build a unique key for current address payload
+            const currentAddressKey = JSON.stringify({
+                name: data.name || '',
+                phone: data.phone || '',
+                email: data.email || '',
+                city: data.city_name || '',
+                address: data.address || '',
+                office_name: data.office_name || '',
+                office_code: data.office_code || '',
+                face: data.face || '',
+                post_code: data.post_code || ''
+            });
+
+            // Auto-save address to backend only if it changed
+            if (currentAddressKey !== lastSavedAddressKey) {
+                const officeName = data.office_name || '';
+                const payload = {
+                    name: data.name || '',
+                    phone: data.phone || '',
+                    email: data.email || '',
+                    delivery_method: officeName ? 'econt_office' : 'econt',
+                    city: data.city_name || '',
+                    address: data.address || '',
+                    office_code: data.office_code || '',
+                    office_name: officeName,
+                    face: data.face || '',
+                    post_code: data.post_code || ''
+                    // Note: no shipping_price here on autosave
+                };
+                try {
+                    fetch('/save-econt-address/{{ order.order_id }}/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(function (resp) { return resp.json(); })
+                    .then(function (respData) {
+                        if (respData && respData.success) {
+                            lastSavedAddressKey = currentAddressKey;
+                        } else {
+                            // Silent fail; leave save to happen again on finalize
+                            console.log('Econt autosave address failed');
+                        }
+                    })
+                    .catch(function () { /* ignore autosave errors */ });
+                } catch (e) { /* no-op */ }
+            }
         }
         if (shippingChanged) {
             updateSummaryForPayment();

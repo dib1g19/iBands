@@ -137,12 +137,13 @@ def save_econt_address(request, order_id):
             order = store_models.Order.objects.get(order_id=order_id)
             data = json.loads(request.body)
 
-
-            shipping_price = data.get('shipping_price')
-            try:
-                shipping_price = float(shipping_price)
-            except (TypeError, ValueError):
-                shipping_price = 0.0
+            # Parse shipping price only if provided; otherwise leave as None
+            shipping_price = None
+            if 'shipping_price' in data:
+                try:
+                    shipping_price = float(data.get('shipping_price'))
+                except (TypeError, ValueError):
+                    shipping_price = None
 
             user = request.user if request.user.is_authenticated else None
             office_name = data.get('office_name', '')
@@ -186,7 +187,9 @@ def save_econt_address(request, order_id):
                     address_kwargs['user'] = user
                 address = customer_models.Address.objects.create(**address_kwargs)
             order.address = address
-            order.shipping = shipping_price
+            # Update shipping only when a valid shipping price was provided
+            if shipping_price is not None:
+                order.shipping = shipping_price
             # Coupon logic: recalculate discount and totals if coupon is applied
             apply_coupon_discount(order)
             return JsonResponse({"success": True})
@@ -1012,6 +1015,8 @@ def cod_payment(request, order_id):
         order = store_models.Order.objects.get(order_id=order_id)
         order.payment_method = "cash_on_delivery"
         order.payment_status = "cash_on_delivery"
+        # Mark order as received when customer confirms COD
+        order.order_status = "received"
         # Econt integration: send order to Econt after saving as paid
         awb = None
         try:
@@ -1090,6 +1095,8 @@ def stripe_payment_verify(request, order_id):
         if order.payment_status == "processing":
             order.payment_status = "paid"
             order.payment_method = "card"
+            # Mark order as received upon successful payment
+            order.order_status = "received"
             # Econt integration: send order to Econt after Stripe payment is confirmed
             awb = None
             try:

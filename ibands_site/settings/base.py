@@ -151,6 +151,15 @@ ECONT_SHIPPMENT_CALC_URL = env("ECONT_SHIPPMENT_CALC_URL", default="https://deli
 ECONT_UPDATE_ORDER_ENDPOINT = env("ECONT_UPDATE_ORDER_ENDPOINT", default="https://delivery.econt.com/services/OrdersService.updateOrder.json")
 ECONT_PRIVATE_KEY = env("ECONT_PRIVATE_KEY")
 
+# --- Speedy Integration ---
+SPEEDY_USERNAME = env("SPEEDY_USERNAME", default=None)
+SPEEDY_PASSWORD = env("SPEEDY_PASSWORD", default=None)
+SPEEDY_API_BASE = env("SPEEDY_API_BASE", default="https://api.speedy.bg")
+SPEEDY_CREATE_SHIPMENT_URL = env("SPEEDY_CREATE_SHIPMENT_URL", default=f"{SPEEDY_API_BASE}/shipments")
+SPEEDY_CALCULATION_URL = env("SPEEDY_CALCULATION_URL", default=f"{SPEEDY_API_BASE}/calculation")
+SPEEDY_DEFAULT_SERVICE_ID = env("SPEEDY_DEFAULT_SERVICE_ID", default="505")
+SPEEDY_DROPOFF_OFFICE_ID = env("SPEEDY_DROPOFF_OFFICE_ID", default=867)
+
 # --- Jazzmin Admin Theme ---
 JAZZMIN_SETTINGS = {
     "site_title": "iBands",

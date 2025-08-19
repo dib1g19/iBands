@@ -24,6 +24,8 @@
     .collapsible-section.open {
         max-height: 2000px;
     }
+    /* Ensure collapsed sections don't display content */
+    #speedy-shipping-block.open { overflow: visible; }
     @media (min-width: 992px) {
         .sticky-order-summary {
             position: sticky;
@@ -126,6 +128,64 @@
                                 </div>
                             </div>
                             </div>
+                            <div class="col-12">
+                            <div id="speedy-shipping-block" class="collapsible-section">
+                                <div class="card-wrap rounded mb-4">
+                                    <div class="card-wrap-header px-3 py-2 border-bottom">
+                                        <div class="card-header-flex">
+                                            <h4 class="fs-md fw-semibold mb-1">Спиди доставка</h4>
+                                        </div>
+                                    </div>
+                                    <div class="card-wrap-body px-3 py-3">
+                                        <div class="mb-2">
+                                            <div class="alert alert-info">
+                                                Моля, попълнете вашите данни за доставка чрез формата на Спиди по-долу. След като попълните и потвърдите, ще използваме тази информация за изпращане на вашата поръчка.
+                                            </div>
+                                        </div>
+                                        <div id="speedy-error-block"></div>
+                                        <div class="row g-2">
+                                            <div class="col-12 mb-1">
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="speedy_delivery_mode" id="speedy_mode_address" value="address">
+                                                    <label class="form-check-label" for="speedy_mode_address">Личен адрес</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="speedy_delivery_mode" id="speedy_mode_office" value="office">
+                                                    <label class="form-check-label" for="speedy_mode_office">Офис или автомат</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="text" class="form-control" id="speedy_name" placeholder="Име и фамилия">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="text" class="form-control" id="speedy_face" placeholder="Лице за контакт (за юридически лица)">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="text" class="form-control" id="speedy_phone" placeholder="Телефон">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="email" class="form-control" id="speedy_email" placeholder="Имейл">
+                                            </div>
+                                            <div class="col-12 position-relative">
+                                                <input type="text" class="form-control" id="speedy_city_search" placeholder="Град (започнете да пишете)">
+                                                <div id="speedy_city_suggestions" class="position-absolute w-100" style="z-index:1050"></div>
+                                                <input type="hidden" id="speedy_site_id">
+                                                <input type="hidden" id="speedy_post_code">
+                                            </div>
+                                            <div class="col-12 speedy-address-field">
+                                                <input type="text" class="form-control" id="speedy_address" placeholder="Адрес за доставка">
+                                            </div>
+                                            <div class="col-12 position-relative speedy-office-field">
+                                                <input type="text" class="form-control" id="speedy_office_search" placeholder="Офис или автомат (започнете да пишете)">
+                                                <div id="speedy_office_suggestions" class="list-group position-absolute w-100" style="z-index:1050"></div>
+                                                <input type="hidden" class="form-control" id="speedy_office_code" placeholder="ID на офис (по избор)">
+                                                <input type="hidden" class="form-control" id="speedy_office_name">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -170,6 +230,9 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script>
+    // removed debug helper
+</script>
 <script src="https://js.stripe.com/v3/"></script>
 <script>
     // Stripe payment logic (address must be saved before payment)
@@ -201,7 +264,7 @@
 
         if (!addressData.phone || (!addressData.office_name && !addressData.address)) {
             if (econtErrorBlock) {
-                econtErrorBlock.innerHTML = '<div class="alert alert-danger mb-2">Моля, попълнете и потвърдете адреса за доставка чрез формата на Еконт!</div>';
+                econtErrorBlock.innerHTML = '<div class="alert alert-danger">Моля, попълнете и потвърдете адреса за доставка чрез формата на Еконт!</div>';
                 econtErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
             }
             return;
@@ -257,7 +320,7 @@
                 }
             } else {
                 if (econtErrorBlock) {
-                    econtErrorBlock.innerHTML = '<div class="alert alert-danger mb-2">Възникна неочаквана грешка при запазване на адреса. Моля, опитайте отново.</div>';
+                    econtErrorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса. Моля, опитайте отново.</div>';
                     econtErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
                 }
                 button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
@@ -265,7 +328,7 @@
         })
         .catch(function (error) {
             if (econtErrorBlock) {
-                econtErrorBlock.innerHTML = '<div class="alert alert-danger mb-2">Възникна неочаквана грешка при запазване на адреса. Моля, опитайте отново.</div>';
+                econtErrorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса. Моля, опитайте отново.</div>';
                 econtErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
             }
             button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
@@ -308,17 +371,114 @@
     }
 </script>
 <script>
+    // Unified Speedy payment handler (mirrors Econt flow)
+    function handleSpeedyPayment(button, paymentType) {
+        var officeName = document.getElementById('speedy_office_search')?.value;
+        var siteId = document.getElementById('speedy_site_id')?.value;
+
+        var addressData = {
+            name: document.getElementById('speedy_name').value,
+            phone: document.getElementById('speedy_phone').value,
+            email: document.getElementById('speedy_email').value,
+            delivery_method: officeName ? 'speedy_office' : 'speedy',
+            city: document.getElementById('speedy_city_search').value,
+            address: document.getElementById('speedy_address').value,
+            office_code: document.getElementById('speedy_office_code')?.value,
+            office_name: officeName,
+            face: document.getElementById('speedy_face').value,
+            post_code: document.getElementById('speedy_post_code')?.value || '',
+            site_id: siteId,
+            shipping_price: (selectedPayment === 'card')
+                ? (lastSpeedyShipping.shipping_price_cod ? (parseFloat(lastSpeedyShipping.shipping_price_cod) * 0.5).toFixed(2) : null)
+                : lastSpeedyShipping.shipping_price_cod
+        };
+
+        var speedyErrorBlock = document.getElementById('speedy-error-block');
+        if (speedyErrorBlock) speedyErrorBlock.innerHTML = '';
+
+        if (!addressData.phone || (!addressData.office_name && !addressData.address)) {
+            if (speedyErrorBlock) {
+                speedyErrorBlock.innerHTML = '<div class="alert alert-danger">Моля, попълнете адреса за доставка за Спиди!</div>';
+                speedyErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            return;
+        }
+
+        if (paymentType === 'card') {
+            button.innerHTML = 'Плащане с карта <i class="fas fa-spinner fa-spin ms-2"></i>';
+        } else {
+            button.innerHTML = 'Наложен платеж <i class="fas fa-spinner fa-spin"></i>';
+        }
+
+        fetch('/save-speedy-address/{{ order.order_id }}/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+            body: JSON.stringify(addressData)
+        })
+        .then(function (resp) { return resp.json(); })
+        .then(function (respData) {
+            if (respData.success) {
+                if (paymentType === 'card') {
+                    fetch('/stripe-payment/{{order.order_id}}/', {
+                        method: 'POST',
+                        body: JSON.stringify({ email: addressData.email })
+                    })
+                    .then(function (response) { return response.json() })
+                    .then(function (session) {
+                        return stripe.redirectToCheckout({ sessionId: session.sessionId })
+                    })
+                    .then(function (result) {
+                        if (result.error) {
+                            if (window.Toast) {
+                                window.Toast.fire({ icon: "error", title: result.error.message });
+                            } else {
+                                alert(result.error.message);
+                            }
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log('Error: ', error)
+                    });
+                } else if (paymentType === 'cash_on_delivery') {
+                    fetch("{% url 'store:cod_payment' order.order_id %}", {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrftoken }
+                    })
+                    .then(function (response) {
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                        }
+                    });
+                }
+            } else {
+                if (speedyErrorBlock) {
+                    speedyErrorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса (Спиди). Моля, опитайте отново.</div>';
+                    speedyErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+                button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
+            }
+        })
+        .catch(function (error) {
+            if (speedyErrorBlock) {
+                speedyErrorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса (Спиди). Моля, опитайте отново.</div>';
+                speedyErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
+        });
+    }
+</script>
+<script>
     // Collapsible shipping block logic
     document.addEventListener('DOMContentLoaded', function() {
         var econtRadio = document.getElementById('shipping-econt');
         var speedyRadio = document.getElementById('shipping-speedy');
         var econtBlock = document.getElementById('econt-shipping-block');
+        var speedyBlock = document.getElementById('speedy-shipping-block');
         function updateShippingBlock() {
-            if (econtRadio.checked) {
-                econtBlock.classList.add('open');
-            } else {
-                econtBlock.classList.remove('open');
-            }
+            const showE = !!(econtRadio && econtRadio.checked);
+            const showS = !!(speedyRadio && speedyRadio.checked);
+            if (econtBlock) econtBlock.classList.toggle('open', showE);
+            if (speedyBlock) speedyBlock.classList.toggle('open', showS);
         }
         if (econtRadio && speedyRadio && econtBlock) {
             econtRadio.addEventListener('change', updateShippingBlock);
@@ -332,6 +492,7 @@
     let selectedPayment = null;
     let selectedShipping = null;
     let lastEcontShipping = { shipping_price: null, shipping_price_cod: null, currency_sign: "лв." };
+    let lastSpeedyShipping = { shipping_price: null, shipping_price_cod: null, currency_sign: "лв." };
     // Track last saved address to avoid redundant autosaves
     let lastSavedAddressKey = null;
 
@@ -343,7 +504,10 @@
         let shippingText = "-";
         let shippingVal = 0;
 
-        let officeName = document.getElementById('econt_customer_office_name')?.value || '';
+        let officeNameE = document.getElementById('econt_customer_office_name')?.value || '';
+        let officeNameS = document.getElementById('speedy_office_name')?.value || '';
+        let officeSelected = (selectedShipping === 'econt') ? !!officeNameE : (selectedShipping === 'speedy' ? !!officeNameS : false);
+        let currencySign = (selectedShipping === 'speedy') ? (lastSpeedyShipping.currency_sign || "лв.") : (lastEcontShipping.currency_sign || "лв.");
 
         if (selectedShipping === 'econt' && selectedPayment) {
             if (selectedPayment === 'cash_on_delivery') {
@@ -361,9 +525,23 @@
                     shippingVal = parseFloat(shipping);
                 }
             }
+        } else if (selectedShipping === 'speedy' && selectedPayment) {
+            if (selectedPayment === 'cash_on_delivery') {
+                if (lastSpeedyShipping.shipping_price_cod !== undefined && lastSpeedyShipping.shipping_price_cod !== null) {
+                    shipping = lastSpeedyShipping.shipping_price_cod;
+                    showShipping = true;
+                    shippingText = shipping + ' ' + (lastSpeedyShipping.currency_sign || "лв.");
+                    shippingVal = parseFloat(shipping);
+                }
+            } else if (selectedPayment === 'card') {
+                if (lastSpeedyShipping.shipping_price_cod !== undefined && lastSpeedyShipping.shipping_price_cod !== null) {
+                    shipping = (parseFloat(lastSpeedyShipping.shipping_price_cod) * 0.5).toFixed(2);
+                    showShipping = true;
+                    shippingText = shipping + ' ' + (lastSpeedyShipping.currency_sign || "лв.") + " (50% отстъпка)";
+                    shippingVal = parseFloat(shipping);
+                }
+            }
         }
-
-        // [Extend here for Speedy if needed]
         if (shippingSummaryElem) {
             if (showShipping) {
                 shippingSummaryElem.textContent = shippingText;
@@ -380,14 +558,14 @@
         }
         let total = backendTotal;
 
-        // Free delivery only if order >= 75 and Econt office is selected
+        // Free delivery only if order >= 75 and office is selected
         let freeDeliveryThreshold = 75;
-        if (backendTotal >= freeDeliveryThreshold && showShipping && officeName) {
+        if (backendTotal >= freeDeliveryThreshold && showShipping && officeSelected) {
             if (shippingSummaryElem) {
                 shippingSummaryElem.textContent = "Безплатна доставка до офис";
             }
             if (totalSummaryElem) {
-                totalSummaryElem.textContent = backendTotal.toFixed(2) + ' ' + (lastEcontShipping.currency_sign || "лв.");
+                totalSummaryElem.textContent = backendTotal.toFixed(2) + ' ' + currencySign;
             }
         } else {
             if (showShipping) {
@@ -402,7 +580,7 @@
             }
             if (totalSummaryElem) {
                 if (total !== null && !isNaN(total)) {
-                    totalSummaryElem.textContent = total.toFixed(2) + ' ' + (lastEcontShipping.currency_sign || "лв.");
+                    totalSummaryElem.textContent = total.toFixed(2) + ' ' + currencySign;
                 } else {
                     totalSummaryElem.textContent = '-';
                 }
@@ -429,13 +607,15 @@
         }
 
         if (paymentCardRadio && paymentCodRadio) {
-            paymentCardRadio.addEventListener('change', function() {
+            paymentCardRadio.addEventListener('change', function(){
                 selectedPayment = 'card';
                 updateSummaryForPayment();
+                if (selectedShipping === 'speedy') { updateQuote(); }
             });
-            paymentCodRadio.addEventListener('change', function() {
+            paymentCodRadio.addEventListener('change', function(){
                 selectedPayment = 'cash_on_delivery';
                 updateSummaryForPayment();
+                if (selectedShipping === 'speedy') { updateQuote(); }
             });
         }
         if (shippingEcontRadio && shippingSpeedyRadio) {
@@ -537,21 +717,29 @@
             if (missingPayment || missingShipping) {
                 if (missingPayment) {
                     if (paymentErrorBlock) {
-                        paymentErrorBlock.innerHTML = '<div class="alert alert-danger mb-2">Моля, изберете метод на плащане!</div>';
+                        paymentErrorBlock.innerHTML = '<div class="alert alert-danger">Моля, изберете метод на плащане!</div>';
                         paymentErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
                     }
                 } else if (missingShipping) {
                     if (shippingErrorBlock) {
-                        shippingErrorBlock.innerHTML = '<div class="alert alert-danger mb-2">Моля, изберете метод на доставка!</div>';
+                        shippingErrorBlock.innerHTML = '<div class="alert alert-danger">Моля, изберете метод на доставка!</div>';
                         shippingErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
                     }
                 }
                 return;
             }
             if (selectedPayment === 'cash_on_delivery') {
-                document.getElementById('cod-payment').click();
+                if (selectedShipping === 'speedy') {
+                    handleSpeedyPayment(document.getElementById('cod-payment'), 'cash_on_delivery');
+                } else {
+                    document.getElementById('cod-payment').click();
+                }
             } else if (selectedPayment === 'card') {
-                document.getElementById('stripe-payment').click();
+                if (selectedShipping === 'speedy') {
+                    handleSpeedyPayment(document.getElementById('stripe-payment'), 'card');
+                } else {
+                    document.getElementById('stripe-payment').click();
+                }
             }
         });
     });
@@ -591,5 +779,222 @@
         currency: "BGN"
     });
     }
+</script>
+<script>
+    // Speedy dropdown population
+    (function(){
+        const citySearch = document.getElementById('speedy_city_search');
+        const citySuggestions = document.getElementById('speedy_city_suggestions');
+        const siteIdInput = document.getElementById('speedy_site_id');
+        const officeSearch = document.getElementById('speedy_office_search');
+        const officeSuggestions = document.getElementById('speedy_office_suggestions');
+        const officeCodeInput = document.getElementById('speedy_office_code');
+        const officeNameHidden = document.getElementById('speedy_office_name');
+        const quoteBox = document.getElementById('speedy-shipping-price-block');
+        let quoteTimer = null;
+        function updateQuote(){
+            clearTimeout(quoteTimer);
+            quoteTimer = setTimeout(function(){
+                const params = new URLSearchParams();
+                const siteId = siteIdInput.value;
+                const officeId = officeCodeInput.value;
+                const city = citySearch.value;
+                const address = document.getElementById('speedy_address')?.value || '';
+                const postCode = document.getElementById('speedy_post_code')?.value || '';
+                const phone = document.getElementById('speedy_phone')?.value || '';
+                const name = document.getElementById('speedy_name')?.value || '';
+                const email = document.getElementById('speedy_email')?.value || '';
+
+                // Only quote when office is selected or address is provided
+                const hasOffice = !!officeId;
+                const hasAddress = !!address.trim();
+                if (!hasOffice && !hasAddress) {
+                    if (quoteBox) quoteBox.innerHTML = '';
+                    return;
+                }
+
+                if (siteId) params.append('site_id', siteId);
+                if (officeId) params.append('office_id', officeId);
+                if (city) params.append('city', city);
+                if (address) params.append('address', address);
+                if (postCode) params.append('post_code', postCode);
+                if (phone) params.append('phone', phone);
+                if (name) params.append('name', name);
+                if (email) params.append('email', email);
+                if (selectedPayment === 'cash_on_delivery') {
+                    params.append('payment', 'cod');
+                }
+                fetch('/speedy/quote/{{ order.order_id }}/?'+params.toString())
+                    .then(r=>r.json())
+                    .then(data=>{
+                        if (data && data.quote && data.quote.price){
+                            const basePrice = parseFloat(data.quote.price);
+                            // Update global shipping cache for summary block
+                            lastSpeedyShipping.shipping_price_cod = basePrice.toFixed(2);
+                            lastSpeedyShipping.currency_sign = 'лв.';
+                            // Also reflect in summary immediately
+                            updateSummaryForPayment();
+                            // Optional: suppress separate inline box to avoid duplication
+                            if (quoteBox) quoteBox.innerHTML = '';
+                        } else {
+                            if (quoteBox) quoteBox.innerHTML = '';
+                        }
+                    }).catch(()=>{ if (quoteBox) quoteBox.innerHTML=''; });
+            }, 300);
+        }
+        function setOffices(siteId){
+            officeSuggestions.innerHTML = '';
+            officeSuggestions.style.display = 'none';
+            if(!siteId) return;
+            fetch('/speedy/find-offices/?site_id='+siteId)
+                .then(r=>r.json())
+                .then(data=>{
+                    const offices=(data && data.offices)||[];
+                    // Store list on element for filtering
+                    officeSuggestions._all = offices;
+                    renderOfficeSuggestions(offices);
+                    // Show all immediately so user can scroll without typing
+                    officeSuggestions.style.display='block';
+                    updateQuote();
+                }).catch((e)=>{ console.warn('[Speedy] Offices fetch failed', e); });
+        }
+        function searchSites(q){
+            if(!q || q.length < 2) return Promise.resolve([]);
+            return fetch('/speedy/find-sites/?q='+encodeURIComponent(q))
+                .then(r=>r.json())
+                .then(data=> { return (data && data.sites) || []; })
+                .catch((e)=>{ console.warn('[Speedy] Sites fetch failed', e); return []; });
+        }
+        function clearSuggestions(el){ el.innerHTML=''; el.style.display='none'; }
+        function renderCitySuggestions(sites){
+            clearSuggestions(citySuggestions);
+            if(!sites.length) return;
+            sites.slice(0, 10).forEach(s=>{
+                const a=document.createElement('a');
+                a.href='#';
+                a.className='list-group-item list-group-item-action';
+                a.textContent=((s.type||'')+' '+(s.name||'')).trim();
+                a.addEventListener('click', function(e){
+                    e.preventDefault();
+                    citySearch.value = ((s.type||'')+' '+(s.name||'')).trim();
+                    siteIdInput.value = s.id;
+                    const pcEl = document.getElementById('speedy_post_code');
+                    if (pcEl && s.postCode) pcEl.value = s.postCode;
+                    clearSuggestions(citySuggestions);
+                    setOffices(s.id);
+                });
+                citySuggestions.appendChild(a);
+            });
+            citySuggestions.style.display='block';
+        }
+        function renderOfficeSuggestions(offices){
+            clearSuggestions(officeSuggestions);
+            if(!offices || !offices.length) return;
+            offices.slice(0, 10).forEach(o=>{
+                const a=document.createElement('a');
+                a.href='#';
+                a.className='list-group-item list-group-item-action';
+                a.textContent=o.name || ('Офис '+o.id);
+                a.addEventListener('click', function(e){
+                    e.preventDefault();
+                    officeSearch.value = o.name || '';
+                    officeCodeInput.value = o.id || '';
+                    if (officeNameHidden) officeNameHidden.value = o.name || '';
+                    const pcEl = document.getElementById('speedy_post_code');
+                    if (pcEl && (o.postCode || o.postcode)) pcEl.value = (o.postCode || o.postcode);
+                    clearSuggestions(officeSuggestions);
+                    updateQuote();
+                });
+                officeSuggestions.appendChild(a);
+            });
+            officeSuggestions.style.display='block';
+        }
+        // Basic suggestions
+        if(citySearch && citySuggestions){
+            let timer=null;
+            citySearch.addEventListener('input', function(){
+                clearTimeout(timer);
+                // Clear office selection when city text changes
+                if (officeSearch) officeSearch.value = '';
+                if (officeCodeInput) officeCodeInput.value = '';
+                if (officeNameHidden) officeNameHidden.value = '';
+                clearSuggestions(officeSuggestions);
+                const q=this.value;
+                timer=setTimeout(async ()=>{
+                    const sites=await searchSites(q);
+                    renderCitySuggestions(sites);
+                },300);
+            });
+            // When Speedy is chosen, reset fields; do not auto-select city/office
+            const speedyRadio = document.getElementById('shipping-speedy');
+            if (speedyRadio) {
+                speedyRadio.addEventListener('change', function(){
+                    if (this.checked) {
+                        if (citySearch) citySearch.value = '';
+                        if (siteIdInput) siteIdInput.value = '';
+                        if (officeSearch) officeSearch.value = '';
+                        if (officeCodeInput) officeCodeInput.value = '';
+                        if (officeNameHidden) officeNameHidden.value = '';
+                        clearSuggestions(citySuggestions);
+                        clearSuggestions(officeSuggestions);
+                        if (typeof lastSpeedyShipping !== 'undefined') {
+                            lastSpeedyShipping.shipping_price = null;
+                            lastSpeedyShipping.shipping_price_cod = null;
+                            lastSpeedyShipping.currency_sign = 'лв.';
+                        }
+                        if (quoteBox) quoteBox.innerHTML = '';
+                        if (typeof updateSummaryForPayment === 'function') {
+                            updateSummaryForPayment();
+                        }
+                    }
+                });
+            }
+        }
+        if(officeSearch && officeSuggestions){
+            officeSearch.addEventListener('input', function(){
+                const all = officeSuggestions._all || [];
+                const q = this.value.toLowerCase();
+                const filtered = q ? all.filter(o=> (o.name||'').toLowerCase().includes(q)) : all;
+                renderOfficeSuggestions(filtered);
+                updateQuote();
+            });
+        }
+        // Also update quote on address/post code changes for address delivery
+        const addressInput = document.getElementById('speedy_address');
+        const postCodeInput = document.getElementById('speedy_post_code');
+        if (addressInput) {
+            addressInput.addEventListener('input', updateQuote);
+        }
+        if (postCodeInput) {
+            postCodeInput.addEventListener('input', updateQuote);
+        }
+        // Hide suggestions on outside click
+        document.addEventListener('click', function(e){
+            if (citySuggestions && !citySuggestions.contains(e.target) && citySearch && !citySearch.contains(e.target)) {
+                clearSuggestions(citySuggestions);
+            }
+            if (officeSuggestions && !officeSuggestions.contains(e.target) && officeSearch && !officeSearch.contains(e.target)) {
+                clearSuggestions(officeSuggestions);
+            }
+        });
+        // Toggle Speedy delivery mode (address vs office)
+        const modeAddress = document.getElementById('speedy_mode_address');
+        const modeOffice = document.getElementById('speedy_mode_office');
+        const speedyAddressFields = document.querySelectorAll('.speedy-address-field');
+        const speedyOfficeFields = document.querySelectorAll('.speedy-office-field');
+        function setSpeedyMode(mode){
+            const isOffice = (mode === 'office');
+            speedyAddressFields.forEach(el => el.style.display = isOffice ? 'none' : 'block');
+            speedyOfficeFields.forEach(el => el.style.display = isOffice ? 'block' : 'none');
+            updateQuote();
+        }
+        if (modeAddress && modeOffice){
+            // Default to office
+            modeOffice.checked = true;
+            setSpeedyMode('office');
+            modeAddress.addEventListener('change', function(){ if (this.checked) setSpeedyMode('address'); });
+            modeOffice.addEventListener('change', function(){ if (this.checked) setSpeedyMode('office'); });
+        }
+    })();
 </script>
 {% endblock %}

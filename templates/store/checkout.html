@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load static %}
 
 {% block robots %}
     <meta name="robots" content="noindex, nofollow">
@@ -57,13 +58,21 @@
                         <div class="shadow rounded p-3">
                             <h4 class="fw-bold mb-3">Начин на плащане</h4>
                             <div id="payment-error-block"></div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="payment_method" id="payment-card" value="card">
-                                <label class="form-check-label" for="payment-card">Плащане с карта</label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="payment_method" id="payment-cod" value="cash_on_delivery">
-                                <label class="form-check-label" for="payment-cod">Наложен платеж</label>
+                            <div class="shipping-options">
+                                <label class="shipping-card" for="payment-card">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment-card" value="card">
+                                    <div class="shipping-card-inner">
+                                        <img src="{% static 'assets/img/card-payment.svg' %}" alt="Плащане с карта" class="shipping-card-logo" onerror="this.style.display='none'">
+                                        <span class="text-muted ms-auto small">Плащане с карта</span>
+                                    </div>
+                                </label>
+                                <label class="shipping-card" for="payment-cod">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment-cod" value="cash_on_delivery">
+                                    <div class="shipping-card-inner">
+                                        <img src="{% static 'assets/img/cash-payment.svg' %}" alt="Наложен платеж" class="shipping-card-logo" onerror="this.style.display='none'">
+                                        <span class="text-muted ms-auto small">Наложен платеж</span>
+                                    </div>
+                                </label>
                             </div>
                         </div>
 
@@ -76,16 +85,20 @@
                             </div>
                             <div class="card-wrap-body px-3 py-3">
                                 <div id="shipping-error-block"></div>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="shipping_method" id="shipping-econt" value="econt">
-                                    <label class="form-check-label" for="shipping-econt">
-                                        Econt (до офис/адрес)
+                                <div class="shipping-options">
+                                    <label class="shipping-card" for="shipping-econt">
+                                        <input class="form-check-input" type="radio" name="shipping_method" id="shipping-econt" value="econt">
+                                        <div class="shipping-card-inner">
+                                            <img src="{% static 'assets/img/econt-logo.svg' %}" alt="Econt" class="shipping-card-logo" onerror="this.style.display='none'">
+                                            <span class="text-muted ms-auto small">(до офис/адрес)</span>
+                                        </div>
                                     </label>
-                                </div>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="shipping_method" id="shipping-speedy" value="speedy">
-                                    <label class="form-check-label" for="shipping-speedy">
-                                        Speedy (до офис/адрес)
+                                    <label class="shipping-card" for="shipping-speedy">
+                                        <input class="form-check-input" type="radio" name="shipping_method" id="shipping-speedy" value="speedy">
+                                        <div class="shipping-card-inner">
+                                            <img src="{% static 'assets/img/speedy-logo.svg' %}" alt="Speedy" class="shipping-card-logo" onerror="this.style.display='none'">
+                                            <span class="text-muted ms-auto small">(до офис/адрес)</span>
+                                        </div>
                                     </label>
                                 </div>
                             </div>
@@ -155,10 +168,10 @@
                                                 </div>
                                             </div>
                                             <div class="col-12">
-                                                <input type="text" class="form-control" id="speedy_name" placeholder="Име и фамилия">
+                                                <input type="text" class="form-control" id="speedy_name" placeholder="Име и фамилия (за физически лица) / Име на фирма (за юридически лица)">
                                             </div>
                                             <div class="col-12">
-                                                <input type="text" class="form-control" id="speedy_face" placeholder="Лице за контакт (за юридически лица)">
+                                                <input type="text" class="form-control" id="speedy_face" placeholder="Лице за контакт (моля, попълнете, ако сте посочили фирма в горното поле)">
                                             </div>
                                             <div class="col-12">
                                                 <input type="text" class="form-control" id="speedy_phone" placeholder="Телефон">

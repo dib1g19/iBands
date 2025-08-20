@@ -536,12 +536,13 @@ def speedy_quote(request, order_id):
             calc_request["sender"] = {"dropoffOfficeId": int(settings.SPEEDY_DROPOFF_OFFICE_ID)}
         # Include COD in quote when payment method implies COD
         is_cod = (request.GET.get("payment") == "cod") or (order.payment_method == "cash_on_delivery")
+        # Add autoAdjustPickupDate so Speedy quotes next valid pickup even when office is closed
+        service_block = {"autoAdjustPickupDate": True}
         if is_cod:
-            calc_request["service"] = {
-                "additionalServices": {
-                    "cod": {"amount": float(order.sub_total), "processingType": "CASH"}
-                }
+            service_block["additionalServices"] = {
+                "cod": {"amount": float(order.sub_total), "processingType": "CASH"}
             }
+        calc_request["service"] = service_block
         calc_response = speedy_v1_calculate(calc_request)
         # Try to extract a single price/total
         quote = None

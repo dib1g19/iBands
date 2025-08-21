@@ -70,6 +70,7 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "store.context_processors.navigation_context",
+                "store.context_processors.pixel_settings",
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
@@ -140,6 +141,11 @@ STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
 RECAPTCHA_PUBLIC_KEY = env("DJANGO_RECAPTCHA_PUBLIC_KEY")
 RECAPTCHA_PRIVATE_KEY = env("DJANGO_RECAPTCHA_PRIVATE_KEY")
 
+# --- Meta / Facebook ---
+FACEBOOK_PIXEL_ID = env("FACEBOOK_PIXEL_ID")
+FACEBOOK_CAPI_ACCESS_TOKEN = env("FACEBOOK_CAPI_ACCESS_TOKEN")
+FACEBOOK_CAPI_TEST_CODE = env("FACEBOOK_CAPI_TEST_CODE", default=None)
+
 # --- Miscellaneous ---
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MESSAGE_TAGS = {messages.ERROR: "danger"}
@@ -152,8 +158,8 @@ ECONT_UPDATE_ORDER_ENDPOINT = env("ECONT_UPDATE_ORDER_ENDPOINT", default="https:
 ECONT_PRIVATE_KEY = env("ECONT_PRIVATE_KEY")
 
 # --- Speedy Integration ---
-SPEEDY_USERNAME = env("SPEEDY_USERNAME", default=None)
-SPEEDY_PASSWORD = env("SPEEDY_PASSWORD", default=None)
+SPEEDY_USERNAME = env("SPEEDY_USERNAME")
+SPEEDY_PASSWORD = env("SPEEDY_PASSWORD")
 SPEEDY_API_BASE = env("SPEEDY_API_BASE", default="https://api.speedy.bg")
 SPEEDY_CREATE_SHIPMENT_URL = env("SPEEDY_CREATE_SHIPMENT_URL", default=f"{SPEEDY_API_BASE}/shipments")
 SPEEDY_CALCULATION_URL = env("SPEEDY_CALCULATION_URL", default=f"{SPEEDY_API_BASE}/calculation")

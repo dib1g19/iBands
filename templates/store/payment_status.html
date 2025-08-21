@@ -77,7 +77,7 @@
                     content_ids: ['{{ order.order_id }}'],
                     value: {{ order.total|default_if_none:"0"|floatformat:2 }},
                     currency: "BGN"
-                });
+                }, { eventID: '{{ order.payment_id|default:order.order_id }}' });
             }
         </script>
     {% endif %}

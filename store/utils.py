@@ -3,6 +3,8 @@ from django.core.cache import cache
 from django.conf import settings
 from decimal import Decimal, ROUND_FLOOR
 import requests
+import hashlib
+import time
 
 
 def paginate_queryset(request, queryset, per_page):
@@ -164,3 +166,107 @@ def speedy_v1_create_shipment(shipment_request: dict):
     r = requests.post(url, json=payload, timeout=15, headers={"Content-Type": "application/json", "Accept": "application/json"})
     r.raise_for_status()
     return r.json()
+
+
+# --- Meta Conversions API ---
+def _sha256_lower(value: str) -> str:
+    try:
+        return hashlib.sha256(value.strip().lower().encode("utf-8")).hexdigest()
+    except Exception:
+        return ""
+
+
+def send_meta_purchase_event(order, request=None):
+    """
+    Send a server-side Purchase event to Meta Conversions API.
+    Uses FACEBOOK_PIXEL_ID and FACEBOOK_CAPI_ACCESS_TOKEN from settings.
+    If request is provided, include client_user_agent and client_ip_address.
+    Deduplicate by using order.payment_id as event_id if available, else order.order_id.
+    """
+    pixel_id = getattr(settings, "FACEBOOK_PIXEL_ID", None)
+    token = getattr(settings, "FACEBOOK_CAPI_ACCESS_TOKEN", None)
+    if not pixel_id or not token:
+        return None
+
+    try:
+        url = f"https://graph.facebook.com/v20.0/{pixel_id}/events"
+        event_id = (getattr(order, "payment_id", None) or order.order_id) and str(getattr(order, "payment_id", None) or order.order_id)
+
+        # Build user_data
+        email = getattr(order.address, "email", None) or (getattr(order.customer, "email", None) if getattr(order, "customer", None) else None)
+        user_data = {
+            "em": [_sha256_lower(email)] if email else [],
+        }
+        if request is not None:
+            user_data["client_user_agent"] = request.META.get("HTTP_USER_AGENT", "")
+            # Prefer XFF if present
+            xff = request.META.get("HTTP_X_FORWARDED_FOR")
+            client_ip = xff.split(",")[0].strip() if xff else request.META.get("REMOTE_ADDR", "")
+            user_data["client_ip_address"] = client_ip
+
+        # Build custom_data
+        try:
+            order_items = list(order.order_items.all())
+        except Exception:
+            order_items = []
+        contents = []
+        content_ids = []
+        for it in order_items:
+            sku = getattr(it.product, "sku", None) or str(it.product_id)
+            content_ids.append(str(sku))
+            try:
+                price_float = float(it.price)
+            except Exception:
+                price_float = None
+            contents.append({
+                "id": str(sku),
+                "quantity": int(getattr(it, "qty", 1) or 1),
+                **({"item_price": price_float} if price_float is not None else {}),
+            })
+
+        try:
+            total_value = float(order.total)
+        except Exception:
+            total_value = None
+
+        custom_data = {
+            "currency": "BGN",
+            **({"value": total_value} if total_value is not None else {}),
+            **({"content_ids": content_ids} if content_ids else {}),
+            **({"contents": contents} if contents else {}),
+            "content_type": "product",
+            "order_id": str(order.order_id),
+        }
+
+        payload = {
+            "data": [
+                {
+                    "event_name": "Purchase",
+                    "event_time": int(time.time()),
+                    "action_source": "website",
+                    "event_id": event_id,
+                    "user_data": user_data,
+                    "custom_data": custom_data,
+                }
+            ]
+        }
+
+        if request is not None:
+            try:
+                payload["data"][0]["event_source_url"] = request.build_absolute_uri()
+            except Exception:
+                pass
+
+        # Test Events support via env or query param
+        test_code = getattr(settings, "FACEBOOK_CAPI_TEST_CODE", None)
+        if request is not None:
+            override = request.GET.get("fb_test") or request.POST.get("fb_test")
+            if override:
+                test_code = override
+        if test_code:
+            payload["test_event_code"] = str(test_code)
+
+        resp = requests.post(url, params={"access_token": token}, json=payload, timeout=8)
+        return resp.json() if hasattr(resp, "json") else None
+    except Exception:
+        return None

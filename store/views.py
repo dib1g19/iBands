@@ -20,6 +20,7 @@ from store.utils import (
     speedy_v1_find_offices,
     speedy_v1_calculate,
     speedy_v1_create_shipment,
+    send_meta_purchase_event,
 )
 from store import models as store_models
 from customer import models as customer_models
@@ -1396,6 +1397,10 @@ def cod_payment(request, order_id):
         # Mark order as received when customer confirms COD
         order.order_status = "received"
         _send_shipment(order)
+        try:
+            send_meta_purchase_event(order, request)
+        except Exception:
+            pass
         order.save()
         send_order_notification_email(
             order=order,
@@ -1463,11 +1468,20 @@ def stripe_payment_verify(request, order_id):
 
     if session.payment_status == "paid":
         if order.payment_status == "processing":
+            # Prefer payment_intent/id as a stable event id for deduplication
+            try:
+                order.payment_id = getattr(session, "payment_intent", None) or getattr(session, "id", None)
+            except Exception:
+                pass
             order.payment_status = "paid"
             order.payment_method = "card"
             # Mark order as received upon successful payment
             order.order_status = "received"
             _send_shipment(order)
+            try:
+                send_meta_purchase_event(order, request)
+            except Exception:
+                pass
             order.save()
             send_order_notification_email(
                 order=order,

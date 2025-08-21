@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.conf import settings
 from .models import Category, Cart
 from customer.models import Wishlist
 
@@ -45,4 +46,11 @@ def navigation_context(request):
         "category_tree": category_tree,
         "total_cart_items": total_cart_items,
         "wishlist_count": wishlist_count,
+    }
+
+
+def pixel_settings(request):
+    """Expose pixel-related settings to templates."""
+    return {
+        "FACEBOOK_PIXEL_ID": getattr(settings, "FACEBOOK_PIXEL_ID", None),
     }

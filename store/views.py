@@ -1562,7 +1562,7 @@ def filter_products(request):
     # Apply price ordering (by effective price: sale_price if lower, else price)
     if price_order in {"lowest", "highest"}:
         products = products.annotate(
-            effective_price=models.Case(
+            sort_price=models.Case(
                 models.When(
                     models.Q(sale_price__isnull=False) & models.Q(sale_price__lt=models.F("price")),
                     then=models.F("sale_price"),
@@ -1572,9 +1572,9 @@ def filter_products(request):
             )
         )
         if price_order == "lowest":
-            products = products.order_by("-effective_price")
+            products = products.order_by("-sort_price")
         else:
-            products = products.order_by("effective_price")
+            products = products.order_by("sort_price")
 
     # Apply search filter
     if search_filter:

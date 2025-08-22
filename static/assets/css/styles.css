@@ -1547,6 +1547,10 @@ footer {
     font-size: 15px;
 }
 
+a[href^="tel"] {
+    color: #a7a7a7;
+  }
+
 footer .footer_widget ul li a:hover,
 footer .footer_widget ul li a:focus {
     color: #ffffff;

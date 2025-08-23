@@ -6,6 +6,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <p class="fw-semibold fs-6">Междинна сума</p>
                 <p class="fs-6">{{ order.sub_total }} лв.</p>
+                <span id="backend-order-subtotal" data-value="{{ order.sub_total|floatformat:2 }}" class="d-none"></span>
             </div>
             {% if order.saved %}
                 {% for coupon in order.coupons.all %}
@@ -19,6 +20,7 @@
                     <p class="fs-6">{{ order.saved }} лв.</p>
                 </div>
             {% endif %}
+            <span id="backend-order-saved" data-value="{{ order.saved|default:0|floatformat:2 }}" class="d-none"></span>
             <div class="d-flex justify-content-between align-items-center">
                 <p class="fw-semibold fs-6">Доставка</p>
                 <p id="shipping-summary-value" class="fs-6">

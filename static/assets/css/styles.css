@@ -1711,3 +1711,51 @@ input[type="number"] {
 .shipping-card-logo {
     height: 100%;
 }
+
+/* ==========================
+   Global announcement bar
+   ========================== */
+.site-announcement {
+    background: linear-gradient(180deg, #f0fff4 0%, #e9ffeb 100%);
+    border-bottom: 1px solid #d7f7dc;
+}
+.ann-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.ann-item {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    color: #0f5132;
+}
+.ann-item i { color: #198754; }
+
+/* Responsive sizing for announcement bar */
+@media (max-width: 991.98px) {
+    .site-announcement .container { padding-top: 6px; padding-bottom: 6px; }
+    .ann-wrap { gap: 12px; }
+    .ann-item { font-size: 0.95rem; }
+}
+
+@media (max-width: 575.98px) {
+    .site-announcement .container { padding-top: 4px; padding-bottom: 4px; }
+    .ann-wrap { gap: 8px; }
+    .ann-item { font-size: 0.875rem; }
+}
+
+/* ==========================
+   Checkout: Free Shipping Widget
+   ========================== */
+.free-ship-widget {
+    background-color: #e9ffeb;
+}
+.free-ship-title {
+    font-size: 0.95rem;
+}
+.free-ship-progress {
+    height: 10px;
+}

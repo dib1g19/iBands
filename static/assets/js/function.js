@@ -140,6 +140,12 @@ $(document).ready(function () {
                 $(".item-qty-" + item_id).val(response.current_qty);
                 $(".item_sub_total_" + item_id).text(response.item_sub_total);
                 $(".cart_sub_total").text(response.cart_sub_total);
+                var hiddenSub = document.getElementById('cart-order-subtotal');
+                if (hiddenSub) {
+                    var numeric = (response.cart_sub_total || '0').toString().replace(/\s/g, '').replace(/,/g, '');
+                    hiddenSub.setAttribute('data-value', numeric);
+                }
+                try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) {}
             },
             error: function (xhr, status, error) {
                 // Rollback change if there is an error
@@ -179,6 +185,12 @@ $(document).ready(function () {
                 });
                 $(".total_cart_items").text(response.total_cart_items);
                 $(".cart_sub_total").text(response.cart_sub_total);
+                var hiddenSub = document.getElementById('cart-order-subtotal');
+                if (hiddenSub) {
+                    var numeric = (response.cart_sub_total || '0').toString().replace(/\s/g, '').replace(/,/g, '');
+                    hiddenSub.setAttribute('data-value', numeric);
+                }
+                try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) {}
                 $(".item_div_" + item_id).addClass("d-none");
             },
             error: function (xhr, status, error) {
@@ -376,19 +388,6 @@ $(document).ready(function () {
             },
         });
     });
-    // Show free shipping modal only once per session
-    if (!sessionStorage.getItem("freeShippingModalShown")) {
-        var modal = new bootstrap.Modal(
-            document.getElementById("freeShippingModal")
-        );
-        modal.show();
-        // Remember not to show again this session
-        document
-            .getElementById("freeShippingModal")
-            .addEventListener("hidden.bs.modal", function () {
-                sessionStorage.setItem("freeShippingModalShown", "1");
-            });
-    }
     // AJAX coupon form submission for checkout
     $(document).on("submit", "#coupon-form", function (e) {
         e.preventDefault();

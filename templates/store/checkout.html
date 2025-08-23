@@ -55,6 +55,7 @@
                     </div>
 
                     <div class="p-3">
+                        <div id="payment-alert-anchor"></div>
                         <div class="shadow rounded p-3">
                             <h4 class="fw-bold mb-3">Начин на плащане</h4>
                             <div id="payment-error-block"></div>
@@ -209,7 +210,7 @@
                         {% include "store/_checkout_summary.html" %}
                     </div>
 
-                    <div class="shadow rounded p-3 mt-3">
+                    <div id="coupon-box" class="shadow rounded p-3 mt-3">
                         <h4 class="fw-bold">Купони</h4>
                         <form id="coupon-form" class="mb-3 d-flex" action="{% url 'store:coupon_apply' order.order_id %}" method="POST">
                             {% csrf_token %}
@@ -226,11 +227,20 @@
                         <button id="cod-payment" style="display:none;" type="button"></button>
                     </div>
 
-                    <div class="alert alert-success text-dark text-center mt-3 mb-4" role="alert" style="font-size: 1.1rem;">
-                        <i class="fas fa-shipping-fast"></i>
-                        <b>Безплатна доставка</b> до офис или автомат на <b>Спиди</b> и <b>Еконт</b> за поръчки над <b>75 лв.</b>!
+                    <div id="free-ship-anchor" class="d-none"></div>
+                    <div id="free-ship-box" class="mt-3 mb-4 p-3 rounded shadow border free-ship-widget" role="region" aria-label="Прогрес до безплатна доставка">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="text-dark fw-semibold free-ship-title">
+                                <i class="fas fa-shipping-fast me-1"></i>
+                                <span id="free-ship-text">Изчисляване...</span>
+                            </div>
+                        </div>
+                        <div class="progress free-ship-progress">
+                            <div id="free-ship-bar" class="progress-bar bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
                     </div>
-                    <div class="alert alert-info text-dark text-center mb-4" role="alert" style="font-size: 1.1rem;">
+                    <div id="sidebar-card-alert-anchor" class="d-none"></div>
+                    <div id="payment-card-alert" class="alert alert-info shadow border text-dark text-center mb-4" role="alert" style="font-size: 1.1rem;">
                         <i class="fas fa-credit-card"></i>
                         <b>50% отстъпка от доставката</b> при плащане с карта!
                         Платете с карта онлайн и получете 50% намаление на цената за доставка до офис или адрес на <b>Спиди</b> и <b>Еконт</b>.
@@ -247,6 +257,8 @@
     // removed debug helper
 </script>
 <script src="https://js.stripe.com/v3/"></script>
+<script src="{% static 'assets/js/free_shipping.js' %}"></script>
+<script src="{% static 'assets/js/checkout_layout.js' %}"></script>
 <script>
     // Stripe payment logic (address must be saved before payment)
     var stripe = Stripe('{{stripe_public_key}}');
@@ -599,6 +611,8 @@
                 }
             }
         }
+        // Update the free shipping progress bar
+        try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) { console.log(e) }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -637,6 +651,7 @@
         }
         // Set summary on load (no shipping/payment selected)
         updateSummaryForPayment();
+        try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) { }
     });
 
     // Econt iframe postMessage

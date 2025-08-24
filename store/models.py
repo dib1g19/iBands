@@ -185,6 +185,20 @@ class Product(models.Model):
     variants = models.ManyToManyField("Variant", blank=True, related_name="products")
     colors = models.ManyToManyField("Color", blank=True, related_name="products")
     on_sale = models.BooleanField(default=False, db_index=True)
+    # New optional relations to drive SKU generation by sets
+    size_group = models.ForeignKey(
+        "SizeGroup",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="products",
+    )
+    model_groups = models.ManyToManyField(
+        "ModelGroup",
+        blank=True,
+        related_name="products",
+        help_text="Select one or more groups of compatible device models",
+    )
 
     class Meta:
         ordering = ["sku"]
@@ -447,3 +461,87 @@ class BandOfTheDay(models.Model):
             return cls.objects.select_related("product").get(date=timezone.localdate())
         except cls.DoesNotExist:
             return None
+
+
+class DeviceModel(models.Model):
+    name = models.CharField(max_length=150, unique=True)
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+
+    def __str__(self):
+        return self.name
+
+
+class Size(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+
+    def __str__(self):
+        return self.name
+
+
+class SizeGroup(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    sizes = models.ManyToManyField(Size, related_name="size_groups", blank=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Size group"
+        verbose_name_plural = "Size groups"
+
+    def __str__(self):
+        return self.name
+
+
+class ModelGroup(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    device_models = models.ManyToManyField(DeviceModel, related_name="model_groups", blank=True)
+    generate_as_single_sku = models.BooleanField(
+        default=False,
+        help_text="When true, SKU generation will create one SKU per size and attach all models in this group to it."
+    )
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Model group"
+        verbose_name_plural = "Model groups"
+
+    def __str__(self):
+        return self.name
+
+
+class ProductItem(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="items")
+    size = models.ForeignKey(Size, on_delete=models.SET_NULL, null=True, blank=True, related_name="items")
+    device_models = models.ManyToManyField(DeviceModel, related_name="product_items", blank=True)
+    sku = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=0)
+    price_override = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True, help_text="Leave empty to use product price/sale logic"
+    )
+
+    class Meta:
+        verbose_name = "Product item (SKU)"
+        verbose_name_plural = "Product items (SKUs)"
+        indexes = [
+            models.Index(fields=["product"]),
+            models.Index(fields=["product", "size"]),
+        ]
+
+    def __str__(self):
+        parts = [self.product.name]
+        if self.size:
+            parts.append(str(self.size))
+        return " / ".join(parts)
+
+    @property
+    def effective_price(self):
+        if self.price_override is not None:
+            return self.price_override
+        # Fallback to product's effective price which already includes sale/BOTD logic
+        return self.product.effective_price

@@ -6,6 +6,7 @@ from ibands_site.admin import iBandsModelAdmin
 from store import models as store_models
 from store.admin_forms import DuplicateProductForm
 from store.admin_helpers import product_path_label
+from itertools import product as cartesian_product
 
 
 class ColorSwatchMixin:
@@ -34,7 +35,7 @@ class ProductAdmin(iBandsModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     
     action_form = DuplicateProductForm
-    actions = ["duplicate_product"]
+    actions = ["duplicate_product", "generate_product_items_from_groups"]
 
     def duplicate_product(self, request, queryset):
         number = int(request.POST.get("number_of_copies", 1))
@@ -62,6 +63,107 @@ class ProductAdmin(iBandsModelAdmin):
         self.message_user(request, f"{count} product copies created successfully.")
 
     duplicate_product.short_description = "Duplicate selected Products"
+
+    def generate_product_items_from_groups(self, request, queryset):
+        created_total = 0
+        for product in queryset.prefetch_related("model_groups__device_models", "size_group__sizes"):
+            sizes_qs = getattr(product.size_group, "sizes", None)
+            sizes = list(sizes_qs.all()) if sizes_qs else []
+
+            # Separate model groups that should collapse into a single SKU per size
+            collapsing_groups = [mg for mg in product.model_groups.all() if getattr(mg, "generate_as_single_sku", False)]
+            regular_groups = [mg for mg in product.model_groups.all() if not getattr(mg, "generate_as_single_sku", False)]
+
+            # Regular models → individual SKU per (size, model)
+            regular_models = set()
+            for mg in regular_groups:
+                regular_models.update(list(mg.device_models.all()))
+            regular_models = list(regular_models)
+
+            # Collapsing models → attach all models of that group to the same SKU per size
+            collapsing_models_by_group = {mg.id: list(mg.device_models.all()) for mg in collapsing_groups}
+
+            # Create one SKU per unique (size, model) combination for regular models
+            if sizes and regular_models:
+                for size_obj, model_obj in cartesian_product(sizes, regular_models):
+                    existing = (
+                        store_models.ProductItem.objects
+                        .filter(product=product, size=size_obj, device_models=model_obj)
+                        .first()
+                    )
+                    if existing:
+                        continue
+                    sku_obj = store_models.ProductItem.objects.create(product=product, size=size_obj)
+                    sku_obj.device_models.add(model_obj)
+                    created_total += 1
+                # continue processing collapsing groups below
+
+            # Only sizes defined and no regular models → create one SKU per size (no model)
+            if sizes:
+                if not regular_models and not collapsing_groups:
+                    for size_obj in sizes:
+                        _, created = store_models.ProductItem.objects.get_or_create(product=product, size=size_obj)
+                        if created:
+                            created_total += 1
+
+            # Only models defined (no sizes): regular models → one SKU per model with size=None
+            if not sizes and regular_models:
+                for model_obj in regular_models:
+                    existing = (
+                        store_models.ProductItem.objects
+                        .filter(product=product, size=None, device_models=model_obj)
+                        .first()
+                    )
+                    if existing:
+                        continue
+                    sku_obj = store_models.ProductItem.objects.create(product=product, size=None)
+                    sku_obj.device_models.add(model_obj)
+                    created_total += 1
+
+            # Handle collapsing groups: per size, one SKU attaching all models in that group
+            if sizes and collapsing_groups:
+                for size_obj in sizes:
+                    for mg in collapsing_groups:
+                        models_in_group = collapsing_models_by_group.get(mg.id, [])
+                        if not models_in_group:
+                            continue
+                        # If any SKU already exists with this size and any of these models, skip creating new one
+                        existing = (
+                            store_models.ProductItem.objects
+                            .filter(product=product, size=size_obj, device_models__in=models_in_group)
+                            .distinct()
+                            .first()
+                        )
+                        if existing:
+                            # Ensure it has all models in the group
+                            existing.device_models.add(*models_in_group)
+                            continue
+                        sku_obj = store_models.ProductItem.objects.create(product=product, size=size_obj)
+                        sku_obj.device_models.add(*models_in_group)
+                        created_total += 1
+
+            # Collapsing groups without sizes → one SKU per group with size=None
+            if not sizes and collapsing_groups:
+                for mg in collapsing_groups:
+                    models_in_group = collapsing_models_by_group.get(mg.id, [])
+                    if not models_in_group:
+                        continue
+                    existing = (
+                        store_models.ProductItem.objects
+                        .filter(product=product, size=None, device_models__in=models_in_group)
+                        .distinct()
+                        .first()
+                    )
+                    if existing:
+                        existing.device_models.add(*models_in_group)
+                        continue
+                    sku_obj = store_models.ProductItem.objects.create(product=product, size=None)
+                    sku_obj.device_models.add(*models_in_group)
+                    created_total += 1
+
+        self.message_user(request, f"Generated {created_total} ProductItem rows.")
+
+    generate_product_items_from_groups.short_description = "Generate SKUs from size/model groups"
 
     class Media:
         js = ('assets/js/admin_char_count.js',)
@@ -273,3 +375,63 @@ class BandOfTheDayAdmin(iBandsModelAdmin):
     @admin.display(description="Product")
     def product_path(self, obj):
         return product_path_label(obj.product, link=True)
+
+
+# -----------------------------
+# New admin registrations for SKU refactor
+# -----------------------------
+
+
+class ProductItemInline(admin.TabularInline):
+    model = store_models.ProductItem
+    extra = 0
+    fields = ["sku", "quantity", "price_override", "device_models", "size"]
+    autocomplete_fields = ["size", "device_models"]
+
+
+# Extend Product admin to include ProductItem inline
+ProductAdmin.inlines = [GalleryInline, ProductItemInline]
+
+
+@admin.register(store_models.DeviceModel)
+class DeviceModelAdmin(iBandsModelAdmin):
+    list_display = ["name", "sort_order"]
+    list_editable = ["sort_order"]
+    search_fields = ["name"]
+
+
+@admin.register(store_models.Size)
+class SizeAdmin(iBandsModelAdmin):
+    list_display = ["name", "sort_order"]
+    list_editable = ["sort_order"]
+    search_fields = ["name"]
+
+
+@admin.register(store_models.SizeGroup)
+class SizeGroupAdmin(iBandsModelAdmin):
+    list_display = ["name"]
+    search_fields = ["name"]
+    filter_horizontal = ["sizes"]
+
+
+@admin.register(store_models.ModelGroup)
+class ModelGroupAdmin(iBandsModelAdmin):
+    list_display = ["name", "generate_as_single_sku"]
+    list_editable = ["generate_as_single_sku"]
+    search_fields = ["name"]
+    filter_horizontal = ["device_models"]
+
+
+@admin.register(store_models.ProductItem)
+class ProductItemAdmin(iBandsModelAdmin):
+    list_display = ["product", "size", "device_models_display", "quantity", "sku", "price_override"]
+    list_editable = ["quantity", "sku", "price_override"]
+    list_filter = ["product", "size"]
+    search_fields = ["product__name", "product__sku"]
+    list_select_related = ["product", "size"]
+    autocomplete_fields = ["product", "size", "device_models"]
+
+    @admin.display(description="Device models")
+    def device_models_display(self, obj):
+        names = [dm.name for dm in obj.device_models.all()]
+        return ", ".join(names) if names else "-"

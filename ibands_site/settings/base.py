@@ -181,6 +181,11 @@ JAZZMIN_SETTINGS = {
     "order_with_respect_to": [
         "store",
         "store.product",
+        "store.productitem",
+        "store.size",
+        "store.sizegroup",
+        "store.devicemodel",
+        "store.modelgroup",
         "store.BandOfTheDay",
         "store.category",
         "store.cart",
@@ -200,6 +205,11 @@ JAZZMIN_SETTINGS = {
     ],
     "icons": {
         "store.Product": "fas fa-th",
+        "store.ProductItem": "fas fa-th",
+        "store.Size": "fas fa-ruler",
+        "store.SizeGroup": "fas fa-th",
+        "store.DeviceModel": "fas fa-mobile-alt",
+        "store.ModelGroup": "fas fa-th",
         "store.BandOfTheDay": "fas fa-calendar-alt",
         "store.Category": "fas fa-tag",
         "store.Cart": "fas fa-cart-plus",

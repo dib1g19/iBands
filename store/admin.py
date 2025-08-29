@@ -385,7 +385,7 @@ class BandOfTheDayAdmin(iBandsModelAdmin):
 class ProductItemInline(admin.TabularInline):
     model = store_models.ProductItem
     extra = 0
-    fields = ["sku", "quantity", "price_override", "device_models", "size"]
+    fields = ["sku", "quantity", "price_delta", "device_models", "size"]
     autocomplete_fields = ["size", "device_models"]
 
 
@@ -424,8 +424,8 @@ class ModelGroupAdmin(iBandsModelAdmin):
 
 @admin.register(store_models.ProductItem)
 class ProductItemAdmin(iBandsModelAdmin):
-    list_display = ["product", "size", "device_models_display", "quantity", "sku", "price_override"]
-    list_editable = ["quantity", "sku", "price_override"]
+    list_display = ["product", "size", "device_models_display", "quantity", "sku", "price_delta"]
+    list_editable = ["quantity", "sku", "price_delta"]
     list_filter = ["product", "size"]
     search_fields = ["product__name", "product__sku"]
     list_select_related = ["product", "size"]

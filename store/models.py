@@ -521,8 +521,12 @@ class ProductItem(models.Model):
     device_models = models.ManyToManyField(DeviceModel, related_name="product_items", blank=True)
     sku = models.CharField(max_length=64, unique=True, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=0)
-    price_override = models.DecimalField(
-        max_digits=12, decimal_places=2, null=True, blank=True, help_text="Leave empty to use product price/sale logic"
+    price_delta = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Optional delta to add to product price/sale price (e.g., 3.00)"
     )
 
     class Meta:
@@ -541,7 +545,9 @@ class ProductItem(models.Model):
 
     @property
     def effective_price(self):
-        if self.price_override is not None:
-            return self.price_override
-        # Fallback to product's effective price which already includes sale/BOTD logic
-        return self.product.effective_price
+        base = self.product.effective_price
+        try:
+            delta = self.price_delta or 0
+        except Exception:
+            delta = 0
+        return (base or 0) + delta

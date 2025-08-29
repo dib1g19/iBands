@@ -1,4 +1,5 @@
 {% load humanize %}
+{% load pricing %}
 
 <div id="order-items-block">
     <div style="overflow-y: scroll; max-height: 650px; overflow-x: hidden" class="p-3">
@@ -10,7 +11,7 @@
                         <p class="mb-0">Цена</p>
                         {% with original_price=item.product.price %}
                             {% if item.product.sale_price and item.product.sale_price < item.product.price %}
-                                <span class="text-decoration-line-through">{{ item.product.price|intcomma }} лв.</span>
+                                <span class="text-decoration-line-through">{% regular_plus_delta item.product item.size item.model as reg_plus %}{{ reg_plus|intcomma }} лв.</span>
                             {% else %}
                                 <span class="invisible d-none d-xl-inline">0 лв.</span>
                             {% endif %}

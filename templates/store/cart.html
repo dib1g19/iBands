@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load pricing %}
 {% load humanize %}
 
 {% block robots %}
@@ -29,7 +30,7 @@
                                         {% include 'store/_product_card.html' with item=item %}
                                         <div class="col-xl-2 mb-xl-3">
                                             {% if item.product.sale_price and item.product.sale_price < item.product.price %}
-                                                <span class="text-decoration-line-through">{{ item.product.price|intcomma }} лв.</span>
+                                                <span class="text-decoration-line-through">{% regular_plus_delta item.product item.size item.model as reg_plus %}{{ reg_plus|intcomma }} лв.</span>
                                             {% else %}
                                                 <span class="invisible d-none d-xl-inline">0 лв.</span>
                                             {% endif %}

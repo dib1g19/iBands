@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load pricing %}
 
 {% block robots %}
     <meta name="robots" content="noindex, nofollow" />
@@ -59,7 +60,8 @@
                                             <div class="delv_status d-flex justify-content-center">
                                                 {% if item.product.sale_price and item.product.sale_price < item.product.price %}
                                                     <div class="d-flex flex-column lh-1">
-                                                        <span class="text-muted text-decoration-line-through">{{ item.product.price|intcomma }} лв.</span>
+                                                        {% regular_plus_delta item.product item.size item.model as reg_plus %}
+                                                        <span class="text-muted text-decoration-line-through">{{ reg_plus|intcomma }} лв.</span>
                                                         <h4 class="fs-sm fw-semibold mb-0">{{ item.price|intcomma }} лв.</h4>
                                                     </div>
                                                 {% else %}

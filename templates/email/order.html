@@ -551,7 +551,16 @@
                                                                 <table cellpadding="0" cellspacing="0" align="right" class="es-right" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:right">
                                                                     <tr>
                                                                         <td align="right" style="padding:0;Margin:0;width:80px">
-                                                                            <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#000000;font-size:14px">{{ item.price }} лв.</p>
+                                                                            {% if item.product.sale_price and item.product.sale_price < item.product.price %}
+                                                                                {% load pricing %}
+                                                                                {% regular_plus_delta item.product item.size item.model as reg_plus %}
+                                                                                <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                                                                                    <span style="text-decoration:line-through;color:#888;font-size:12px;">{{ reg_plus|floatformat:2 }} лв.</span>
+                                                                                    <span style="font-weight:bold;">{{ item.price|floatformat:2 }} лв.</span>
+                                                                                </div>
+                                                                            {% else %}
+                                                                                <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#000000;font-size:14px">{{ item.price }} лв.</p>
+                                                                            {% endif %}
                                                                         </td>
                                                                     </tr>
                                                                 </table>

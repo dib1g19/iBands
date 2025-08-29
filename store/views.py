@@ -443,7 +443,23 @@ def apply_item_discounts(order, coupon=None):
         coupons = order.coupons.all()
         coupon = coupons.first() if coupons.exists() else None
     for item in order.order_items.all():
-        base_price = Decimal(str(item.product.effective_price or 0))
+        # Compute base price from the specific SKU (product item) if possible
+        try:
+            sku_qs = store_models.ProductItem.objects.filter(product=item.product)
+            if item.size:
+                sku_qs = sku_qs.filter(size__name=item.size)
+            else:
+                sku_qs = sku_qs.filter(size__isnull=True)
+            if item.model:
+                sku_qs = sku_qs.filter(device_models__name=item.model)
+            sku = sku_qs.first()
+        except Exception:
+            sku = None
+
+        if sku:
+            base_price = Decimal(str(sku.effective_price or 0))
+        else:
+            base_price = Decimal(str(item.product.effective_price or 0))
         if coupon:
             discount = Decimal(str(coupon.discount)) / Decimal("100")
             discounted_price = round2(base_price * (Decimal("1") - discount))
@@ -670,7 +686,7 @@ def band_of_the_day(request):
     product = (
         Product.objects
         .select_related('category', 'category__parent', 'category__parent__parent')
-        .prefetch_related('gallery_images', 'colors', 'variants__variant_items')
+        .prefetch_related('gallery_images', 'colors')
         .get(pk=product.pk)
     )
 
@@ -689,7 +705,51 @@ def band_of_the_day(request):
         product.sale_price = discounted_price
     else:
         product.sale_price = None
-    product_stock_range = range(1, (product.stock or 0) + 1)
+
+    # Build SKU options similar to product_detail
+    sku_items = (
+        store_models.ProductItem.objects.filter(product=product)
+        .select_related("size")
+        .prefetch_related("device_models")
+    )
+    size_list = []
+    seen_sizes = set()
+    for it in sku_items:
+        if it.size and it.size.id not in seen_sizes:
+            size_list.append(it.size)
+            seen_sizes.add(it.size.id)
+    size_list.sort(key=lambda s: (s.sort_order, s.name.lower()))
+
+    model_list = []
+    seen_models = set()
+    for it in sku_items:
+        for dm in it.device_models.all():
+            if dm.id not in seen_models:
+                model_list.append(dm)
+                seen_models.add(dm.id)
+    model_list.sort(key=lambda m: (getattr(m, "sort_order", 0), m.name.lower()))
+
+    sku_data = []
+    try:
+        for it in sku_items:
+            size_name = getattr(it.size, "name", None)
+            delta_val = float(getattr(it, "price_delta", 0) or 0)
+            qty_val = int(getattr(it, "quantity", 0) or 0)
+            dms = list(it.device_models.all())
+            if dms:
+                for dm in dms:
+                    sku_data.append({"size": size_name, "model": dm.name, "delta": delta_val, "qty": qty_val})
+            else:
+                sku_data.append({"size": size_name, "model": None, "delta": delta_val, "qty": qty_val})
+    except Exception:
+        sku_data = []
+
+    try:
+        total_stock = max([max(0, int(getattr(it, "quantity", 0))) for it in sku_items] or [int(product.stock or 0)])
+    except Exception:
+        total_stock = int(product.stock or 0)
+    product_stock_range = range(1, (total_stock or 0) + 1)
+
     has_length_variant = any(v.variant_type == "length" for v in product.variants.all())
 
     # Build month calendar for history
@@ -739,6 +799,11 @@ def band_of_the_day(request):
         "prev_month": prev_month,
         "next_month": next_month,
         "selected_date": selected_date,
+        "total_stock": total_stock,
+        # SKU context
+        "sizes": size_list,
+        "device_models": model_list,
+        "sku_data_json": json.dumps(sku_data),
     }
     return render(request, "store/band_of_the_day.html", context)
 
@@ -990,6 +1055,57 @@ def product_detail(request, category_path, product_slug):
         slug=product_slug, category=category, status="published"
     )
 
+    # Load SKU items for size/model options
+    sku_items = (
+        store_models.ProductItem.objects.filter(product=product)
+        .select_related("size")
+        .prefetch_related("device_models")
+    )
+    # Distinct sizes ordered by sort_order
+    size_list = []
+    seen_sizes = set()
+    for it in sku_items:
+        if it.size and it.size.id not in seen_sizes:
+            size_list.append(it.size)
+            seen_sizes.add(it.size.id)
+    size_list.sort(key=lambda s: (s.sort_order, s.name.lower()))
+
+    # Distinct device models ordered by sort_order then name
+    model_list = []
+    seen_models = set()
+    for it in sku_items:
+        for dm in it.device_models.all():
+            if dm.id not in seen_models:
+                model_list.append(dm)
+                seen_models.add(dm.id)
+    model_list.sort(key=lambda m: (getattr(m, "sort_order", 0), m.name.lower()))
+
+    # Build SKU price delta map for front-end (also include qty per exact SKU)
+    sku_data = []
+    try:
+        for it in sku_items:
+            size_name = getattr(it.size, "name", None)
+            delta_val = float(getattr(it, "price_delta", 0) or 0)
+            qty_val = int(getattr(it, "quantity", 0) or 0)
+            dms = list(it.device_models.all())
+            if dms:
+                for dm in dms:
+                    sku_data.append({
+                        "size": size_name,
+                        "model": dm.name,
+                        "delta": delta_val,
+                        "qty": qty_val,
+                    })
+            else:
+                sku_data.append({
+                    "size": size_name,
+                    "model": None,
+                    "delta": delta_val,
+                    "qty": qty_val,
+                })
+    except Exception:
+        sku_data = []
+
     # Prepare related products (from the same category, exclude self)
     related_products_list = (
         Product.objects.filter(category=category)
@@ -1003,7 +1119,12 @@ def product_detail(request, category_path, product_slug):
     has_length_variant = any(
         v.variant_type == "length" for v in product.variants.all()
     )
-    product_stock_range = range(1, product.stock + 1)
+    # Total stock across SKUs (fallback to product.stock if no items yet)
+    try:
+        total_stock = max([max(0, int(getattr(it, "quantity", 0))) for it in sku_items] or [int(product.stock or 0)])
+    except Exception:
+        total_stock = int(product.stock or 0)
+    product_stock_range = range(1, (total_stock or 0) + 1)
 
     # Breadcrumbs (use full path, using select_related category for zero extra queries)
     ancestors = get_category_ancestors(product.category)
@@ -1020,6 +1141,10 @@ def product_detail(request, category_path, product_slug):
         "user_wishlist_products": get_user_wishlist_products(request),
         "breadcrumbs": breadcrumbs,
         "has_length_variant": has_length_variant,
+        "sizes": size_list,
+        "device_models": model_list,
+        "sku_data_json": json.dumps(sku_data),
+        "total_stock": total_stock,
     }
     return render(request, "store/product_detail.html", context)
 
@@ -1028,8 +1153,8 @@ def add_to_cart(request):
     # Get parameters from the request (ID, model, size, quantity, cart_id)
     id = request.GET.get("id")
     qty = request.GET.get("qty")
-    model = request.GET.get("model")
-    size = request.GET.get("size")
+    model = request.GET.get("model")  # device model name
+    size = request.GET.get("size")    # size name
     cart_id = request.GET.get("cart_id")
     item_id = request.GET.get("item_id")
     request.session["cart_id"] = cart_id
@@ -1084,7 +1209,7 @@ def add_to_cart(request):
 
     # Validate required fields for product detail add-to-cart
     if not id or not qty or not cart_id:
-        return JsonResponse({"error": "No model or size selected"}, status=400)
+        return JsonResponse({"error": "Невалидна заявка."}, status=400)
 
     # Try to fetch the product, return an error if it doesn't exist
     try:
@@ -1092,9 +1217,40 @@ def add_to_cart(request):
     except store_models.Product.DoesNotExist:
         return JsonResponse({"error": "Product not found"}, status=404)
 
-    # Check if quantity that user is adding exceed item stock qty
-    if int(qty) > product.stock:
-        return JsonResponse({"error": "Qty exceed current stock amount"}, status=404)
+    # If product has ProductItems with size/model, require corresponding selection
+    has_size_dimension = store_models.ProductItem.objects.filter(product=product, size__isnull=False).exists()
+    has_model_dimension = store_models.ProductItem.objects.filter(product=product, device_models__isnull=False).exists()
+    if has_size_dimension and not (request.GET.get("size")):
+        return JsonResponse({"error": "Моля, изберете размер."}, status=400)
+    if has_model_dimension and not (request.GET.get("model")):
+        return JsonResponse({"error": "Моля, изберете модел."}, status=400)
+
+    # Resolve SKU by size/model selection and validate stock per SKU
+    selected_size = None
+    if size:
+        selected_size = store_models.Size.objects.filter(name=size).first()
+        if not selected_size:
+            return JsonResponse({"error": "Невалиден размер."}, status=400)
+
+    selected_model = None
+    if model:
+        selected_model = store_models.DeviceModel.objects.filter(name=model).first()
+        if not selected_model:
+            return JsonResponse({"error": "Невалиден модел."}, status=400)
+
+    # Find SKU candidates
+    sku_qs = store_models.ProductItem.objects.filter(product=product)
+    if selected_size:
+        sku_qs = sku_qs.filter(size=selected_size)
+    if selected_model:
+        sku_qs = sku_qs.filter(device_models=selected_model)
+
+    sku = sku_qs.first()
+    if not sku:
+        return JsonResponse({"error": "Избраната комбинация не е налична."}, status=400)
+
+    if int(qty) > int(getattr(sku, "quantity", 0)):
+        return JsonResponse({"error": "Недостатъчна наличност."}, status=404)
 
     cart_item = store_models.Cart.objects.filter(
         cart_id=cart_id,
@@ -1126,8 +1282,8 @@ def add_to_cart(request):
                 }
             )
         cart_item.qty = new_qty
-        cart_item.price = product.effective_price
-        cart_item.sub_total = Decimal(product.effective_price) * Decimal(cart_item.qty)
+        cart_item.price = sku.effective_price
+        cart_item.sub_total = Decimal(sku.effective_price) * Decimal(cart_item.qty)
         cart_item.user = request.user if request.user.is_authenticated else None
         cart_item.cart_id = cart_id
         cart_item.size = size
@@ -1142,10 +1298,10 @@ def add_to_cart(request):
         cart = store_models.Cart()
         cart.product = product
         cart.qty = qty
-        cart.price = product.effective_price
+        cart.price = sku.effective_price
         cart.model = model
         cart.size = size
-        cart.sub_total = Decimal(product.effective_price) * Decimal(qty)
+        cart.sub_total = Decimal(sku.effective_price) * Decimal(qty)
         cart.user = request.user if request.user.is_authenticated else None
         cart.cart_id = cart_id
         cart.save()
@@ -1256,14 +1412,24 @@ def create_order(request):
         order.save()
 
         for i in items:
+            # Resolve SKU and snapshot price with delta
+            sku_qs = store_models.ProductItem.objects.filter(product=i.product)
+            if i.size:
+                sku_qs = sku_qs.filter(size__name=i.size)
+            else:
+                sku_qs = sku_qs.filter(size__isnull=True)
+            if i.model:
+                sku_qs = sku_qs.filter(device_models__name=i.model)
+            sku = sku_qs.first()
+            line_price = Decimal(str(getattr(sku, "effective_price", None) or i.price or i.product.effective_price or 0))
             store_models.OrderItem.objects.create(
                 order=order,
                 product=i.product,
                 qty=i.qty,
                 model=i.model,
                 size=i.size,
-                price=i.price,
-                sub_total=i.sub_total,
+                price=line_price,
+                sub_total=round2(line_price * Decimal(str(i.qty))),
             )
 
     return redirect("store:checkout", order.order_id)
@@ -1544,9 +1710,9 @@ def filter_products(request):
     if rating:
         products = products.filter(reviews__rating__in=rating).distinct()
 
-    # Apply size filtering
+    # Apply size filtering (by ProductItem sizes)
     if sizes:
-        products = products.filter(variant__variant_items__content__in=sizes).distinct()
+        products = products.filter(items__size__name__in=sizes).distinct()
 
     # Apply color filtering by selected color group ids
     if colors:

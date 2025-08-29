@@ -47,16 +47,14 @@
                         <h2 class="fw-semibold mb-2">{{ product.category.title }} - {{ product.name }}</h2>
                         <div class="mb-3">
                             {% if product.sale_price and product.sale_price < product.price %}
-                                <span class="fw-medium text-decoration-line-through fs-md me-1">{{ product.price }} лв.</span>
-                                <span class="fw-semibold text-danger fs-lg me-3">{{ product.sale_price }} лв.</span>
+                                <span class="fw-medium text-decoration-line-through fs-md me-1 price-regular">{{ product.price }} лв.</span>
+                                <span class="fw-semibold text-danger fs-lg me-3 price-sale">{{ product.sale_price }} лв.</span>
                             {% else %}
-                                <span class="fw-semibold fs-lg me-3">{{ product.price }} лв.</span>
+                                <span class="fw-semibold fs-lg me-3 price-regular">{{ product.price }} лв.</span>
                             {% endif %}
-                            {% if product.stock > 0 %}
-                                <span class="text-light bg-success py-1 px-2 fs-sm fw-medium">В наличност</span>
-                            {% else %}
-                                <span class="text-light bg-danger py-1 px-2 fs-sm fw-medium">Няма наличност</span>
-                            {% endif %}
+                            <span class="stock-indicator text-light py-1 px-2 fs-sm fw-medium {% if total_stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if total_stock > 0 %}В наличност{% else %}Няма наличност{% endif %}
+                            </span>
                         </div>
                         {% if product.colors.exists %}
                             <div class="d-flex gap-2 align-items-center">
@@ -69,23 +67,32 @@
                             </div>
                         {% endif %}
                     </div>
-                    {% for variant in product.variants.all %}
-                        {% if variant.variant_type == 'size' or variant.variant_type == 'model' %}
-                            <div class="mb-3">
-                                <p class="d-flex align-items-center mb-0 text-dark fw-medium">
-                                    {% if variant.variant_type == 'size' %}Размер:{% elif variant.variant_type == 'model' %}Модел:{% endif %}
-                                </p>
-                                <div class="pt-2">
-                                    {% for s in variant.variant_items.all %}
-                                        <div class="form-option mb-2">
-                                            <input class="form-check-input" value="{{ s.title }}" type="radio" name="{{ variant.variant_type }}" id="{{ s.content }}" />
-                                            <label class="form-option-label" for="{{ s.content }}">{{ s.content }}</label>
-                                        </div>
-                                    {% endfor %}
-                                </div>
+                    {% if sizes %}
+                        <div class="mb-3">
+                            <p class="d-flex align-items-center mb-0 text-dark fw-medium">Размер:</p>
+                            <div class="pt-2">
+                                {% for s in sizes %}
+                                    <div class="form-option mb-2">
+                                        <input class="form-check-input" value="{{ s.name }}" type="radio" name="size" id="size-{{ s.id }}" />
+                                        <label class="form-option-label" for="size-{{ s.id }}">{{ s.name }}</label>
+                                    </div>
+                                {% endfor %}
                             </div>
-                        {% endif %}
-                    {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if device_models %}
+                        <div class="mb-3">
+                            <p class="d-flex align-items-center mb-0 text-dark fw-medium">Модел:</p>
+                            <div class="pt-2">
+                                {% for m in device_models %}
+                                    <div class="form-option mb-2">
+                                        <input class="form-check-input" value="{{ m.name }}" type="radio" name="model" id="model-{{ m.id }}" />
+                                        <label class="form-option-label" for="model-{{ m.id }}">{{ m.name }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
                     <div class="d-flex gap-3 align-items-center">
                         <select class="form-select w-auto quantity" name="quantity">
                             {% for qty in product_stock_range %}
@@ -241,6 +248,15 @@
 
 {% block extra_scripts %}
 {{ block.super }}
+<script>
+  window.SkuPriceConfig = {
+    baseRegular: {{ product.price|default:0|floatformat:2 }},
+    baseSale: {{ product.sale_price|default:0|floatformat:2 }},
+    hasSale: {% if product.sale_price and product.sale_price < product.price %}true{% else %}false{% endif %},
+    skuData: {{ sku_data_json|safe }}
+  };
+</script>
+<script src="{% static 'assets/js/sku_price_stock.js' %}"></script>
 <script src="{% static 'assets/js/botd_coutdown.js' %}"></script>
 {% endblock %}
 

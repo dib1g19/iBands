@@ -30,34 +30,28 @@
             {% if subcategories|length > 1 and not all_sub_mode %}
                 <div class="mb-5">
                     <h3 class="fw-bold">Колекции</h3>
-                    <div class="row">
+                    <div class="row g-3 g-md-4">
                         {% for sub in subcategories %}
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <div class="card mb-3">
-                                    {% if sub.is_all %}
-                                        {% if sub.marketing_image %}
-                                            <a href="{% url 'store:category_all_sub' category.get_full_path %}">
+                            {% if not sub.is_all or products|length == 0 %}
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <a class="subcategory-card" href="{% if sub.is_all %}{% url 'store:category_all_sub' category.get_full_path %}{% else %}{{ sub.get_absolute_url }}{% endif %}">
+                                        <div class="subcategory-card-media">
+                                            {% if sub.marketing_image %}
                                                 {% include 'store/_hover_image.html' with image=sub.marketing_image hover_image=sub.hover_image alt=sub.title %}
-                                            </a>
-                                        {% endif %}
-                                    {% else %}
-                                        {% if sub.marketing_image %}
-                                            <a href="{{ sub.get_absolute_url }}">
-                                                {% include 'store/_hover_image.html' with image=sub.marketing_image hover_image=sub.hover_image alt=sub.title %}
-                                            </a>
-                                        {% endif %}
-                                    {% endif %}
-                                    <div class="card-body text-center">
-                                        <h5 class="card-title">
-                                            {% if sub.is_all %}
-                                                Всички {{ category.title }}
-                                            {% else %}
-                                                {{ sub.title }}
                                             {% endif %}
-                                        </h5>
-                                    </div>
+                                            <div class="subcategory-card-overlay">
+                                                <div class="subcategory-card-title">
+                                                    {% if sub.is_all %}
+                                                        Всички {{ category.title }}
+                                                    {% else %}
+                                                        {{ sub.title }}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
                                 </div>
-                            </div>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>

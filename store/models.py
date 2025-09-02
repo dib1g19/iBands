@@ -133,6 +133,33 @@ class Category(models.Model):
         return cat
 
 
+class CategoryLink(models.Model):
+    parent = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name="linked_children",
+    )
+    child = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name="linked_parents",
+    )
+
+    class Meta:
+        unique_together = ("parent", "child")
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(parent=models.F("child")),
+                name="catlink_parent_not_child",
+            )
+        ]
+        verbose_name = "Category link (alias)"
+        verbose_name_plural = "Category links (aliases)"
+
+    def __str__(self):
+        return f"{self.parent.title} → {self.child.title}"
+
+
 class Product(models.Model):
     name = models.CharField(max_length=100)
     image = models.FileField(
@@ -198,6 +225,12 @@ class Product(models.Model):
         blank=True,
         related_name="products",
         help_text="Select one or more groups of compatible device models",
+    )
+    additional_categories = models.ManyToManyField(
+        Category,
+        blank=True,
+        related_name="extra_products",
+        help_text="Optional extra categories where this product should also appear",
     )
 
     class Meta:

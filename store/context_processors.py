@@ -1,6 +1,6 @@
 from django.core.cache import cache
 from django.conf import settings
-from .models import Category, Cart
+from .models import Category, Cart, CategoryLink
 from customer.models import Wishlist
 
 
@@ -10,6 +10,7 @@ def build_category_tree(categories):
     # Add an empty children list to each category
     for cat in categories:
         cat.children = []
+        cat.url = None
     tree = []
     for cat in categories:
         if cat.parent_id:
@@ -18,6 +19,16 @@ def build_category_tree(categories):
                 parent.children.append(cat)
         else:
             tree.append(cat)
+    # Include virtual placements (CategoryLink) as additional children
+    try:
+        links = CategoryLink.objects.select_related("parent", "child").all()
+        for link in links:
+            parent = category_dict.get(link.parent_id)
+            child = category_dict.get(link.child_id)
+            if parent and child and child not in parent.children:
+                parent.children.append(child)
+    except Exception:
+        pass
     # Attach absolute url to each category (while parent is loaded)
     for cat in categories:
         cat.url = cat.get_absolute_url()

@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 from datetime import date as dt_date, datetime as dt_datetime
 import calendar as pycal
 from decimal import Decimal, ROUND_HALF_UP
-from .models import Category, Product, BandOfTheDay
+from .models import Category, Product, BandOfTheDay, CategoryLink
 import stripe
 from store.utils import (
     paginate_queryset,
@@ -927,15 +927,27 @@ def category(request, category_path):
 
     category = Category.objects.select_related('parent', 'parent__parent').get(pk=category.pk)
 
+    # Direct children
     child_categories_qs = Category.objects.filter(parent=category).select_related('parent', 'parent__parent')
     child_categories = list(child_categories_qs)
+    # Virtual linked children
+    linked_qs = Category.objects.filter(linked_parents__parent=category).select_related('parent', 'parent__parent')
+    # Merge unique
+    child_ids = {c.id for c in child_categories}
+    for lc in linked_qs:
+        if lc.id not in child_ids:
+            child_categories.append(lc)
+            child_ids.add(lc.id)
     all_sub = category
     all_sub.is_all = True
     subcategories_with_all = [all_sub] + child_categories
 
+    # Products in this category including additional placements
     products_list = (
-        Product.objects.filter(status="published", category=category)
+        Product.objects.filter(status="published")
+        .filter(models.Q(category=category) | models.Q(additional_categories=category))
         .select_related('category', 'category__parent', 'category__parent__parent')
+        .distinct()
     )
     products = paginate_queryset(request, products_list, 12)
 
@@ -1000,9 +1012,12 @@ def category_all_sub(request, category_path):
     else:
         descendant_ids = [category.id]
 
+    # Include products whose primary or additional categories are within descendant ids
     products_list = (
-        Product.objects.filter(status="published", category_id__in=descendant_ids)
+        Product.objects.filter(status="published")
+        .filter(models.Q(category_id__in=descendant_ids) | models.Q(additional_categories__in=descendant_ids))
         .select_related('category', 'category__parent', 'category__parent__parent')
+        .distinct()
     )
     query = request.GET.get("q")
     if query:
@@ -1704,7 +1719,10 @@ def filter_products(request):
                     all_category_ids.extend(collect_descendant_ids(node))
             except Exception:
                 continue
-        products = products.filter(category__id__in=all_category_ids)
+        products = products.filter(
+            models.Q(category__id__in=all_category_ids) |
+            models.Q(additional_categories__id__in=all_category_ids)
+        ).distinct()
 
     # Apply rating filtering
     if rating:

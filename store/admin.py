@@ -33,6 +33,7 @@ class ProductAdmin(iBandsModelAdmin):
 
     inlines = [GalleryInline]
     prepopulated_fields = {"slug": ("name",)}
+    filter_horizontal = ["additional_categories", "variants", "colors", "model_groups"]
     
     action_form = DuplicateProductForm
     actions = ["duplicate_product", "generate_product_items_from_groups"]
@@ -181,6 +182,13 @@ class CategoryAdmin(iBandsModelAdmin):
 
     class Media:
         js = ('assets/js/admin_char_count.js',)
+
+
+@admin.register(store_models.CategoryLink)
+class CategoryLinkAdmin(iBandsModelAdmin):
+    list_display = ["parent", "child"]
+    list_select_related = ["parent", "child"]
+    search_fields = ["parent__title", "child__title", "parent__sku", "child__sku"]
 
 
 @admin.register(store_models.Cart)

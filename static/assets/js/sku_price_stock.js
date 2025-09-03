@@ -84,12 +84,21 @@
   function init() {
     var cfg = (window.SkuPriceConfig || {});
     if (!cfg || !Array.isArray(cfg.skuData)) return;
-    // Precompute max available across all SKUs for initial quantity selector
+    // Precompute max available across all SKUs for initial quantity selector,
+    // but honor an explicit maxQty provided by server (e.g., product.stock when no SKUs)
+    var computedMax = 0;
     try {
-      cfg.maxQty = cfg.skuData.reduce(function (acc, r) {
+      computedMax = cfg.skuData.reduce(function (acc, r) {
         var q = parseInt(r.qty, 10) || 0; return Math.max(acc, q);
       }, 0);
-    } catch (e) { cfg.maxQty = 0; }
+    } catch (e) { computedMax = 0; }
+    if (typeof cfg.maxQty === 'number') {
+      cfg.maxQty = Math.max(cfg.maxQty, computedMax);
+    } else if (typeof cfg.fallbackMaxQty === 'number') {
+      cfg.maxQty = Math.max(cfg.fallbackMaxQty || 0, computedMax);
+    } else {
+      cfg.maxQty = computedMax;
+    }
     var handler = function () { recompute(cfg); };
     document.addEventListener('change', function (ev) {
       if (ev.target && (ev.target.name === 'size' || ev.target.name === 'model')) {

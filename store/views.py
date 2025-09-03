@@ -1232,40 +1232,53 @@ def add_to_cart(request):
     except store_models.Product.DoesNotExist:
         return JsonResponse({"error": "Product not found"}, status=404)
 
-    # If product has ProductItems with size/model, require corresponding selection
-    has_size_dimension = store_models.ProductItem.objects.filter(product=product, size__isnull=False).exists()
-    has_model_dimension = store_models.ProductItem.objects.filter(product=product, device_models__isnull=False).exists()
-    if has_size_dimension and not (request.GET.get("size")):
-        return JsonResponse({"error": "Моля, изберете размер."}, status=400)
-    if has_model_dimension and not (request.GET.get("model")):
-        return JsonResponse({"error": "Моля, изберете модел."}, status=400)
+    # Check if product has any SKU items at all
+    has_any_skus = store_models.ProductItem.objects.filter(product=product).exists()
 
-    # Resolve SKU by size/model selection and validate stock per SKU
-    selected_size = None
-    if size:
-        selected_size = store_models.Size.objects.filter(name=size).first()
-        if not selected_size:
-            return JsonResponse({"error": "Невалиден размер."}, status=400)
+    sku = None
+    unit_price = None
 
-    selected_model = None
-    if model:
-        selected_model = store_models.DeviceModel.objects.filter(name=model).first()
-        if not selected_model:
-            return JsonResponse({"error": "Невалиден модел."}, status=400)
+    if has_any_skus:
+        # If product has ProductItems with size/model, require corresponding selection when relevant
+        has_size_dimension = store_models.ProductItem.objects.filter(product=product, size__isnull=False).exists()
+        has_model_dimension = store_models.ProductItem.objects.filter(product=product, device_models__isnull=False).exists()
+        if has_size_dimension and not (request.GET.get("size")):
+            return JsonResponse({"error": "Моля, изберете размер."}, status=400)
+        if has_model_dimension and not (request.GET.get("model")):
+            return JsonResponse({"error": "Моля, изберете модел."}, status=400)
 
-    # Find SKU candidates
-    sku_qs = store_models.ProductItem.objects.filter(product=product)
-    if selected_size:
-        sku_qs = sku_qs.filter(size=selected_size)
-    if selected_model:
-        sku_qs = sku_qs.filter(device_models=selected_model)
+        # Resolve SKU by size/model selection and validate stock per SKU
+        selected_size = None
+        if size:
+            selected_size = store_models.Size.objects.filter(name=size).first()
+            if not selected_size:
+                return JsonResponse({"error": "Невалиден размер."}, status=400)
 
-    sku = sku_qs.first()
-    if not sku:
-        return JsonResponse({"error": "Избраната комбинация не е налична."}, status=400)
+        selected_model = None
+        if model:
+            selected_model = store_models.DeviceModel.objects.filter(name=model).first()
+            if not selected_model:
+                return JsonResponse({"error": "Невалиден модел."}, status=400)
 
-    if int(qty) > int(getattr(sku, "quantity", 0)):
-        return JsonResponse({"error": "Недостатъчна наличност."}, status=404)
+        # Find SKU candidates
+        sku_qs = store_models.ProductItem.objects.filter(product=product)
+        if selected_size:
+            sku_qs = sku_qs.filter(size=selected_size)
+        if selected_model:
+            sku_qs = sku_qs.filter(device_models=selected_model)
+
+        sku = sku_qs.first()
+        if not sku:
+            return JsonResponse({"error": "Избраната комбинация не е налична."}, status=400)
+
+        if int(qty) > int(getattr(sku, "quantity", 0)):
+            return JsonResponse({"error": "Недостатъчна наличност."}, status=404)
+        unit_price = sku.effective_price
+    else:
+        # No SKU items: use product-level stock and price
+        if int(qty) > int(product.stock or 0):
+            return JsonResponse({"error": "Недостатъчна наличност."}, status=404)
+        unit_price = product.effective_price
 
     cart_item = store_models.Cart.objects.filter(
         cart_id=cart_id,
@@ -1297,8 +1310,25 @@ def add_to_cart(request):
                 }
             )
         cart_item.qty = new_qty
-        cart_item.price = sku.effective_price
-        cart_item.sub_total = Decimal(sku.effective_price) * Decimal(cart_item.qty)
+        # Resolve price from current cart line selection when possible
+        if not sku:
+            # Try to resolve SKU based on stored size/model on cart item
+            try:
+                sku_try = store_models.ProductItem.objects.filter(product=cart_item.product)
+                if cart_item.size:
+                    sku_try = sku_try.filter(size__name=cart_item.size)
+                else:
+                    sku_try = sku_try.filter(size__isnull=True)
+                if cart_item.model:
+                    sku_try = sku_try.filter(device_models__name=cart_item.model)
+                sku_resolved = sku_try.first()
+                line_price = sku_resolved.effective_price if sku_resolved else cart_item.product.effective_price
+            except Exception:
+                line_price = cart_item.product.effective_price
+        else:
+            line_price = sku.effective_price
+        cart_item.price = line_price
+        cart_item.sub_total = Decimal(line_price) * Decimal(cart_item.qty)
         cart_item.user = request.user if request.user.is_authenticated else None
         cart_item.cart_id = cart_id
         cart_item.size = size
@@ -1313,10 +1343,10 @@ def add_to_cart(request):
         cart = store_models.Cart()
         cart.product = product
         cart.qty = qty
-        cart.price = sku.effective_price
+        cart.price = unit_price
         cart.model = model
         cart.size = size
-        cart.sub_total = Decimal(sku.effective_price) * Decimal(qty)
+        cart.sub_total = Decimal(unit_price) * Decimal(qty)
         cart.user = request.user if request.user.is_authenticated else None
         cart.cart_id = cart_id
         cart.save()

@@ -253,7 +253,8 @@
     baseRegular: {{ product.price|default:0|floatformat:2 }},
     baseSale: {{ product.sale_price|default:0|floatformat:2 }},
     hasSale: {% if product.sale_price and product.sale_price < product.price %}true{% else %}false{% endif %},
-    skuData: {{ sku_data_json|safe }}
+    skuData: {{ sku_data_json|safe }},
+    fallbackMaxQty: {{ product.stock|default:0|floatformat:0 }}
   };
 </script>
 <script src="{% static 'assets/js/sku_price_stock.js' %}"></script>

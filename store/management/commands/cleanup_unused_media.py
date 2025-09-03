@@ -125,8 +125,8 @@ class Command(BaseCommand):
         used_keys: Set[str] = set()
 
         # Categories
-        for category in Category.objects.all().only("image", "marketing_image", "hover_image", "description"):
-            for field in (category.image, category.marketing_image, category.hover_image):
+        for category in Category.objects.all().only("marketing_image", "hover_image", "description"):
+            for field in (category.marketing_image, category.hover_image):
                 key = normalize_key_from_field(field, media_prefix)
                 if key:
                     used_keys.add(key)

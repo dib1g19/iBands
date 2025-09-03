@@ -41,9 +41,7 @@ SHIPPING_SERVICE = (
 
 VARIANT_TYPE_CHOICES = (
     ("specification", "Specification"),
-    ("size", "Size"),
     ("length", "Length"),
-    ("model", "Model"),
 )
 
 RATING = (
@@ -65,9 +63,6 @@ class Category(models.Model):
         related_name="subcategories",
         blank=True,
         null=True,
-    )
-    image = models.FileField(
-        upload_to="images", default="default/default-image.avif", null=True, blank=True
     )
     marketing_image = models.FileField(
         upload_to="images", blank=True, null=True, verbose_name="Маркетинг снимка"

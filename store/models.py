@@ -157,6 +157,13 @@ class CategoryLink(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
+    # Optional override for the H1 title on the product detail page
+    h1_override = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        help_text="When set, this will replace the dynamic product detail H1"
+    )
     image = models.FileField(
         upload_to="images", blank=True, null=True, default="default/default-image.avif"
     )

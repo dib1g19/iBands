@@ -354,10 +354,10 @@ class ColorAdmin(ColorSwatchMixin, iBandsModelAdmin):
     list_editable = ["name_en", "name_bg", "hex_code"]
 
 
-@admin.register(store_models.BandOfTheDay)
-class BandOfTheDayAdmin(iBandsModelAdmin):
-    list_display = ["date", "product_path"]
-    list_filter = ["date"]
+@admin.register(store_models.BandOfTheWeek)
+class BandOfTheWeekAdmin(iBandsModelAdmin):
+    list_display = ["week_start", "product_path"]
+    list_filter = ["week_start"]
     search_fields = ["product__name", "product__sku"]
     list_select_related = ["product__category__parent__parent"]
     

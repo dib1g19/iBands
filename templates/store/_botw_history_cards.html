@@ -1,0 +1,20 @@
+{% for w in history %}
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card border-0 rounded-3 shadow m-2 p-2 h-100 position-relative botw-card {% if selected_week_start and selected_week_start == w.start %}botw-selected{% endif %}">
+            {% if current_week_start and w.start > current_week_start %}
+                <div class="botw-ribbon" title="Очаквайте скоро">Очаквайте скоро</div>
+            {% endif %}
+            <a class="card-img-top d-block overflow-hidden" href="?date={{ w.start|date:'Y-m-d' }}">
+                {% include 'store/_hover_image.html' with image=w.deal.product.image gallery_list=w.deal.product.gallery_images.all alt=w.deal.product.name %}
+            </a>
+            <div class="p-2">
+                <div class="small text-muted">{{ w.start|date:"d.m.Y" }} — {{ w.end|date:"d.m.Y" }}</div>
+                <h6 class="mt-1 mb-2">{{ w.deal.product.category.title }} — {{ w.deal.product.name }}</h6>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <p class="text-center">Няма история за предишни седмици.</p>
+{% endfor %}
+
+

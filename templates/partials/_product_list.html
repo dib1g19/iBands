@@ -4,7 +4,7 @@
             <!-- Product Image -->
             <div class="card-body p-0">
                 <div class="shop_thumb position-relative">
-                    {% if band_discount_percent and band_of_the_day and product.id == band_of_the_day.id %}
+                    {% if band_discount_percent and band_of_the_week and product.id == band_of_the_week.id %}
                         <div class="discount-badge">
                             -{{ band_discount_percent }}%
                         </div>
@@ -14,7 +14,7 @@
                         </div>
                     {% endif %}
                     <a class="card-img-top d-block overflow-hidden" href="{{ product_url|default:product.get_absolute_url }}">
-                        {% include 'store/_hover_image.html' with image=product.image hover_image=product.gallery.first.image alt=product.name %}
+                        {% include 'store/_hover_image.html' with image=product.image gallery_list=product.gallery_images.all alt=product.name %}
                     </a>
                 </div>
             </div>
@@ -29,7 +29,7 @@
                     <div class="d-flex align-items-center justify-content-start gap-2">
                         <!-- Price -->
                         <div class="elis_rty mb-2">
-                            {% if band_discount_percent and band_of_the_day and product.id == band_of_the_day.id %}
+                            {% if band_discount_percent and band_of_the_week and product.id == band_of_the_week.id %}
                                 <span class="fw-medium text-decoration-line-through fs-xs me-1">{{ product.price }} лв.</span>
                                 <span class="fw-semibold text-danger fs-xs">{{ band_price }} лв.</span>
                             {% elif product.sale_price and product.sale_price < product.price %}

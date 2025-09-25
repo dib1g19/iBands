@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load color_filters %}
+
+{% block title %}
+    Каишка на седмицата -50% | iBands
+{% endblock %}
+
+{% block meta_description %}
+    Специална оферта за седмицата: избрана каишка на 50% намаление.
+{% endblock %}
+
+{% block content %}
+{% include 'partials/_breadcrumbs.html' %}
+
+    <div class="botw-header">
+        <h1 class="botw-title">Каишка на седмицата</h1>
+        <span class="botw-date-pill">
+            <i class="far fa-calendar"></i>
+            {{ deal_week_start|date:"d.m.Y" }} — {{ deal_week_end|date:"d.m.Y" }}
+        </span>
+    </div>
+    <div class="botw-countdown" aria-live="polite">
+        <span class="botw-date-pill">
+            <i class="far fa-clock"></i>
+            <span class="d-none d-sm-inline">Остават:</span>
+            <span id="botw-countdown" data-week-start="{{ deal_week_start|date:'Y-m-d' }}">--дни --:--:--</span>
+        </span>
+    </div>
+    <!-- Product Detail Section -->
+    <section class="middle">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="sp-loading">
+                        <img src="{{ product.image.url }}" alt="{{ product.category.title }} - {{ product.name }}" /><br />Зареждане на изображения...
+                    </div>
+                    <div class="sp-wrap">
+                        <a href="{{ product.image.url }}"><img class="product-main-image" src="{{ product.image.url }}" alt="{{ product.category.title }} - {{ product.name }}" /></a>
+                        {% for image in product.gallery_images.all %}
+                            <a href="{{ image.image.url }}"><img src="{{ image.image.url }}" alt="{{ product.category.title }} - {{ product.name }} - Реална - {{ forloop.counter }}" /></a>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="mb-3">
+                        <h2 class="fw-semibold mb-2">{{ product.category.title }} - {{ product.name }}</h2>
+                        <div class="mb-3">
+                            {% if product.sale_price and product.sale_price < product.price %}
+                                <span class="fw-medium text-decoration-line-through fs-md me-1 price-regular">{{ product.price }} лв.</span>
+                                <span class="fw-semibold text-danger fs-lg me-3 price-sale">{{ product.sale_price }} лв.</span>
+                            {% else %}
+                                <span class="fw-semibold fs-lg me-3 price-regular">{{ product.price }} лв.</span>
+                            {% endif %}
+                            <span class="stock-indicator text-light py-1 px-2 fs-sm fw-medium {% if total_stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if total_stock > 0 %}В наличност{% else %}Няма наличност{% endif %}
+                            </span>
+                        </div>
+                        {% if product.colors.exists %}
+                            <div class="d-flex gap-2 align-items-center">
+                                <span class="fw-bold">Цвят:</span>
+                                {% for color in product.colors.all %}
+                                    <span class="badge color-badge" style="background: {{ color.hex_code }}; color: {{ color.hex_code|contrast_text }};">
+                                        {{ color.name_bg }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% if sizes %}
+                        <div class="mb-3">
+                            <p class="d-flex align-items-center mb-0 text-dark fw-medium">Размер:</p>
+                            <div class="pt-2">
+                                {% for s in sizes %}
+                                    <div class="form-option mb-2">
+                                        <input class="form-check-input" value="{{ s.name }}" type="radio" name="size" id="size-{{ s.id }}" />
+                                        <label class="form-option-label" for="size-{{ s.id }}">{{ s.name }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if device_models %}
+                        <div class="mb-3">
+                            <p class="d-flex align-items-center mb-0 text-dark fw-medium">Модел:</p>
+                            <div class="pt-2">
+                                {% for m in device_models %}
+                                    <div class="form-option mb-2">
+                                        <input class="form-check-input" value="{{ m.name }}" type="radio" name="model" id="model-{{ m.id }}" />
+                                        <label class="form-option-label" for="model-{{ m.id }}">{{ m.name }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="d-flex gap-3 align-items-center">
+                        {% if not is_future_week %}
+                            <select class="form-select w-auto quantity" name="quantity">
+                                {% for qty in product_stock_range %}
+                                    <option class="stock-{{ qty }}" value="{{ qty }}">{{ qty }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="btn btn-primary rounded add_to_cart fs-md py-2 px-3 px-md-4"
+                            data-id="{{ product.id }}"
+                            data-name="{{ product.name|escapejs }}"
+                            data-category="{{ product.category.title|escapejs }}"
+                            data-price="{{ product.effective_price }}">
+                            Добави в количка <i class="fas fa-shopping-cart ms-2"></i>
+                            </button>
+                        {% else %}
+                            <span class="badge bg-warning text-dark fs-md py-2 px-3">Очаквайте скоро</span>
+                        {% endif %}
+                        <a class="add_to_wishlist wishlist-action" data-product_id="{{ product.id }}" aria-label="Добави в любими">
+                            <i class="fa-heart {% if request.user.is_authenticated and product.id in user_wishlist_products %}fs-4 fas text-danger{% else %}fs-5 far text-dark{% endif %}"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Band of the Week History (4 weeks) -->
+    <section class="middle pt-0">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="sec_title position-relative text-center">
+                        <h3 class="fw-semibold pt-3">История на каишка на седмицата</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="botw-wrapper position-relative">
+                <button id="botw-prev" class="botw-nav botw-nav-left" aria-label="Предишни">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="botw-next" class="botw-nav botw-nav-right" aria-label="Следващи">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div id="botw-history" class="row rows-products">
+                    {% include 'store/_botw_history_cards.html' with history=history selected_week_start=selected_week_start current_week_start=current_week_start %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ block.super }}
+<script>
+  window.SkuPriceConfig = {
+    baseRegular: {{ product.price|default:0|floatformat:2 }},
+    baseSale: {{ product.sale_price|default:0|floatformat:2 }},
+    hasSale: {% if product.sale_price and product.sale_price < product.price %}true{% else %}false{% endif %},
+    skuData: {{ sku_data_json|safe }},
+    fallbackMaxQty: {{ product.stock|default:0|floatformat:0 }}
+  };
+</script>
+<script src="{% static 'assets/js/sku_price_stock.js' %}"></script>
+<script src="{% static 'assets/js/botw_countdown.js' %}"></script>
+<script src="{% static 'assets/js/botw_history.js' %}"></script>
+{% endblock %}
+
+

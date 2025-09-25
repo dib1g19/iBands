@@ -255,15 +255,15 @@ class Product(models.Model):
 
     @property
     def effective_price(self):
-        """Price used for purchase: applies Band of the Day 50% discount if active,
+        """Price used for purchase: applies Band of the Week 50% discount if active,
         otherwise uses sale_price if valid, otherwise price.
         """
-        # Apply Band of the Day discount (50% of base price) if this product is today's band
-        BandOfTheDay = globals().get("BandOfTheDay")
-        if BandOfTheDay and self.price:
+        # Apply Band of the Week discount (50% of base price) if this product is this week's band
+        BandOfTheWeek = globals().get("BandOfTheWeek")
+        if BandOfTheWeek and self.price:
             try:
-                today_deal = BandOfTheDay.get_today()
-                if today_deal and today_deal.product_id == self.id:
+                current_week_deal = BandOfTheWeek.get_current_week()
+                if current_week_deal and current_week_deal.product_id == self.id:
                     half_price = self.price * Decimal("0.5")
                     return floor_to_cent(half_price)
             except Exception:
@@ -478,24 +478,53 @@ class Color(models.Model):
         return f"{self.name_bg} ({self.name_en})"
 
 
-class BandOfTheDay(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="daily_deals")
-    date = models.DateField(db_index=True, unique=True)
+class BandOfTheWeek(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="weekly_deals")
+    week_start = models.DateField(db_index=True, unique=True, help_text="May be any date in the week; it will auto-normalize to Monday.")
 
     class Meta:
-        verbose_name = "Band of the Day"
-        verbose_name_plural = "Band of the Day"
-        ordering = ["-date"]
+        verbose_name = "Band of the Week"
+        verbose_name_plural = "Band of the Week"
+        ordering = ["-week_start"]
 
     def __str__(self):
-        return f"{self.date} - {self.product.name}"
+        return f"{self.week_start} - {self.product.name}"
+
+    @staticmethod
+    def _to_week_start(d):
+        try:
+            # Monday as start of week
+            return d - timezone.timedelta(days=d.weekday())
+        except Exception:
+            # Fallback: treat given date as already week start
+            return d
 
     @classmethod
-    def get_today(cls):
+    def get_current_week(cls):
         try:
-            return cls.objects.select_related("product").get(date=timezone.localdate())
+            today = timezone.localdate()
+            week_start = cls._to_week_start(today)
+            return cls.objects.select_related("product").get(week_start=week_start)
         except cls.DoesNotExist:
             return None
+
+    @classmethod
+    def get_for_date(cls, date_obj):
+        try:
+            week_start = cls._to_week_start(date_obj)
+            return cls.objects.select_related("product").get(week_start=week_start)
+        except cls.DoesNotExist:
+            return None
+
+    def save(self, *args, **kwargs):
+        # Ensure week_start is normalized to Monday regardless of input date
+        try:
+            from datetime import date as _date
+            if isinstance(self.week_start, _date):
+                self.week_start = self._to_week_start(self.week_start)
+        except Exception:
+            pass
+        super().save(*args, **kwargs)
 
 
 class DeviceModel(models.Model):

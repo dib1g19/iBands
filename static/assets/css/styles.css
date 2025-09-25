@@ -584,12 +584,12 @@ h6 {
 }
 
 .sale-in-categories { display: none; }
-@media (min-width: 992px) and (max-width: 1261.98px) {
+@media (min-width: 992px) and (max-width: 1281.98px) {
     .sale-toplink { display: none !important; }
     .sale-in-categories { display: inline; }
 }
 
-@media (min-width: 992px) and (max-width: 1041.98px) {
+@media (min-width: 992px) and (max-width: 1061.98px) {
     .home-toplink { display: none !important; }
 }
 
@@ -1284,8 +1284,8 @@ textarea.form-control { min-height: 8rem; }
     margin: 0;
 }
 
-/*--------------- Band of the Day Header ---------------*/
-.botd-header {
+/*--------------- Band of the Week Header ---------------*/
+.botw-header {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1293,11 +1293,11 @@ textarea.form-control { min-height: 8rem; }
     margin: 12px 0 20px;
     flex-wrap: wrap;
 }
-.botd-title {
+.botw-title {
     font-weight: 700;
     margin: 0;
 }
-.botd-date-pill {
+.botw-date-pill {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -1311,7 +1311,7 @@ textarea.form-control { min-height: 8rem; }
     overflow: hidden;
     box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08), inset 0 0 0 1px rgba(15,23,42,.06);
 }
-.botd-date-pill::after {
+.botw-date-pill::after {
     content: "";
     position: absolute;
     top: -50%;
@@ -1320,113 +1320,102 @@ textarea.form-control { min-height: 8rem; }
     height: 200%;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent);
     transform: translateX(-100%) rotate(12deg);
-    animation: botdShimmer 3.6s ease-in-out infinite;
+    animation: botwShimmer 3.6s ease-in-out infinite;
 }
-@keyframes botdShimmer {
+@keyframes botwShimmer {
     0% { transform: translateX(-120%) rotate(12deg); }
     100% { transform: translateX(220%) rotate(12deg); }
 }
-.botd-date-pill i {
+.botw-date-pill i {
     color: #334155;
     font-size: 1.05em;
 }
 
 /* Countdown chip */
-.botd-countdown {
+.botw-countdown {
     display: flex;
     justify-content: center;
     margin: -6px 0 18px;
 }
 
-.botd-countdown .botd-date-pill {
+.botw-countdown .botw-date-pill {
     gap: 10px;
 }
 
-.botd-countdown #botd-countdown {
+.botw-countdown #botw-countdown {
     letter-spacing: 0.6px;
     font-weight: 700;
 }
 
 @media (max-width: 575.98px) {
-    .botd-date-pill {
+    .botw-date-pill {
         font-size: 0.95rem;
         padding: 8px 14px;
         gap: 8px;
     }
 }
 
-/* Calendar styles */
-.botd-cal-header .btn {
-    border-radius: 999px;
-    padding: 6px 12px;
-}
+/* (Removed) Old Band of the Day calendar styles */
 
-.botd-calendar {
-    display: grid;
-    gap: 6px;
-}
-
-.botd-cal-row {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-}
-
-.botd-cal-head {
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-}
-
-.botd-cal-head > div {
-    text-align: center;
-    padding: 6px 0;
-}
-
-.botd-cal-cell {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 10px;
-    min-height: 72px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.botd-cal-empty {
-    background: transparent;
+/* BOTW history slider */
+.botw-wrapper { position: relative; }
+.botw-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    width: 44px;
+    height: 44px;
     border: none;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.85);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+    transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.botw-nav:hover { 
+    background: rgba(15, 23, 42, 0.95); 
+    box-shadow: 0 10px 26px rgba(2, 6, 23, 0.24);
+}
+.botw-nav:disabled {
+    background: rgba(15, 23, 42, 0.35);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+.botw-nav-left { left: 0; transform: translate(-100%, -50%); }
+.botw-nav-right { right: 0; transform: translate(100%, -50%); }
+@media (max-width: 575.98px) {
+    .botw-nav { width: 38px; height: 38px; }
+    .botw-nav-left { left: 0; transform: translate(-90%, -50%); }
+    .botw-nav-right { right: 0; transform: translate(90%, -50%); }
 }
 
-.botd-cal-day {
-    font-weight: 700;
-    color: #0f172a;
-}
-
-.botd-cal-name {
-    font-size: 0.8rem;
-    color: #334155;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.botd-cal-active {
-    text-decoration: none;
-    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-}
-
-.botd-cal-active:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(2, 6, 23, 0.08);
-    border-color: #cbd5e1;
-}
-
-.botd-cal-selected {
+.botw-selected {
     outline: 2px solid #0ea5e9;
+    box-shadow: 0 8px 22px rgba(2,6,23,.12);
+}
+
+/* BOTW future ribbon */
+.botw-card { overflow: hidden; }
+.botw-ribbon {
+    position: absolute;
+    top: 10px;
+    left: -32px;
+    transform: rotate(-12deg);
+    background: linear-gradient(135deg, #fff3cd, #ffe69c);
+    color: #7a5d00;
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: .5px;
+    border: 1px solid #ffec99;
+    padding: 6px 36px;
+    box-shadow: 0 6px 18px rgba(2,6,23,.12);
+    text-transform: uppercase;
+    z-index: 5;
+    pointer-events: none;
 }
 
 /*--------------- Countdown -----------------*/

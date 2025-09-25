@@ -5,7 +5,8 @@ app_name = "store"
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("band-of-the-day/", views.band_of_the_day, name="band_of_the_day"),
+    path("band-of-the-week/", views.band_of_the_week, name="band_of_the_week"),
+    path("band-of-the-week/history", views.band_of_the_week_history, name="band_of_the_week_history"),
     path("shop/", views.shop, name="shop"),
     path("sale/", views.sale, name="sale"),
     path("categories/<path:category_path>/all/", views.category_all_sub, name="category_all_sub"),

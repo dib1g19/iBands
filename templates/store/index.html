@@ -22,15 +22,15 @@
         </div>
     </section>
 
-    <!-- Band of the Day Section -->
-    {% if band_of_the_day %}
+    <!-- Band of the Week Section -->
+    {% if band_of_the_week %}
     <section>
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     <div class="sec_title position-relative text-center">
-                        <h2 class="fw-semibold pt-3 d-inline-flex align-items-center gap-2">
-                            Каишка на деня
+                        <h2 class="fw-semibold pt-3 d-inline-flex align-items-center gap-2=">
+                            Каишка на седмицата
                             <span class="band-of-the-day-pill"><i class="fas fa-bolt"></i> -{{ band_discount_percent|default:50 }}%</span>
                         </h2>
                     </div>
@@ -41,8 +41,8 @@
                     <!-- Image -->
                     <div class="col-12 col-lg-6">
                         <div class="h-100 w-100 bg-light p-3 p-lg-4">
-                            <a href="{% url 'store:band_of_the_day' %}" class="d-block">
-                                {% include 'store/_hover_image.html' with image=band_of_the_day.image hover_image=band_of_the_day.gallery_images.first.image alt=band_of_the_day.name %}
+                            <a href="{% url 'store:band_of_the_week' %}" class="d-block">
+                                {% include 'store/_hover_image.html' with image=band_of_the_week.image gallery_list=band_of_the_week.gallery_images.all alt=band_of_the_week.name %}
                             </a>
                         </div>
                     </div>
@@ -50,26 +50,26 @@
                     <div class="col-12 col-lg-6 d-flex">
                         <div class="p-4 p-lg-5 d-flex flex-column align-items-center text-center w-100">
                             <div class="d-flex flex-column align-items-center mb-3">
-                                <span class="botd-date-pill mb-2"><i class="far fa-calendar"></i> {{ band_date|date:"d.m.Y" }}</span>
-                                <div class="botd-countdown" aria-live="polite">
-                                    <span class="botd-date-pill">
+                                <span class="botw-date-pill mb-2"><i class="far fa-calendar"></i> {{ band_week_start|date:"d.m.Y" }} — {{ band_week_end|date:"d.m.Y" }}</span>
+                                <div class="botw-countdown" aria-live="polite">
+                                    <span class="botw-date-pill">
                                         <i class="far fa-clock"></i>
-                                        <span class="botd-countdown-label d-none d-sm-inline">Остават:</span>
-                                        <span id="botd-countdown">--:--:--</span>
+                                        <span class="xf-label d-none d-sm-inline">Остават:</span>
+                                        <span id="botw-countdown">--дни --:--:--</span>
                                     </span>
                                 </div>
                             </div>
-                            <h3 class="fw-semibold m-0 mb-2">{{ band_of_the_day.category.title }} — {{ band_of_the_day.name }}</h3>
+                            <h3 class="fw-semibold m-0 mb-2">{{ band_of_the_week.category.title }} — {{ band_of_the_week.name }}</h3>
                             <div class="mb-3 flex-column align-items-center">
                                 {% if band_price %}
-                                    <span class="text-muted text-decoration-line-through me-2">{{ band_of_the_day.price }} лв.</span>
+                                    <span class="text-muted text-decoration-line-through me-2">{{ band_of_the_week.price }} лв.</span>
                                     <span class="fw-semibold text-danger fs-4">{{ band_price|floatformat:2 }} лв.</span>
                                 {% else %}
-                                    <span class="fw-semibold fs-4">{{ band_of_the_day.price }} лв.</span>
+                                    <span class="fw-semibold fs-4">{{ band_of_the_week.price }} лв.</span>
                                 {% endif %}
                             </div>
                             <div class="d-flex flex-wrap gap-2">
-                                <a class="btn btn-primary rounded px-4" href="{{ band_of_the_day_url }}">Купи сега</a>
+                                <a class="btn btn-primary rounded px-4" href="{{ band_of_the_week_url }}">Купи сега</a>
                             </div>
                         </div>
                     </div>
@@ -169,5 +169,5 @@
 
 {% block extra_scripts %}
 {{ block.super }}
-<script src="{% static 'assets/js/botd_coutdown.js' %}"></script>
+<script src="{% static 'assets/js/botw_countdown.js' %}"></script>
 {% endblock %}

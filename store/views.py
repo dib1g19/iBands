@@ -8,10 +8,10 @@ from django.db import models
 from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
-from datetime import date as dt_date, datetime as dt_datetime
+from datetime import date as dt_date, datetime as dt_datetime, timedelta as dt_timedelta
 import calendar as pycal
 from decimal import Decimal, ROUND_HALF_UP
-from .models import Category, Product, BandOfTheDay, CategoryLink
+from .models import Category, Product, BandOfTheWeek, CategoryLink
 import stripe
 from store.utils import (
     paginate_queryset,
@@ -33,6 +33,7 @@ from urllib.parse import urlencode
 import json
 import requests
 from django.views.decorators.http import require_POST
+from django.http import HttpResponse
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
@@ -619,13 +620,15 @@ def index(request):
     products_list = (
         store_models.Product.objects.filter(status="published", featured=True)
         .select_related('category', 'category__parent', 'category__parent__parent')
+        .prefetch_related('gallery_images')
     )
     products = paginate_queryset(request, products_list, 20)
 
     # Sale products (manually marked)
     sale_products = (
         store_models.Product.objects.filter(status="published", on_sale=True)
-        .select_related('category', 'category__parent', 'category__parent__parent')[:12]
+        .select_related('category', 'category__parent', 'category__parent__parent')
+        .prefetch_related('gallery_images')[:12]
     )
 
     categories = store_models.Category.objects.filter(parent__isnull=True)
@@ -636,9 +639,20 @@ def index(request):
     )
 
 
-    # Band of the Day (50% off)
-    band_of_the_day = BandOfTheDay.get_today()
-    band_product = getattr(band_of_the_day, "product", None)
+    # Band of the Week (50% off)
+    band_of_the_week = BandOfTheWeek.get_current_week()
+    band_product = getattr(band_of_the_week, "product", None)
+    # Ensure gallery_images are prefetched for band product (homepage card)
+    if band_product:
+        try:
+            band_product = (
+                Product.objects
+                .select_related('category', 'category__parent', 'category__parent__parent')
+                .prefetch_related('gallery_images')
+                .get(pk=band_product.pk)
+            )
+        except Exception:
+            pass
     band_override_price = None
     band_discount_percent = None
     if band_product and band_product.price:
@@ -646,8 +660,9 @@ def index(request):
         band_override_price = floor_to_cent(half)
         band_discount_percent = 50
 
-    band_of_the_day_url = reverse("store:band_of_the_day") if band_product else None
-    band_date = getattr(band_of_the_day, "date", None)
+    band_of_the_week_url = reverse("store:band_of_the_week") if band_product else None
+    band_week_start = getattr(band_of_the_week, "week_start", None)
+    band_week_end = (band_week_start + dt_timedelta(days=6)) if band_week_start else None
 
     context = {
         "products": products,
@@ -655,16 +670,17 @@ def index(request):
         "categories": categories,
         "popular_categories": popular_categories,
         "user_wishlist_products": get_user_wishlist_products(request),
-        "band_of_the_day": band_product,
+        "band_of_the_week": band_product,
         "band_price": band_override_price,
         "band_discount_percent": band_discount_percent,
-        "band_of_the_day_url": band_of_the_day_url,
-        "band_date": band_date,
+        "band_of_the_week_url": band_of_the_week_url,
+        "band_week_start": band_week_start,
+        "band_week_end": band_week_end,
     }
     return render(request, "store/index.html", context)
 
 
-def band_of_the_day(request):
+def band_of_the_week(request):
     # Parse selected date from query (?date=YYYY-MM-DD). Default to today.
     date_str = request.GET.get("date")
     try:
@@ -672,11 +688,11 @@ def band_of_the_day(request):
     except Exception:
         selected_date = dt_date.today()
 
-    # Get deal for selected date; fallback to today's if requested date has no deal
-    deal = BandOfTheDay.objects.filter(date=selected_date).select_related("product__category").first()
+    # Get deal for the week of selected date; fallback to current week's if requested week has no deal
+    deal = BandOfTheWeek.get_for_date(selected_date)
     if not deal:
-        deal = BandOfTheDay.get_today()
-        selected_date = deal.date if deal else selected_date
+        deal = BandOfTheWeek.get_current_week()
+        # Keep selected_date unchanged; we still need it for calendar positioning
     product = getattr(deal, "product", None) if deal else None
     if not product:
         messages.info(request, "Няма избрана каишка за тази дата.")
@@ -693,18 +709,21 @@ def band_of_the_day(request):
     # Prepare breadcrumbs
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": "Каишка на деня", "url": ""},
+        {"label": "Каишка на седмицата", "url": ""},
     ]
 
-    # Explicit price values for display and override sale display to -50% (only for today)
+    # Explicit price values for display and override sale display to -50% (only for current week)
     original_price = product.price
     half = product.price * Decimal("0.5") if product and product.price else None
     discounted_price = floor_to_cent(half) if half is not None else product.effective_price
-    # For today's deal: show discounted price. For past days: show regular price
-    if deal.date == dt_date.today():
-        product.sale_price = discounted_price
-    else:
-        product.sale_price = None
+    # For current week's deal: show discounted price. For previous/future weeks: show regular price
+    if deal:
+        today = dt_date.today()
+        current_week_start = today - dt_timedelta(days=today.weekday())
+        if getattr(deal, 'week_start', None) == current_week_start:
+            product.sale_price = discounted_price
+        else:
+            product.sale_price = None
 
     # Build SKU options similar to product_detail
     sku_items = (
@@ -752,35 +771,56 @@ def band_of_the_day(request):
 
     has_length_variant = any(v.variant_type == "length" for v in product.variants.all())
 
-    # Build month calendar for history
-    first_day = selected_date.replace(day=1)
-    # Compute next month start safely
-    if first_day.month == 12:
-        next_month_start = first_day.replace(year=first_day.year + 1, month=1, day=1)
-    else:
-        next_month_start = first_day.replace(month=first_day.month + 1, day=1)
-    month_end = next_month_start
-    month_deals = BandOfTheDay.objects.filter(date__gte=first_day, date__lt=month_end).select_related("product__category")
-    deals_by_day = {d.date.day: d for d in month_deals}
-    cal = pycal.Calendar(firstweekday=0)
-    weeks = cal.monthdayscalendar(first_day.year, first_day.month)  # list of weeks, 0=pad
-    # Build template-friendly structure: each cell has {day, deal}
-    weeks_data = []
-    for wk in weeks:
-        row = []
-        for d in wk:
-            row.append({
-                "day": d,
-                "deal": deals_by_day.get(d) if d else None,
-            })
-        weeks_data.append(row)
-
-    # Prev/next month params for navigation
-    if first_day.month == 1:
-        prev_month = first_day.replace(year=first_day.year - 1, month=12, day=1)
-    else:
-        prev_month = first_day.replace(month=first_day.month - 1, day=1)
-    next_month = next_month_start
+    # Weekly history: show last N weeks (e.g., 4) as cards, independent of selected week
+    history_weeks_count = 4
+    # Compute current (this) Monday; allow future weeks to be shown
+    today = dt_date.today()
+    current_week_start = today - dt_timedelta(days=today.weekday())
+    # Anchor to the most recent existing (can be future)
+    latest_week_start = (
+        BandOfTheWeek.objects
+        .order_by("-week_start")
+        .values_list("week_start", flat=True)
+        .first()
+        or current_week_start
+    )
+    # History pagination via offset h (blocks of N weeks), 0 = latest block, 1 = older block, etc.
+    try:
+        history_offset = int(request.GET.get("h", 0))
+    except Exception:
+        history_offset = 0
+    if history_offset < 0:
+        history_offset = 0
+    start_base = latest_week_start - dt_timedelta(weeks=history_offset * history_weeks_count)
+    # Collect N previous week starts including base
+    history_starts = [start_base - dt_timedelta(weeks=i) for i in range(history_weeks_count)]
+    weekly_history = (
+        BandOfTheWeek.objects
+        .filter(week_start__in=history_starts)
+        .select_related("product__category")
+        .prefetch_related("product__gallery_images")
+        .order_by("-week_start")
+    )
+    # Compute week end (Sunday) for display ranges
+    history = []
+    for w in weekly_history:
+        week_end = w.week_start + dt_timedelta(days=6)
+        history.append({
+            "deal": w,
+            "start": w.week_start,
+            "end": week_end,
+        })
+    # Determine if we can paginate further back/forward
+    min_week_start = (
+        BandOfTheWeek.objects
+        .order_by("week_start")
+        .values_list("week_start", flat=True)
+        .first()
+    )
+    # Oldest week shown on current page is the last in history_starts
+    oldest_shown = history_starts[-1] if history_starts else None
+    has_next_history = bool(min_week_start and oldest_shown and oldest_shown > min_week_start)
+    has_prev_history = history_offset > 0
 
     context = {
         "product": product,
@@ -790,14 +830,19 @@ def band_of_the_day(request):
         "has_length_variant": has_length_variant,
         "breadcrumbs": breadcrumbs,
         "user_wishlist_products": get_user_wishlist_products(request),
-        "deal_date": deal.date,
-        "is_today": (deal.date == dt_date.today()),
-        # Calendar context
-        "calendar_weeks": weeks,
-        "weeks_data": weeks_data,
-        "calendar_month": first_day,
-        "prev_month": prev_month,
-        "next_month": next_month,
+        "deal_week_start": getattr(deal, 'week_start', None),
+        "deal_week_end": (getattr(deal, 'week_start', None) + dt_timedelta(days=6)) if getattr(deal, 'week_start', None) else None,
+        # Week state helpers
+        "is_current_week": (getattr(deal, 'week_start', None) == (dt_date.today() - dt_timedelta(days=dt_date.today().weekday()))),
+        "is_future_week": (getattr(deal, 'week_start', None) and getattr(deal, 'week_start', None) > (dt_date.today() - dt_timedelta(days=dt_date.today().weekday()))),
+        # Weekly history context (last 4 weeks)
+        "history": history,
+        "history_offset": history_offset,
+        "has_prev_history": has_prev_history,
+        "has_next_history": has_next_history,
+        # For highlighting the selected week in history
+        "selected_week_start": (selected_date - dt_timedelta(days=selected_date.weekday())),
+        "current_week_start": current_week_start,
         "selected_date": selected_date,
         "total_stock": total_stock,
         # SKU context
@@ -805,7 +850,66 @@ def band_of_the_day(request):
         "device_models": model_list,
         "sku_data_json": json.dumps(sku_data),
     }
-    return render(request, "store/band_of_the_day.html", context)
+    return render(request, "store/band_of_the_week.html", context)
+
+
+def band_of_the_week_history(request):
+    """AJAX: return weekly history cards (4 items) for a given date + offset h."""
+    # History is anchored to latest; ignore date to avoid future weeks
+    try:
+        history_offset = int(request.GET.get("h", 0))
+        if history_offset < 0:
+            history_offset = 0
+    except Exception:
+        history_offset = 0
+
+    # Determine anchor: the latest available (can be future)
+    latest_week_start = (
+        BandOfTheWeek.objects
+        .order_by("-week_start")
+        .values_list("week_start", flat=True)
+        .first()
+    )
+    if not latest_week_start:
+        latest_week_start = dt_date.today() - dt_timedelta(days=dt_date.today().weekday())
+
+    history_weeks_count = 4
+    start_base = latest_week_start - dt_timedelta(weeks=history_offset * history_weeks_count)
+    history_starts = [start_base - dt_timedelta(weeks=i) for i in range(history_weeks_count)]
+
+    weekly_history = (
+        BandOfTheWeek.objects
+        .filter(week_start__in=history_starts)
+        .select_related("product__category")
+        .order_by("-week_start")
+    )
+    history = []
+    for w in weekly_history:
+        week_end = w.week_start + dt_timedelta(days=6)
+        history.append({
+            "deal": w,
+            "start": w.week_start,
+            "end": week_end,
+        })
+
+    min_week_start = (
+        BandOfTheWeek.objects
+        .order_by("week_start")
+        .values_list("week_start", flat=True)
+        .first()
+    )
+    oldest_shown = history_starts[-1] if history_starts else None
+    has_next_history = bool(min_week_start and oldest_shown and oldest_shown > min_week_start)
+    has_prev_history = history_offset > 0
+
+    html = render_to_string("store/_botw_history_cards.html", {"history": history})
+    return JsonResponse({
+        "success": True,
+        "html": html,
+        "h": history_offset,
+        "has_prev": has_prev_history,
+        "has_next": has_next_history,
+    })
 
 
 def shop(request):

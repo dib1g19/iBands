@@ -9,17 +9,25 @@
         return end;
     }
 
+    function formatYMDLocal(d) {
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var da = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + da;
+    }
+
     function isCurrentWeek(weekStartISO) {
         if (!weekStartISO) return true;
         try {
-            var ws = new Date(weekStartISO);
+            // Parse as local date to avoid UTC shifting
+            var parts = weekStartISO.split('-');
+            var ws = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
             var today = new Date();
             var monday = new Date(today);
             var d = monday.getDay(); // 0=Sun
             var diffToMonday = (d === 0 ? 6 : d - 1);
             monday.setDate(today.getDate() - diffToMonday);
-            // Compare year-month-day
-            return monday.toISOString().slice(0,10) === ws.toISOString().slice(0,10);
+            return formatYMDLocal(monday) === formatYMDLocal(ws);
         } catch(e) { return true; }
     }
 

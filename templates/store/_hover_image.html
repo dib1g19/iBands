@@ -1,8 +1,8 @@
 <div class="product-img-hover-wrapper{% if hover_image or gallery_list %} has-hover{% endif %}">
-    <img class="card-img-top main-img" src="{{ image.url }}" alt="{{ alt }}" style="width:100%;object-fit:cover;" />
+    <img class="card-img-top main-img" src="{{ image.url }}" alt="{{ alt }}" style="width:100%;object-fit:cover;" {% if lazy %}loading="lazy"{% endif %} />
     {% if hover_image %}
-        <img class="card-img-top hover-img" src="{{ hover_image.url }}" alt="{{ alt }}" style="width:100%;object-fit:cover;" />
+        <img class="card-img-top hover-img" src="{{ hover_image.url }}" alt="{{ alt }}" style="width:100%;object-fit:cover;" {% if lazy %}loading="lazy"{% endif %} />
     {% elif gallery_list and gallery_list.0 %}
-        <img class="card-img-top hover-img" src="{{ gallery_list.0.image.url }}" alt="{{ alt }}" style="width:100%;object-fit:cover;" />
+        <img class="card-img-top hover-img" src="{{ gallery_list.0.image.url }}" alt="{{ alt }}" style="width:100%;object-fit:cover;" {% if lazy %}loading="lazy"{% endif %} />
     {% endif %}
 </div>

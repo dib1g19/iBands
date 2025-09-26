@@ -1388,9 +1388,8 @@ textarea.form-control { min-height: 8rem; }
 .botw-nav-left { left: 0; transform: translate(-100%, -50%); }
 .botw-nav-right { right: 0; transform: translate(100%, -50%); }
 @media (max-width: 575.98px) {
-    .botw-nav { width: 38px; height: 38px; }
-    .botw-nav-left { left: 0; transform: translate(-90%, -50%); }
-    .botw-nav-right { right: 0; transform: translate(90%, -50%); }
+    .botw-wrapper { overflow: hidden; }
+    .botw-nav { display: none; }
 }
 
 .botw-selected {
@@ -1416,6 +1415,25 @@ textarea.form-control { min-height: 8rem; }
     text-transform: uppercase;
     z-index: 5;
     pointer-events: none;
+}
+
+/* BOTW mobile load-more */
+.botw-load-more {
+    border: 1px solid #0d6efd;
+    color: #0d6efd;
+    background: #fff;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(13,110,253,.15);
+}
+.botw-load-more:hover {
+    background: #0d6efd;
+    color: #fff;
+}
+.botw-load-more.disabled {
+    opacity: .6;
+    cursor: not-allowed;
 }
 
 /*--------------- Countdown -----------------*/

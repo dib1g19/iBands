@@ -1769,7 +1769,8 @@ def stripe_payment(request, order_id):
         + "&payment_method=Stripe",
         cancel_url=request.build_absolute_uri(
             reverse("store:stripe_payment_verify", args=[order.order_id])
-        ),
+        )
+        + "?canceled=1",
     )
 
     print("checkkout session", checkout_session)
@@ -1778,11 +1779,23 @@ def stripe_payment(request, order_id):
 
 def stripe_payment_verify(request, order_id):
     order = store_models.Order.objects.get(order_id=order_id)
-    session_id = request.GET.get("session_id")
-    session = stripe.checkout.Session.retrieve(session_id)
+    stripe.api_key = settings.STRIPE_SECRET_KEY
 
-    if session.payment_status == "paid":
-        if order.payment_status == "processing":
+    # Handle explicit cancel or missing session id gracefully
+    if request.GET.get("canceled") == "1":
+        return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
+
+    session_id = request.GET.get("session_id")
+    if not session_id:
+        return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
+
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+    except Exception:
+        return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
+
+    if getattr(session, "payment_status", None) == "paid":
+        if order.payment_status != "paid":
             # Prefer payment_intent/id as a stable event id for deduplication
             try:
                 order.payment_id = getattr(session, "payment_intent", None) or getattr(session, "id", None)
@@ -1810,12 +1823,18 @@ def stripe_payment_verify(request, order_id):
                 email_title="iBands: Приета поръчка",
                 to_email=settings.ORDER_NOTIFICATION_EMAIL,
             )
-            customer_models.Notifications.objects.create(
-                type="New Order", user=request.user
-            )
+            if request.user.is_authenticated:
+                customer_models.Notifications.objects.create(
+                    type="New Order", user=request.user
+                )
             clear_cart_items(request)
-            return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=paid")
-    return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
+        return redirect(
+            reverse("store:payment_status", args=[order.order_id]) + "?payment_status=paid"
+        )
+
+    return redirect(
+        reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed"
+    )
 
 
 def payment_status(request, order_id):

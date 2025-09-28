@@ -32,50 +32,50 @@
                     <h3 class="fw-bold">Колекции</h3>
                     <div class="row g-3 g-md-4">
                         {% for sub in subcategories %}
-                            {% if not sub.is_all or products|length == 0 %}
-                                <div class="col-6 col-md-4 col-lg-3">
-                                    <a class="subcategory-card" href="{% if sub.is_all %}{% url 'store:category_all_sub' category.get_full_path %}{% else %}{{ sub.get_absolute_url }}{% endif %}">
-                                        <div class="subcategory-card-media">
-                                            {% if sub.marketing_image %}
-                                                {% include 'store/_hover_image.html' with image=sub.marketing_image hover_image=sub.hover_image alt=sub.title %}
-                                            {% endif %}
-                                            <div class="subcategory-card-overlay">
-                                                <div class="subcategory-card-title">
-                                                    {% if sub.is_all %}
-                                                        Всички {{ category.title }}
-                                                    {% else %}
-                                                        {{ sub.title }}
-                                                    {% endif %}
-                                                </div>
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <a class="subcategory-card" href="{% if sub.is_all %}{% url 'store:category_all_sub' category.get_full_path %}{% else %}{{ sub.get_absolute_url }}{% endif %}">
+                                    <div class="subcategory-card-media">
+                                        {% if sub.marketing_image %}
+                                            {% include 'store/_hover_image.html' with image=sub.marketing_image hover_image=sub.hover_image alt=sub.title %}
+                                        {% endif %}
+                                        <div class="subcategory-card-overlay">
+                                            <div class="subcategory-card-title">
+                                                {% if sub.is_all %}
+                                                    Всички {{ category.title }}
+                                                {% else %}
+                                                    {{ sub.title }}
+                                                {% endif %}
                                             </div>
                                         </div>
-                                    </a>
-                                </div>
-                            {% endif %}
+                                    </div>
+                                </a>
+                            </div>
                         {% endfor %}
                     </div>
                 </div>
             {% endif %}
 
-            {% if category.marketing_image or category.hover_image %}
-                <div class="category-page row mb-5 gx-4">
-                    <div class="col-12 col-md-6">
-                        <div class="category-img-wrapper w-100">
-                            <img src="{{ category.marketing_image.url }}" class="img-fluid main-img" alt="{{ category.title }}" />
-                            {% if category.hover_image %}
-                                <img src="{{ category.hover_image.url }}" class="img-fluid hover-img d-md-none" alt="{{ category.title }}" />
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% if category.hover_image %}
-                        <!-- On desktop, show hover image separately, no hover effect -->
-                        <div class="col-md-6 d-none d-md-flex">
+            {% if category.show_banner and not all_sub_mode %}
+                {% if category.marketing_image or category.hover_image %}
+                    <div class="category-page row mb-5 gx-4">
+                        <div class="col-12 col-md-6">
                             <div class="category-img-wrapper w-100">
-                                <img src="{{ category.hover_image.url }}" class="img-fluid main-img" alt="{{ category.title }}" />
+                                <img src="{{ category.marketing_image.url }}" class="img-fluid main-img" alt="{{ category.title }}" />
+                                {% if category.hover_image %}
+                                    <img src="{{ category.hover_image.url }}" class="img-fluid hover-img d-md-none" alt="{{ category.title }}" />
+                                {% endif %}
                             </div>
                         </div>
-                    {% endif %}
-                </div>
+                        {% if category.hover_image %}
+                            <!-- On desktop, show hover image separately, no hover effect -->
+                            <div class="col-md-6 d-none d-md-flex">
+                                <div class="category-img-wrapper w-100">
+                                    <img src="{{ category.hover_image.url }}" class="img-fluid main-img" alt="{{ category.title }}" />
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
             {% endif %}
 
             <!-- Product List -->

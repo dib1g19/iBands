@@ -73,6 +73,10 @@ class Category(models.Model):
         null=True,
         verbose_name="Втора снимка (показва се при задържане)",
     )
+    show_banner = models.BooleanField(
+        default=True,
+        verbose_name="Показвай банера в категория",
+    )
     slug = models.SlugField()
     meta_title = models.CharField(max_length=150, blank=True, null=True)
     meta_description = models.CharField(max_length=300, blank=True, null=True)

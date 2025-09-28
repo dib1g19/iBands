@@ -151,6 +151,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MESSAGE_TAGS = {messages.ERROR: "danger"}
 GRAPH_MODELS = {"all_applications": True, "graph_models": True}
 
+# Canonical site URL (used in emails/links)
+SITE_URL = env("SITE_URL", default="https://ibands.online")
+
 # --- Econt Integration ---
 ECONT_SHOP_ID = env("ECONT_SHOP_ID")
 ECONT_SHIPPMENT_CALC_URL = env("ECONT_SHIPPMENT_CALC_URL", default="https://delivery.econt.com/customer_info.php")

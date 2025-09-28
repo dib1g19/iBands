@@ -878,7 +878,7 @@ h6 {
         width: auto;
     }
     .nav-menu-wrapper .nav-menu > li > a {
-        padding: 22px 12px !important;
+        padding: 10px !important;
     }
 
     .nav-dropdown {
@@ -908,6 +908,11 @@ h6 {
     /* Hide submenu indicator chevrons/arrows (desktop only) */
     .submenu-indicator {
         display: none;
+    }
+}
+@media (min-width: 1200px) {
+    .nav-menu-wrapper .nav-menu > li > a {
+        padding: 12px !important;
     }
 }
 

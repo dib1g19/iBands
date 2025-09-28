@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Добре дошли в iBands</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background:#0f172a; margin:0; padding:24px; color:#e2e8f0;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px; margin:0 auto; background:#0b1220; border:1px solid #1f2937; border-radius:16px; overflow:hidden;">
+        <tr>
+            <td style="padding:28px 24px; background:#111827; color:#ffffff;">
+                <h1 style="margin:0; font-size:24px; letter-spacing:0.2px;">Добре дошли в iBands</h1>
+                <p style="margin:8px 0 0 0; color:#9ca3af; font-size:14px;">Вашият акаунт е създаден успешно</p>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:24px;">
+                <p style="margin:0 0 12px 0; line-height:1.6;">
+                    Здравейте {{ full_name|yesno:", ," }}{{ full_name }},
+                </p>
+                <p style="margin:0 0 14px 0; line-height:1.7; color:#cbd5e1;">
+                    Благодарим Ви, че се присъединихте към iBands! С акаунта си можете да проследявате поръчки, 
+                    да запазвате любими продукти и да управлявате адреси за доставка.
+                </p>
+
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin:18px 0 22px 0;">
+                    <tr>
+                        <td>
+                            <a href="{{ site_url|default:'#' }}" style="display:inline-block; background:#2563eb; color:#ffffff; text-decoration:none; padding:12px 18px; border-radius:10px; font-weight:600; font-size:14px;">
+                                Към iBands
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+                <p style="margin:0; font-size:12px; color:#94a3b8;">Екипът на iBands</p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+
+

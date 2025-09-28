@@ -6,6 +6,9 @@ from django.urls import reverse
 
 from userauths import models as userauths_models
 from userauths import forms as userauths_forms
+from store import models as store_models
+from decimal import Decimal
+from store.emails import send_welcome_email
 
 
 def register_view(request):
@@ -16,23 +19,63 @@ def register_view(request):
     form = userauths_forms.UserRegisterForm(request.POST or None)
 
     if form.is_valid():
-        user = form.save()
+        # Preserve anonymous session cart before login (session rotates on login)
+        preserved_cart_id = request.session.get("cart_id")
+        try:
+            user = form.save()
+        except Exception as e:
+            # Surface any model/DB errors as non-field errors
+            form.add_error(None, "Възникна грешка при създаването на профила. Моля, опитайте отново.")
+            return render(request, "userauths/sign-up.html", {"form": form, "breadcrumbs": [
+                {"label": "Начална Страница", "url": reverse("store:index")},
+                {"label": "Създай акаунт", "url": ""},
+            ]})
 
         full_name = form.cleaned_data.get("full_name")
         email = form.cleaned_data.get("email")
         mobile = form.cleaned_data.get("mobile")
         password = form.cleaned_data.get("password1")
 
-        user = authenticate(email=email, password=password)
-        login(request, user)
+        user = authenticate(request, email=email, password=password)
+        if not user:
+            form.add_error(None, "Профилът беше създаден, но възникна проблем при вход. Моля, влезте ръчно.")
+        else:
+            login(request, user)
+
+        # Restore cart_id and attach anonymous cart items to the new user
+        if preserved_cart_id and user:
+            request.session["cart_id"] = preserved_cart_id
+            try:
+                store_models.Cart.objects.filter(cart_id=preserved_cart_id).update(user=user)
+            except Exception:
+                pass
 
         messages.success(request, f"Профилът беше създаден успешно.")
-        profile = userauths_models.Profile.objects.create(
-            full_name=full_name, mobile=mobile, user=user
+        # Ensure a profile exists; idempotent across retries/races
+        profile, _ = userauths_models.Profile.objects.get_or_create(
+            user=user,
+            defaults={"full_name": full_name, "mobile": mobile},
         )
-        profile.save()
 
-        next_url = request.GET.get("next", "store:index")
+        # Send welcome email (fail silently on errors)
+        try:
+            if user:
+                send_welcome_email(user=user)
+        except Exception:
+            pass
+
+        # Safe redirect handling (avoid undefined/external values)
+        next_url = request.GET.get("next")
+        if not user:
+            # Stay on the form when auto-login failed
+            return render(request, "userauths/sign-up.html", {"form": form, "breadcrumbs": [
+                {"label": "Начална Страница", "url": reverse("store:index")},
+                {"label": "Създай акаунт", "url": ""},
+            ]})
+        if next_url in ("/undefined/", "undefined", None):
+            return redirect("store:index")
+        if not isinstance(next_url, str) or not next_url.startswith("/"):
+            return redirect("store:index")
         return redirect(next_url)
 
     breadcrumbs = [
@@ -57,10 +100,8 @@ def login_view(request):
         if form.is_valid():
             email = form.cleaned_data["email"].lower().strip()
             password = form.cleaned_data["password"]
-            captcha_verified = form.cleaned_data.get("captcha", False)
-
-            if captcha_verified:
-                try:
+            # Captcha temporarily disabled; proceed directly
+            try:
                     user_authenticate = authenticate(
                         request, email=email, password=password
                     )
@@ -68,6 +109,61 @@ def login_view(request):
                     if user_authenticate is not None:
                         login(request, user_authenticate)
                         messages.success(request, "Успешно влязохте в профила си.")
+                        # Merge any previous carts linked to this user into current session cart_id
+                        try:
+                            current_cart_id = request.session.get("cart_id")
+                            if not current_cart_id:
+                                # Generate a simple 10-digit numeric cart id similar to frontend
+                                import random
+                                current_cart_id = "".join(str(random.randint(0, 9)) for _ in range(10))
+                                request.session["cart_id"] = current_cart_id
+
+                            # Attach any existing session cart lines to the user
+                            store_models.Cart.objects.filter(cart_id=current_cart_id).update(user=user_authenticate)
+
+                            # Find other carts for this user and merge into current_cart_id
+                            other_items = store_models.Cart.objects.filter(user=user_authenticate).exclude(cart_id=current_cart_id)
+                            for item in other_items:
+                                # Try to find an existing line in the target cart with same product/model/size
+                                target = store_models.Cart.objects.filter(
+                                    cart_id=current_cart_id,
+                                    product=item.product,
+                                    model=item.model,
+                                    size=item.size,
+                                ).first()
+                                # Resolve line unit price (prefer SKU when size/model selected)
+                                try:
+                                    sku_qs = store_models.ProductItem.objects.filter(product=item.product)
+                                    if item.size:
+                                        sku_qs = sku_qs.filter(size__name=item.size)
+                                    else:
+                                        sku_qs = sku_qs.filter(size__isnull=True)
+                                    if item.model:
+                                        sku_qs = sku_qs.filter(device_models__name=item.model)
+                                    sku = sku_qs.first()
+                                    unit_price = getattr(sku, "effective_price", None) if sku else item.product.effective_price
+                                except Exception:
+                                    unit_price = item.product.effective_price
+
+                                if target:
+                                    # Merge quantities
+                                    target.qty = int(target.qty or 0) + int(item.qty or 0)
+                                    target.price = unit_price
+                                    target.sub_total = Decimal(str(unit_price or 0)) * Decimal(str(target.qty or 0))
+                                    target.user = user_authenticate
+                                    target.cart_id = current_cart_id
+                                    target.save()
+                                    item.delete()
+                                else:
+                                    # Move this line into current cart
+                                    item.cart_id = current_cart_id
+                                    item.user = user_authenticate
+                                    item.price = unit_price
+                                    item.sub_total = Decimal(str(unit_price or 0)) * Decimal(str(item.qty or 0))
+                                    item.save()
+                        except Exception:
+                            # Don't block login on cart merge issues
+                            pass
                         next_url = request.GET.get("next", "store:index")
 
                         print("next_url ========", next_url)
@@ -83,13 +179,8 @@ def login_view(request):
                         return redirect(next_url)
                     else:
                         messages.error(request, "Грешен имейл или парола")
-                except userauths_models.User.DoesNotExist:
-                    messages.error(request, "Потребителят не съществува")
-            else:
-                messages.error(
-                    request,
-                    "Верификацията чрез капча не бе успешна. Моля, опитайте отново.",
-                )
+            except userauths_models.User.DoesNotExist:
+                messages.error(request, "Потребителят не съществува")
     else:
         form = userauths_forms.LoginForm()
 

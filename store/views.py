@@ -162,8 +162,16 @@ def send_order_to_speedy(order):
         # Derive parcels from cart: quantity * 0.1 kg per item, count fixed to 1
         parcels = [{"weight": max(0.01, round(total_weight, 3) or 0.1)}]
 
+        # Determine payer (free shipping -> SENDER pays, else COD->RECIPIENT, card->SENDER)
+        try:
+            free_shipping = (Decimal(str(order.shipping or 0)) == Decimal("0.00"))
+        except Exception:
+            free_shipping = False
+        is_cod = (order.payment_method == "cash_on_delivery")
+        payer_code = "SENDER" if free_shipping else ("RECIPIENT" if is_cod else "SENDER")
+
         calc_req = {
-            "payer": "RECIPIENT" if order.payment_method == "cash_on_delivery" else "SENDER",
+            "payer": payer_code,
             "documents": False,
             "palletized": False,
             "parcels": parcels or [{"weight": round(total_weight, 3) or 0.1}],
@@ -193,6 +201,11 @@ def send_order_to_speedy(order):
 
     # Build payload per example structure
     is_cod = (order.payment_method == "cash_on_delivery")
+    try:
+        free_shipping = (Decimal(str(order.shipping or 0)) == Decimal("0.00"))
+    except Exception:
+        free_shipping = False
+    payer_code = "SENDER" if free_shipping else ("RECIPIENT" if is_cod else "SENDER")
     shipment_request = {
         "language": "BG",
         "service": {
@@ -209,8 +222,8 @@ def send_order_to_speedy(order):
             "package": "BOX",
         },
         "payment": {
-            "courierServicePayer": ("RECIPIENT" if is_cod else "SENDER"),
-            "declaredValuePayer": ("RECIPIENT" if is_cod else "SENDER"),
+            "courierServicePayer": payer_code,
+            "declaredValuePayer": payer_code,
         },
         "sender": ({"dropoffOfficeId": int(settings.SPEEDY_DROPOFF_OFFICE_ID)}
                    if getattr(settings, "SPEEDY_DROPOFF_OFFICE_ID", None) else {}),
@@ -224,6 +237,28 @@ def send_order_to_speedy(order):
         },
         "ref1": f"ORDER {order.order_id}",
     }
+    # Attach Options Before Payment (OBPD) with configured option (OPEN/TEST) under service.additionalServices.obpd
+    try:
+        _return_service_id = service_id or int(getattr(settings, "SPEEDY_DEFAULT_SERVICE_ID", 0) or 0) or None
+    except Exception:
+        _return_service_id = getattr(settings, "SPEEDY_DEFAULT_SERVICE_ID", None)
+    # Use configurable OBPD option: OPEN (default) or TEST (for "test before payment")
+    obpd_option = str(getattr(settings, "SPEEDY_OBPD_OPTION", "OPEN")).upper()
+    if obpd_option not in {"OPEN", "TEST"}:
+        obpd_option = "OPEN"
+    obp_block = {
+        "option": obpd_option,
+        "returnShipmentPayer": "SENDER",
+    }
+    if _return_service_id:
+        try:
+            obp_block["returnShipmentServiceId"] = int(_return_service_id)
+        except Exception:
+            pass
+    # Ensure additionalServices exists and add obpd
+    if "additionalServices" not in shipment_request["service"] or not isinstance(shipment_request["service"].get("additionalServices"), dict):
+        shipment_request["service"]["additionalServices"] = {}
+    shipment_request["service"]["additionalServices"]["obpd"] = obp_block
     # For address delivery, add address (single block) as before
     if "pickupOfficeId" not in shipment_request["recipient"]:
         addr = {"countryId": 100}
@@ -245,6 +280,41 @@ def send_order_to_speedy(order):
     try:
         resp_json = speedy_v1_create_shipment(shipment_request)
         shipment_number = resp_json.get("shipmentNumber") or resp_json.get("id") or resp_json.get("shipmentId")
+        # If OBPD TEST is not allowed (e.g., automats), retry with OPEN then without OBPD
+        if not shipment_number and isinstance(resp_json, dict) and resp_json.get("error"):
+            try:
+                err_block = resp_json.get("error") or {}
+                err_text = f"{err_block.get('message', '')} {err_block.get('name', '')} {err_block.get('component', '')}".lower()
+            except Exception:
+                err_text = ""
+            obpd_in_payload = isinstance(shipment_request.get("service", {}).get("additionalServices", {}).get("obpd"), dict)
+            attempted_test = obpd_option == "TEST"
+            mentions_obpd = ("obpd" in err_text) or ("options before payment" in err_text) or ("optionsbeforepayment" in err_text) or ("test" in err_text)
+            if obpd_in_payload and (attempted_test or mentions_obpd):
+                # 1) Retry with OPEN
+                shipment_request_open = json.loads(json.dumps(shipment_request))
+                try:
+                    shipment_request_open["service"]["additionalServices"]["obpd"]["option"] = "OPEN"
+                except Exception:
+                    shipment_request_open = None
+                if shipment_request_open:
+                    resp_json = speedy_v1_create_shipment(shipment_request_open)
+                    shipment_number = resp_json.get("shipmentNumber") or resp_json.get("id") or resp_json.get("shipmentId")
+                # 2) Retry without OBPD if still no number and still looks related
+                if not shipment_number and isinstance(resp_json, dict):
+                    try:
+                        err_block2 = resp_json.get("error") or {}
+                        err_text2 = f"{err_block2.get('message', '')} {err_block2.get('name', '')} {err_block2.get('component', '')}".lower()
+                    except Exception:
+                        err_text2 = ""
+                    if ("obpd" in err_text2) or ("options before payment" in err_text2) or ("optionsbeforepayment" in err_text2) or (attempted_test and not shipment_number):
+                        shipment_request_no_obpd = json.loads(json.dumps(shipment_request))
+                        try:
+                            shipment_request_no_obpd["service"]["additionalServices"].pop("obpd", None)
+                        except Exception:
+                            pass
+                        resp_json = speedy_v1_create_shipment(shipment_request_no_obpd)
+                        shipment_number = resp_json.get("shipmentNumber") or resp_json.get("id") or resp_json.get("shipmentId")
         if not shipment_number and isinstance(resp_json, dict) and resp_json.get("error") and "recipient.address" in str(resp_json.get("error", {}).get("component", "")):
             # Fallback: retry with streetName/streetNo if possible
             try:

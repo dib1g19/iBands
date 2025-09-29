@@ -28,7 +28,17 @@
 - Телефон: {{ order.address.phone }}
 - Начин на доставка: {{ order.address.get_delivery_method_display }}
 - Град: {{ order.address.city }}
+{% if order.address.office_name %}
+- Офис: {{ order.address.office_name }}{% if order.address.office_code %} ({{ order.address.office_code }}){% endif %}
+{% else %}
 - Адрес: {{ order.address.address }}
+{% endif %}
+{% if order.address.post_code %}
+- Пощенски код: {{ order.address.post_code }}
+{% endif %}
+{% if order.address.face %}
+- Лице за контакт: {{ order.address.face }}
+{% endif %}
 
 Благодарим Ви, че избрахте iBands!
 

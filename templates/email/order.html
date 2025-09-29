@@ -551,15 +551,15 @@
                                                                 <table cellpadding="0" cellspacing="0" align="right" class="es-right" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:right">
                                                                     <tr>
                                                                         <td align="right" style="padding:0;Margin:0;width:80px">
-                                                                            {% if item.product.sale_price and item.product.sale_price < item.product.price %}
-                                                                                {% load pricing %}
-                                                                                {% regular_plus_delta item.product item.size item.model as reg_plus %}
+                                                                            {% load pricing %}
+                                                                            {% regular_plus_delta item.product item.size item.model as reg_plus %}
+                                                                            {% if reg_plus and reg_plus > item.price %}
                                                                                 <div style="display:flex;flex-direction:column;align-items:flex-end;">
                                                                                     <span style="text-decoration:line-through;color:#888;font-size:12px;">{{ reg_plus|floatformat:2 }} лв.</span>
                                                                                     <span style="font-weight:bold;">{{ item.price|floatformat:2 }} лв.</span>
                                                                                 </div>
                                                                             {% else %}
-                                                                                <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#000000;font-size:14px">{{ item.price }} лв.</p>
+                                                                                <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#000000;font-size:14px">{{ item.price|floatformat:2 }} лв.</p>
                                                                             {% endif %}
                                                                         </td>
                                                                     </tr>
@@ -646,9 +646,25 @@
                                                                         <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
                                                                             <strong>Град:</strong> {{ order.address.city }}
                                                                         </p>
-                                                                        <p style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
-                                                                            <strong>Адрес:</strong> {{ order.address.address }}
-                                                                        </p>
+                                                                        {% if order.address.office_name %}
+                                                                            <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
+                                                                                <strong>Офис:</strong> {{ order.address.office_name }}{% if order.address.office_code %} ({{ order.address.office_code }}){% endif %}
+                                                                            </p>
+                                                                        {% else %}
+                                                                            <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
+                                                                                <strong>Адрес:</strong> {{ order.address.address }}
+                                                                            </p>
+                                                                        {% endif %}
+                                                                        {% if order.address.post_code %}
+                                                                            <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
+                                                                                <strong>Пощенски код:</strong> {{ order.address.post_code }}
+                                                                            </p>
+                                                                        {% endif %}
+                                                                        {% if order.address.face %}
+                                                                            <p style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
+                                                                                <strong>Лице за контакт:</strong> {{ order.address.face }}
+                                                                            </p>
+                                                                        {% endif %}
                                                                     </td>
                                                                 </tr>
                                                             </table>

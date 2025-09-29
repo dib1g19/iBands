@@ -263,6 +263,19 @@
     // Stripe payment logic (address must be saved before payment)
     var stripe = Stripe('{{stripe_public_key}}');
     var checkoutButton = document.getElementById('stripe-payment');
+    
+    // Helper: toggle loading state on the visible "Завърши поръчка" button
+    function setContinueLoading(isLoading) {
+        var continueBtn = document.getElementById('continue-payment');
+        if (!continueBtn) return;
+        if (isLoading) {
+            continueBtn.disabled = true;
+            continueBtn.innerHTML = 'Завърши поръчка <i class="fas fa-spinner fa-spin ms-2"></i>';
+        } else {
+            continueBtn.disabled = false;
+            continueBtn.innerHTML = 'Завърши поръчка';
+        }
+    }
 
     // Unified Econt payment handler
     function handleEcontPayment(button, paymentType) {
@@ -292,6 +305,7 @@
                 econtErrorBlock.innerHTML = '<div class="alert alert-danger">Моля, попълнете и потвърдете адреса за доставка чрез формата на Еконт!</div>';
                 econtErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
             }
+            setContinueLoading(false);
             return;
         }
 
@@ -349,6 +363,7 @@
                     econtErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
                 }
                 button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
+                setContinueLoading(false);
             }
         })
         .catch(function (error) {
@@ -357,6 +372,7 @@
                 econtErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
             }
             button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
+            setContinueLoading(false);
         });
     }
 
@@ -426,6 +442,7 @@
                 speedyErrorBlock.innerHTML = '<div class="alert alert-danger">Моля, попълнете адреса за доставка за Спиди!</div>';
                 speedyErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
             }
+            setContinueLoading(false);
             return;
         }
 
@@ -481,6 +498,7 @@
                     speedyErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
                 }
                 button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
+                setContinueLoading(false);
             }
         })
         .catch(function (error) {
@@ -489,6 +507,7 @@
                 speedyErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
             }
             button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
+            setContinueLoading(false);
         });
     }
 </script>
@@ -733,6 +752,7 @@
     // "Continue" button triggers hidden payment button
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('continue-payment').addEventListener('click', function() {
+            setContinueLoading(true);
             var errorBlock = document.getElementById('checkout-error-block');
             var paymentErrorBlock = document.getElementById('payment-error-block');
             var shippingErrorBlock = document.getElementById('shipping-error-block');
@@ -754,6 +774,7 @@
                         shippingErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
                     }
                 }
+                setContinueLoading(false);
                 return;
             }
             if (selectedPayment === 'cash_on_delivery') {

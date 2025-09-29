@@ -80,6 +80,7 @@ def send_order_to_econt(order):
         try:
             resp_json = response.json()
         except Exception:
+            print("ECONT updateOrder: failed to parse JSON. Raw:", getattr(response, "text", "")[:500])
             return None
 
         # Now, call the createAWB endpoint to generate the AWB/label
@@ -87,16 +88,25 @@ def send_order_to_econt(order):
         try:
             awb_response = requests.post(create_awb_url, headers=headers, json=data, timeout=10)
             if awb_response.status_code == 200:
-                awb_json = awb_response.json()
+                try:
+                    awb_json = awb_response.json()
+                except Exception:
+                    print("ECONT createAWB: failed to parse JSON. Raw:", getattr(awb_response, "text", "")[:500])
+                    return None
                 shipment_number = awb_json.get("shipmentNumber")
                 if shipment_number:
                     order.tracking_id = shipment_number
                     order.save(update_fields=["tracking_id"])
+                else:
+                    print("ECONT createAWB: success status but missing shipmentNumber. Payload:", str(awb_json)[:500])
                 return awb_json
-        except Exception:
-            pass
+            else:
+                print("ECONT createAWB failed:", awb_response.status_code, getattr(awb_response, "text", "")[:500])
+        except Exception as e:
+            print("ECONT createAWB exception:", e)
         return None
     else:
+        print("ECONT updateOrder failed:", response.status_code, getattr(response, "text", "")[:500])
         return None
 
 
@@ -188,7 +198,7 @@ def send_order_to_speedy(order):
         "service": {
             "serviceId": service_id or getattr(settings, "SPEEDY_DEFAULT_SERVICE_ID", None),
             "additionalServices": {
-                **({"cod": {"amount": float(order.sub_total), "processingType": "CASH"}} if is_cod else {}),
+                **({"cod": {"amount": float(order.total), "processingType": "CASH"}} if is_cod else {}),
             },
             "autoAdjustPickupDate": True,
         },
@@ -342,10 +352,16 @@ def save_econt_address(request, order_id):
                     address_kwargs['user'] = user
                 address = customer_models.Address.objects.create(**address_kwargs)
             order.address = address
-            # Update shipping only when a valid shipping price was provided
-            if shipping_price is not None:
-                order.shipping = shipping_price
-            # Coupon logic: recalculate discount and totals if coupon is applied
+            # Backend free-shipping enforcement: if subtotal >= 75 and office delivery selected -> free
+            free_shipping_threshold = Decimal("75")
+            is_office_delivery = delivery_method == 'econt_office'
+            if (order.sub_total or 0) is not None and Decimal(str(order.sub_total)) >= free_shipping_threshold and is_office_delivery:
+                order.shipping = Decimal("0.00")
+            else:
+                # Update shipping only when a valid shipping price was provided
+                if shipping_price is not None:
+                    order.shipping = Decimal(str(shipping_price))
+            # Recalculate totals (and item prices if coupon present)
             apply_coupon_discount(order)
             return JsonResponse({"success": True})
         except Exception as e:
@@ -397,8 +413,14 @@ def save_speedy_address(request, order_id):
                 address = customer_models.Address.objects.create(**address_kwargs)
 
             order.address = address
-            if shipping_price is not None:
-                order.shipping = shipping_price
+            # Backend free-shipping enforcement: if subtotal >= 75 and office delivery selected -> free
+            free_shipping_threshold = Decimal("75")
+            is_office_delivery = delivery_method == 'speedy_office'
+            if (order.sub_total or 0) is not None and Decimal(str(order.sub_total)) >= free_shipping_threshold and is_office_delivery:
+                order.shipping = Decimal("0.00")
+            else:
+                if shipping_price is not None:
+                    order.shipping = Decimal(str(shipping_price))
             # Cache extra Speedy options for shipment creation
             from django.core.cache import cache
             speedy_opts = {
@@ -558,7 +580,7 @@ def speedy_quote(request, order_id):
         service_block = {"autoAdjustPickupDate": True}
         if is_cod:
             service_block["additionalServices"] = {
-                "cod": {"amount": float(order.sub_total), "processingType": "CASH"}
+                "cod": {"amount": float(order.total), "processingType": "CASH"}
             }
         calc_request["service"] = service_block
         calc_response = speedy_v1_calculate(calc_request)

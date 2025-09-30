@@ -174,7 +174,7 @@ class ProductAdmin(iBandsModelAdmin):
 class CategoryAdmin(iBandsModelAdmin):
     list_display = ["title", "sku", "marketing_image", "hover_image", "is_popular", "parent"]
     list_editable = ["sku", "marketing_image", "hover_image", "is_popular"]
-    list_filter = ["parent"]
+    list_filter = ["parent", "is_popular"]
     search_fields = ["title", "sku"]
     list_select_related = ["parent"]
 

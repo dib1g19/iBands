@@ -1732,6 +1732,32 @@ footer img {
     border: 1px solid #bbb;
 }
 
+/* Color swatches grid (shop sidebar) */
+.color-swatches-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* two columns */
+    gap: 8px 12px;
+    justify-items: start; /* align items to the left within each column */
+}
+
+.color-swatch-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* left-align content */
+}
+
+.color-swatch-label {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Slightly larger swatch for easier tapping */
+.color-swatches-grid .color-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+}
+
 /* Hide number input spinner controls across different browsers */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {

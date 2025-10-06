@@ -88,12 +88,12 @@
                     <!-- Color Filter -->
                     <div class="border rounded p-3 mb-3">
                         <h4>Цвят</h4>
-                        <div class="d-flex flex-wrap gap-2">
+                        <div class="color-swatches-grid">
                             {% for group in color_groups %}
-                                <div class="form-check d-flex align-items-center" title="{{ group.name_bg }}">
-                                    <input type="checkbox" class="form-check-input colors-filter me-2" value="{{ group.id }}" id="colorGroup{{ group.id }}" />
-                                    <label for="colorGroup{{ group.id }}" class="d-flex align-items-center gap-2 mb-0">
-                                        <span class="rounded-circle color-swatch" data-hex="{{ group.hex_code }}"></span>
+                                <div class="form-check color-swatch-item" title="{{ group.name_bg }}">
+                                    <input type="checkbox" class="form-check-input colors-filter" value="{{ group.id }}" id="colorGroup{{ group.id }}" />
+                                    <label for="colorGroup{{ group.id }}" class="color-swatch-label d-inline-flex align-items-center gap-2 mb-0">
+                                        <span class="color-swatch rounded-circle" data-hex="{{ group.hex_code }}"></span>
                                         <span class="fs-6">{{ group.name_bg }}</span>
                                     </label>
                                 </div>

@@ -37,6 +37,30 @@ from django.http import HttpResponse
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
+def _hex_to_rgb(hex_code):
+    """Convert #RRGGBB or #RGB to integer RGB tuple."""
+    if not isinstance(hex_code, str):
+        return (0, 0, 0)
+    s = hex_code.strip().lstrip('#')
+    if len(s) == 3:
+        try:
+            r, g, b = (int(s[0]*2, 16), int(s[1]*2, 16), int(s[2]*2, 16))
+            return (r, g, b)
+        except Exception:
+            return (0, 0, 0)
+    if len(s) == 6:
+        try:
+            r, g, b = (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
+            return (r, g, b)
+        except Exception:
+            return (0, 0, 0)
+    return (0, 0, 0)
+
+def _perceived_brightness(hex_code):
+    """Return perceived brightness (0-255) using ITU-R BT.601 weights."""
+    r, g, b = _hex_to_rgb(hex_code)
+    return 0.299 * r + 0.587 * g + 0.114 * b
+
 def send_order_to_econt(order):
     url = settings.ECONT_UPDATE_ORDER_ENDPOINT
     headers = {
@@ -1015,8 +1039,9 @@ def shop(request):
         store_models.Category.objects.filter(parent__isnull=True)
         .prefetch_related("subcategories__subcategories")
     )
-    # Color groups for color filter
-    color_groups = store_models.ColorGroup.objects.all()
+    # Color groups for color filter (sorted light → dark by perceived brightness)
+    color_groups = list(store_models.ColorGroup.objects.all())
+    color_groups.sort(key=lambda cg: _perceived_brightness(getattr(cg, "hex_code", "")), reverse=True)
 
     item_display = [
         {"id": "12", "value": 12},
@@ -1070,7 +1095,8 @@ def sale(request):
         store_models.Category.objects.filter(parent__isnull=True)
         .prefetch_related("subcategories__subcategories")
     )
-    color_groups = store_models.ColorGroup.objects.all()
+    color_groups = list(store_models.ColorGroup.objects.all())
+    color_groups.sort(key=lambda cg: _perceived_brightness(getattr(cg, "hex_code", "")), reverse=True)
 
     item_display = [
         {"id": "12", "value": 12},

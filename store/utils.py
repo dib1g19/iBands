@@ -50,6 +50,83 @@ def floor_to_cent(amount):
     return dec.quantize(Decimal("0.01"), rounding=ROUND_FLOOR)
 
 
+# --- Cart/Order promo allocation helpers ---
+def compute_paid_units_allocation(product, items):
+    """
+    Given a product and a list of items (each: {"id": any, "qty": int, "price": Decimal/float}),
+    return a dict of item_id -> paid_units using group-level Buy X Get Y promo.
+
+    Allocation policy: paid units are assigned to the most expensive units first,
+    so free units effectively apply to the cheapest items.
+    """
+    try:
+        from decimal import Decimal as _D
+        norm_items = []
+        total_qty = 0
+        for it in items:
+            qty = max(0, int(it.get("qty", 0) or 0))
+            price = _D(str(it.get("price", 0) or 0))
+            norm_items.append({"id": it.get("id"), "qty": qty, "price": price})
+            total_qty += qty
+
+        if hasattr(product, "has_active_promo") and product.has_active_promo():
+            try:
+                paid_total = int(product.compute_promo_paid_units(total_qty))
+            except Exception:
+                paid_total = total_qty
+        else:
+            paid_total = total_qty
+
+        # Sort by unit price descending so the cheaper units become free
+        norm_items.sort(key=lambda r: (r["price"], r["qty"]), reverse=True)
+        allocation = {it["id"]: 0 for it in norm_items}
+        remaining = paid_total
+        for it in norm_items:
+            if remaining <= 0:
+                break
+            take = min(it["qty"], remaining)
+            allocation[it["id"]] = take
+            remaining -= take
+        return allocation
+    except Exception:
+        # Fallback: charge everything to be safe
+        return {it.get("id"): int(it.get("qty", 0) or 0) for it in (items or [])}
+
+
+def recalc_cart_group_promos(cart_qs):
+    """
+    Recalculate sub_total for all Cart items in the queryset by grouping items
+    per product and allocating paid units across variants (sizes/models).
+    """
+    try:
+        # Group items by product id
+        by_product = {}
+        for ci in cart_qs.select_related("product"):  # ensure product present
+            key = getattr(ci.product, "id", None)
+            if key is None:
+                # Skip lines without product
+                continue
+            by_product.setdefault(key, {"product": ci.product, "lines": []})
+            by_product[key]["lines"].append(ci)
+
+        for _, group in by_product.items():
+            product = group["product"]
+            lines = group["lines"]
+            item_specs = [
+                {"id": line.id, "qty": int(getattr(line, "qty", 0) or 0), "price": getattr(line, "price", 0) or 0}
+                for line in lines
+            ]
+            allocation = compute_paid_units_allocation(product, item_specs)
+            for line in lines:
+                paid_units = int(allocation.get(line.id, getattr(line, "qty", 0) or 0))
+                unit_price = Decimal(str(getattr(line, "price", 0) or 0))
+                line.sub_total = floor_to_cent(unit_price * Decimal(paid_units))
+                line.save(update_fields=["sub_total"])
+    except Exception:
+        # Best-effort only; don't crash
+        return
+
+
 # --- Speedy v1 JSON-credential endpoints ---
 def speedy_v1_find_sites(name: str, country_id: int = 100):
     url = getattr(settings, "SPEEDY_API_BASE", "https://api.speedy.bg") + "/v1/location/site"

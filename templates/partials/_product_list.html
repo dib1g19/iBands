@@ -12,6 +12,10 @@
                         <div class="discount-badge">
                             -{{ product.discount_percent }}%
                         </div>
+                    {% elif product.has_active_promo %}
+                        <div class="discount-badge">
+                            {% load pricing %}{% promo_label product as pl %}{{ pl }}
+                        </div>
                     {% endif %}
                     <a class="card-img-top d-block overflow-hidden" href="{{ product_url|default:product.get_absolute_url }}">
                         {% include 'store/_hover_image.html' with image=product.image gallery_list=product.gallery_images.all alt=product.name %}

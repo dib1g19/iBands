@@ -32,3 +32,28 @@ def regular_plus_delta(product, size_name=None, model_name=None):
         return base
 
 
+@register.simple_tag
+def promo_label(product):
+    try:
+        label = product.promo_label()
+        return label or ""
+    except Exception:
+        return ""
+
+
+@register.simple_tag
+def promo_paid_units(product, qty):
+    try:
+        return product.compute_promo_paid_units(qty)
+    except Exception:
+        return qty
+
+
+@register.simple_tag
+def promo_free_units(product, qty):
+    try:
+        return product.compute_promo_free_units(qty)
+    except Exception:
+        return 0
+
+

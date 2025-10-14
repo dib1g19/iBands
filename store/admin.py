@@ -25,15 +25,30 @@ class GalleryInline(admin.TabularInline):
 
 @admin.register(store_models.Product)
 class ProductAdmin(iBandsModelAdmin):
-    list_display = ["category", "sku", "name", "image", "price", "sale_price", "on_sale", "featured"]
-    list_editable = ["sku", "name", "image", "price", "sale_price", "on_sale", "featured"]
-    list_filter = ["status", "featured", "on_sale", "category"]
+    list_display = ["category", "sku", "name", "image", "price", "sale_price", "on_sale", "featured", "promo_type", "promo_buy_qty", "promo_get_qty"]
+    list_editable = ["sku", "name", "image", "price", "sale_price", "on_sale", "featured", "promo_type", "promo_buy_qty", "promo_get_qty"]
+    list_filter = ["status", "featured", "on_sale", "promo_type", "category"]
     search_fields = ["name", "category__title"]
     list_select_related = ["category"]
 
     inlines = [GalleryInline]
     prepopulated_fields = {"slug": ("name",)}
     filter_horizontal = ["additional_categories", "variants", "colors", "model_groups"]
+
+    fieldsets = (
+        (None, {
+            "fields": ("category", "sku", "name", "slug", "image", "price", "sale_price", "on_sale", "featured")
+        }),
+        ("Promotion", {
+            "fields": ("promo_type", "promo_buy_qty", "promo_get_qty", "promo_label_override"),
+        }),
+        ("SEO", {
+            "fields": ("h1_override", "meta_description",)
+        }),
+        ("Relations", {
+            "fields": ("additional_categories", "variants", "colors", "size_group", "model_groups")
+        }),
+    )
     
     action_form = DuplicateProductForm
     actions = ["duplicate_product", "generate_product_items_from_groups"]

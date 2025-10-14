@@ -21,6 +21,7 @@ from store.utils import (
     speedy_v1_calculate,
     speedy_v1_create_shipment,
     send_meta_purchase_event,
+    recalc_cart_group_promos,
 )
 from store import models as store_models
 from customer import models as customer_models
@@ -577,14 +578,20 @@ def apply_item_discounts(order, coupon=None):
             base_price = Decimal(str(sku.effective_price or 0))
         else:
             base_price = Decimal(str(item.product.effective_price or 0))
+        # Determine chargeable (paid) units from current line allocation (not recomputed)
+        try:
+            paid_units = int(getattr(item, "promo_paid_units", item.qty) or item.qty)
+        except Exception:
+            paid_units = item.qty
+
         if coupon:
             discount = Decimal(str(coupon.discount)) / Decimal("100")
             discounted_price = round2(base_price * (Decimal("1") - discount))
             item.price = discounted_price
-            item.sub_total = round2(discounted_price * item.qty)
+            item.sub_total = round2(discounted_price * paid_units)
         else:
             item.price = base_price
-            item.sub_total = round2(base_price * item.qty)
+            item.sub_total = round2(base_price * paid_units)
         item.save()
 
 
@@ -1425,15 +1432,32 @@ def add_to_cart(request):
             )
         cart_item.qty = new_qty
         cart_item.price = cart_item.product.effective_price
-        cart_item.sub_total = Decimal(cart_item.product.effective_price) * Decimal(cart_item.qty)
+        # Apply product-level promo: charge only for paid units
+        try:
+            paid_units = cart_item.product.compute_promo_paid_units(cart_item.qty)
+        except Exception:
+            paid_units = cart_item.qty
+        cart_item.sub_total = Decimal(cart_item.product.effective_price) * Decimal(paid_units)
         cart_item.user = request.user if request.user.is_authenticated else None
         cart_item.cart_id = cart_id
         cart_item.save()
+        # After saving the change, normalize promos across product variants in this cart
+        try:
+            recalc_cart_group_promos(store_models.Cart.objects.filter(cart_id=cart_id))
+        except Exception:
+            pass
         message = "Koличката е обновена"
         total_cart_items = store_models.Cart.objects.filter(cart_id=cart_id)
         cart_sub_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(
             sub_total=models.Sum("sub_total")
         )["sub_total"]
+        # Build promo map for dynamic UI update
+        promo_map = {}
+        try:
+            for ci in store_models.Cart.objects.filter(cart_id=cart_id):
+                promo_map[str(ci.id)] = int(getattr(ci, "promo_free_units", 0) or 0)
+        except Exception:
+            pass
         return JsonResponse(
             {
                 "message": message,
@@ -1441,6 +1465,7 @@ def add_to_cart(request):
                 "cart_sub_total": "{:,.2f}".format(cart_sub_total),
                 "item_sub_total": "{:,.2f}".format(cart_item.sub_total),
                 "current_qty": cart_item.qty,
+                "promo_free_units_by_item": promo_map,
             }
         )
 
@@ -1550,7 +1575,11 @@ def add_to_cart(request):
         else:
             line_price = sku.effective_price
         cart_item.price = line_price
-        cart_item.sub_total = Decimal(line_price) * Decimal(cart_item.qty)
+        try:
+            paid_units = cart_item.product.compute_promo_paid_units(cart_item.qty)
+        except Exception:
+            paid_units = cart_item.qty
+        cart_item.sub_total = Decimal(line_price) * Decimal(paid_units)
         cart_item.user = request.user if request.user.is_authenticated else None
         cart_item.cart_id = cart_id
         cart_item.size = size
@@ -1568,10 +1597,19 @@ def add_to_cart(request):
         cart.price = unit_price
         cart.model = model
         cart.size = size
-        cart.sub_total = Decimal(unit_price) * Decimal(qty)
+        try:
+            paid_units = product.compute_promo_paid_units(int(qty))
+        except Exception:
+            paid_units = int(qty)
+        cart.sub_total = Decimal(unit_price) * Decimal(paid_units)
         cart.user = request.user if request.user.is_authenticated else None
         cart.cart_id = cart_id
         cart.save()
+        # After adding a new line, normalize promos across product variants in this cart
+        try:
+            recalc_cart_group_promos(store_models.Cart.objects.filter(cart_id=cart_id))
+        except Exception:
+            pass
         cart_item = cart
         message = "Продуктът е добавен в количката"
 
@@ -1582,6 +1620,12 @@ def add_to_cart(request):
     )["sub_total"]
 
     # Return the response with the cart update message and total cart items
+    promo_map = {}
+    try:
+        for ci in store_models.Cart.objects.filter(cart_id=cart_id):
+            promo_map[str(ci.id)] = int(getattr(ci, "promo_free_units", 0) or 0)
+    except Exception:
+        pass
     return JsonResponse(
         {
             "message": message,
@@ -1589,6 +1633,7 @@ def add_to_cart(request):
             "cart_sub_total": "{:,.2f}".format(cart_sub_total),
             "item_sub_total": "{:,.2f}".format(cart_item.sub_total),
             "current_qty": cart_item.qty,
+            "promo_free_units_by_item": promo_map,
         }
     )
 
@@ -1598,6 +1643,12 @@ def cart(request):
         cart_id = request.session["cart_id"]
     else:
         cart_id = None
+
+    # Normalize promos across variants before rendering
+    try:
+        recalc_cart_group_promos(store_models.Cart.objects.filter(cart_id=cart_id))
+    except Exception:
+        pass
 
     items = store_models.Cart.objects.filter(cart_id=cart_id).select_related(
         "product",
@@ -1644,6 +1695,11 @@ def delete_cart_item(request):
     # Check if the item is already in the cart
     item = store_models.Cart.objects.get(product=product, id=item_id)
     item.delete()
+    # Normalize promos after deletion
+    try:
+        recalc_cart_group_promos(store_models.Cart.objects.filter(cart_id=cart_id))
+    except Exception:
+        pass
 
     # Count the total number of items in the cart
     total_cart_items = store_models.Cart.objects.filter(cart_id=cart_id)
@@ -1651,6 +1707,12 @@ def delete_cart_item(request):
         sub_total=models.Sum("sub_total")
     )["sub_total"]
 
+    promo_map = {}
+    try:
+        for ci in store_models.Cart.objects.filter(cart_id=cart_id):
+            promo_map[str(ci.id)] = int(getattr(ci, "promo_free_units", 0) or 0)
+    except Exception:
+        pass
     return JsonResponse(
         {
             "message": "Продуктът е изтрит",
@@ -1658,6 +1720,7 @@ def delete_cart_item(request):
             "cart_sub_total": (
                 "{:,.2f}".format(cart_sub_total) if cart_sub_total else 0.00
             ),
+            "promo_free_units_by_item": promo_map,
         }
     )
 
@@ -1678,17 +1741,16 @@ def create_order(request):
         order.total = (order.sub_total or 0) + (order.shipping or 0)
         order.save()
 
+        # Before snapshotting items to the order, recalc promos at cart level to ensure correct sub_totals
+        try:
+            recalc_cart_group_promos(items)
+        except Exception:
+            pass
+
         for i in items:
-            # Resolve SKU and snapshot price with delta
-            sku_qs = store_models.ProductItem.objects.filter(product=i.product)
-            if i.size:
-                sku_qs = sku_qs.filter(size__name=i.size)
-            else:
-                sku_qs = sku_qs.filter(size__isnull=True)
-            if i.model:
-                sku_qs = sku_qs.filter(device_models__name=i.model)
-            sku = sku_qs.first()
-            line_price = Decimal(str(getattr(sku, "effective_price", None) or i.price or i.product.effective_price or 0))
+            # Snapshot price and sub_total exactly as in cart to avoid rounding/alloc mismatch
+            line_price = Decimal(str(i.price or 0))
+            sub_total_snapshot = Decimal(str(i.sub_total or 0))
             store_models.OrderItem.objects.create(
                 order=order,
                 product=i.product,
@@ -1696,7 +1758,7 @@ def create_order(request):
                 model=i.model,
                 size=i.size,
                 price=line_price,
-                sub_total=round2(line_price * Decimal(str(i.qty))),
+                sub_total=sub_total_snapshot,
             )
 
     return redirect("store:checkout", order.order_id)

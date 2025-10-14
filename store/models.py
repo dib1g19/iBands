@@ -5,7 +5,7 @@ from slugify import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 from userauths import models as user_models
 from django.urls import reverse
-from decimal import Decimal
+from decimal import Decimal, ROUND_FLOOR
 from store.utils import floor_to_cent
 
 STATUS = (
@@ -50,6 +50,12 @@ RATING = (
     (3, "★★★☆☆"),
     (4, "★★★★☆"),
     (5, "★★★★★"),
+)
+
+
+PROMO_TYPE_CHOICES = (
+    ("none", "No promotion"),
+    ("buy_x_get_y", "Buy X Get Y Free"),
 )
 
 
@@ -218,6 +224,28 @@ class Product(models.Model):
     variants = models.ManyToManyField("Variant", blank=True, related_name="products")
     colors = models.ManyToManyField("Color", blank=True, related_name="products")
     on_sale = models.BooleanField(default=False, db_index=True)
+    # --- Product-specific promotion (e.g., Buy X Get Y Free) ---
+    promo_type = models.CharField(
+        max_length=20,
+        choices=PROMO_TYPE_CHOICES,
+        default="none",
+        db_index=True,
+        help_text="Type of product-level promotion."
+    )
+    promo_buy_qty = models.PositiveIntegerField(
+        default=0,
+        help_text="X in 'Buy X Get Y Free'."
+    )
+    promo_get_qty = models.PositiveIntegerField(
+        default=0,
+        help_text="Y in 'Buy X Get Y Free'."
+    )
+    promo_label_override = models.CharField(
+        max_length=120,
+        null=True,
+        blank=True,
+        help_text="Optional custom label for the promotion badge."
+    )
     # New optional relations to drive SKU generation by sets
     size_group = models.ForeignKey(
         "SizeGroup",
@@ -299,6 +327,49 @@ class Product(models.Model):
             "store:product_detail", args=[self.category.get_full_path(), self.slug]
         )
 
+    # --- Promotion helpers ---
+    def has_active_promo(self) -> bool:
+        try:
+            return (
+                self.promo_type == "buy_x_get_y"
+                and int(self.promo_buy_qty or 0) > 0
+                and int(self.promo_get_qty or 0) > 0
+            )
+        except Exception:
+            return False
+
+    def promo_label(self) -> str:
+        if not self.has_active_promo():
+            return ""
+        if self.promo_label_override:
+            return self.promo_label_override
+        return f"Купи {int(self.promo_buy_qty)} вземи {int(self.promo_get_qty)} безплатно"
+
+    def compute_promo_free_units(self, qty: int) -> int:
+        try:
+            q = max(0, int(qty or 0))
+        except Exception:
+            q = 0
+        if not self.has_active_promo():
+            return 0
+        x = int(self.promo_buy_qty)
+        y = int(self.promo_get_qty)
+        group = x + y
+        if group <= 0:
+            return 0
+        full_groups = q // group
+        remainder = q % group
+        extra_free = max(0, remainder - x)
+        return full_groups * y + extra_free
+
+    def compute_promo_paid_units(self, qty: int) -> int:
+        try:
+            q = max(0, int(qty or 0))
+        except Exception:
+            q = 0
+        free_units = self.compute_promo_free_units(q)
+        return max(0, q - free_units)
+
 
 class Variant(models.Model):
     name = models.CharField(
@@ -358,6 +429,26 @@ class Cart(models.Model):
 
     def __str__(self):
         return f"{self.cart_id} - {self.product.name}"
+
+    @property
+    def promo_paid_units(self):
+        try:
+            unit = Decimal(str(self.price or 0))
+            sub_total = Decimal(str(self.sub_total or 0))
+            if unit and unit > 0:
+                paid = (sub_total / unit).quantize(Decimal('1'), rounding=ROUND_FLOOR)
+                paid_int = int(paid)
+                return max(0, min(int(self.qty or 0), paid_int))
+        except Exception:
+            pass
+        return int(self.qty or 0)
+
+    @property
+    def promo_free_units(self):
+        try:
+            return max(0, int(self.qty or 0) - int(self.promo_paid_units))
+        except Exception:
+            return 0
 
 
 class Coupon(models.Model):
@@ -440,6 +531,25 @@ class OrderItem(models.Model):
 
     class Meta:
         ordering = ["id"]
+
+    @property
+    def promo_paid_units(self):
+        try:
+            unit = Decimal(str(self.price or 0))
+            if unit and unit > 0:
+                paid = (Decimal(str(self.sub_total or 0)) / unit)
+                paid_int = int(paid)
+                return max(0, min(int(self.qty or 0), paid_int))
+        except Exception:
+            pass
+        return int(self.qty or 0)
+
+    @property
+    def promo_free_units(self):
+        try:
+            return max(0, int(self.qty or 0) - int(self.promo_paid_units))
+        except Exception:
+            return 0
 
 
 class Review(models.Model):

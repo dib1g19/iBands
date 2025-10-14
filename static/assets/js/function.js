@@ -145,6 +145,43 @@ $(document).ready(function () {
                     var numeric = (response.cart_sub_total || '0').toString().replace(/\s/g, '').replace(/,/g, '');
                     hiddenSub.setAttribute('data-value', numeric);
                 }
+                // Update promo free units display if provided
+                if (response.promo_free_units_by_item) {
+                    try {
+                        Object.keys(response.promo_free_units_by_item).forEach(function(key){
+                            var free = response.promo_free_units_by_item[key];
+                            var el = document.getElementById('promo-free-' + key);
+                            if (!el) return;
+                            if (free > 0) {
+                                el.textContent = "+" + free + " бр. безплатно";
+                                el.classList.remove('d-none');
+                            } else {
+                                el.textContent = "";
+                                el.classList.add('d-none');
+                            }
+                            // If all units of this line are free, show unit price as 0.00 for that line
+                            var qtyInput = document.querySelector('.item-qty-' + key);
+                            var qtyVal = qtyInput ? parseInt(qtyInput.value) : null;
+                            var priceEl = document.getElementById('item-price-' + key);
+                            if (priceEl && qtyVal !== null) {
+                                if (free >= qtyVal) {
+                                    priceEl.textContent = '0.00 лв.';
+                                } else {
+                                    // Restore to unit price text from data attribute
+                                    var unit = priceEl.getAttribute('data-unit-price') || '';
+                                    if (unit) {
+                                        try {
+                                            var num = parseFloat(unit);
+                                            priceEl.textContent = (num.toLocaleString('bg-BG', {minimumFractionDigits: 2, maximumFractionDigits: 2})) + ' лв.';
+                                        } catch(e) {
+                                            priceEl.textContent = unit + ' лв.';
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } catch (e) {}
+                }
                 try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) {}
             },
             error: function (xhr, status, error) {

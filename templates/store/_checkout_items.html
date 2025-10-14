@@ -22,6 +22,9 @@
                                 {% endif %}">
                                 {{ item.price|intcomma }} лв.
                             </h4>
+                            {% if item.product.has_active_promo and item.promo_free_units > 0 %}
+                                <div class="small text-success mt-1">+{{ item.promo_free_units }} бр. безплатно</div>
+                            {% endif %}
                         {% endwith %}
                     </div>
                     <div class="col-xl-2">

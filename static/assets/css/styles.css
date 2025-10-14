@@ -500,6 +500,35 @@ h6 {
     user-select: none;
 }
 
+/* ==========================
+   Product Detail: Promo Banner
+   ========================== */
+.promo-banner {
+    background: linear-gradient(135deg, #fff4e6, #ffe8cc);
+    border: 1px solid #ffd8a8;
+    color: #7c4d00;
+    box-shadow: 0 6px 18px rgba(122, 93, 0, 0.08), inset 0 0 0 1px rgba(255, 232, 204, 0.65);
+}
+.promo-banner-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffec99, #ffd43b);
+    color: #7a5d00;
+    box-shadow: 0 6px 16px rgba(122,93,0,0.18);
+    font-size: 1.25rem;
+}
+.promo-banner-text { line-height: 1.15; }
+.promo-banner-title { font-size: 1.05rem; letter-spacing: .2px; }
+.promo-banner-subtitle { font-weight: 700; font-size: 1.15rem; letter-spacing: .2px; }
+
+@media (max-width: 575.98px) {
+    .promo-banner-icon { width: 42px; height: 42px; min-width: 42px; font-size: 1.1rem; }
+    .promo-banner-title { font-size: .95rem; }
+    .promo-banner-subtitle { font-size: 1.05rem; }
+}
+
 .color-badge {
     padding: 0.5em 1em;
     border-radius: 10px;

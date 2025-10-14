@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load pricing %}
 {% load color_filters %}
 
 {% block title %}
@@ -35,6 +36,17 @@
                 <div class="col-lg-6">
                     <div class="mb-3">
                         <h1 class="fw-semibold mb-2">{% if product.h1_override %}{{ product.h1_override }}{% else %}{{ product.category.title }} - {{ product.name }}{% endif %}</h1>
+                        {% if product.has_active_promo %}
+                            <div class="promo-banner rounded-3 p-3 d-flex align-items-center gap-3 mt-2" role="status" aria-label="Активна промоция">
+                                <div class="promo-banner-icon d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                                <div class="promo-banner-text">
+                                    <div class="promo-banner-title fw-semibold">{{ product.promo_label_override|default:"Промоция" }}</div>
+                                    <div class="promo-banner-subtitle">Купи {{ product.promo_buy_qty }} вземи {{ product.promo_get_qty }} безплатно</div>
+                                </div>
+                            </div>
+                        {% endif %}
                         <div class="mb-3">
                             {% if product.sale_price and product.sale_price < product.price %}
                                 <span class="fw-medium text-decoration-line-through fs-md me-1 price-regular">{{ product.price }} лв.</span>

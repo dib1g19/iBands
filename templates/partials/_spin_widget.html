@@ -47,9 +47,13 @@
                 <div class="progress" style="height: 10px;">
                     <div id="{{ widget_id }}-milestone-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%;"></div>
                 </div>
-                <div class="small mt-2 text-white-50">
+                <div class="small mt-2 text-white-50 spin-hint">
                     <span id="{{ widget_id }}-milestone-label">0 / 0</span>
-                    <span class="text-white-50">връщай се всеки ден за още по-големи награди! виж повече <a href="{% url 'store:spin_page' %}" class="text-white-50">тук</a></span>
+                    <span>връщай се всеки ден за още по-големи награди!
+                        {% if widget_id != 'spin' %}
+                            виж повече <a href="{% url 'store:spin_page' %}">тук</a>
+                        {% endif %}
+                    </span>
                 </div>
             </div>
 
@@ -61,7 +65,8 @@
 <script src="{% static 'assets/js/spin_wheel.js' %}"></script>
 <script>
     (function(){
-        window.initSpinWheel({
+        function runInit(){
+            window.initSpinWheel({
             canvasId: '{{ widget_id }}-spin-canvas',
             fallbackId: '{{ widget_id }}-wheel-fallback',
             legendId: '{{ widget_id }}-prize-legend',
@@ -70,7 +75,6 @@
             couponId: '{{ widget_id }}-spin-coupon',
             milestoneProgressId: '{{ widget_id }}-milestone-progress',
             milestoneLabelId: '{{ widget_id }}-milestone-label',
-            milestoneLegendId: '{{ widget_id }}-milestone-legend',
             resetIso: '{{ reset_at_iso|default:"" }}',
             countdownIds: { nextId: '{{ widget_id }}-next-spin', prizeId: '{{ widget_id }}-prize-countdown' },
             prizesJson: '{{ prizes_json|default:"[]"|escapejs }}',
@@ -80,7 +84,13 @@
             spinUrl: '{{ spin_url }}',
             canSpin: {% if can_spin %}true{% else %}false{% endif %},
             csrfToken: '{{ csrf_token }}'
-        });
+            });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runInit);
+        } else {
+            runInit();
+        }
     })();
 </script>
 

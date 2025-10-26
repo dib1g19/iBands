@@ -1,3 +1,9 @@
+/* Spin widget hint link styling */
+.spin-hint a {
+    color: rgba(255,255,255,.75) !important;
+    text-decoration: underline;
+}
+.spin-hint a:hover { color: #ffffff !important; }
 /* ==========================================================
    Global Settings
 ========================================================== */
@@ -473,14 +479,37 @@ h6 {
     padding-left: 0;
 }
 .milestone-item {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    padding: .35rem 0;
+    display: block;
+    padding: .5rem .65rem;
+    border: 1px solid #eceff4;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15,23,42,.04);
+    margin-bottom: .5rem;
 }
 .milestone-threshold {
     font-weight: 600;
     color: #333;
+}
+.milestone-line1,
+.milestone-line2 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+.milestone-line2 { 
+    margin-top: .15rem; 
+}
+.code-pair {
+     display: inline-flex; 
+     align-items: center; 
+     gap: .25rem; 
+}
+@media (min-width: 992px) {
+    .milestone-item { display: flex; align-items: center; gap: .5rem; flex-wrap: nowrap; }
+    .milestone-line1, .milestone-line2 { display: contents; }
+    .milestone-line2 { margin-top: 0; }
 }
 .reward-pill {
     display: inline-block;
@@ -500,6 +529,12 @@ h6 {
     border-radius: 4px;
     padding: .12rem .4rem;
     font-size: .8rem;
+}
+@media (max-width: 575.98px) {
+    .milestone-item { padding: .45rem .55rem; }
+    .milestone-threshold { font-size: .95rem; }
+    .reward-pill { font-size: .8rem; }
+    .min-order-note { font-size: .85rem; }
 }
 .spin-section-bg {
     background-image: var(--spin-bg);

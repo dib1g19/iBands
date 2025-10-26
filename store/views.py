@@ -2111,11 +2111,14 @@ def spin_page(request):
         "prizes": prizes,
         "prizes_json": json.dumps(prizes, ensure_ascii=False),
         "spin_url": reverse("store:spin_perform"),
+        # server + client milestone data
+        "spin_milestones": spin_milestones,
         "spin_milestones_json": json.dumps(spin_milestones, ensure_ascii=False),
         "spin_milestone_progress_json": json.dumps({
             "spins": spin_total_spins,
             "achieved": achieved_thresholds,
         }),
+        "spin_achieved_details": achieved_details,
         "spin_achieved_details_json": json.dumps(achieved_details, ensure_ascii=False),
     }
     return render(request, "store/spin.html", context)

@@ -52,7 +52,6 @@
     var msProgressEl = config.milestoneProgressId ? document.getElementById(config.milestoneProgressId) : null;
     var msLabelEl = config.milestoneLabelId ? document.getElementById(config.milestoneLabelId) : null;
     var msAchievedEl = null; // removed separate achieved list; show codes inline next to legend items
-    var msLegendEl = config.milestoneLegendId ? document.getElementById(config.milestoneLegendId) : null;
 
     if (config.countdownIds) {
       if (config.countdownIds.nextId) startCountdown(config.resetIso, document.getElementById(config.countdownIds.nextId));
@@ -120,40 +119,6 @@
       if (msProgressEl) msProgressEl.style.width = pct + '%';
       if (msLabelEl) msLabelEl.textContent = spins + ' / ' + goal;
       // No separate achieved list; we will inject achieved ticks/codes inline in legend below
-      if (msLegendEl) {
-        if (Array.isArray(milestones) && milestones.length) {
-          var sorted = milestones.slice().sort(function(a,b){ return (a.threshold_spins||a) - (b.threshold_spins||b); });
-          var html = '<ul class="milestone-list mb-0">';
-          for (var i=0;i<sorted.length;i++){
-            var m = sorted[i];
-            var t = (typeof m === 'number') ? m : m.threshold_spins;
-            var reward = '';
-            if (typeof m !== 'number') {
-              if (m.prize_type === 'discount_percent' && m.discount_percent) reward = '<span class="reward-pill">-'+m.discount_percent+'%</span>';
-              else if (m.prize_type === 'free_shipping') reward = '<span class="reward-pill">Безплатна доставка</span>';
-              else if (m.prize_type === 'mystery_box_min_total') reward = '<span class="reward-pill">Mystery Box</span>';
-              else if (m.label) reward = '<span class="reward-pill">'+m.label+'</span>';
-            }
-            // Find matching achieved detail for this threshold
-            var ach = null;
-            for (var j=0;j<achievedDetails.length;j++){
-              if (parseInt(achievedDetails[j].threshold_spins,10) === parseInt(t,10)) { ach = achievedDetails[j]; break; }
-            }
-            var tick = ach ? '<i class="fas fa-check-circle text-success me-2"></i>' : '';
-            var code = ach && ach.coupon_code ? '<span class="code-badge ms-2">'+ach.coupon_code+'</span>' : '';
-            var minNote = '';
-            if (typeof m !== 'number' && m.min_order_total != null) {
-              minNote = ' <span class="min-order-note">при поръчка над '+m.min_order_total+' лв.</span>';
-            }
-            if (ach && ach.min_order_total != null) {
-              minNote = ' <span class="min-order-note">при поръчка над '+ach.min_order_total+' лв.</span>';
-            }
-            html += '<li class="milestone-item">'+ tick + '<span class="milestone-threshold">'+t+' завъртания</span>' + reward + minNote + code + '</li>';
-          }
-          html += '</ul>';
-          msLegendEl.innerHTML = html;
-        }
-      }
     }
     updateMilestoneBar(milestoneProgress);
 

@@ -58,6 +58,13 @@ PROMO_TYPE_CHOICES = (
     ("buy_x_get_y", "Buy X Get Y Free"),
 )
 
+PRIZE_TYPE_CHOICES = (
+    ("none", "No prize"),
+    ("discount_percent", "Percentage discount"),
+    ("free_shipping", "Free shipping"),
+    ("mystery_box_min_total", "Mystery box over minimum total"),
+)
+
 
 class Category(models.Model):
     title = models.CharField(max_length=255)
@@ -729,3 +736,85 @@ class ProductItem(models.Model):
         except Exception:
             delta = 0
         return (base or 0) + delta
+
+
+class SpinEntry(models.Model):
+    """Stores a record of a user's spin result for a specific day.
+
+    One spin per user per day is enforced via a unique constraint.
+    Rewards are modeled simply for now: a percentage coupon or free shipping flag.
+    """
+    user = models.ForeignKey(user_models.User, on_delete=models.CASCADE, related_name="spin_entries")
+    date = models.DateField(db_index=True, default=timezone.localdate)
+    # Result labels are for analytics/visibility (e.g., "5%", "Free Shipping", "No Win")
+    result_label = models.CharField(max_length=64)
+    # Prize metadata
+    prize_type = models.CharField(max_length=32, choices=PRIZE_TYPE_CHOICES, default="none", db_index=True)
+    coupon_discount_percent = models.PositiveIntegerField(null=True, blank=True)
+    free_shipping = models.BooleanField(default=False)
+    min_order_total = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    coupon_code = models.CharField(max_length=100, null=True, blank=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Daily spin entry"
+        verbose_name_plural = "Daily spin entries"
+        unique_together = ("user", "date")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.email} — {self.date} — {self.result_label}"
+
+
+class SpinPrize(models.Model):
+    """Admin-configurable prize shown on the wheel and used for selection."""
+    label = models.CharField(max_length=64)
+    prize_type = models.CharField(max_length=32, choices=PRIZE_TYPE_CHOICES, default="none", db_index=True)
+    # Optional parameters depending on type
+    discount_percent = models.PositiveIntegerField(null=True, blank=True)
+    min_order_total = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    # Selection and display
+    weight = models.FloatField(default=0.0, help_text="Relative probability weight; higher means more likely.")
+    color = models.CharField(max_length=7, null=True, blank=True, help_text="Slice color hex code (e.g., #FFE082)")
+    active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "Spin prize"
+        verbose_name_plural = "Spin prizes"
+
+    def __str__(self):
+        return f"{self.label} ({self.prize_type})"
+
+
+class SpinMilestone(models.Model):
+    """Configurable milestones for number of spins, e.g., 100 spins → grant prize."""
+    threshold_spins = models.PositiveIntegerField(db_index=True, help_text="Award triggers when user reaches this total spin count")
+    prize_type = models.CharField(max_length=32, choices=PRIZE_TYPE_CHOICES, default="none")
+    discount_percent = models.PositiveIntegerField(null=True, blank=True)
+    min_order_total = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    label = models.CharField(max_length=120, default="Награда за лоялност")
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["threshold_spins", "id"]
+        unique_together = ("threshold_spins", "prize_type", "discount_percent", "min_order_total")
+
+    def __str__(self):
+        return f"#{self.threshold_spins} spins → {self.label}"
+
+
+class SpinMilestoneAward(models.Model):
+    """Records that a user has received a milestone award to avoid duplicates."""
+    user = models.ForeignKey(user_models.User, on_delete=models.CASCADE, related_name="spin_milestone_awards")
+    milestone = models.ForeignKey(SpinMilestone, on_delete=models.CASCADE, related_name="awards")
+    awarded_at = models.DateTimeField(auto_now_add=True)
+    coupon_code = models.CharField(max_length=100, null=True, blank=True, db_index=True)
+
+    class Meta:
+        unique_together = ("user", "milestone")
+        ordering = ["-awarded_at"]
+
+    def __str__(self):
+        return f"{self.user.email} → milestone {self.milestone.threshold_spins}"

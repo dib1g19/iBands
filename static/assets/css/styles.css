@@ -414,6 +414,115 @@ h6 {
     text-align: center;
 }
 
+.wheel-title {
+    color: #fff !important;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+    text-align: center;
+}
+.wheel-wrapper {
+    position: relative;
+    width: 320px;
+    max-width: 90vw;
+}
+.wheel-pointer {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    background: #fff;
+    border-radius: 50%;
+    border: 2px solid #0d6efd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    z-index: 2;
+}
+.wheel-pointer .chev-icon {
+    display: block;
+}
+.fallback-wheel {
+    width: 100%;
+    padding-top: 100%;
+    border-radius: 50%;
+    border: 8px solid #eee;
+    background: conic-gradient(#ffd54f 0 20%, #fff9c4 0 40%, #ffe082 0 60%, #fff59d 0 80%, #ffecb3 0 100%);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+@media (min-width: 576px) {
+    .wheel-wrapper {
+        width: 360px;
+    }
+}
+@media (min-width: 992px) {
+    .wheel-wrapper {
+        width: 420px;
+    }
+}
+/* Milestone list styling */
+.legend-card {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+.milestone-list {
+    list-style: none;
+    padding-left: 0;
+}
+.milestone-item {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .35rem 0;
+}
+.milestone-threshold {
+    font-weight: 600;
+    color: #333;
+}
+.reward-pill {
+    display: inline-block;
+    background: #f1f5ff;
+    color: #0d6efd;
+    border: 1px solid #dbe8ff;
+    border-radius: 999px;
+    padding: .15rem .5rem;
+    font-size: .85rem;
+    margin-left: .25rem;
+}
+.code-badge {
+    display: inline-block;
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px dashed #ced4da;
+    border-radius: 4px;
+    padding: .12rem .4rem;
+    font-size: .8rem;
+}
+.spin-section-bg {
+    background-image: var(--spin-bg);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+.spin-section-bg > * { 
+    position: relative; z-index: 1; 
+}
+
+/* Edge-to-edge background even inside containers */
+.spin-section-edge {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+}
+
 .category-overlay .btn {
     background: #fff;
     color: #0d6efd;
@@ -620,6 +729,10 @@ h6 {
 
 @media (min-width: 992px) and (max-width: 1061.98px) {
     .home-toplink { display: none !important; }
+}
+
+@media (min-width: 992px) and (max-width: 1469.98px) {
+    .spin-toplink { display: none !important; }
 }
 
 /* Off-canvas sidebar styles for nav (hamburger opens this) */

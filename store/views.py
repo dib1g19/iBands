@@ -11,7 +11,10 @@ from django.template.loader import render_to_string
 from datetime import date as dt_date, datetime as dt_datetime, timedelta as dt_timedelta
 import calendar as pycal
 from decimal import Decimal, ROUND_HALF_UP
-from .models import Category, Product, BandOfTheWeek, CategoryLink
+from .models import Category, Product, BandOfTheWeek, CategoryLink, SpinEntry, Coupon, SpinPrize, SpinMilestone, SpinMilestoneAward
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+import random
 import stripe
 from store.utils import (
     paginate_queryset,
@@ -787,6 +790,81 @@ def index(request):
     band_week_start = getattr(band_of_the_week, "week_start", None)
     band_week_end = (band_week_start + dt_timedelta(days=6)) if band_week_start else None
 
+    # --- Daily Spin (homepage wheel) ---
+    try:
+        today = timezone.localdate()
+        from datetime import datetime as _dt, time as _time
+        tz = timezone.get_current_timezone()
+        tomorrow = today + dt_timedelta(days=1)
+        reset_at = timezone.make_aware(_dt.combine(tomorrow, _time.min), tz)
+    except Exception:
+        reset_at = None
+
+    spin_last_spin = None
+    spin_can_spin = True
+    if getattr(request, "user", None) and request.user.is_authenticated:
+        try:
+            spin_last_spin = store_models.SpinEntry.objects.filter(user=request.user).order_by("-date", "-created_at").first()
+            if spin_last_spin and spin_last_spin.date == today:
+                spin_can_spin = False
+        except Exception:
+            pass
+
+    try:
+        prizes_qs = store_models.SpinPrize.objects.filter(active=True).order_by("sort_order", "id")
+        spin_prizes = [
+            {
+                "label": p.label,
+                "type": p.prize_type,
+                "discount_percent": int(p.discount_percent or 0),
+                "min_order_total": float(p.min_order_total) if p.min_order_total is not None else None,
+                "color": p.color or "#ffe082",
+                "weight": float(p.weight or 0),
+            }
+            for p in prizes_qs
+        ]
+    except Exception:
+        spin_prizes = []
+
+    # Milestone progress (for homepage widget)
+    try:
+        milestones_qs = store_models.SpinMilestone.objects.filter(active=True).order_by("threshold_spins", "id")
+        spin_milestones = [
+            {
+                "threshold_spins": int(m.threshold_spins),
+                "label": m.label,
+                "prize_type": m.prize_type,
+                "discount_percent": int(m.discount_percent or 0),
+                "min_order_total": float(m.min_order_total) if m.min_order_total is not None else None,
+            }
+            for m in milestones_qs
+        ]
+    except Exception:
+        spin_milestones = []
+    if getattr(request, "user", None) and request.user.is_authenticated:
+        spin_total_spins = store_models.SpinEntry.objects.filter(user=request.user).count()
+        try:
+            achieved_qs = store_models.SpinMilestoneAward.objects.filter(user=request.user).select_related("milestone")
+            achieved_thresholds = [int(a.milestone.threshold_spins) for a in achieved_qs]
+            achieved_details = [
+                {
+                    "threshold_spins": int(a.milestone.threshold_spins),
+                    "label": a.milestone.label,
+                    "prize_type": a.milestone.prize_type,
+                    "discount_percent": int(a.milestone.discount_percent or 0),
+                    "min_order_total": float(a.milestone.min_order_total) if a.milestone.min_order_total is not None else None,
+                    "coupon_code": a.coupon_code,
+                }
+                for a in achieved_qs
+            ]
+        except Exception:
+            achieved_thresholds = []
+            achieved_details = []
+    else:
+        spin_total_spins = 0
+        achieved_thresholds = []
+        achieved_details = []
+
     context = {
         "products": products,
         "sale_products": sale_products,
@@ -799,6 +877,18 @@ def index(request):
         "band_of_the_week_url": band_of_the_week_url,
         "band_week_start": band_week_start,
         "band_week_end": band_week_end,
+        # Spin widget context
+        "spin_can_spin": spin_can_spin,
+        "spin_last_spin": spin_last_spin,
+        "spin_reset_at_iso": reset_at.isoformat() if reset_at else None,
+        "spin_prizes_json": json.dumps(spin_prizes, ensure_ascii=False),
+        "spin_url": reverse("store:spin_perform"),
+        "spin_milestones_json": json.dumps(spin_milestones),
+        "spin_milestone_progress_json": json.dumps({
+            "spins": spin_total_spins,
+            "achieved": achieved_thresholds,
+        }),
+        "spin_achieved_details_json": json.dumps(achieved_details, ensure_ascii=False),
     }
     return render(request, "store/index.html", context)
 
@@ -1795,6 +1885,28 @@ def coupon_apply(request, order_id):
             messages.error(request, msg)
             return redirect("store:checkout", order.order_id)
 
+        # Enforce SPIN coupon validity: same user, same day
+        if coupon.code.startswith("SPIN-"):
+            if not request.user.is_authenticated:
+                msg = "Трябва да сте влезли, за да използвате този купон."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'message': msg})
+                messages.error(request, msg)
+                return redirect("store:checkout", order.order_id)
+            spin = store_models.SpinEntry.objects.filter(user=request.user, coupon_code=coupon.code).first()
+            if not spin:
+                msg = "Този купон не е валиден за вашия акаунт."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'message': msg})
+                messages.error(request, msg)
+                return redirect("store:checkout", order.order_id)
+            if spin.date != timezone.localdate():
+                msg = "Купонът от колелото е валиден само за днес."
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'message': msg})
+                messages.error(request, msg)
+                return redirect("store:checkout", order.order_id)
+
         # Always clear any existing coupons and reset saved and total
         order.coupons.clear()
         order.saved = round2(0)
@@ -1922,6 +2034,212 @@ def cod_payment(request, order_id):
     else:
         return redirect("store:checkout", order_id)
 
+
+@login_required
+def spin_page(request):
+    today = timezone.localdate()
+    # Compute next reset at local midnight (start of next day)
+    try:
+        from datetime import datetime as _dt, time as _time
+        tz = timezone.get_current_timezone()
+        tomorrow = today + dt_timedelta(days=1)
+        reset_at = timezone.make_aware(_dt.combine(tomorrow, _time.min), tz)
+    except Exception:
+        reset_at = None
+    last_spin = SpinEntry.objects.filter(user=request.user).order_by("-date", "-created_at").first()
+    can_spin = True
+    next_spin_date = today
+    if last_spin and last_spin.date == today:
+        can_spin = False
+        next_spin_date = today + dt_timedelta(days=1)
+
+    breadcrumbs = [
+        {"label": "Начална Страница", "url": reverse("store:index")},
+        {"label": "Колелото на късмета", "url": ""},
+    ]
+
+    # Provide current active prizes to drive client wheel rendering
+    prizes_qs = SpinPrize.objects.filter(active=True).order_by("sort_order", "id")
+    prizes = [
+        {
+            "label": p.label,
+            "type": p.prize_type,
+            "discount_percent": int(p.discount_percent or 0),
+            "min_order_total": float(p.min_order_total) if p.min_order_total is not None else None,
+            "color": p.color or "#ffe082",
+            "weight": float(p.weight or 0),
+        }
+        for p in prizes_qs
+    ]
+
+    # Milestone progress (spin page)
+    try:
+        milestones_qs = SpinMilestone.objects.filter(active=True).order_by("threshold_spins", "id")
+        spin_milestones = [
+            {
+                "threshold_spins": int(m.threshold_spins),
+                "label": m.label,
+                "prize_type": m.prize_type,
+                "discount_percent": int(m.discount_percent or 0),
+                "min_order_total": float(m.min_order_total) if m.min_order_total is not None else None,
+            }
+            for m in milestones_qs
+        ]
+    except Exception:
+        spin_milestones = []
+    spin_total_spins = SpinEntry.objects.filter(user=request.user).count()
+    _awards_qs = SpinMilestoneAward.objects.filter(user=request.user).select_related("milestone")
+    achieved_thresholds = [int(a.milestone.threshold_spins) for a in _awards_qs]
+    achieved_details = [
+        {
+            "threshold_spins": int(a.milestone.threshold_spins),
+            "label": a.milestone.label,
+            "prize_type": a.milestone.prize_type,
+            "discount_percent": int(a.milestone.discount_percent or 0),
+            "min_order_total": float(a.milestone.min_order_total) if a.milestone.min_order_total is not None else None,
+            "coupon_code": a.coupon_code,
+        }
+        for a in _awards_qs
+    ]
+
+    context = {
+        "can_spin": can_spin,
+        "last_spin": last_spin,
+        "next_spin_date": next_spin_date,
+        "breadcrumbs": breadcrumbs,
+        "reset_at_iso": reset_at.isoformat() if reset_at else None,
+        "prizes": prizes,
+        "prizes_json": json.dumps(prizes, ensure_ascii=False),
+        "spin_url": reverse("store:spin_perform"),
+        "spin_milestones_json": json.dumps(spin_milestones, ensure_ascii=False),
+        "spin_milestone_progress_json": json.dumps({
+            "spins": spin_total_spins,
+            "achieved": achieved_thresholds,
+        }),
+        "spin_achieved_details_json": json.dumps(achieved_details, ensure_ascii=False),
+    }
+    return render(request, "store/spin.html", context)
+
+
+@require_POST
+def spin_perform(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            "success": False,
+            "message": "Моля, влезте или се регистрирайте, за да завъртите.",
+            "login_url": reverse("userauths:sign-in") + "?next=" + request.path,
+        }, status=401)
+    today = timezone.localdate()
+    # Enforce one spin per day
+    if SpinEntry.objects.filter(user=request.user, date=today).exists():
+        return JsonResponse({
+            "success": False,
+            "message": "Вече завъртя днес. Опитай отново утре!",
+        }, status=400)
+
+    # Load active prizes from DB, fallback to defaults if none configured
+    prizes_qs = SpinPrize.objects.filter(active=True).order_by("sort_order", "id")
+    outcomes = []
+    if prizes_qs.exists():
+        for p in prizes_qs:
+            outcomes.append({
+                "label": p.label,
+                "type": p.prize_type,
+                "discount_percent": int(p.discount_percent or 0),
+                "min_order_total": float(p.min_order_total) if p.min_order_total is not None else None,
+                "weight": float(p.weight or 0),
+                "color": p.color or None,
+            })
+    else:
+        outcomes = [
+            {"label": "Опитай пак утре", "type": "none", "discount_percent": 0, "min_order_total": None, "weight": 0.45, "color": "#ffd54f"},
+            {"label": "Отстъпка 3%", "type": "discount_percent", "discount_percent": 3, "min_order_total": None, "weight": 0.25, "color": "#fff9c4"},
+            {"label": "Отстъпка 5%", "type": "discount_percent", "discount_percent": 5, "min_order_total": None, "weight": 0.15, "color": "#ffe082"},
+            {"label": "Безплатна доставка", "type": "free_shipping", "discount_percent": 0, "min_order_total": None, "weight": 0.07, "color": "#fff59d"},
+            {"label": "Mystery Box", "type": "mystery_box_min_total", "discount_percent": 0, "min_order_total": 20.00, "weight": 0.08, "color": "#ffecb3"},
+        ]
+
+    r = random.random()
+    cumulative = 0.0
+    selected = outcomes[-1]
+    for item in outcomes:
+        w = float(item.get("weight", 0))
+        cumulative += w
+        if r <= cumulative:
+            selected = item
+            break
+
+    coupon_code = None
+    if selected["type"] == "discount_percent" and selected.get("discount_percent"):
+        # Generate a unique coupon code
+        # Keep it short but not easily guessable
+        code = f"SPIN-{request.user.id}-{random.randint(100000, 999999)}"
+        coupon = Coupon.objects.create(code=code, discount=int(selected["discount_percent"]))
+        coupon_code = coupon.code
+
+    entry = SpinEntry.objects.create(
+        user=request.user,
+        date=today,
+        result_label=selected["label"],
+        prize_type=selected["type"],
+        coupon_discount_percent=(int(selected["discount_percent"]) if selected.get("discount_percent") else None),
+        free_shipping=(selected["type"] == "free_shipping"),
+        min_order_total=(Decimal(str(selected["min_order_total"])) if selected.get("min_order_total") else None),
+        coupon_code=coupon_code,
+    )
+
+    # Compute user's lifetime spin count and check milestones
+    total_spins = SpinEntry.objects.filter(user=request.user).count()
+    milestone_payload = None
+    from store.models import SpinMilestone, SpinMilestoneAward  # local import to avoid cycles
+    try:
+        milestones = list(SpinMilestone.objects.filter(active=True, threshold_spins__lte=total_spins).order_by('threshold_spins'))
+        for ms in milestones:
+            already_awarded = SpinMilestoneAward.objects.filter(user=request.user, milestone=ms).exists()
+            if already_awarded:
+                continue
+            # Award this milestone
+            ms_coupon_code = None
+            if ms.prize_type == 'discount_percent' and ms.discount_percent:
+                ms_code = f"MS-{request.user.id}-{ms.threshold_spins}-{random.randint(100000,999999)}"
+                Coupon.objects.create(code=ms_code, discount=int(ms.discount_percent))
+                ms_coupon_code = ms_code
+            SpinMilestoneAward.objects.create(user=request.user, milestone=ms, coupon_code=ms_coupon_code)
+            milestone_payload = {
+                "threshold_spins": ms.threshold_spins,
+                "label": ms.label,
+                "prize_type": ms.prize_type,
+                "discount_percent": int(ms.discount_percent or 0),
+                "min_order_total": float(ms.min_order_total) if ms.min_order_total is not None else None,
+                "coupon_code": ms_coupon_code,
+            }
+    except Exception:
+        milestone_payload = None
+
+    # Persist reward in session for UI hints at checkout
+    try:
+        request.session["spin_reward"] = {
+            "date": str(today),
+            "label": selected["label"],
+            "type": selected["type"],
+            "discount_percent": (int(selected["discount_percent"]) if selected.get("discount_percent") else 0),
+            "min_order_total": selected.get("min_order_total"),
+            "coupon_code": coupon_code,
+        }
+        request.session.modified = True
+    except Exception:
+        pass
+
+    return JsonResponse({
+        "success": True,
+        "label": selected["label"],
+        "coupon_code": coupon_code,
+        "discount_percent": (int(selected["discount_percent"]) if selected.get("discount_percent") else 0),
+        "prize_type": selected["type"],
+        "min_order_total": selected.get("min_order_total"),
+        "outcomes": outcomes,
+        "milestone": milestone_payload,
+    })
 
 @csrf_exempt
 def stripe_payment(request, order_id):

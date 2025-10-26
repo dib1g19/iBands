@@ -132,6 +132,9 @@
                                 <li>
                                     <a href="{% url 'store:band_of_the_week' %}"><i class="fas fa-bolt me-1"></i> Седмична каишка</a>
                                 </li>
+                                <li class="spin-toplink">
+                                    <a href="{% url 'store:spin_page' %}"><i class="fas fa-gift me-1"></i> Играй и спечели</a>
+                                </li>
                                 <li class="sale-toplink">
                                     <a href="{% url 'store:sale' %}"><i class="fas fa-tags me-1"></i> Разпродажба</a>
                                 </li>
@@ -141,6 +144,9 @@
                                         <span class="submenu-indicator"><span class="submenu-indicator-chevron"></span></span>
                                     </a>
                                     <ul class="nav-dropdown">
+                                        <li>
+                                            <a href="{% url 'store:spin_page' %}"><i class="fas fa-gift me-1"></i> Колелото на късмета</a>
+                                        </li>
                                         <li class="d-none d-lg-inline">
                                             <a href="{% url 'store:order_tracker_page' %}"><i class="fas fa-shipping-fast me-1"></i>Проследи поръчка</a>
                                         </li>

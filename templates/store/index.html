@@ -11,12 +11,23 @@
 
 {% block content %}
     <!-- Hero Section -->
-    <section>
+    <section class="pb-0">
         <div class="container-fluid p-0">
             <div class="position-relative">
                 <img class="img-fluid w-100 hero" src="{% static 'assets/img/cover.avif' %}" alt="Hero Cover" />
                 <div class="hero-cta position-absolute text-center w-100">
                     <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Spin Wheel (homepage - full experience) -->
+    <section class="pb-2">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-xl-8 col-lg-9 col-md-10 text-center">
+                    {% include 'partials/_spin_widget.html' with widget_id='home' can_spin=spin_can_spin last_spin=spin_last_spin prizes_json=spin_prizes_json reset_at_iso=spin_reset_at_iso spin_url=spin_url %}
                 </div>
             </div>
         </div>

@@ -37,7 +37,7 @@ class ProductAdmin(iBandsModelAdmin):
 
     fieldsets = (
         (None, {
-            "fields": ("category", "sku", "name", "slug", "image", "price", "sale_price", "on_sale", "featured")
+            "fields": ("category", "sku", "name", "slug", "image", "description", "price", "sale_price", "stock", "shipping", "on_sale", "featured", "status", "date")
         }),
         ("Promotion", {
             "fields": ("promo_type", "promo_buy_qty", "promo_get_qty", "promo_label_override"),
@@ -348,6 +348,36 @@ class GalleryAdmin(iBandsModelAdmin):
 class CouponAdmin(iBandsModelAdmin):
     list_display = ["code", "discount"]
     search_fields = ["code"]
+
+
+@admin.register(store_models.SpinEntry)
+class SpinEntryAdmin(iBandsModelAdmin):
+    list_display = ["user", "date", "result_label", "prize_type", "coupon_discount_percent", "min_order_total", "free_shipping", "created_at"]
+    list_filter = ["date", "prize_type"]
+    search_fields = ["user__email", "result_label"]
+
+
+@admin.register(store_models.SpinPrize)
+class SpinPrizeAdmin(iBandsModelAdmin):
+    list_display = ["label", "prize_type", "discount_percent", "min_order_total", "weight", "active", "sort_order", "color"]
+    list_editable = ["weight", "active", "sort_order", "color", "discount_percent", "min_order_total"]
+    list_filter = ["prize_type", "active"]
+    search_fields = ["label"]
+
+
+@admin.register(store_models.SpinMilestone)
+class SpinMilestoneAdmin(iBandsModelAdmin):
+    list_display = ["threshold_spins", "label", "prize_type", "discount_percent", "min_order_total", "active"]
+    list_editable = ["label", "prize_type", "discount_percent", "min_order_total", "active"]
+    list_filter = ["active", "prize_type"]
+    search_fields = ["label"]
+
+
+@admin.register(store_models.SpinMilestoneAward)
+class SpinMilestoneAwardAdmin(iBandsModelAdmin):
+    list_display = ["user", "milestone", "coupon_code", "awarded_at"]
+    list_filter = ["awarded_at", "milestone__threshold_spins"]
+    search_fields = ["user__email", "coupon_code", "milestone__label"]
 
 
 @admin.register(store_models.Review)

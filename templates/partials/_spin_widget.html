@@ -1,0 +1,86 @@
+{% load static %}
+<div class="spin-section-edge spin-section-bg py-4" style="--spin-bg: url('{% static "assets/img/wheel-cover.avif" %}')">
+    <div class="container">
+        <div class="category-overlay d-flex justify-content-center">
+            <div class="category-overlay-box text-center p-3 p-md-4 rounded shadow-sm mx-auto" style="max-width: 960px;">
+            <h1 class="wheel-title mb-4">Колелото на късмета</h1>
+            {% if can_spin %}
+                <p class="category-title">Имаш едно завъртане за днес. Късмет!</p>
+            {% else %}
+                <div class="alert alert-info">Вече завъртя днес. Следващо завъртане след: <span id="{{ widget_id }}-next-spin">--:--:--</span></div>
+                {% if last_spin %}
+                <div class="alert alert-success text-center">
+                    <div class="fw-bold mb-1"><i class="fas fa-gift me-1"></i> Днешна награда (изтича след: <span id="{{ widget_id }}-prize-countdown">--:--:--</span>)</div>
+                    <div>{{ last_spin.result_label }}</div>
+                    {% if last_spin.coupon_code %}
+                        <div class="mt-1">Код: <code>{{ last_spin.coupon_code }}</code></div>
+                    {% elif last_spin.prize_type == 'free_shipping' %}
+                        <div class="mt-1">Безплатна доставка</div>
+                    {% elif last_spin.prize_type == 'mystery_box_min_total' %}
+                        <div class="mt-1">Mystery Box при поръчка над {{ last_spin.min_order_total }} лв.</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endif %}
+
+            <div class="wheel-wrapper my-3 position-relative mx-auto" style="max-width: 420px;">
+                <div class="wheel-pointer" aria-hidden="true">
+                    <svg class="chev-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 9l6 6 6-6" stroke="#0d6efd" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <canvas id="{{ widget_id }}-spin-canvas" width="360" height="360" aria-label="Колелото на късмета"></canvas>
+                <div id="{{ widget_id }}-wheel-fallback" class="d-none">
+                    <div class="fallback-wheel"></div>
+                </div>
+            </div>
+
+            <button id="{{ widget_id }}-spin-btn" class="btn btn-sm fs-lg fw-bold shadow-sm" {% if not can_spin %}disabled{% endif %}>Завърти</button>
+
+            <div class="mt-3">
+                <div class="h4" id="{{ widget_id }}-spin-result"></div>
+                <div id="{{ widget_id }}-spin-coupon" class="mt-2"></div>
+            </div>
+
+            <div class="mt-4 text-start">
+                <h5 class="mb-2 text-white">Прогрес към допълнителни награди</h5>
+                <div class="progress" style="height: 10px;">
+                    <div id="{{ widget_id }}-milestone-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%;"></div>
+                </div>
+                <div class="small mt-2 text-white-50">
+                    <span id="{{ widget_id }}-milestone-label">0 / 0</span>
+                    <span class="text-white-50">връщай се всеки ден за още по-големи награди! виж повече <a href="{% url 'store:spin_page' %}" class="text-white-50">тук</a></span>
+                </div>
+            </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'assets/js/spin_wheel.js' %}"></script>
+<script>
+    (function(){
+        window.initSpinWheel({
+            canvasId: '{{ widget_id }}-spin-canvas',
+            fallbackId: '{{ widget_id }}-wheel-fallback',
+            legendId: '{{ widget_id }}-prize-legend',
+            btnId: '{{ widget_id }}-spin-btn',
+            resultId: '{{ widget_id }}-spin-result',
+            couponId: '{{ widget_id }}-spin-coupon',
+            milestoneProgressId: '{{ widget_id }}-milestone-progress',
+            milestoneLabelId: '{{ widget_id }}-milestone-label',
+            milestoneLegendId: '{{ widget_id }}-milestone-legend',
+            resetIso: '{{ reset_at_iso|default:"" }}',
+            countdownIds: { nextId: '{{ widget_id }}-next-spin', prizeId: '{{ widget_id }}-prize-countdown' },
+            prizesJson: '{{ prizes_json|default:"[]"|escapejs }}',
+            milestonesJson: '{{ spin_milestones_json|default:"[]"|escapejs }}',
+            milestoneProgressJson: '{{ spin_milestone_progress_json|default:"{}"|escapejs }}',
+            achievedDetailsJson: '{{ spin_achieved_details_json|default:"[]"|escapejs }}',
+            spinUrl: '{{ spin_url }}',
+            canSpin: {% if can_spin %}true{% else %}false{% endif %},
+            csrfToken: '{{ csrf_token }}'
+        });
+    })();
+</script>
+

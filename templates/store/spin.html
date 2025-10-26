@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Колелото на късмета – iBands{% endblock %}
+{% block meta_description %}Завърти колелото на късмета веднъж на ден и спечели малки награди!{% endblock %}
+
+{% block content %}
+    {% include 'partials/_breadcrumbs.html' with breadcrumbs=breadcrumbs %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% include 'partials/_spin_widget.html' with widget_id='spin' can_spin=can_spin last_spin=last_spin prizes_json=prizes_json reset_at_iso=reset_at_iso spin_url=spin_url %}
+            
+            <div class="container my-3">
+                <div class="row justify-content-center">
+                    <div class="col-md-10 col-lg-8">
+                        <div class="legend-card p-3 p-md-4 rounded shadow-sm">
+                            <div class="mb-0">
+                                <h6 class="mb-2">Награди за лоялност</h6>
+                                <ul id="{{ widget_id }}-milestone-legend" class="small text-muted mb-0"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}{% endblock %}
+
+

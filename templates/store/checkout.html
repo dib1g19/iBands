@@ -227,6 +227,20 @@
                         <button id="cod-payment" style="display:none;" type="button"></button>
                     </div>
 
+                    {% if request.session.spin_reward %}
+                    <div class="alert alert-success shadow-sm small" role="status" aria-live="polite">
+                        <i class="fas fa-gift me-1"></i>
+                        Награда от колелото: <strong>{{ request.session.spin_reward.label }}</strong>
+                        {% if request.session.spin_reward.coupon_code %}
+                            <br>Код: <code>{{ request.session.spin_reward.coupon_code }}</code>
+                        {% elif request.session.spin_reward.type == 'free_shipping' %}
+                            <br>Безплатна доставка при финализиране.
+                        {% elif request.session.spin_reward.type == 'mystery_box_min_total' %}
+                            <br>Mystery Box при поръчка над {{ request.session.spin_reward.min_order_total }} лв.
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
                     <div id="free-ship-anchor" class="d-none"></div>
                     <div id="free-ship-box" class="mt-3 mb-4 p-3 rounded shadow border free-ship-widget" role="region" aria-label="Прогрес до безплатна доставка">
                         <div class="d-flex align-items-center justify-content-between mb-2">

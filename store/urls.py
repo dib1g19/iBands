@@ -5,6 +5,8 @@ app_name = "store"
 
 urlpatterns = [
     path("", views.index, name="index"),
+    path("spin/", views.spin_page, name="spin_page"),
+    path("spin/perform/", views.spin_perform, name="spin_perform"),
     path("band-of-the-week/", views.band_of_the_week, name="band_of_the_week"),
     path("band-of-the-week/history", views.band_of_the_week_history, name="band_of_the_week_history"),
     path("shop/", views.shop, name="shop"),

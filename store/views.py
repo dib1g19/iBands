@@ -2294,15 +2294,31 @@ def stripe_payment_verify(request, order_id):
 
     # Handle explicit cancel or missing session id gracefully
     if request.GET.get("canceled") == "1":
+        # Mark as failed if not already paid
+        if order.payment_status != "paid":
+            order.payment_status = "failed"
+            if not order.payment_method:
+                order.payment_method = "card"
+            order.save(update_fields=["payment_status", "payment_method"])
         return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
 
     session_id = request.GET.get("session_id")
     if not session_id:
+        if order.payment_status != "paid":
+            order.payment_status = "failed"
+            if not order.payment_method:
+                order.payment_method = "card"
+            order.save(update_fields=["payment_status", "payment_method"])
         return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
 
     try:
         session = stripe.checkout.Session.retrieve(session_id)
     except Exception:
+        if order.payment_status != "paid":
+            order.payment_status = "failed"
+            if not order.payment_method:
+                order.payment_method = "card"
+            order.save(update_fields=["payment_status", "payment_method"])
         return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
 
     if getattr(session, "payment_status", None) == "paid":
@@ -2343,9 +2359,13 @@ def stripe_payment_verify(request, order_id):
             reverse("store:payment_status", args=[order.order_id]) + "?payment_status=paid"
         )
 
-    return redirect(
-        reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed"
-    )
+    # Not paid: mark as failed
+    if order.payment_status != "paid":
+        order.payment_status = "failed"
+        if not order.payment_method:
+            order.payment_method = "card"
+        order.save(update_fields=["payment_status", "payment_method"])
+    return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
 
 
 def payment_status(request, order_id):
@@ -2354,6 +2374,45 @@ def payment_status(request, order_id):
 
     context = {"order": order, "payment_status": payment_status}
     return render(request, "store/payment_status.html", context)
+
+
+@require_POST
+def set_payment_method(request, order_id):
+    """
+    Persist the customer's selected payment method (e.g., 'card' or 'cash_on_delivery')
+    without changing payment_status. This lets us restore their choice if they return.
+
+    Distinguishing completed vs not:
+    - payment_status remains 'processing' until Stripe success or COD is confirmed.
+    - This view only updates order.payment_method.
+    """
+    try:
+        order = store_models.Order.objects.get(order_id=order_id)
+    except store_models.Order.DoesNotExist:
+        return JsonResponse({"success": False, "message": "Поръчката не беше намерена."}, status=404)
+
+    # Accept JSON or form-encoded
+    payment_method = None
+    if request.content_type and "application/json" in request.content_type:
+        try:
+            payload = json.loads(request.body or b"{}")
+            payment_method = (payload.get("payment_method") or "").strip()
+        except Exception:
+            payment_method = None
+    if not payment_method:
+        payment_method = (request.POST.get("payment_method") or "").strip()
+
+    allowed = {"card", "cash_on_delivery"}
+    if payment_method not in allowed:
+        return JsonResponse({"success": False, "message": "Невалиден метод на плащане."}, status=400)
+
+    # If already paid, do not change persisted method
+    if order.payment_status == "paid":
+        return JsonResponse({"success": True, "message": "Поръчката вече е платена.", "payment_method": order.payment_method})
+
+    order.payment_method = payment_method
+    order.save(update_fields=["payment_method"])
+    return JsonResponse({"success": True, "payment_method": order.payment_method})
 
 
 def filter_products(request):

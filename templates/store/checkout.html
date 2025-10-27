@@ -416,6 +416,17 @@
         return cookieValue
     }
     const csrftoken = getCookie('csrftoken')
+
+    // Persist selected payment method immediately so it survives refresh/failure
+    function persistPaymentMethod(method) {
+        try {
+            fetch('{% url "store:set_payment_method" order.order_id %}', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payment_method: method })
+            }).then(function() { /* ignore result; UI updates independently */ }).catch(function(){});
+        } catch (e) { /* no-op */ }
+    }
     var codButton = document.getElementById('cod-payment');
     try {
         codButton.addEventListener('click', function () {
@@ -552,7 +563,8 @@
     let lastEcontShipping = { shipping_price: null, shipping_price_cod: null, currency_sign: "лв." };
     let lastSpeedyShipping = { shipping_price: null, shipping_price_cod: null, currency_sign: "лв." };
     // Track last saved address to avoid redundant autosaves
-    let lastSavedAddressKey = null;
+    let lastSavedAddressKey = null; // Econt autosave key
+    let lastSavedSpeedyKey = null;  // Speedy autosave key
 
     function updateSummaryForPayment() {
         const shippingSummaryElem = document.getElementById('shipping-summary-value');
@@ -669,11 +681,13 @@
         if (paymentCardRadio && paymentCodRadio) {
             paymentCardRadio.addEventListener('change', function(){
                 selectedPayment = 'card';
+                persistPaymentMethod('card');
                 updateSummaryForPayment();
                 if (selectedShipping === 'speedy') { updateQuote(); }
             });
             paymentCodRadio.addEventListener('change', function(){
                 selectedPayment = 'cash_on_delivery';
+                persistPaymentMethod('cash_on_delivery');
                 updateSummaryForPayment();
                 if (selectedShipping === 'speedy') { updateQuote(); }
             });
@@ -855,6 +869,61 @@
         const officeNameHidden = document.getElementById('speedy_office_name');
         const quoteBox = document.getElementById('speedy-shipping-price-block');
         let quoteTimer = null;
+        let speedySaveTimer = null;
+
+        function buildSpeedyKey() {
+            const officeName = document.getElementById('speedy_office_search')?.value || '';
+            return JSON.stringify({
+                name: document.getElementById('speedy_name')?.value || '',
+                phone: document.getElementById('speedy_phone')?.value || '',
+                email: document.getElementById('speedy_email')?.value || '',
+                delivery_method: officeName ? 'speedy_office' : 'speedy',
+                city: document.getElementById('speedy_city_search')?.value || '',
+                address: document.getElementById('speedy_address')?.value || '',
+                office_code: document.getElementById('speedy_office_code')?.value || '',
+                office_name: officeName,
+                face: document.getElementById('speedy_face')?.value || '',
+                post_code: document.getElementById('speedy_post_code')?.value || ''
+            });
+        }
+
+        function autoSaveSpeedyAddress() {
+            clearTimeout(speedySaveTimer);
+            speedySaveTimer = setTimeout(function(){
+                const currentKey = buildSpeedyKey();
+                if (currentKey === lastSavedSpeedyKey) return;
+                const officeName = document.getElementById('speedy_office_search')?.value || '';
+                const payload = {
+                    name: document.getElementById('speedy_name')?.value || '',
+                    phone: document.getElementById('speedy_phone')?.value || '',
+                    email: document.getElementById('speedy_email')?.value || '',
+                    delivery_method: officeName ? 'speedy_office' : 'speedy',
+                    city: document.getElementById('speedy_city_search')?.value || '',
+                    address: document.getElementById('speedy_address')?.value || '',
+                    office_code: document.getElementById('speedy_office_code')?.value || '',
+                    office_name: officeName,
+                    face: document.getElementById('speedy_face')?.value || '',
+                    post_code: document.getElementById('speedy_post_code')?.value || '',
+                    site_id: document.getElementById('speedy_site_id')?.value || null
+                    // Note: no shipping_price on autosave
+                };
+                try {
+                    fetch('/save-speedy-address/{{ order.order_id }}/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(function (resp) { return resp.json(); })
+                    .then(function (respData) {
+                        if (respData && respData.success) {
+                            lastSavedSpeedyKey = currentKey;
+                        }
+                    })
+                    .catch(function(){ /* ignore autosave errors */ });
+                } catch (e) { /* no-op */ }
+            }, 400);
+        }
+
         function updateQuote(){
             clearTimeout(quoteTimer);
             quoteTimer = setTimeout(function(){
@@ -919,6 +988,7 @@
                     // Show all immediately so user can scroll without typing
                     officeSuggestions.style.display='block';
                     updateQuote();
+                    autoSaveSpeedyAddress();
                 }).catch((e)=>{ console.warn('[Speedy] Offices fetch failed', e); });
         }
         function searchSites(q){
@@ -945,6 +1015,7 @@
                     if (pcEl && s.postCode) pcEl.value = s.postCode;
                     clearSuggestions(citySuggestions);
                     setOffices(s.id);
+                    autoSaveSpeedyAddress();
                 });
                 citySuggestions.appendChild(a);
             });
@@ -967,6 +1038,7 @@
                     if (pcEl && (o.postCode || o.postcode)) pcEl.value = (o.postCode || o.postcode);
                     clearSuggestions(officeSuggestions);
                     updateQuote();
+                    autoSaveSpeedyAddress();
                 });
                 officeSuggestions.appendChild(a);
             });
@@ -987,6 +1059,7 @@
                     const sites=await searchSites(q);
                     renderCitySuggestions(sites);
                 },300);
+                autoSaveSpeedyAddress();
             });
             // When Speedy is chosen, reset fields; do not auto-select city/office
             const speedyRadio = document.getElementById('shipping-speedy');
@@ -1009,6 +1082,7 @@
                         if (typeof updateSummaryForPayment === 'function') {
                             updateSummaryForPayment();
                         }
+                        autoSaveSpeedyAddress();
                     }
                 });
             }
@@ -1020,17 +1094,26 @@
                 const filtered = q ? all.filter(o=> (o.name||'').toLowerCase().includes(q)) : all;
                 renderOfficeSuggestions(filtered);
                 updateQuote();
+                autoSaveSpeedyAddress();
             });
         }
         // Also update quote on address/post code changes for address delivery
         const addressInput = document.getElementById('speedy_address');
         const postCodeInput = document.getElementById('speedy_post_code');
+        const phoneInput = document.getElementById('speedy_phone');
+        const nameInput = document.getElementById('speedy_name');
+        const emailInput = document.getElementById('speedy_email');
         if (addressInput) {
             addressInput.addEventListener('input', updateQuote);
+            addressInput.addEventListener('input', autoSaveSpeedyAddress);
         }
         if (postCodeInput) {
             postCodeInput.addEventListener('input', updateQuote);
+            postCodeInput.addEventListener('input', autoSaveSpeedyAddress);
         }
+        if (phoneInput) phoneInput.addEventListener('input', autoSaveSpeedyAddress);
+        if (nameInput) nameInput.addEventListener('input', autoSaveSpeedyAddress);
+        if (emailInput) emailInput.addEventListener('input', autoSaveSpeedyAddress);
         // Hide suggestions on outside click
         document.addEventListener('click', function(e){
             if (citySuggestions && !citySuggestions.contains(e.target) && citySearch && !citySearch.contains(e.target)) {
@@ -1050,6 +1133,7 @@
             speedyAddressFields.forEach(el => el.style.display = isOffice ? 'none' : 'block');
             speedyOfficeFields.forEach(el => el.style.display = isOffice ? 'block' : 'none');
             updateQuote();
+            autoSaveSpeedyAddress();
         }
         if (modeAddress && modeOffice){
             // Default to office

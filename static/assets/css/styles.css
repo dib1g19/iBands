@@ -588,6 +588,15 @@ h6 {
     .category-title {
         font-size: 1rem;
     }
+    .progress-title {
+        font-size: 1rem; 
+    }
+}
+
+@media (max-width: 409.98px) {
+    .spin-auth-prompt {
+        font-size: 1.3rem; 
+    }
 }
 
 /*-------------- Product Image ------------------*/

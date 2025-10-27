@@ -14,10 +14,8 @@
                     <div>{{ last_spin.result_label }}</div>
                     {% if last_spin.coupon_code %}
                         <div class="mt-1">Код: <code>{{ last_spin.coupon_code }}</code></div>
-                    {% elif last_spin.prize_type == 'free_shipping' %}
-                        <div class="mt-1">Безплатна доставка</div>
-                    {% elif last_spin.prize_type == 'mystery_box_min_total' %}
-                        <div class="mt-1">Mystery Box при поръчка над {{ last_spin.min_order_total }} лв.</div>
+                    {% elif last_spin.min_order_total %}
+                        <div class="mt-1">при поръчка над {{ last_spin.min_order_total }} лв.</div>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -43,7 +41,7 @@
             </div>
 
             <div class="mt-4 text-start">
-                <h5 class="mb-2 text-white">Прогрес към допълнителни награди</h5>
+                <h5 class="mb-2 text-white progress-title">Прогрес към допълнителни награди</h5>
                 <div class="progress" style="height: 10px;">
                     <div id="{{ widget_id }}-milestone-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%;"></div>
                 </div>

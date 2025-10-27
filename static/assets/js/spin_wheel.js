@@ -299,9 +299,10 @@
           })
           .catch(function(err){
             if (err && err.auth && resultEl) {
-              var signIn = err.login_url || (config.signInUrl ? (config.signInUrl + '?next=' + encodeURIComponent(window.location.pathname)) : '#');
+              var signIn = err.login_url || (config.signInUrl ? (config.signInUrl + '?next=' + encodeURIComponent(window.location.href)) : '#');
               var signUp = config.signUpUrl ? (config.signUpUrl + '?next=' + encodeURIComponent(window.location.pathname)) : '#';
-              resultEl.innerHTML = (err.message || 'Моля, влезте в профила си.') +
+              var msg = err.message || 'Моля, влезте или се регистрирайте, за да завъртите.';
+              resultEl.innerHTML = '<span class="spin-auth-prompt">'+ msg +
                 ' <a class="btn btn-sm btn-primary ms-2" href="'+signIn+'">Влез</a>'+
                 ' <a class="btn btn-sm btn-outline-primary ms-2" href="'+signUp+'">Регистрация</a>';
               return;

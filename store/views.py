@@ -1816,40 +1816,50 @@ def delete_cart_item(request):
 
 
 def create_order(request):
-    if request.method == "POST":
-        cart_id = request.session.get("cart_id")
-        items = store_models.Cart.objects.filter(cart_id=cart_id)
-        cart_sub_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(
-            sub_total=models.Sum("sub_total")
-        )["sub_total"]
+    # Only allow POST; on GET direct the user back to the cart
+    if request.method != "POST":
+        messages.warning(request, "Моля, направете поръчка от количката.")
+        return redirect("store:cart")
 
-        shipping = 0.00
-        order = store_models.Order()
-        order.sub_total = cart_sub_total
-        order.customer = request.user if request.user.is_authenticated else None
-        order.shipping = shipping
-        order.total = (order.sub_total or 0) + (order.shipping or 0)
-        order.save()
+    cart_id = request.session.get("cart_id")
+    items = store_models.Cart.objects.filter(cart_id=cart_id)
 
-        # Before snapshotting items to the order, recalc promos at cart level to ensure correct sub_totals
-        try:
-            recalc_cart_group_promos(items)
-        except Exception:
-            pass
+    # Guard: empty cart
+    if not items.exists():
+        messages.error(request, "Количката е празна.")
+        return redirect("store:cart")
 
-        for i in items:
-            # Snapshot price and sub_total exactly as in cart to avoid rounding/alloc mismatch
-            line_price = Decimal(str(i.price or 0))
-            sub_total_snapshot = Decimal(str(i.sub_total or 0))
-            store_models.OrderItem.objects.create(
-                order=order,
-                product=i.product,
-                qty=i.qty,
-                model=i.model,
-                size=i.size,
-                price=line_price,
-                sub_total=sub_total_snapshot,
-            )
+    cart_sub_total = store_models.Cart.objects.filter(cart_id=cart_id).aggregate(
+        sub_total=models.Sum("sub_total")
+    )["sub_total"] or 0
+
+    shipping = 0.00
+    order = store_models.Order()
+    order.sub_total = cart_sub_total
+    order.customer = request.user if request.user.is_authenticated else None
+    order.shipping = shipping
+    order.total = (order.sub_total or 0) + (order.shipping or 0)
+    order.save()
+
+    # Before snapshotting items to the order, recalc promos at cart level to ensure correct sub_totals
+    try:
+        recalc_cart_group_promos(items)
+    except Exception:
+        pass
+
+    for i in items:
+        # Snapshot price and sub_total exactly as in cart to avoid rounding/alloc mismatch
+        line_price = Decimal(str(i.price or 0))
+        sub_total_snapshot = Decimal(str(i.sub_total or 0))
+        store_models.OrderItem.objects.create(
+            order=order,
+            product=i.product,
+            qty=i.qty,
+            model=i.model,
+            size=i.size,
+            price=line_price,
+            sub_total=sub_total_snapshot,
+        )
 
     return redirect("store:checkout", order.order_id)
 

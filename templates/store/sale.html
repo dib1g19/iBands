@@ -25,7 +25,7 @@
             </div>
             {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_bottom %}
             <div class="halloween-divider mb-2"></div>
-            {% include 'partials/_pagination.html' %}
+            {% include 'partials/_pagination.html' with is_shop=False %}
         </div>
     </section>
 {% endblock %}

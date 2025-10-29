@@ -2136,6 +2136,31 @@ input[type="number"] {
     color: #1a0f00;
 }
 
+/* Pagination readability inside Halloween sections */
+.halloween-section .pagination .page-link {
+    color: #f7f7f7;
+    background-color: transparent; /* keep background clean over theme */
+    border-bottom-color: rgba(255,255,255,0.18);
+}
+.halloween-section .pagination > .active > a,
+.halloween-section .pagination > .active > a:focus,
+.halloween-section .pagination > .active > a:hover,
+.halloween-section .pagination > .active > span,
+.halloween-section .pagination > .active > span:focus,
+.halloween-section .pagination > .active > span:hover,
+.halloween-section .page-item.active .page-link {
+    color: #1a0f00;
+    background-color: #ff8a00;
+    border-color: #ff8a00;
+}
+.halloween-section .pagination > li > a:focus,
+.halloween-section .pagination > li > a:hover,
+.halloween-section .pagination .page-link:hover {
+    color: #ff8a00;
+    background-color: transparent;
+    border-color: #ff8a00;
+}
+
 /* cute floating bats */
 .bat {
     position: absolute;

@@ -229,6 +229,7 @@
       btn.addEventListener('click', function(){
         if (btn.disabled) return;
         btn.disabled = true;
+        if (wrapperEl) wrapperEl.classList.add('is-spinning');
         if (resultEl) resultEl.textContent = '';
         if (couponEl) couponEl.textContent = '';
         var csrf = config.csrfToken || getCookie('csrftoken') || '';
@@ -250,6 +251,7 @@
           .then(function(data){
             if (!data.success) throw new Error(data.message || 'Грешка при завъртане');
             spinToLabel(data.label, function(){
+              if (wrapperEl) wrapperEl.classList.remove('is-spinning');
               if (resultEl) resultEl.textContent = data.label;
               if (couponEl) {
                 if (data.coupon_code) {
@@ -298,6 +300,7 @@
             });
           })
           .catch(function(err){
+            if (wrapperEl) wrapperEl.classList.remove('is-spinning');
             if (err && err.auth && resultEl) {
               var signIn = err.login_url || (config.signInUrl ? (config.signInUrl + '?next=' + encodeURIComponent(window.location.href)) : '#');
               var signUp = config.signUpUrl ? (config.signUpUrl + '?next=' + encodeURIComponent(window.location.pathname)) : '#';
@@ -309,7 +312,10 @@
             }
             if (resultEl) resultEl.textContent = err && err.message ? err.message : 'Опитай отново утре.';
           })
-          .finally(function(){ btn.disabled = true; });
+          .finally(function(){
+            if (wrapperEl) wrapperEl.classList.remove('is-spinning');
+            btn.disabled = true;
+          });
       });
     }
   };

@@ -469,6 +469,23 @@ h6 {
         width: 420px;
     }
 }
+/* Spin wheel hover nudge (canvas only, keep pointer static) */
+.wheel-wrapper canvas {
+    transition: transform .25s ease;
+    transform-origin: 50% 50%;
+}
+.wheel-wrapper:not(.is-spinning):hover canvas {
+    animation: wheelNudge 900ms ease-in-out both;
+}
+@keyframes wheelNudge {
+    0% { transform: rotate(0deg); }
+    30% { transform: rotate(5deg); }
+    60% { transform: rotate(-3deg); }
+    100% { transform: rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .wheel-wrapper:hover canvas { animation: none !important; transition: none !important; }
+}
 /* Milestone list styling */
 .legend-card {
     background: #fff;

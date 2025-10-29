@@ -254,10 +254,9 @@
                         </div>
                     </div>
                     <div id="sidebar-card-alert-anchor" class="d-none"></div>
-                    <div id="payment-card-alert" class="alert alert-info shadow border text-dark text-center mb-4" role="alert" style="font-size: 1.1rem;">
-                        <i class="fas fa-credit-card"></i>
-                        <b>50% отстъпка от доставката</b> при плащане с карта!
-                        Платете с карта онлайн и получете 50% намаление на цената за доставка до офис или адрес на <b>Спиди</b> и <b>Еконт</b>.
+                    <div id="payment-card-alert" class="alert alert-info shadow border text-dark text-center mb-4" role="alert">
+                        <i class="fas fa-shipping-fast"></i>
+                        Доставка на следващия работен ден за поръчки до <strong>17:00</strong>
                     </div>
                 </div>
             </div>
@@ -306,9 +305,7 @@
             office_name: officeName,
             face: document.getElementById('econt_customer_face').value,
             post_code: document.getElementById('econt_customer_post_code').value,
-            shipping_price: (selectedPayment === 'card')
-                ? (lastEcontShipping.shipping_price_cod ? (parseFloat(lastEcontShipping.shipping_price_cod) * 0.5).toFixed(2) : null)
-                : lastEcontShipping.shipping_price_cod
+            shipping_price: (lastEcontShipping.shipping_price_cod ? lastEcontShipping.shipping_price_cod : null)
         };
 
         var econtErrorBlock = document.getElementById('econt-error-block');
@@ -454,9 +451,7 @@
             face: document.getElementById('speedy_face').value,
             post_code: document.getElementById('speedy_post_code')?.value || '',
             site_id: siteId,
-            shipping_price: (selectedPayment === 'card')
-                ? (lastSpeedyShipping.shipping_price_cod ? (parseFloat(lastSpeedyShipping.shipping_price_cod) * 0.5).toFixed(2) : null)
-                : lastSpeedyShipping.shipping_price_cod
+            shipping_price: (lastSpeedyShipping.shipping_price_cod ? lastSpeedyShipping.shipping_price_cod : null)
         };
 
         var speedyErrorBlock = document.getElementById('speedy-error-block');
@@ -589,9 +584,9 @@
                 }
             } else if (selectedPayment === 'card') {
                 if (lastEcontShipping.shipping_price_cod !== undefined && lastEcontShipping.shipping_price_cod !== null) {
-                    shipping = (parseFloat(lastEcontShipping.shipping_price_cod) * 0.5).toFixed(2);
+                    shipping = lastEcontShipping.shipping_price_cod;
                     showShipping = true;
-                    shippingText = shipping + ' ' + (lastEcontShipping.currency_sign || "лв.") + " (50% отстъпка)";
+                    shippingText = shipping + ' ' + (lastEcontShipping.currency_sign || "лв.");
                     shippingVal = parseFloat(shipping);
                 }
             }
@@ -605,9 +600,9 @@
                 }
             } else if (selectedPayment === 'card') {
                 if (lastSpeedyShipping.shipping_price_cod !== undefined && lastSpeedyShipping.shipping_price_cod !== null) {
-                    shipping = (parseFloat(lastSpeedyShipping.shipping_price_cod) * 0.5).toFixed(2);
+                    shipping = lastSpeedyShipping.shipping_price_cod;
                     showShipping = true;
-                    shippingText = shipping + ' ' + (lastSpeedyShipping.currency_sign || "лв.") + " (50% отстъпка)";
+                    shippingText = shipping + ' ' + (lastSpeedyShipping.currency_sign || "лв.");
                     shippingVal = parseFloat(shipping);
                 }
             }

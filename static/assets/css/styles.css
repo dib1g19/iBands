@@ -902,6 +902,13 @@ h6 {
     transition: color 0.2s ease;
 }
 
+/* Make Halloween label/icon follow same hover color in dropdowns */
+.nav-dropdown > li > a:hover .text-warning,
+.nav-dropdown > li:hover > a .text-warning,
+.nav-dropdown > li > a:focus .text-warning {
+    color: #ff6a00 !important;
+}
+
 /* Remove border for last dropdown item */
 .nav-dropdown > li:last-child > a {
     border-bottom: none;
@@ -1088,6 +1095,13 @@ h6 {
     .nav-menu > .focus > a,
     .nav-menu > li:hover > a {
         color: #ccc !important;
+        transition: color 0.2s ease;
+    }
+
+    /* Ensure Halloween label/icon respond to hover like other items */
+    .nav-menu > li:hover > a .text-warning,
+    .nav-menu > li:hover > a i.text-warning {
+        color: #ff6a00 !important;
         transition: color 0.2s ease;
     }
 
@@ -2317,4 +2331,7 @@ input[type="number"] {
     50% { transform: translateY(calc(var(--ampY, 11px) * 0.6)) rotate(calc(var(--rot, 7) * 0.2deg)); }
     75% { transform: translateY(calc(var(--ampY, 11px) * -0.5)) rotate(calc(var(--rot, 7) * -0.15deg)); }
     100% { left: calc(var(--startLeftPct, -12%) + 150%); transform: translateY(0) rotate(0deg); }
+}
+@media (max-width: 409.98px) {
+    .ann-hide-under-410 { display: none !important; }
 }

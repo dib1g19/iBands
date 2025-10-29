@@ -238,7 +238,7 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(store_models.Order)
 class OrderAdmin(iBandsModelAdmin):
-    list_display = ["address", "total", "order_status", "shipping_service", "tracking_id", "payment_method", "date"]
+    list_display = ["order_id", "customer", "address", "total", "order_status", "shipping_service", "tracking_id", "payment_method", "date"]
     list_editable = [ "order_status", "shipping_service", "tracking_id"]
     list_filter = ["payment_status", "order_status"]
     search_fields = ["order_id", "customer__username"]

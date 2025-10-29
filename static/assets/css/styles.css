@@ -429,27 +429,32 @@ h6 {
 }
 .wheel-wrapper {
     position: relative;
-    width: 320px;
-    max-width: 90vw;
+    width: 330px;
 }
 .wheel-pointer {
     position: absolute;
-    top: -20px;
+    top: -10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 40px;
-    height: 40px;
-    background: #fff;
-    border-radius: 50%;
-    border: 2px solid #0d6efd;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    width: 0;
+    height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 36px solid #0d6efd; /* longer point for a more isosceles look */
     z-index: 2;
+    pointer-events: none; /* purely visual */
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
-.wheel-pointer .chev-icon {
-    display: block;
+.wheel-pointer::after {
+    content: "";
+    position: absolute;
+    left: -11px; /* center inner triangle */
+    top: -34px;  /* inset for the taller outer triangle */
+    width: 0;
+    height: 0;
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-top: 30px solid #fff; /* inner triangle */
 }
 .fallback-wheel {
     width: 100%;
@@ -458,15 +463,35 @@ h6 {
     border: 8px solid #eee;
     background: conic-gradient(#ffd54f 0 20%, #fff9c4 0 40%, #ffe082 0 60%, #fff59d 0 80%, #ffecb3 0 100%);
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    position: relative;
+}
+/* central hub for fallback wheel */
+.fallback-wheel::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 24%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    background: #fff url('/static/assets/img/center-wheel.avif') center/82% no-repeat;
+    border: 2px solid rgba(0,0,0,0.08);
+}
+
+@media (min-width: 420px) {
+    .wheel-wrapper {
+        width: 370px;
+    }
 }
 @media (min-width: 576px) {
     .wheel-wrapper {
-        width: 360px;
+        width: 480px;
     }
 }
 @media (min-width: 992px) {
     .wheel-wrapper {
-        width: 420px;
+        width: 560px;
     }
 }
 /* Spin wheel hover nudge (canvas only, keep pointer static) */
@@ -919,10 +944,11 @@ h6 {
     transition: color 0.2s ease;
 }
 
-/* Make Halloween label/icon follow same hover color in dropdowns */
-.nav-dropdown > li > a:hover .text-warning,
-.nav-dropdown > li:hover > a .text-warning,
-.nav-dropdown > li > a:focus .text-warning {
+/* Mobile tap feedback for top-level Halloween link (focus/active) */
+.nav-menu > li > a:focus .text-warning,
+.nav-menu > li > a:active .text-warning,
+.nav-menu > li > a:focus i.text-warning,
+.nav-menu > li > a:active i.text-warning {
     color: #ff6a00 !important;
 }
 
@@ -2230,9 +2256,6 @@ input[type="number"] {
 /* bat variants */
 .bat-sm { transform: scale(.85); }
 .bat-lg { transform: scale(1.3); }
-.bat-fast { animation-duration: 6s; }
-.bat-slow { animation-duration: 12s; }
-.bat.alt { color: #ff4d00; }
 /* simple color variants */
 .bat.orange { color: #ff8a00; }
 .bat.amber { color: #ffb300; }
@@ -2278,13 +2301,7 @@ input[type="number"] {
     to { transform: translateX(-50%); }
 }
 
-/* Inline bats (no x-translation reset) */
-.bat--inline { position: relative; animation: none !important; margin: 0 18px; }
-.bat--bob { animation: batBob 2.8s ease-in-out infinite; }
-@keyframes batBob {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-3px) scale(1.02); }
-}
+/* Inline bat variants removed */
 
 /* Randomized bat swarm (top and bottom) */
 .halloween-swarm {
@@ -2303,10 +2320,7 @@ input[type="number"] {
 }
 /* Bottom swarm uses same direction by default (left-to-right) */
 
-/* Reusable reverse variant for any swarm */
-.bat-reverse { right: -12%; left: auto !important; animation-direction: reverse !important; }
-/* Reusable normal-direction override for bottom swarm */
-.bat-normal { left: -12% !important; right: auto !important; animation-direction: normal !important; }
+/* Direction override variants removed */
 
 @keyframes batDrift {
     0%   { left: calc(var(--startLeftPct, -12%) + 0%);  transform: translateY(0) rotate(calc(var(--rot, 6) * 0.0deg)); }

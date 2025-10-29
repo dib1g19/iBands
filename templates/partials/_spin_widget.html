@@ -21,12 +21,8 @@
                 {% endif %}
             {% endif %}
 
-            <div class="wheel-wrapper my-3 position-relative mx-auto" style="max-width: 420px;">
-                <div class="wheel-pointer" aria-hidden="true">
-                    <svg class="chev-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6 9l6 6 6-6" stroke="#0d6efd" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
+            <div class="wheel-wrapper my-3 position-relative mx-auto">
+                <div class="wheel-pointer" aria-hidden="true"></div>
                 <canvas id="{{ widget_id }}-spin-canvas" width="360" height="360" aria-label="Колелото на късмета"></canvas>
                 <div id="{{ widget_id }}-wheel-fallback" class="d-none">
                     <div class="fallback-wheel"></div>
@@ -71,6 +67,7 @@
             btnId: '{{ widget_id }}-spin-btn',
             resultId: '{{ widget_id }}-spin-result',
             couponId: '{{ widget_id }}-spin-coupon',
+            centerImageUrl: '{% static "assets/img/center-wheel.avif" %}',
             milestoneProgressId: '{{ widget_id }}-milestone-progress',
             milestoneLabelId: '{{ widget_id }}-milestone-label',
             resetIso: '{{ reset_at_iso|default:"" }}',

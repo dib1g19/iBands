@@ -52,6 +52,15 @@
     var msProgressEl = config.milestoneProgressId ? document.getElementById(config.milestoneProgressId) : null;
     var msLabelEl = config.milestoneLabelId ? document.getElementById(config.milestoneLabelId) : null;
     var msAchievedEl = null; // removed separate achieved list; show codes inline next to legend items
+    // Optional center image for hub
+    var hubImage = null;
+    if (config.centerImageUrl) {
+      hubImage = new Image();
+      hubImage.onload = function(){
+        if (ctx) drawWheelAt(0);
+      };
+      hubImage.src = config.centerImageUrl;
+    }
 
     if (config.countdownIds) {
       if (config.countdownIds.nextId) startCountdown(config.resetIso, document.getElementById(config.countdownIds.nextId));
@@ -169,10 +178,19 @@
         ctx.fillStyle = '#111';
         ctx.shadowColor = 'rgba(255,255,255,0.35)';
         ctx.shadowBlur = 0;
-        var fontSize = Math.max(12, Math.floor(displayedSize * 0.046));
-        ctx.font = fontSize+'px Roboto, Arial, sans-serif';
+        // dynamic fit: shrink font until the label fits between hub and rim
+        var hubForText = Math.max(14, Math.floor(displayedSize * 0.06));
+        var innerPad = Math.max(8, Math.floor(displayedSize * 0.02));
+        var xEnd = radius - 12;
+        var available = Math.max(20, xEnd - (hubForText + innerPad));
+        var fs = Math.max(10, Math.floor(displayedSize * 0.042));
+        ctx.font = fs+'px Roboto, Arial, sans-serif';
+        while (ctx.measureText(segments[i].label).width > available && fs > 10) {
+          fs -= 1;
+          ctx.font = fs+'px Roboto, Arial, sans-serif';
+        }
         ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-        ctx.fillText(segments[i].label, radius - 12, 0);
+        ctx.fillText(segments[i].label, xEnd, 0);
         ctx.restore();
       }
       // soft gloss
@@ -181,7 +199,47 @@
       gloss.addColorStop(1, 'rgba(255,255,255,0.02)');
       ctx.beginPath(); ctx.arc(0,0,radius,0,TAU); ctx.closePath();
       ctx.fillStyle = gloss; ctx.fill();
+
+      // center hub circle to smooth segment intersections (optionally draw image)
+      var hubR = Math.max(14, Math.floor(displayedSize * 0.06));
+      if (hubImage && hubImage.complete) {
+        ctx.save();
+        ctx.beginPath(); ctx.arc(0,0,hubR,0,TAU); ctx.closePath();
+        ctx.clip();
+        // white base then slightly smaller image for a visible ring
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-hubR, -hubR, hubR*2, hubR*2);
+        var imgR = Math.floor(hubR * 0.82);
+        ctx.drawImage(hubImage, -imgR, -imgR, imgR*2, imgR*2);
+        ctx.restore();
+      } else {
+        ctx.beginPath(); ctx.arc(0,0,hubR,0,TAU); ctx.closePath();
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      }
+      ctx.lineWidth = Math.max(2, Math.floor(displayedSize * 0.01));
+      ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+      ctx.stroke();
       ctx.restore();
+    }
+
+    if (canvas) {
+      var hubFactor = 0.12; // radius as a fraction of wheel size
+      function canSpin(){
+        return !!btn && !btn.disabled && config.spinUrl && config.canSpin !== false && !(wrapperEl && wrapperEl.classList.contains('is-spinning'));
+      }
+      function inHub(e){
+        var rect = canvas.getBoundingClientRect();
+        var cx = rect.left + rect.width/2;
+        var cy = rect.top + rect.height/2;
+        var dx = e.clientX - cx;
+        var dy = e.clientY - cy;
+        var hubR = Math.min(rect.width, rect.height) * hubFactor;
+        return (dx*dx + dy*dy) <= (hubR*hubR);
+      }
+      canvas.addEventListener('mousemove', function(e){ canvas.style.cursor = (canSpin() && inHub(e)) ? 'pointer' : ''; });
+      canvas.addEventListener('mouseleave', function(){ canvas.style.cursor = ''; });
+      canvas.addEventListener('click', function(e){ if (canSpin() && inHub(e)) { btn && btn.click(); } });
     }
 
     function animateTo(targetRotation, durationMs, onDone) {

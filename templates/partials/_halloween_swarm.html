@@ -1,0 +1,9 @@
+{% if bats %}
+<div class="halloween-swarm {{ extra_classes|default:'' }}" aria-hidden="true">
+    {% for b in bats %}
+    <span class="bat {{ b.classes }}" style="top:{{ b.top }}px; --startLeftPct:{{ b.startPct|default:-20 }}%; --speed: {{ b.speed }}s; --delay: {{ b.delay }}s; --ampY: {{ b.ampY }}px; --rot: {{ b.rot }};"></span>
+    {% endfor %}
+    
+</div>
+{% endif %}
+

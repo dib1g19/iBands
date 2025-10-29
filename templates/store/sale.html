@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Разпродажба – Намалени продукти
+    Halloween Разпродажба – Намалени продукти
 {% endblock %}
 
 {% block meta_description %}
@@ -11,9 +11,11 @@
 {% block content %}
     {% include 'partials/_breadcrumbs.html' %}
 
-    <section class="middle">
+    <section class="middle halloween-section">
         <div class="container">
-            <h1 class="fw-bold mb-4">Разпродажба</h1>
+            <h1 class="fw-bold text-center mb-2">Halloween Разпродажба</h1>
+            <div class="halloween-divider mb-2"></div>
+            {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_top %}
             <div class="row align-items-center rows-products" id="products-list">
                 {% for product in products %}
                     {% include 'partials/_product_list.html' with product=product %}
@@ -21,6 +23,8 @@
                     <p>В момента няма продукти в разпродажба.</p>
                 {% endfor %}
             </div>
+            {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_bottom %}
+            <div class="halloween-divider mb-2"></div>
             {% include 'partials/_pagination.html' %}
         </div>
     </section>

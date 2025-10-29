@@ -65,6 +65,40 @@ def _perceived_brightness(hex_code):
     r, g, b = _hex_to_rgb(hex_code)
     return 0.299 * r + 0.587 * g + 0.114 * b
 
+
+def _generate_halloween_bats(count: int):
+    paths = ["", "bat-path-b", "bat-path-c", "bat-path-d", "bat-path-e"]
+    sizes = ["", "bat-sm", "bat-lg"]
+    colors = ["orange", "amber", "tanger", "red"]
+    bats = []
+    for _ in range(int(count)):
+        top_px = random.randint(6, 30)
+        start_pct = -random.randint(20, 50)
+        speed_s = round(random.uniform(10.5, 16.0), 1)
+        delay_s = round(-random.uniform(0.2, 8.0), 1)
+        amp_y_px = random.randint(8, 14)
+        rot_deg = random.randint(4, 9)
+        cls = ["bat-fly"]
+        p = random.choice(paths)
+        if p:
+            cls.append(p)
+        s = random.choices(sizes, weights=[6, 3, 2], k=1)[0]
+        if s:
+            cls.append(s)
+        c = random.choice(colors)
+        if c:
+            cls.append(c)
+        bats.append({
+            "classes": " ".join(cls),
+            "top": top_px,
+            "startPct": start_pct,
+            "speed": speed_s,
+            "delay": delay_s,
+            "ampY": amp_y_px,
+            "rot": rot_deg,
+        })
+    return bats
+
 def send_order_to_econt(order):
     url = settings.ECONT_UPDATE_ORDER_ENDPOINT
     headers = {
@@ -865,6 +899,10 @@ def index(request):
         achieved_thresholds = []
         achieved_details = []
 
+    # --- Halloween swarms (randomized) ---
+    halloween_bats_top = _generate_halloween_bats(5)
+    halloween_bats_bottom = _generate_halloween_bats(5)
+
     context = {
         "products": products,
         "sale_products": sale_products,
@@ -889,6 +927,9 @@ def index(request):
             "achieved": achieved_thresholds,
         }),
         "spin_achieved_details_json": json.dumps(achieved_details, ensure_ascii=False),
+        # Halloween swarms
+        "halloween_bats_top": halloween_bats_top,
+        "halloween_bats_bottom": halloween_bats_bottom,
     }
     return render(request, "store/index.html", context)
 
@@ -1221,6 +1262,10 @@ def sale(request):
         {"label": "Разпродажба", "url": ""},
     ]
 
+    # Halloween swarms for sale page
+    halloween_bats_top = _generate_halloween_bats(5)
+    halloween_bats_bottom = _generate_halloween_bats(5)
+
     context = {
         "products": products,
         "products_list": products_list,
@@ -1233,6 +1278,8 @@ def sale(request):
         "breadcrumbs": breadcrumbs,
     }
     context["is_shop"] = True
+    context["halloween_bats_top"] = halloween_bats_top
+    context["halloween_bats_bottom"] = halloween_bats_bottom
     return render(request, "store/sale.html", context)
 
 

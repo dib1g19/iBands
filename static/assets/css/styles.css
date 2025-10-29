@@ -2050,3 +2050,246 @@ input[type="number"] {
 .free-ship-progress {
     height: 10px;
 }
+
+/* ==========================
+   Seasonal: Halloween Theme
+   ========================== */
+.halloween-section {
+    padding: 0 0 20px;
+    margin: 0 0 20px;
+    position: relative;
+    background:
+        radial-gradient(1200px 600px at 120% -10%, rgba(255,138,0,0.06), transparent 60%),
+        radial-gradient(800px 500px at -20% 110%, rgba(255,77,0,0.05), transparent 55%),
+        linear-gradient(180deg, #0b0b0b 0%, #0a0a0a 45%, #0f0a05 100%);
+    overflow: hidden;
+}
+.halloween-section .sec_title h2,
+.halloween-section h1,
+.halloween-section h2,
+.halloween-section h3,
+.halloween-section h4,
+.halloween-section h5,
+.halloween-section h6 { color: #ff8a00; }
+
+/* subtle web of lines */
+.halloween-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at top left, rgba(255,138,0,0.08), transparent 55%),
+                radial-gradient(ellipse at bottom right, rgba(255,138,0,0.06), transparent 60%);
+    pointer-events: none;
+}
+
+/* soft animated mist */
+.halloween-section::after {
+    content: "";
+    position: absolute;
+    inset: -10% -10% -10% -10%;
+    background:
+        radial-gradient(ellipse at 20% 30%, rgba(255,255,255,0.035), transparent 60%),
+        radial-gradient(ellipse at 80% 60%, rgba(255,255,255,0.03), transparent 60%);
+    filter: blur(6px);
+    animation: mistDrift 24s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes mistDrift {
+    0% { transform: translateX(-4%); }
+    50% { transform: translateX(4%); }
+    100% { transform: translateX(-4%); }
+}
+
+/* glowing divider accent under section title */
+.halloween-divider {
+    width: 120px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #ff8a00, #ff4d00, transparent);
+    border-radius: 999px;
+    margin: 6px auto 0;
+    box-shadow: 0 0 16px rgba(255,77,0,.35), 0 0 6px rgba(255,138,0,.4);
+}
+
+/* product cards in halloween context */
+.halloween-section .product_grid {
+    background: #121212;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.halloween-section .product_grid h5,
+.halloween-section .product_grid .price,
+.halloween-section .product_grid .price span { color: #fff; }
+.halloween-section .discount-badge {
+    background: #ff4d00;
+    color: #fff;
+}
+.halloween-section .btn-primary,
+.halloween-section .btn-dark {
+    background: #ff8a00;
+    border-color: #ff8a00;
+    color: #1a0f00;
+}
+.halloween-section .btn-primary:hover,
+.halloween-section .btn-dark:hover {
+    background: #ff6a00;
+    border-color: #ff6a00;
+    color: #1a0f00;
+}
+
+/* cute floating bats */
+.bat {
+    position: absolute;
+    width: 18px;
+    height: 8px;
+    background: currentColor;
+    color: #ff8a00;
+    border-radius: 4px 4px 2px 2px;
+    opacity: .8;
+    transform-origin: center;
+    animation: batFly 8s linear infinite;
+}
+.bat::before,
+.bat::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-bottom-color: transparent;
+    border-right-color: transparent;
+    border-radius: 50% 0 0 0;
+}
+.bat::before { left: -10px; transform: rotate(-25deg); }
+.bat::after { right: -10px; transform: scaleX(-1) rotate(-25deg); }
+
+@keyframes batFly {
+    0% { transform: translateX(-10%) translateY(0) rotate(0deg); }
+    25% { transform: translateX(15%) translateY(-6px) rotate(-5deg); }
+    50% { transform: translateX(40%) translateY(2px) rotate(3deg); }
+    75% { transform: translateX(70%) translateY(-4px) rotate(-3deg); }
+    100% { transform: translateX(110%) translateY(0) rotate(0deg); }
+}
+
+/* bat variants */
+.bat-sm { transform: scale(.85); }
+.bat-lg { transform: scale(1.3); }
+.bat-fast { animation-duration: 6s; }
+.bat-slow { animation-duration: 12s; }
+.bat.alt { color: #ff4d00; }
+/* simple color variants */
+.bat.orange { color: #ff8a00; }
+.bat.amber { color: #ffb300; }
+.bat.tanger { color: #ff6a00; }
+.bat.red { color: #ff4d00; }
+
+/* Top bats strip inside halloween section */
+.halloween-top-bats {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    pointer-events: none;
+    overflow: visible;
+}
+
+/* tone link color inside dark section */
+.halloween-section a { color: #ff9000; }
+
+/* Seamless bats marquee (placed below section title) */
+.halloween-bats-marquee {
+    position: relative;
+    overflow: hidden;
+    height: 48px;
+    margin-top: 6px;
+    pointer-events: none;
+}
+.hbm-track {
+    display: flex;
+    width: 200%;
+    animation: batsScroll 24s linear infinite;
+}
+.hbm-segment {
+    width: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 8px;
+}
+@keyframes batsScroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+/* Inline bats (no x-translation reset) */
+.bat--inline { position: relative; animation: none !important; margin: 0 18px; }
+.bat--bob { animation: batBob 2.8s ease-in-out infinite; }
+@keyframes batBob {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-3px) scale(1.02); }
+}
+
+/* Randomized bat swarm (top and bottom) */
+.halloween-swarm {
+    position: relative;
+    overflow: hidden;
+    height: 56px;
+    pointer-events: none;
+}
+
+/* Use with <span class="bat bat-fly">; override default .bat animation */
+.bat-fly {
+    position: absolute;
+    left: -12%;
+    animation: batDrift var(--speed, 12s) linear infinite;
+    animation-delay: var(--delay, 0s);
+}
+/* Bottom swarm uses same direction by default (left-to-right) */
+
+/* Reusable reverse variant for any swarm */
+.bat-reverse { right: -12%; left: auto !important; animation-direction: reverse !important; }
+/* Reusable normal-direction override for bottom swarm */
+.bat-normal { left: -12% !important; right: auto !important; animation-direction: normal !important; }
+
+@keyframes batDrift {
+    0%   { left: calc(var(--startLeftPct, -12%) + 0%);  transform: translateY(0) rotate(calc(var(--rot, 6) * 0.0deg)); }
+    25%  { transform: translateY(calc(var(--ampY, 10px) * 0.6)) rotate(calc(var(--rot, 6) * 0.3deg)); }
+    50%  { transform: translateY(calc(var(--ampY, 10px) * -0.5)) rotate(calc(var(--rot, 6) * -0.2deg)); }
+    75%  { transform: translateY(calc(var(--ampY, 10px) * 0.4)) rotate(calc(var(--rot, 6) * 0.15deg)); }
+    100% { left: calc(var(--startLeftPct, -12%) + 150%); transform: translateY(0) rotate(0deg); }
+}
+/* Alternate drift paths */
+.bat-path-b { animation-name: batDriftB !important; }
+.bat-path-c { animation-name: batDriftC !important; }
+.bat-path-d { animation-name: batDriftD !important; }
+.bat-path-e { animation-name: batDriftE !important; }
+
+@keyframes batDriftB {
+    0% { left: calc(var(--startLeftPct, -12%) + 0%); transform: translateY(0) rotate(calc(var(--rot, 8) * 0.0deg)); }
+    25% { transform: translateY(calc(var(--ampY, 12px) * -0.5)) rotate(calc(var(--rot, 8) * -0.2deg)); }
+    50% { transform: translateY(calc(var(--ampY, 12px) * 0.4)) rotate(calc(var(--rot, 8) * 0.1deg)); }
+    75% { transform: translateY(calc(var(--ampY, 12px) * -0.6)) rotate(calc(var(--rot, 8) * -0.25deg)); }
+    100% { left: calc(var(--startLeftPct, -12%) + 150%); transform: translateY(0) rotate(0deg); }
+}
+@keyframes batDriftC {
+    0% { left: calc(var(--startLeftPct, -12%) + 0%); transform: translateY(calc(var(--ampY, 10px) * 0.1)) rotate(calc(var(--rot, 6) * 0.05deg)); }
+    25% { transform: translateY(calc(var(--ampY, 10px) * 0.8)) rotate(calc(var(--rot, 6) * 0.25deg)); }
+    50% { transform: translateY(calc(var(--ampY, 10px) * -0.6)) rotate(calc(var(--rot, 6) * -0.15deg)); }
+    75% { transform: translateY(calc(var(--ampY, 10px) * 0.5)) rotate(calc(var(--rot, 6) * 0.15deg)); }
+    100% { left: calc(var(--startLeftPct, -12%) + 150%); transform: translateY(0) rotate(0deg); }
+}
+@keyframes batDriftD {
+    0% { left: calc(var(--startLeftPct, -12%) + 0%); transform: translateY(calc(var(--ampY, 14px) * -0.2)) rotate(calc(var(--rot, 9) * -0.1deg)); }
+    25% { transform: translateY(calc(var(--ampY, 14px) * 0.4)) rotate(calc(var(--rot, 9) * 0.15deg)); }
+    50% { transform: translateY(calc(var(--ampY, 14px) * -0.8)) rotate(calc(var(--rot, 9) * -0.25deg)); }
+    75% { transform: translateY(calc(var(--ampY, 14px) * 0.3)) rotate(calc(var(--rot, 9) * 0.2deg)); }
+    100% { left: calc(var(--startLeftPct, -12%) + 150%); transform: translateY(0) rotate(0deg); }
+}
+@keyframes batDriftE {
+    0% { left: calc(var(--startLeftPct, -12%) + 0%); transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(calc(var(--ampY, 11px) * -0.4)) rotate(calc(var(--rot, 7) * -0.1deg)); }
+    50% { transform: translateY(calc(var(--ampY, 11px) * 0.6)) rotate(calc(var(--rot, 7) * 0.2deg)); }
+    75% { transform: translateY(calc(var(--ampY, 11px) * -0.5)) rotate(calc(var(--rot, 7) * -0.15deg)); }
+    100% { left: calc(var(--startLeftPct, -12%) + 150%); transform: translateY(0) rotate(0deg); }
+}

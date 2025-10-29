@@ -34,7 +34,7 @@
                         <!-- Price -->
                         <div class="elis_rty mb-2">
                             {% if band_discount_percent and band_of_the_week and product.id == band_of_the_week.id %}
-                                <span class="fw-medium text-decoration-line-through fs-xs me-1">{{ product.price }} лв.</span>
+                                <span class="fw-medium text-decoration-line-through fs-xs">{{ product.price }} лв.</span>
                                 <span class="fw-semibold text-danger fs-xs">{{ band_price }} лв.</span>
                             {% elif product.sale_price and product.sale_price < product.price %}
                                 <span class="fw-medium text-decoration-line-through fs-xs me-1">{{ product.price }} лв.</span>

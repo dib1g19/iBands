@@ -43,7 +43,7 @@
                                 </div>
                                 <div class="promo-banner-text">
                                     <div class="promo-banner-title fw-semibold">{{ product.promo_label_override|default:"Промоция" }}</div>
-                                    <div class="promo-banner-subtitle">Купи {{ product.promo_buy_qty }} вземи {{ product.promo_get_qty }} безплатно</div>
+                                    <div class="promo-banner-subtitle">{% promo_label product as pl %}{{ pl }}</div>
                                 </div>
                             </div>
                         {% endif %}

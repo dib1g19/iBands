@@ -350,7 +350,7 @@ class Product(models.Model):
             return ""
         if self.promo_label_override:
             return self.promo_label_override
-        return f"Купи {int(self.promo_buy_qty)} вземи {int(self.promo_get_qty)} безплатно"
+        return f"Купи {int(self.promo_buy_qty)} вземи {int(self.promo_buy_qty) + int(self.promo_get_qty)}"
 
     def compute_promo_free_units(self, qty: int) -> int:
         try:

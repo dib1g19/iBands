@@ -1500,6 +1500,9 @@ def product_detail(request, category_path, product_slug):
     has_length_variant = any(
         v.variant_type == "length" for v in product.variants.all()
     )
+    has_specification_variant = any(
+        v.variant_type == "specification" for v in product.variants.all()
+    )
     # Total stock across SKUs (fallback to product.stock if no items yet)
     try:
         total_stock = max([max(0, int(getattr(it, "quantity", 0))) for it in sku_items] or [int(product.stock or 0)])
@@ -1522,6 +1525,7 @@ def product_detail(request, category_path, product_slug):
         "user_wishlist_products": get_user_wishlist_products(request),
         "breadcrumbs": breadcrumbs,
         "has_length_variant": has_length_variant,
+        "has_specification_variant": has_specification_variant,
         "sizes": size_list,
         "device_models": model_list,
         "sku_data_json": json.dumps(sku_data),

@@ -125,9 +125,11 @@
                     <li class="nav-item" role="presentation">
                         <a class="nav-link active" id="description-tab" href="#description" data-bs-toggle="tab" role="tab" aria-controls="description" aria-selected="true">Описание</a>
                     </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" href="#information" id="information-tab" data-bs-toggle="tab" role="tab" aria-controls="information" aria-selected="false">Характеристики</a>
-                    </li>
+                    {% if has_specification_variant %}
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" href="#information" id="information-tab" data-bs-toggle="tab" role="tab" aria-controls="information" aria-selected="false">Характеристики</a>
+                        </li>
+                    {% endif %}
                     {% if has_length_variant %}
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" href="#length" id="length-tab" data-bs-toggle="tab" role="tab" aria-controls="length" aria-selected="false">Дължина</a>
@@ -142,24 +144,26 @@
                         </div>
                     </div>
                     <!-- Specification Tab -->
-                    <div class="tab-pane fade" id="information" role="tabpanel" aria-labelledby="information-tab">
-                        <div class="additionals">
-                            <table class="table">
-                                <tbody>
-                                    {% for variant in product.variants.all %}
-                                        {% if variant.variant_type == 'specification' %}
-                                            {% for s in variant.variant_items.all %}
-                                                <tr>
-                                                    <th class="fw-medium text-dark">{{ s.title }}</th>
-                                                    <td>{{ s.content }}</td>
-                                                </tr>
-                                            {% endfor %}
-                                        {% endif %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                    {% if has_specification_variant %}
+                        <div class="tab-pane fade" id="information" role="tabpanel" aria-labelledby="information-tab">
+                            <div class="additionals">
+                                <table class="table">
+                                    <tbody>
+                                        {% for variant in product.variants.all %}
+                                            {% if variant.variant_type == 'specification' %}
+                                                {% for s in variant.variant_items.all %}
+                                                    <tr>
+                                                        <th class="fw-medium text-dark">{{ s.title }}</th>
+                                                        <td>{{ s.content }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
+                    {% endif %}
                     <!-- Length Tab -->
                     <div class="tab-pane fade" id="length" role="tabpanel" aria-labelledby="length-tab">
                         <div class="additionals">

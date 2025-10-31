@@ -16,6 +16,8 @@ class Wishlist(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="wishlist"
     )
+    # Anonymous session identifier (mirrors cart_id usage for Cart)
+    wishlist_id = models.CharField(max_length=1000, null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "Wishlist"

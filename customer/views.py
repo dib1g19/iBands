@@ -80,9 +80,16 @@ def order_detail(request, order_id):
     return render(request, "customer/order_detail.html", context)
 
 
-@login_required
 def wishlist(request):
-    wishlist_list = customer_models.Wishlist.objects.filter(user=request.user).select_related(
+    # Show wishlist for both authenticated and anonymous users
+    if request.user.is_authenticated:
+        wishlist_qs = customer_models.Wishlist.objects.filter(user=request.user)
+    else:
+        # Use session cart_id as anonymous wishlist identifier; do not create if not present
+        cart_id = request.session.get("cart_id")
+        wishlist_qs = customer_models.Wishlist.objects.filter(wishlist_id=cart_id)
+
+    wishlist_list = wishlist_qs.select_related(
         "product__category", "product__category__parent", "product__category__parent__parent"
     )
     wishlist = paginate_queryset(request, wishlist_list, 6)
@@ -102,8 +109,17 @@ def wishlist(request):
 
 
 def toggle_wishlist(request, id):
+    # Allow guests to toggle wishlist by binding to session cart_id
+    product = store_models.Product.objects.get(id=id)
+
+    # Ensure we have a session identifier similar to cart
+    cart_id = request.session.get("cart_id")
+    if not cart_id:
+        import random
+        cart_id = "".join(str(random.randint(0, 9)) for _ in range(10))
+        request.session["cart_id"] = cart_id
+
     if request.user.is_authenticated:
-        product = store_models.Product.objects.get(id=id)
         wishlist_item, created = customer_models.Wishlist.objects.get_or_create(
             product=product, user=request.user
         )
@@ -120,6 +136,9 @@ def toggle_wishlist(request, id):
                 }
             )
         else:
+            # Optionally mark current session id for consistency (useful for header count if session is used elsewhere)
+            wishlist_item.wishlist_id = cart_id
+            wishlist_item.save(update_fields=["wishlist_id"])
             total_wishlist_items = customer_models.Wishlist.objects.filter(
                 user=request.user
             ).count()
@@ -131,17 +150,46 @@ def toggle_wishlist(request, id):
                 }
             )
     else:
-        return JsonResponse(
-            {"status": "warning", "message": "Трябва да влезнете в профила си"}
+        wishlist_item, created = customer_models.Wishlist.objects.get_or_create(
+            product=product, wishlist_id=cart_id
         )
+        if not created:
+            wishlist_item.delete()
+            total_wishlist_items = customer_models.Wishlist.objects.filter(
+                wishlist_id=cart_id
+            ).count()
+            return JsonResponse(
+                {
+                    "status": "removed",
+                    "message": "Продуктът е премахнат от любими",
+                    "total_wishlist_items": total_wishlist_items,
+                }
+            )
+        else:
+            total_wishlist_items = customer_models.Wishlist.objects.filter(
+                wishlist_id=cart_id
+            ).count()
+            return JsonResponse(
+                {
+                    "status": "added",
+                    "message": "Продуктът е добавен в любими",
+                    "total_wishlist_items": total_wishlist_items,
+                }
+            )
 
 
-@login_required
 def remove_from_wishlist(request, id):
-    wishlist = customer_models.Wishlist.objects.get(user=request.user, id=id)
-    wishlist.delete()
-
-    messages.success(request, "Продуктът е премахнат от любими.")
+    # Remove wishlist item for both authenticated and anonymous users
+    try:
+        if request.user.is_authenticated:
+            wishlist = customer_models.Wishlist.objects.get(user=request.user, id=id)
+        else:
+            cart_id = request.session.get("cart_id")
+            wishlist = customer_models.Wishlist.objects.get(wishlist_id=cart_id, id=id)
+        wishlist.delete()
+        messages.success(request, "Продуктът е премахнат от любими.")
+    except customer_models.Wishlist.DoesNotExist:
+        messages.warning(request, "Артикулът не беше намерен в любими.")
     return redirect("customer:wishlist")
 
 

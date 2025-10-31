@@ -7,6 +7,7 @@ from django.urls import reverse
 from userauths import models as userauths_models
 from userauths import forms as userauths_forms
 from store import models as store_models
+from customer import models as customer_models
 from decimal import Decimal
 from store.emails import send_welcome_email
 
@@ -161,6 +162,24 @@ def login_view(request):
                                     item.price = unit_price
                                     item.sub_total = Decimal(str(unit_price or 0)) * Decimal(str(item.qty or 0))
                                     item.save()
+                            # Merge wishlist: attach any anonymous session wishlist to the authenticated user
+                            try:
+                                # Attach session wishlist rows to this user
+                                customer_models.Wishlist.objects.filter(wishlist_id=current_cart_id).update(user=user_authenticate)
+                                # Deduplicate same product for this user (keep a single row per product)
+                                user_wishlist = (
+                                    customer_models.Wishlist.objects
+                                    .filter(user=user_authenticate)
+                                    .order_by("product_id", "id")
+                                )
+                                seen = set()
+                                for wl in user_wishlist:
+                                    if wl.product_id in seen:
+                                        wl.delete()
+                                    else:
+                                        seen.add(wl.product_id)
+                            except Exception:
+                                pass
                         except Exception:
                             # Don't block login on cart merge issues
                             pass

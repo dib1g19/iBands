@@ -2,7 +2,11 @@
     <div class="d-block border p-2 rounded">
         <div class="py-2 text-center">
             <div class="rounded-circle p-1 border d-inline-flex mx-auto mb-2">
-                <img src="{{ request.user.profile.image.url }}" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;" alt="Профилна снимка на {{ request.user.profile.full_name }}" />
+                {% if request.user.is_authenticated and request.user.profile.image %}
+                    <img src="{{ request.user.profile.image.url }}" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;" alt="Профилна снимка на {{ request.user.profile.full_name }}" />
+                {% else %}
+                    <img src="https://ibandsbg.s3.amazonaws.com/media/default/default-user.avif" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;" alt="Профилна снимка по подразбиране" />
+                {% endif %}
             </div>
             <div>
                 <h4 class="fs-md mb-0">{{ request.user.profile.full_name }}</h4>

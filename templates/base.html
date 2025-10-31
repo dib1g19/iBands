@@ -183,10 +183,10 @@
                                 <li>
                                     <a href="{% url 'customer:dashboard' %}"><i class="fas fa-user"></i></a>
                                 </li>
-                                <li>
-                                    <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count }}</span></a>
-                                </li>
                             {% endif %}
+                            <li>
+                                <a href="{% url 'customer:wishlist' %}"><i class="fas fa-heart"></i><span class="dn-counter total_wishlist_items">{{ wishlist_count }}</span></a>
+                            </li>
                             <li>
                                 <a href="{% url 'store:cart' %}"><i class="fas fa-shopping-cart"></i><span class="dn-counter total_cart_items">{{ total_cart_items }}</span></a>
                             </li>

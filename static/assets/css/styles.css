@@ -2366,3 +2366,6 @@ input[type="number"] {
 @media (max-width: 409.98px) {
     .ann-hide-under-410 { display: none !important; }
 }
+@media (min-width: 992px) and (max-width: 1419.98px) {
+    .hide-under-1420 { display: none !important; }
+}

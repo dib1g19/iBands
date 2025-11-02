@@ -1549,7 +1549,9 @@ def product_detail(request, category_path, product_slug):
                 devices_qs = g.device_models.all().order_by("sort_order", "name")
             except Exception:
                 devices_qs = g.device_models.all()
-            groups_for_ui.append({"group": g, "devices": list(devices_qs)})
+            devices_list = list(devices_qs)
+            if devices_list:
+                groups_for_ui.append({"group": g, "devices": devices_list})
         context["mystery_groups"] = groups_for_ui
     return render(request, "store/product_detail.html", context)
 

@@ -13,11 +13,33 @@
     <!-- Hero Section -->
     <section class="pb-0">
         <div class="container-fluid p-0">
-            <div class="position-relative">
-                <img class="img-fluid w-100 hero" src="{% static 'assets/img/cover.avif' %}" alt="Hero Cover" />
-                <div class="hero-cta position-absolute text-center w-100">
-                    <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
+            <div id="homeHeroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <div class="position-relative">
+                            <img class="d-block w-100 hero" src="{% static 'assets/img/cover.avif' %}" alt="Hero Cover" />
+                            <div class="hero-cta position-absolute text-center w-100">
+                                <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="position-relative">
+                            <img class="d-block w-100 hero" src="{% static 'assets/img/mystery-box.avif' %}" alt="Mystery Box" onerror="this.onerror=null;this.src='{% static 'assets/img/wheel-cover.avif' %}';" />
+                            <div class="hero-cta position-absolute text-center w-100">
+                                <a href="{% url 'store:category' 'mystery-box' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Купи Mystery Box</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="prev" aria-label="Предишен слайд">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#homeHeroCarousel" data-bs-slide="next" aria-label="Следващ слайд">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
             </div>
         </div>
     </section>

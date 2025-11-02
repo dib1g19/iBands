@@ -96,27 +96,29 @@
                         </div>
                     {% endif %}
                     {% if product.is_mystery_box %}
-                        <div class="mb-3">
-                            <p class="d-flex align-items-center mb-0 text-dark fw-medium">Избери устройства (можеш да избереш повече от едно):</p>
-                            <div class="pt-2">
-                                {% for grp in mystery_groups %}
-                                    <div class="mb-2">
-                                        <div class="fw-semibold text-dark">{{ grp.group.name }}</div>
-                                        <div class="pt-1">
-                                            {% for dm in grp.devices %}
-                                                <div class="form-check mb-1">
-                                                    <input class="form-check-input" type="checkbox" name="mystery_devices[]" id="mystery-{{ dm.id }}" value="{{ dm.name }}" />
-                                                    <label class="form-check-label" for="mystery-{{ dm.id }}">{{ dm.name }}</label>
-                                                </div>
-                                            {% endfor %}
+                        {% if mystery_groups %}
+                            <div class="mb-3">
+                                <p class="d-flex align-items-center mb-0 text-dark fw-medium">Предпочитания за устройства (по избор):</p>
+                                <div class="pt-2">
+                                    {% for grp in mystery_groups %}
+                                        <div class="mb-2">
+                                            <div class="fw-semibold text-dark">{{ grp.group.name }}</div>
+                                            <div class="pt-1">
+                                                {% for dm in grp.devices %}
+                                                    <div class="form-check mb-1">
+                                                        <input class="form-check-input" type="checkbox" name="mystery_devices[]" id="mystery-{{ dm.id }}" value="{{ dm.name }}" />
+                                                        <label class="form-check-label" for="mystery-{{ dm.id }}">{{ dm.name }}</label>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
                                         </div>
-                                    </div>
-                                {% endfor %}
+                                    {% endfor %}
+                                </div>
                             </div>
-                        </div>
+                        {% endif %}
                         <div class="mb-3">
-                            <label for="mystery-note" class="d-flex align-items-center mb-1 text-dark fw-medium">Бележка към мистери бокс (по избор):</label>
-                            <textarea class="form-control" id="mystery-note" rows="3" placeholder="Напиши пожелание, предпочитания или изненада"></textarea>
+                            <label for="mystery-note" class="d-flex align-items-center mb-1 text-dark fw-medium">Бележка:</label>
+                            <textarea class="form-control" id="mystery-note" rows="3" placeholder="Добави бележка ако имаш допълнителни предпочитания"></textarea>
                         </div>
                     {% endif %}
                     <div class="d-flex gap-3 align-items-center">

@@ -1538,7 +1538,7 @@ def product_detail(request, category_path, product_slug):
                 product.model_groups
                 .all()
                 .prefetch_related("device_models")
-                .order_by("name")
+                .order_by("sort_order", "name")
             )
         except Exception:
             product_groups = []

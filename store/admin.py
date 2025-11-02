@@ -469,8 +469,8 @@ class SizeGroupAdmin(iBandsModelAdmin):
 
 @admin.register(store_models.ModelGroup)
 class ModelGroupAdmin(iBandsModelAdmin):
-    list_display = ["name", "generate_as_single_sku"]
-    list_editable = ["generate_as_single_sku"]
+    list_display = ["name", "sort_order", "generate_as_single_sku"]
+    list_editable = ["sort_order", "generate_as_single_sku"]
     search_fields = ["name"]
     filter_horizontal = ["device_models"]
 

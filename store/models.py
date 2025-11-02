@@ -698,9 +698,10 @@ class ModelGroup(models.Model):
         default=False,
         help_text="When true, SKU generation will create one SKU per size and attach all models in this group to it."
     )
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["sort_order", "name"]
         verbose_name = "Model group"
         verbose_name_plural = "Model groups"
 

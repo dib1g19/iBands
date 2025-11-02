@@ -14,6 +14,17 @@
                     <span class="fw-bold">Модел:</span> {{ item.model }}
                 </p>
             {% endif %}
+            {% if item.note %}
+                <p class="mb-0"><span class="fw-bold">Бележка:</span> {{ item.note }}</p>
+            {% endif %}
+            {% if item.mystery_device_models %}
+                <p class="mb-0">
+                    <span class="fw-bold">Устройства:</span>
+                    {% for d in item.mystery_device_models %}
+                        {{ d }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+            {% endif %}
         </div>
     </div>
 </div>

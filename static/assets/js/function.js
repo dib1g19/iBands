@@ -36,16 +36,23 @@ $(document).ready(function () {
         const size = $("input[name='size']:checked").val();
         const model = $("input[name='model']:checked").val();
         const cart_id = generateCartId();
+        // Mystery box extras (if present on page)
+        const note = $("#mystery-note").length ? $("#mystery-note").val() : undefined;
+        const selectedDevices = $("input[name='mystery_devices[]']:checked, input[name='mystery_devices']:checked").map(function () { return $(this).val(); }).get();
+
+        const payload = {
+            id: id,
+            qty: qty,
+            size: size,
+            model: model,
+            cart_id: cart_id,
+        };
+        if (note) payload.note = note;
+        if (selectedDevices && selectedDevices.length) payload.mystery_devices = selectedDevices;
 
         $.ajax({
             url: "/add-to-cart/",
-            data: {
-                id: id,
-                qty: qty,
-                size: size,
-                model: model,
-                cart_id: cart_id,
-            },
+            data: payload,
             success: function (response) {
                 console.log(response);
                 Toast.fire({

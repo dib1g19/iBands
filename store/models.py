@@ -227,6 +227,8 @@ class Product(models.Model):
     featured = models.BooleanField(default=False, verbose_name="Marketplace Featured")
     sku = models.CharField(max_length=50, unique=True, verbose_name="SKU")
     slug = models.SlugField(null=True, blank=True)
+    # Special product type that allows custom note and multi-device selection
+    is_mystery_box = models.BooleanField(default=False, db_index=True)
     date = models.DateTimeField(default=timezone.now)
     variants = models.ManyToManyField("Variant", blank=True, related_name="products")
     colors = models.ManyToManyField("Color", blank=True, related_name="products")
@@ -433,6 +435,9 @@ class Cart(models.Model):
     model = models.CharField(max_length=100, null=True, blank=True)
     cart_id = models.CharField(max_length=1000, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
+    # Optional customer note and selected devices for mystery box lines
+    note = models.TextField(null=True, blank=True)
+    mystery_device_models = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.cart_id} - {self.product.name}"
@@ -529,6 +534,9 @@ class OrderItem(models.Model):
     size = models.CharField(max_length=100, null=True, blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     sub_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    # Snapshot of mystery box customizations
+    note = models.TextField(null=True, blank=True)
+    mystery_device_models = models.JSONField(null=True, blank=True)
 
     def order_id(self):
         return f"{self.order.order_id}"

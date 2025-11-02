@@ -37,7 +37,7 @@ class ProductAdmin(iBandsModelAdmin):
 
     fieldsets = (
         (None, {
-            "fields": ("category", "sku", "name", "slug", "image", "description", "price", "sale_price", "stock", "shipping", "on_sale", "featured", "status", "date")
+            "fields": ("category", "sku", "name", "slug", "image", "description", "price", "sale_price", "stock", "shipping", "on_sale", "featured", "is_mystery_box", "status", "date")
         }),
         ("Promotion", {
             "fields": ("promo_type", "promo_buy_qty", "promo_get_qty", "promo_label_override"),
@@ -220,7 +220,7 @@ class CartAdmin(iBandsModelAdmin):
 
 class OrderItemInline(admin.TabularInline):
     model = store_models.OrderItem
-    fields = ["product_path", "model", "size", "qty", "price", "sub_total"]
+    fields = ["product_path", "model", "size", "qty", "price", "sub_total", "note"]
     readonly_fields = fields
     extra = 0
 
@@ -294,7 +294,7 @@ class OrderAdmin(iBandsModelAdmin):
 
 @admin.register(store_models.OrderItem)
 class OrderItemAdmin(iBandsModelAdmin):
-    list_display = ["order", "product_path", "model", "size" ,"qty", "price", "sub_total"]
+    list_display = ["order", "product_path", "model", "size" ,"qty", "price", "sub_total", "note"]
     list_filter = ["order__date"]
     search_fields = ["order__order_id", "product__name"]
     list_select_related = ["order", "product__category__parent__parent"]

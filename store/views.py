@@ -1531,6 +1531,26 @@ def product_detail(request, category_path, product_slug):
         "sku_data_json": json.dumps(sku_data),
         "total_stock": total_stock,
     }
+    # For mystery box, provide only the product's model groups as-is
+    if getattr(product, "is_mystery_box", False):
+        try:
+            product_groups = (
+                product.model_groups
+                .all()
+                .prefetch_related("device_models")
+                .order_by("name")
+            )
+        except Exception:
+            product_groups = []
+        groups_for_ui = []
+        for g in product_groups:
+            # Ensure a stable, human-friendly order within each group
+            try:
+                devices_qs = g.device_models.all().order_by("sort_order", "name")
+            except Exception:
+                devices_qs = g.device_models.all()
+            groups_for_ui.append({"group": g, "devices": list(devices_qs)})
+        context["mystery_groups"] = groups_for_ui
     return render(request, "store/product_detail.html", context)
 
 
@@ -1542,6 +1562,9 @@ def add_to_cart(request):
     size = request.GET.get("size")    # size name
     cart_id = request.GET.get("cart_id")
     item_id = request.GET.get("item_id")
+    note = request.GET.get("note")
+    # Support both mystery_devices and mystery_devices[] param keys
+    devices_list = request.GET.getlist("mystery_devices") or request.GET.getlist("mystery_devices[]")
     request.session["cart_id"] = cart_id
 
     # If item_id is provided, update cart item directly (from cart page +/- buttons)
@@ -1620,6 +1643,8 @@ def add_to_cart(request):
     except store_models.Product.DoesNotExist:
         return JsonResponse({"error": "Product not found"}, status=404)
 
+    # For mystery box, device selection is optional
+
     # Check if product has any SKU items at all
     has_any_skus = store_models.ProductItem.objects.filter(product=product).exists()
 
@@ -1674,6 +1699,9 @@ def add_to_cart(request):
         model=model,
         size=size,
     ).first()
+    # Do not merge mystery box lines (custom selections should be separate)
+    if getattr(product, "is_mystery_box", False):
+        cart_item = None
 
     if cart_item:
         new_qty = cart_item.qty + int(qty)
@@ -1745,6 +1773,14 @@ def add_to_cart(request):
         cart.sub_total = Decimal(unit_price) * Decimal(paid_units)
         cart.user = request.user if request.user.is_authenticated else None
         cart.cart_id = cart_id
+        # Attach mystery box customizations when applicable
+        if getattr(product, "is_mystery_box", False):
+            cart.note = note
+            # Store names for easy rendering; ensure it's a list of strings
+            try:
+                cart.mystery_device_models = [str(x) for x in (devices_list or [])]
+            except Exception:
+                cart.mystery_device_models = devices_list or []
         cart.save()
         # After adding a new line, normalize promos across product variants in this cart
         try:
@@ -1910,6 +1946,8 @@ def create_order(request):
             size=i.size,
             price=line_price,
             sub_total=sub_total_snapshot,
+            note=getattr(i, "note", None),
+            mystery_device_models=getattr(i, "mystery_device_models", None),
         )
 
     return redirect("store:checkout", order.order_id)

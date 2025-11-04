@@ -27,7 +27,7 @@
 - Име: {{ order.address.name }}
 - Телефон: {{ order.address.phone }}
 - Начин на доставка: {{ order.address.get_delivery_method_display }}
-- Град: {{ order.address.city }}
+- Населено място: {{ order.address.city }}
 {% if order.address.office_name %}
 - Офис: {{ order.address.office_name }}{% if order.address.office_code %} ({{ order.address.office_code }}){% endif %}
 {% else %}

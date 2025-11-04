@@ -2,6 +2,9 @@
     <input type="text" name="name" class="form-control mb-2" placeholder="Име и фамилия" value="{{ address.name|default:'' }}" required />
 </div>
 <div class="form-group mb-2">
+    <input type="text" name="face" class="form-control mb-2" placeholder="Лице за контакт (за юридически лица)" value="{{ address.face|default:'' }}" />
+</div>
+<div class="form-group mb-2">
     <input type="text" name="phone" class="form-control mb-2" placeholder="Телефон" value="{{ address.phone|default:'' }}" required />
 </div>
 <div class="form-group mb-2">
@@ -20,7 +23,7 @@
     <input type="text" name="city" class="form-control mb-2" placeholder="Град" value="{{ address.city|default:'' }}" required />
 </div>
 <div class="form-group mb-2">
-    <input type="text" name="address" class="form-control mb-2" placeholder="Адрес" value="{{ address.address|default:'' }}" required />
+    <input type="text" name="address" class="form-control mb-2" placeholder="Адрес" value="{{ address.address|default:'' }}" />
 </div>
 <div class="form-group mb-2" id="econt-office-fields" style="display: none;">
     <input type="text" name="office_name" class="form-control mb-2" placeholder="Офис на Еконт/Спиди" value="{{ address.office_name|default:'' }}" />
@@ -29,15 +32,21 @@
 document.addEventListener('DOMContentLoaded', function () {
     function toggleFields() {
         var method = document.getElementById('delivery-method-select').value;
-        var addressField = document.querySelector('[name="address"]').closest('.form-group');
+        var addressInputEl = document.querySelector('[name="address"]');
+        var addressField = addressInputEl.closest('.form-group');
         var officeField = document.getElementById('econt-office-fields');
+        var officeInputEl = officeField.querySelector('[name="office_name"]');
 
         if (method === 'econt_office' || method === 'speedy_office') {
             officeField.style.display = '';
             addressField.style.display = 'none';
+            if (officeInputEl) officeInputEl.required = true;
+            if (addressInputEl) addressInputEl.required = false;
         } else {
             officeField.style.display = 'none';
             addressField.style.display = '';
+            if (officeInputEl) officeInputEl.required = false;
+            if (addressInputEl) addressInputEl.required = true;
         }
     }
     document.getElementById('delivery-method-select').addEventListener('change', toggleFields);

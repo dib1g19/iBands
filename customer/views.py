@@ -245,6 +245,7 @@ def address_detail(request, id):
 
     if request.method == "POST":
         name = request.POST.get("name")
+        face = request.POST.get("face")
         phone = request.POST.get("phone")
         email = request.POST.get("email")
         delivery_method = request.POST.get("delivery_method")
@@ -253,6 +254,7 @@ def address_detail(request, id):
         office_name = request.POST.get("office_name")
 
         address.name = name
+        address.face = face
         address.phone = phone
         address.email = email
         address.delivery_method = delivery_method
@@ -287,6 +289,7 @@ def address_detail(request, id):
 def address_create(request):
     if request.method == "POST":
         name = request.POST.get("name")
+        face = request.POST.get("face")
         phone = request.POST.get("phone")
         email = request.POST.get("email")
         delivery_method = request.POST.get("delivery_method")
@@ -306,6 +309,7 @@ def address_create(request):
         customer_models.Address.objects.create(
             user=request.user,
             name=name,
+            face=face,
             phone=phone,
             email=email,
             delivery_method=delivery_method,

@@ -60,10 +60,11 @@ class SpeedyCODAmountTests(TestCase):
         self.client = Client()
 
     @patch("store.views.speedy_v1_create_shipment")
-    def test_send_order_to_speedy_uses_order_total_for_cod(self, mock_create_shipment):
+    def test_send_order_to_speedy_uses_goods_total_excluding_shipping_for_cod(self, mock_create_shipment):
         # Minimal product and order to generate a shipment
         product = store_models.Product.objects.create(name="Band X", price=Decimal("100.00"), sku="SKU-1")
-        order = store_models.Order.objects.create(sub_total=Decimal("100.00"), shipping=Decimal("0.00"), total=Decimal("100.00"), payment_method="cash_on_delivery")
+        # Shipping should not be part of COD amount; set shipping to 10 to verify
+        order = store_models.Order.objects.create(sub_total=Decimal("100.00"), shipping=Decimal("10.00"), total=Decimal("110.00"), payment_method="cash_on_delivery")
         address = customer_models.Address.objects.create(name="Test", phone="0888", email="t@e.com", delivery_method="speedy_office", city="София", office_code="1111", office_name="Офис")
         order.address = address
         order.save(update_fields=["address"])
@@ -82,7 +83,11 @@ class SpeedyCODAmountTests(TestCase):
         shipment_request = args[0]
         cod_block = ((shipment_request or {}).get("service") or {}).get("additionalServices", {}).get("cod")
         self.assertIsNotNone(cod_block)
-        self.assertEqual(cod_block.get("amount"), float(order.total))
+        self.assertEqual(cod_block.get("amount"), float(Decimal("100.00")))
+        # Also ensure top-level COD block (if present) matches the same amount
+        top_level_cod = (shipment_request or {}).get("cod")
+        if isinstance(top_level_cod, dict):
+            self.assertEqual(top_level_cod.get("amount"), float(Decimal("100.00")))
 
 
 class EmailPriceRenderingTests(TestCase):

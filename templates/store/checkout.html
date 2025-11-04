@@ -1137,6 +1137,44 @@
             modeAddress.addEventListener('change', function(){ if (this.checked) setSpeedyMode('address'); });
             modeOffice.addEventListener('change', function(){ if (this.checked) setSpeedyMode('office'); });
         }
+        // Prefill first 4 Speedy fields (name, contact person, phone, email) from user's primary address; fallback to order/user
+        try {
+            const speedyName = document.getElementById('speedy_name');
+            const speedyFace = document.getElementById('speedy_face');
+            const speedyPhone = document.getElementById('speedy_phone');
+            const speedyEmail = document.getElementById('speedy_email');
+
+            const prefill = {
+                // Primary address (Основен адрес)
+                p_name: "{{ primary_address.name|default_if_none:''|escapejs }}",
+                p_face: "{{ primary_address.face|default_if_none:''|escapejs }}",
+                p_phone: "{{ primary_address.phone|default_if_none:''|escapejs }}",
+                p_email: "{{ primary_address.email|default_if_none:''|escapejs }}",
+                // Order address (if already saved during checkout)
+                o_name: "{{ order.address.name|default_if_none:''|escapejs }}",
+                o_face: "{{ order.address.face|default_if_none:''|escapejs }}",
+                o_phone: "{{ order.address.phone|default_if_none:''|escapejs }}",
+                o_email: "{{ order.address.email|default_if_none:''|escapejs }}",
+                user_name: "{{ request.user.profile.full_name|default_if_none:''|escapejs }}",
+                user_phone: "{{ request.user.profile.mobile|default_if_none:''|escapejs }}",
+                user_email: "{{ request.user.email|default_if_none:''|escapejs }}",
+            };
+
+            const desired = {
+                name: (prefill.p_name || prefill.o_name || prefill.user_name || '').trim(),
+                face: (prefill.p_face || prefill.o_face || '').trim(),
+                phone: (prefill.p_phone || prefill.o_phone || prefill.user_phone || '').trim(),
+                email: (prefill.p_email || prefill.o_email || prefill.user_email || '').trim(),
+            };
+
+            let changed = false;
+            if (speedyName && !speedyName.value && desired.name) { speedyName.value = desired.name; changed = true; }
+            if (speedyFace && !speedyFace.value && desired.face) { speedyFace.value = desired.face; changed = true; }
+            if (speedyPhone && !speedyPhone.value && desired.phone) { speedyPhone.value = desired.phone; changed = true; }
+            if (speedyEmail && !speedyEmail.value && desired.email) { speedyEmail.value = desired.email; changed = true; }
+            // Save the prefilled data so backend knows them; city/address left blank to trigger quote later
+            if (changed) { autoSaveSpeedyAddress(); }
+        } catch (e) { /* no-op */ }
     })();
 </script>
 {% endblock %}

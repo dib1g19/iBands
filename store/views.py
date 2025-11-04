@@ -268,12 +268,19 @@ def send_order_to_speedy(order):
     except Exception:
         free_shipping = False
     payer_code = "SENDER" if free_shipping else ("RECIPIENT" if is_cod else "SENDER")
+    # Compute merchandise-only COD amount: sub_total minus saved discounts, never below zero
+    try:
+        goods_total = round2(Decimal(str(order.sub_total or 0)) - Decimal(str(order.saved or 0)))
+        if goods_total < Decimal("0.00"):
+            goods_total = Decimal("0.00")
+    except Exception:
+        goods_total = Decimal(str(order.sub_total or 0))
     shipment_request = {
         "language": "BG",
         "service": {
             "serviceId": service_id or getattr(settings, "SPEEDY_DEFAULT_SERVICE_ID", None),
             "additionalServices": {
-                **({"cod": {"amount": float(order.total), "processingType": "CASH"}} if is_cod else {}),
+                **(({"cod": {"amount": float(goods_total), "processingType": "CASH"}}) if is_cod else {}),
             },
             "autoAdjustPickupDate": True,
         },
@@ -335,7 +342,7 @@ def send_order_to_speedy(order):
         shipment_request["recipient"]["address"] = addr
     if order.payment_method == "cash_on_delivery":
         shipment_request["cod"] = {
-            "amount": float(order.sub_total),
+            "amount": float(goods_total),
             "currency": "BGN",
         }
 
@@ -717,8 +724,15 @@ def speedy_quote(request, order_id):
         # Add autoAdjustPickupDate so Speedy quotes next valid pickup even when office is closed
         service_block = {"autoAdjustPickupDate": True}
         if is_cod:
+            # Merchandise-only COD amount (exclude shipping): sub_total - saved
+            try:
+                goods_total = round2(Decimal(str(order.sub_total or 0)) - Decimal(str(order.saved or 0)))
+                if goods_total < Decimal("0.00"):
+                    goods_total = Decimal("0.00")
+            except Exception:
+                goods_total = Decimal(str(order.sub_total or 0))
             service_block["additionalServices"] = {
-                "cod": {"amount": float(order.total), "processingType": "CASH"}
+                "cod": {"amount": float(goods_total), "processingType": "CASH"}
             }
         calc_request["service"] = service_block
         calc_response = speedy_v1_calculate(calc_request)
@@ -2092,6 +2106,8 @@ def checkout(request, order_id):
         "stripe_public_key": settings.STRIPE_PUBLIC_KEY,
         "breadcrumbs": breadcrumbs,
         "econt_url": econt_url,
+        # Expose user's primary (main) address for checkout autofill
+        "primary_address": address,
     }
 
     return render(request, "store/checkout.html", context)

@@ -124,6 +124,9 @@
                             </div>
                             <div class="card-body">
                                 <h6 class="fs-sm mb-2"><strong>Име:</strong> {{ order.address.name }}</h6>
+                                {% if order.address.face %}
+                                <h6 class="fs-sm mb-2"><strong>Лице за контакт:</strong> {{ order.address.face }}</h6>
+                                {% endif %}
                                 <h6 class="fs-sm mb-2"><strong>Имейл:</strong> {{ order.address.email }}</h6>
                                 <h6 class="fs-sm mb-0"><strong>Телефон:</strong> {{ order.address.phone }}</h6>
                             </div>
@@ -135,8 +138,12 @@
                             </div>
                             <div class="card-body">
                                 <h6 class="fs-sm mb-2"><strong>Метод на доставка:</strong> {{ order.address.get_delivery_method_display }}</h6>
-                                <h6 class="fs-sm mb-2"><strong>Адрес:</strong> {{ order.address.address }}</h6>
-                                <h6 class="fs-sm mb-0"><strong>Град:</strong> {{ order.address.city }}</h6>
+                                <h6 class="fs-sm mb-2"><strong>Населено място:</strong> {{ order.address.city }}</h6>
+                                {% if order.address.office_name %}
+                                <h6 class="fs-sm mb-0"><strong>Офис:</strong> {{ order.address.office_name }}{% if order.address.office_code %} ({{ order.address.office_code }}){% endif %}</h6>
+                                {% else %}
+                                <h6 class="fs-sm mb-0"><strong>Адрес:</strong> {{ order.address.address }}</h6>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

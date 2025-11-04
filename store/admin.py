@@ -276,12 +276,14 @@ class OrderAdmin(iBandsModelAdmin):
                 address = "-"
             return format_html(
                 "<b>Име:</b> {}<br>"
+                "<b>Лице за контакт:</b> {}<br>"
                 "<b>Телефон:</b> {}<br>"
                 "<b>Email:</b> {}<br>"
                 "<b>Доставка:</b> {}<br>"
-                "<b>Град:</b> {}<br>"
+                "<b>Населено място:</b> {}<br>"
                 "<b>Адрес:</b> {}",
                 addr.name or "-",
+                addr.face or "-",
                 addr.phone or "-",
                 addr.email or "-",
                 addr.get_delivery_method_display() if hasattr(addr, "get_delivery_method_display") else addr.delivery_method or "-",

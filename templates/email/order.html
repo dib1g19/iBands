@@ -640,11 +640,16 @@
                                                                         <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
                                                                             <strong>Телефон:</strong> {{ order.address.phone }}
                                                                         </p>
+                                                                        {% if order.address.face %}
+                                                                        <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
+                                                                            <strong>Лице за контакт:</strong> {{ order.address.face }}
+                                                                        </p>
+                                                                        {% endif %}
                                                                         <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
                                                                             <strong>Начин на доставка:</strong> {{ order.address.get_delivery_method_display }}
                                                                         </p>
                                                                         <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
-                                                                            <strong>Град:</strong> {{ order.address.city }}
+                                                                            <strong>Населено място:</strong> {{ order.address.city }}
                                                                         </p>
                                                                         {% if order.address.office_name %}
                                                                             <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
@@ -658,11 +663,6 @@
                                                                         {% if order.address.post_code %}
                                                                             <p style="Margin:0 0 3px 0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
                                                                                 <strong>Пощенски код:</strong> {{ order.address.post_code }}
-                                                                            </p>
-                                                                        {% endif %}
-                                                                        {% if order.address.face %}
-                                                                            <p style="Margin:0;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;color:#000000;">
-                                                                                <strong>Лице за контакт:</strong> {{ order.address.face }}
                                                                             </p>
                                                                         {% endif %}
                                                                     </td>

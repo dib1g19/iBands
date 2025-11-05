@@ -401,6 +401,24 @@ class ColorAdmin(ColorSwatchMixin, iBandsModelAdmin):
     list_editable = ["name_en", "name_bg", "hex_code"]
 
 
+@admin.register(store_models.StoreThemeSettings)
+class StoreThemeSettingsAdmin(iBandsModelAdmin):
+    list_display = ["active_campaign"]
+    radio_fields = {"active_campaign": admin.VERTICAL}
+
+    def has_add_permission(self, request):
+        # Allow adding only if no settings row exists
+        exists = store_models.StoreThemeSettings.objects.exists()
+        return not exists
+
+    def changelist_view(self, request, extra_context=None):
+        # Redirect the changelist to the single settings object's change form for convenience
+        obj = store_models.StoreThemeSettings.objects.first()
+        if obj:
+            return HttpResponseRedirect(f"./{obj.pk}/change/")
+        return super().changelist_view(request, extra_context=extra_context)
+
+
 @admin.register(store_models.BandOfTheWeek)
 class BandOfTheWeekAdmin(iBandsModelAdmin):
     list_display = ["week_start", "product_path"]

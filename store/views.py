@@ -913,9 +913,17 @@ def index(request):
         achieved_thresholds = []
         achieved_details = []
 
-    # --- Halloween swarms (randomized) ---
-    halloween_bats_top = _generate_halloween_bats(5)
-    halloween_bats_bottom = _generate_halloween_bats(5)
+    # --- Seasonal decorations (Halloween swarms) ---
+    try:
+        active_campaign = store_models.StoreThemeSettings.get_solo().active_campaign
+    except Exception:
+        active_campaign = "default"
+    if active_campaign == "halloween":
+        halloween_bats_top = _generate_halloween_bats(5)
+        halloween_bats_bottom = _generate_halloween_bats(5)
+    else:
+        halloween_bats_top = []
+        halloween_bats_bottom = []
 
     context = {
         "products": products,
@@ -1276,9 +1284,17 @@ def sale(request):
         {"label": "Разпродажба", "url": ""},
     ]
 
-    # Halloween swarms for sale page
-    halloween_bats_top = _generate_halloween_bats(5)
-    halloween_bats_bottom = _generate_halloween_bats(5)
+    # Seasonal decorations (Halloween swarms) for sale page
+    try:
+        active_campaign = store_models.StoreThemeSettings.get_solo().active_campaign
+    except Exception:
+        active_campaign = "default"
+    if active_campaign == "halloween":
+        halloween_bats_top = _generate_halloween_bats(5)
+        halloween_bats_bottom = _generate_halloween_bats(5)
+    else:
+        halloween_bats_top = []
+        halloween_bats_bottom = []
 
     context = {
         "products": products,

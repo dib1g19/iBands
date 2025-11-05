@@ -827,3 +827,47 @@ class SpinMilestoneAward(models.Model):
 
     def __str__(self):
         return f"{self.user.email} → milestone {self.milestone.threshold_spins}"
+
+
+# -----------------------------
+# Store theme / campaign settings
+# -----------------------------
+class StoreThemeSettings(models.Model):
+    """Singleton-style settings to control the active seasonal campaign manually.
+
+    Admin sets the currently active campaign (e.g., default, halloween). Views and
+    templates read this value to conditionally render seasonal labels, icons and
+    decorative elements. Not date-driven by design (manual toggle only).
+    """
+
+    CAMPAIGN_DEFAULT = "default"
+    CAMPAIGN_HALLOWEEN = "halloween"
+    CAMPAIGN_BLACK_FRIDAY = "black-friday"  # reserved for future use
+
+    CAMPAIGN_CHOICES = (
+        (CAMPAIGN_DEFAULT, "Default"),
+        (CAMPAIGN_HALLOWEEN, "Halloween"),
+        (CAMPAIGN_BLACK_FRIDAY, "Black Friday"),
+    )
+
+    active_campaign = models.CharField(
+        max_length=32,
+        choices=CAMPAIGN_CHOICES,
+        default=CAMPAIGN_DEFAULT,
+        db_index=True,
+    )
+
+    class Meta:
+        verbose_name = "Store theme settings"
+        verbose_name_plural = "Store theme settings"
+
+    def __str__(self) -> str:
+        return f"Active: {self.active_campaign}"
+
+    @classmethod
+    def get_solo(cls):
+        """Return the single settings row, creating one with defaults if missing."""
+        obj = cls.objects.first()
+        if obj:
+            return obj
+        return cls.objects.create(active_campaign=cls.CAMPAIGN_DEFAULT)

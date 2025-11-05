@@ -55,16 +55,20 @@
         </div>
     </section>
 
-    <!-- Sale Products Section (Halloween themed) -->
-    <section class="halloween-section">
+    <!-- Sale Products Section (campaign aware) -->
+    <section class="{{ campaign.section_class|default:'' }}">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     <div class="position-relative text-center">
-                        <h2 class="ft-bold pt-3">Halloween Разпродажба</h2>
+                        <h2 class="ft-bold pt-3">{{ campaign.home_sale_title|default:'Намалени продукти' }}</h2>
+                        {% if campaign.key == 'halloween' %}
                         <div class="halloween-divider"></div>
+                        {% endif %}
                     </div>
-                    {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_top %}
+                    {% if campaign.key == 'halloween' %}
+                        {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_top %}
+                    {% endif %}
                 </div>
             </div>
 
@@ -76,11 +80,15 @@
                 {% endfor %}
             </div>
 
-            {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_bottom %}
+            {% if campaign.key == 'halloween' %}
+                {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_bottom %}
+            {% endif %}
 
             <div class="row justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+                    {% if campaign.key == 'halloween' %}
                     <div class="halloween-divider mb-2"></div>
+                    {% endif %}
                     <div class="position-relative text-center">
                         <a href="{% url 'store:sale' %}" class="btn btn-dark rounded">Виж всички намаления <i class="fas fa-arrow-right ms-2"></i></a>
                     </div>

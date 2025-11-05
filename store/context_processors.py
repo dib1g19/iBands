@@ -1,6 +1,6 @@
 from django.core.cache import cache
 from django.conf import settings
-from .models import Category, Cart, CategoryLink
+from .models import Category, Cart, CategoryLink, StoreThemeSettings
 from customer.models import Wishlist
 
 
@@ -71,3 +71,52 @@ def pixel_settings(request):
     return {
         "FACEBOOK_PIXEL_ID": getattr(settings, "FACEBOOK_PIXEL_ID", None),
     }
+
+
+def theme_settings(request):
+    """Expose the active seasonal campaign for manual admin-controlled theming.
+
+    Returns a small dict with label/icon/classes and titles used across templates.
+    """
+    try:
+        settings_obj = StoreThemeSettings.get_solo()
+        active_key = getattr(settings_obj, "active_campaign", StoreThemeSettings.CAMPAIGN_DEFAULT)
+    except Exception:
+        active_key = "default"
+
+    campaigns = {
+        "default": {
+            "key": "default",
+            "nav_label": "Разпродажба",
+            "nav_icon": "fas fa-tags",
+            "nav_icon_class": "",
+            "nav_text_class": "",
+            "section_class": "",
+            "home_sale_title": "Разпродажба",
+            "sale_title": "Разпродажба",
+        },
+        "halloween": {
+            "key": "halloween",
+            "nav_label": "Halloween",
+            "nav_icon": "fas fa-spider",
+            "nav_icon_class": "text-warning",
+            "nav_text_class": "text-warning",
+            "section_class": "halloween-section",
+            "home_sale_title": "Halloween Разпродажба",
+            "sale_title": "Halloween Разпродажба – Намалени продукти",
+        },
+        # Prepared for future toggle without code changes
+        "black-friday": {
+            "key": "black-friday",
+            "nav_label": "Black Friday",
+            "nav_icon": "fas fa-tag",
+            "nav_icon_class": "",
+            "nav_text_class": "",
+            "section_class": "",  # add a class and CSS later if needed
+            "home_sale_title": "Black Friday Разпродажба",
+            "sale_title": "Black Friday Разпродажба – Намалени продукти",
+        },
+    }
+
+    campaign = campaigns.get(active_key) or campaigns["default"]
+    return {"campaign": campaign}

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Halloween Разпродажба – Намалени продукти
+    {{ campaign.sale_title|default:'Намалени продукти' }}
 {% endblock %}
 
 {% block meta_description %}
@@ -11,11 +11,13 @@
 {% block content %}
     {% include 'partials/_breadcrumbs.html' %}
 
-    <section class="middle halloween-section">
+    <section class="middle {{ campaign.section_class|default:'' }}">
         <div class="container">
-            <h1 class="fw-bold text-center mb-2">Halloween Разпродажба</h1>
+            <h1 class="fw-bold text-center mb-2">{{ campaign.home_sale_title|default:'Намалени продукти' }}</h1>
+            {% if campaign.key == 'halloween' %}
             <div class="halloween-divider mb-2"></div>
             {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_top %}
+            {% endif %}
             <div class="row align-items-center rows-products" id="products-list">
                 {% for product in products %}
                     {% include 'partials/_product_list.html' with product=product %}
@@ -23,8 +25,10 @@
                     <p>В момента няма продукти в разпродажба.</p>
                 {% endfor %}
             </div>
+            {% if campaign.key == 'halloween' %}
             {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_bottom %}
             <div class="halloween-divider mb-2"></div>
+            {% endif %}
             {% include 'partials/_pagination.html' with is_shop=False %}
         </div>
     </section>

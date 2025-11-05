@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.cache import cache
 from shortuuid.django_fields import ShortUUIDField
 from django.utils import timezone
 from slugify import slugify
@@ -871,3 +872,27 @@ class StoreThemeSettings(models.Model):
         if obj:
             return obj
         return cls.objects.create(active_campaign=cls.CAMPAIGN_DEFAULT)
+
+    # Cached getter for active campaign (single DB hit, then cache)
+    CACHE_KEY = "store.active_campaign"
+
+    @classmethod
+    def get_active_campaign(cls) -> str:
+        cached = cache.get(cls.CACHE_KEY)
+        if cached:
+            return cached
+        try:
+            obj = cls.get_solo()
+            value = getattr(obj, "active_campaign", cls.CAMPAIGN_DEFAULT)
+        except Exception:
+            value = cls.CAMPAIGN_DEFAULT
+        cache.set(cls.CACHE_KEY, value, timeout=None)
+        return value
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Invalidate cache after changes in admin
+        try:
+            cache.delete(self.CACHE_KEY)
+        except Exception:
+            pass

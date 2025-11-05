@@ -78,11 +78,7 @@ def theme_settings(request):
 
     Returns a small dict with label/icon/classes and titles used across templates.
     """
-    try:
-        settings_obj = StoreThemeSettings.get_solo()
-        active_key = getattr(settings_obj, "active_campaign", StoreThemeSettings.CAMPAIGN_DEFAULT)
-    except Exception:
-        active_key = "default"
+    active_key = StoreThemeSettings.get_active_campaign()
 
     campaigns = {
         "default": {

@@ -914,10 +914,7 @@ def index(request):
         achieved_details = []
 
     # --- Seasonal decorations (Halloween swarms) ---
-    try:
-        active_campaign = store_models.StoreThemeSettings.get_solo().active_campaign
-    except Exception:
-        active_campaign = "default"
+    active_campaign = store_models.StoreThemeSettings.get_active_campaign()
     if active_campaign == "halloween":
         halloween_bats_top = _generate_halloween_bats(5)
         halloween_bats_bottom = _generate_halloween_bats(5)
@@ -1285,10 +1282,7 @@ def sale(request):
     ]
 
     # Seasonal decorations (Halloween swarms) for sale page
-    try:
-        active_campaign = store_models.StoreThemeSettings.get_solo().active_campaign
-    except Exception:
-        active_campaign = "default"
+    active_campaign = store_models.StoreThemeSettings.get_active_campaign()
     if active_campaign == "halloween":
         halloween_bats_top = _generate_halloween_bats(5)
         halloween_bats_bottom = _generate_halloween_bats(5)

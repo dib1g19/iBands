@@ -106,10 +106,10 @@ def theme_settings(request):
             "key": "black-friday",
             "nav_label": "Black Friday",
             "nav_icon": "fas fa-tag",
-            "nav_icon_class": "",
-            "nav_text_class": "",
-            "section_class": "",  # add a class and CSS later if needed
-            "home_sale_title": "Black Friday Разпродажба",
+            "nav_icon_class": "text-danger",
+            "nav_text_class": "text-danger",
+            "section_class": "bf-section",
+            "home_sale_title": "Black Friday",
             "sale_title": "Black Friday Разпродажба – Намалени продукти",
         },
     }

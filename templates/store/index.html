@@ -61,9 +61,11 @@
             <div class="row justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     <div class="position-relative text-center">
-                        <h2 class="ft-bold pt-3">{{ campaign.home_sale_title|default:'Намалени продукти' }}</h2>
+                        <h2 class="ft-bold pt-3 home-sale-title">{{ campaign.home_sale_title|default:'Намалени продукти' }}</h2>
                         {% if campaign.key == 'halloween' %}
                         <div class="halloween-divider"></div>
+                        {% elif campaign.key == 'black-friday' %}
+                        <div class="bf-divider"></div>
                         {% endif %}
                     </div>
                     {% if campaign.key == 'halloween' %}
@@ -88,6 +90,8 @@
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     {% if campaign.key == 'halloween' %}
                     <div class="halloween-divider mb-2"></div>
+                    {% elif campaign.key == 'black-friday' %}
+                    <div class="bf-divider mb-2"></div>
                     {% endif %}
                     <div class="position-relative text-center">
                         <a href="{% url 'store:sale' %}" class="btn btn-dark rounded">Виж всички намаления <i class="fas fa-arrow-right ms-2"></i></a>

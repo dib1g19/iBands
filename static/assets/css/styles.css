@@ -951,6 +951,13 @@ h6 {
 .nav-menu > li > a:active i.text-warning {
     color: #ff6a00 !important;
 }
+/* Mobile tap feedback for Black Friday link */
+.nav-menu > li > a:focus .text-danger,
+.nav-menu > li > a:active .text-danger,
+.nav-menu > li > a:focus i.text-danger,
+.nav-menu > li > a:active i.text-danger {
+    color: #c82333 !important;
+}
 
 /* Remove border for last dropdown item */
 .nav-dropdown > li:last-child > a {
@@ -1145,6 +1152,12 @@ h6 {
     .nav-menu > li:hover > a .text-warning,
     .nav-menu > li:hover > a i.text-warning {
         color: #ff6a00 !important;
+        transition: color 0.2s ease;
+    }
+    /* Ensure BF label/icon respond to hover like other items */
+    .nav-menu > li:hover > a .text-danger,
+    .nav-menu > li:hover > a i.text-danger {
+        color: #dc3545 !important;
         transition: color 0.2s ease;
     }
 
@@ -2160,7 +2173,7 @@ input[type="number"] {
 
 /* glowing divider accent under section title */
 .halloween-divider {
-    width: 120px;
+    width: 100%;
     height: 3px;
     background: linear-gradient(90deg, transparent, #ff8a00, #ff4d00, transparent);
     border-radius: 999px;
@@ -2366,6 +2379,114 @@ input[type="number"] {
 @media (max-width: 409.98px) {
     .ann-hide-under-410 { display: none !important; }
 }
-@media (min-width: 992px) and (max-width: 1419.98px) {
-    .hide-under-1420 { display: none !important; }
+@media (min-width: 992px) and (max-width: 1599.98px) {
+    .hide-under-1600 { display: none !important; }
+}
+
+/* ==========================
+   Seasonal: Black Friday Theme
+   ========================== */
+.bf-section {
+    padding: 0 0 20px;
+    margin: 0 0 20px;
+    position: relative;
+    background:
+        radial-gradient(1100px 500px at 120% -10%, rgba(220,53,69,0.06), transparent 60%),
+        radial-gradient(900px 600px at -20% 110%, rgba(108,117,125,0.05), transparent 55%),
+        linear-gradient(180deg, #0a0a0a 0%, #0a0a0a 45%, #101010 100%);
+    overflow: hidden;
+}
+.bf-section .sec_title h2,
+.bf-section h1,
+.bf-section h2,
+.bf-section h3,
+.bf-section h4,
+.bf-section h5,
+.bf-section h6 { color: #dc3545; }
+
+/* subtle sheen */
+.bf-section::after {
+    content: "";
+    position: absolute;
+    inset: -10% -10% -10% -10%;
+    background:
+        radial-gradient(ellipse at 20% 30%, rgba(255,255,255,0.03), transparent 60%),
+        radial-gradient(ellipse at 80% 60%, rgba(255,255,255,0.025), transparent 60%);
+    filter: blur(5px);
+    pointer-events: none;
+}
+
+.bf-divider {
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #dc3545, #e60c0c, transparent);
+    border-radius: 999px;
+    margin: 6px auto 0;
+    box-shadow: 0 0 14px rgba(220,53,69,.35), 0 0 6px rgba(220,53,69,.35);
+}
+
+.bf-section .product_grid {
+    background: #121212;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.bf-section .product_grid h5,
+.bf-section .product_grid .price,
+.bf-section .product_grid .price span { color: #fff; }
+.bf-section .discount-badge {
+    background: #c82333;
+    color: #fff;
+}
+.bf-section .btn-primary,
+.bf-section .btn-dark {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: #fff;
+}
+.bf-section .btn-primary:hover,
+.bf-section .btn-dark:hover {
+    background: #bd2130;
+    border-color: #bd2130;
+    color: #fff;
+}
+
+.bf-section .pagination .page-link {
+    color: #f7f7f7;
+    background-color: transparent;
+    border-bottom-color: rgba(255,255,255,0.18);
+}
+.bf-section .pagination > .active > a,
+.bf-section .pagination > .active > a:focus,
+.bf-section .pagination > .active > a:hover,
+.bf-section .pagination > .active > span,
+.bf-section .pagination > .active > span:focus,
+.bf-section .pagination > .active > span:hover,
+.bf-section .page-item.active .page-link {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+.bf-section .pagination > li > a:focus,
+.bf-section .pagination > li > a:hover,
+.bf-section .pagination .page-link:hover {
+    color: #dc3545;
+    background-color: transparent;
+    border-color: #dc3545;
+}
+
+.bf-section a { color: #ff6b6b; }
+
+/* ==========================
+   Home: Sale Section Title (bigger)
+   ========================== */
+.home-sale-title {
+    font-size: 2rem;
+}
+@media (min-width: 576px) {
+    .home-sale-title { font-size: 2.4rem; }
+}
+@media (min-width: 768px) {
+    .home-sale-title { font-size: 2.6rem; }
+}
+@media (min-width: 992px) {
+    .home-sale-title { font-size: 3.2rem; }
 }

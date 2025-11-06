@@ -15,8 +15,10 @@
         <div class="container">
             <h1 class="fw-bold text-center mb-2">{{ campaign.home_sale_title|default:'Намалени продукти' }}</h1>
             {% if campaign.key == 'halloween' %}
-            <div class="halloween-divider mb-2"></div>
-            {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_top %}
+                <div class="halloween-divider mb-2"></div>
+                {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_top %}
+            {% elif campaign.key == 'black-friday' %}
+                <div class="bf-divider mb-2"></div>
             {% endif %}
             <div class="row align-items-center rows-products" id="products-list">
                 {% for product in products %}
@@ -26,8 +28,10 @@
                 {% endfor %}
             </div>
             {% if campaign.key == 'halloween' %}
-            {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_bottom %}
-            <div class="halloween-divider mb-2"></div>
+                {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_bottom %}
+                <div class="halloween-divider mb-2"></div>
+            {% elif campaign.key == 'black-friday' %}
+                <div class="bf-divider mb-2"></div>
             {% endif %}
             {% include 'partials/_pagination.html' with is_shop=False %}
         </div>

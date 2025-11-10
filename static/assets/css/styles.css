@@ -2379,8 +2379,8 @@ input[type="number"] {
 @media (max-width: 409.98px) {
     .ann-hide-under-410 { display: none !important; }
 }
-@media (min-width: 992px) and (max-width: 1599.98px) {
-    .hide-under-1600 { display: none !important; }
+@media (min-width: 992px) and (max-width: 1609.98px) {
+    .hide-under-1610 { display: none !important; }
 }
 
 /* ==========================

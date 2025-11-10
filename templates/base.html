@@ -138,7 +138,7 @@
                                 <li class="sale-toplink">
                                     <a href="{% url 'store:sale' %}"><i class="{{ campaign.nav_icon }} me-1 {{ campaign.nav_icon_class|default:'' }}"></i> <span class="{{ campaign.nav_text_class|default:'' }}">{{ campaign.nav_label }}</span></a>
                                 </li>
-                                <li class="sale-toplink hide-under-1600">
+                                <li class="sale-toplink hide-under-1610">
                                     <a href="{% url 'store:category' 'mystery-box' %}"><i class="fas fa-box-open me-1"></i> Mystery Box</a>
                                 </li>
                                 <li>
@@ -201,7 +201,7 @@
                                 <li>
                                     <a href="{% url 'userauths:sign-in' %}" class="btn btn-primary rounded">Влез <i class="fas fa-sign-in-alt ms-1"></i></a>
                                 </li>
-                                <li class="d-none d-md-inline">
+                                <li class="d-none d-md-inline d-lg-none">
                                     <a href="{% url 'userauths:sign-up' %}" class="btn btn-primary rounded">Регистрирай се <i class="fas fa-user-plus ms-1"></i></a>
                                 </li>
                             {% endif %}

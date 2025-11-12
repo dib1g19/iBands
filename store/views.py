@@ -2059,21 +2059,21 @@ def coupon_apply(request, order_id):
 
 
 def checkout(request, order_id):
-    order = (
-        store_models.Order.objects
-        .prefetch_related(
-            models.Prefetch(
-                "order_items",
-                queryset=store_models.OrderItem.objects.select_related(
-                    "product",
-                    "product__category",
-                    "product__category__parent",
-                    "product__category__parent__parent"
-                ),
-            )
+    qs = store_models.Order.objects.prefetch_related(
+        models.Prefetch(
+            "order_items",
+            queryset=store_models.OrderItem.objects.select_related(
+                "product",
+                "product__category",
+                "product__category__parent",
+                "product__category__parent__parent",
+            ),
         )
-        .get(order_id=order_id)
     )
+    order = qs.filter(order_id=order_id).first()
+    if not order:
+        messages.warning(request, "Сесията на поръчката изтече или не съществува. Моля, прегледайте количката и започнете отново.")
+        return redirect("store:cart")
 
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},

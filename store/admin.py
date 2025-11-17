@@ -220,8 +220,9 @@ class CartAdmin(iBandsModelAdmin):
 
 class OrderItemInline(admin.TabularInline):
     model = store_models.OrderItem
-    fields = ["product_path", "model", "size", "qty", "price", "sub_total", "note"]
-    readonly_fields = fields
+    fields = ["product", "model", "size", "qty", "price", "sub_total", "note"]
+    readonly_fields = []
+    autocomplete_fields = ["product"]
     extra = 0
 
     def get_queryset(self, request):

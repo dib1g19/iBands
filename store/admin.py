@@ -221,7 +221,7 @@ class CartAdmin(iBandsModelAdmin):
 class OrderItemInline(admin.TabularInline):
     model = store_models.OrderItem
     fields = ["product", "model", "size", "qty", "price", "sub_total", "note"]
-    readonly_fields = []
+    readonly_fields = ["note"]
     autocomplete_fields = ["product"]
     extra = 0
 

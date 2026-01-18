@@ -282,7 +282,7 @@ class Product(models.Model):
         verbose_name_plural = "Products"
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.sku})" if self.sku else self.name
 
     def average_rating(self):
         return Review.objects.filter(product=self).aggregate(

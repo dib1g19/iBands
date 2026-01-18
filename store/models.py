@@ -174,10 +174,10 @@ class CategoryLink(models.Model):
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
     # Optional override for the H1 title on the product detail page
     h1_override = models.CharField(
-        max_length=150,
+        max_length=255,
         blank=True,
         null=True,
         help_text="When set, this will replace the dynamic product detail H1"
@@ -227,7 +227,7 @@ class Product(models.Model):
     status = models.CharField(choices=STATUS, max_length=50, default="published")
     featured = models.BooleanField(default=False, verbose_name="Marketplace Featured")
     sku = models.CharField(max_length=50, unique=True, verbose_name="SKU")
-    slug = models.SlugField(null=True, blank=True)
+    slug = models.SlugField(max_length=255, null=True, blank=True)
     # Special product type that allows custom note and multi-device selection
     is_mystery_box = models.BooleanField(default=False, db_index=True)
     date = models.DateTimeField(default=timezone.now)

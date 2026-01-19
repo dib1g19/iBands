@@ -1,20 +1,34 @@
 ;(function(){
   var BGN_PER_EUR = 1.95583
   function formatDualCurrency(value) {
-    var bgn = parseFloat(value)
-    if (isNaN(bgn)) return '-'
-    var eur = bgn / BGN_PER_EUR
+    var eur = parseFloat(value)
+    if (isNaN(eur)) return '-'
+    var bgn = eur * BGN_PER_EUR
     var fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 }
     var eurText = eur.toLocaleString('bg-BG', fmt) + ' €'
     var bgnText = bgn.toLocaleString('bg-BG', fmt) + ' лв.'
     return eurText + ' / ' + bgnText
   }
+  function extractCurrencyValue(raw, symbol) {
+    var re = symbol === 'EUR' ? /([0-9.,]+)\s*€/i : /([0-9.,]+)\s*лв/i
+    var match = raw.match(re)
+    if (!match) return null
+    return match[1]
+  }
   function parseNumeric(value) {
     if (value == null) return 0
     if (typeof value === 'number') return value
     var raw = String(value)
-    var bgnMatch = raw.match(/([0-9.,]+)\s*лв/i)
-    var txt = (bgnMatch && bgnMatch[1]) ? bgnMatch[1] : raw
+    var extracted = null
+    extracted = extractCurrencyValue(raw, 'EUR')
+    if (extracted == null) {
+      extracted = extractCurrencyValue(raw, 'BGN')
+      if (extracted != null) {
+        var bgnVal = parseFloat(extracted.replace(',', '.'))
+        if (!isNaN(bgnVal) && BGN_PER_EUR) return bgnVal / BGN_PER_EUR
+      }
+    }
+    var txt = extracted != null ? extracted : raw
     txt = String(txt).replace(/[^0-9.,]/g, '').replace(/\s+/g, '')
     // Replace comma with dot if dot absent
     if (txt.indexOf('.') === -1 && txt.indexOf(',') !== -1) {

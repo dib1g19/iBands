@@ -116,3 +116,4 @@ def theme_settings(request):
 
     campaign = campaigns.get(active_key) or campaigns["default"]
     return {"campaign": campaign}
+

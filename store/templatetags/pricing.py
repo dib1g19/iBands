@@ -18,15 +18,15 @@ def _to_decimal(value):
 @register.filter
 def dual_price(value, decimals=2):
     """
-    Format a BGN price as "X.XX € / Y.YY лв."
+    Format a base-currency price as "X.XX € / Y.YY лв."
     """
     try:
         decimals = int(decimals)
     except Exception:
         decimals = 2
     q = Decimal("1." + ("0" * decimals))
-    amount_bgn = _to_decimal(value)
-    amount_eur = amount_bgn / BGN_PER_EUR if BGN_PER_EUR else Decimal("0")
+    amount_eur = _to_decimal(value)
+    amount_bgn = amount_eur * BGN_PER_EUR if BGN_PER_EUR else Decimal("0")
     bgn_str = intcomma(amount_bgn.quantize(q, rounding=ROUND_HALF_UP))
     eur_str = intcomma(amount_eur.quantize(q, rounding=ROUND_HALF_UP))
     return f"{eur_str} € / {bgn_str} лв."

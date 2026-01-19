@@ -1,9 +1,9 @@
 (function () {
   var BGN_PER_EUR = 1.95583;
   function formatDualCurrency(val) {
-    var bgn = parseFloat(val);
-    if (isNaN(bgn)) { return val; }
-    var eur = bgn / BGN_PER_EUR;
+    var eur = parseFloat(val);
+    if (isNaN(eur)) { return val; }
+    var bgn = eur * BGN_PER_EUR;
     var fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
     var eurText = eur.toLocaleString('bg-BG', fmt) + ' €';
     var bgnText = bgn.toLocaleString('bg-BG', fmt) + ' лв.';

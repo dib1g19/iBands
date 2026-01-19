@@ -14,8 +14,8 @@ $(document).ready(function () {
         return isNaN(num) ? 0 : num;
     }
     function formatDualCurrency(value) {
-        const bgn = parseNumber(value);
-        const eur = bgn / BGN_PER_EUR;
+        const eur = parseNumber(value);
+        const bgn = eur * BGN_PER_EUR;
         const fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
         const eurText = eur.toLocaleString("bg-BG", fmt) + " €";
         const bgnText = bgn.toLocaleString("bg-BG", fmt) + " лв.";

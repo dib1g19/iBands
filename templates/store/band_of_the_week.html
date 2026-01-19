@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load color_filters %}
+{% load pricing %}
 
 {% block title %}
     Каишка на седмицата -50% | iBands
@@ -47,10 +48,10 @@
                         <h2 class="fw-semibold mb-2">{{ product.category.title }} - {{ product.name }}</h2>
                         <div class="mb-3">
                             {% if product.sale_price and product.sale_price < product.price %}
-                                <span class="fw-medium text-decoration-line-through fs-md me-1 price-regular">{{ product.price }} лв.</span>
-                                <span class="fw-semibold text-danger fs-lg me-3 price-sale">{{ product.sale_price }} лв.</span>
+                                <span class="fw-medium text-decoration-line-through fs-md me-1 price-regular">{{ product.price|dual_price }}</span>
+                                <span class="fw-semibold text-danger fs-lg me-3 price-sale">{{ product.sale_price|dual_price }}</span>
                             {% else %}
-                                <span class="fw-semibold fs-lg me-3 price-regular">{{ product.price }} лв.</span>
+                                <span class="fw-semibold fs-lg me-3 price-regular">{{ product.price|dual_price }}</span>
                             {% endif %}
                             <span class="stock-indicator text-light py-1 px-2 fs-sm fw-medium {% if total_stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
                                 {% if total_stock > 0 %}В наличност{% else %}Няма наличност{% endif %}

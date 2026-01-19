@@ -1,11 +1,12 @@
 {% load humanize %}
+{% load pricing %}
 
 <div id="order-summary-block">
     <div class="shadow rounded p-3 mt-5">
         <div>
             <div class="d-flex justify-content-between align-items-center">
                 <p class="fw-semibold fs-6">Междинна сума</p>
-                <p class="fs-6">{{ order.sub_total }} лв.</p>
+                <p class="fs-6">{{ order.sub_total|dual_price }}</p>
                 <span id="backend-order-subtotal" data-value="{{ order.sub_total|floatformat:2 }}" class="d-none"></span>
             </div>
             {% if order.saved %}
@@ -17,14 +18,18 @@
                 {% endfor %}
                 <div class="d-flex justify-content-between align-items-center">
                     <p class="fw-semibold fs-6">Отстъпка</p>
-                    <p class="fs-6">{{ order.saved }} лв.</p>
+                    <p class="fs-6">{{ order.saved|dual_price }}</p>
                 </div>
             {% endif %}
             <span id="backend-order-saved" data-value="{{ order.saved|default:0|floatformat:2 }}" class="d-none"></span>
             <div class="d-flex justify-content-between align-items-center">
                 <p class="fw-semibold fs-6">Доставка</p>
                 <p id="shipping-summary-value" class="fs-6">
-                    {{ order.shipping|default:"-"|floatformat:2 }} лв.
+                    {% if order.shipping or order.shipping == 0 %}
+                        {{ order.shipping|dual_price }}
+                    {% else %}
+                        -
+                    {% endif %}
                     {# This field is dynamically updated by JS when shipping method and payment method are selected #}
                 </p>
             </div>
@@ -32,7 +37,11 @@
                 <p class="fw-bold text-dark fs-5">Общо</p>
                 <span id="backend-order-total" data-value="{{ order.total|floatformat:2 }}" style="display:none;"></span>
                 <p id="total-summary-value" class="fw-bold text-dark fs-5">
-                    {{ order.total|default:"-" }} лв.
+                    {% if order.total or order.total == 0 %}
+                        {{ order.total|dual_price }}
+                    {% else %}
+                        -
+                    {% endif %}
                     {# This field is dynamically updated by JS #}
                 </p>
             </div>

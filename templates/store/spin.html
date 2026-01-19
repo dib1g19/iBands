@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load pricing %}
 
 {% block title %}Колелото на късмета – iBands{% endblock %}
 {% block meta_description %}Завърти колелото на късмета веднъж на ден и спечели малки награди!{% endblock %}
@@ -34,7 +35,7 @@
                                                 </div>
                                                 <div class="milestone-line2">
                                                     {% if m.min_order_total %}
-                                                        <span class="min-order-note">при поръчка над {{ m.min_order_total|floatformat:"0" }} лв.</span>
+                                                        <span class="min-order-note">при поръчка над {{ m.min_order_total|dual_price:0 }}</span>
                                                     {% endif %}
                                                     {% if spin_achieved_details %}
                                                     {% for a in spin_achieved_details %}

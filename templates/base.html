@@ -1,4 +1,5 @@
 {% load static %}
+{% load pricing %}
 <!DOCTYPE html>
 <!-- Favicons -->
 <link rel="icon" type="image/svg+xml" href="{% static 'assets/favicons/favicon.svg' %}" />
@@ -211,7 +212,7 @@
             </div>
             <div class="site-announcement">
                 <div class="container ann-wrap py-2">
-                    <div class="ann-item"><i class="fas fa-shipping-fast me-2"></i>Безплатна доставка до офис над 75 лв.</div>
+                    <div class="ann-item"><i class="fas fa-shipping-fast me-2"></i>Безплатна доставка до офис над {{ 75|dual_price }}</div>
                     <div class="ann-item text-muted">Доставка на следващия работен ден<span class="ann-hide-under-410">&nbsp;за поръчки до 17:00</span></div>
                 </div>
             </div>

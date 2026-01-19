@@ -1,6 +1,13 @@
 (function () {
-  function formatBGN(val) {
-    try { return (parseFloat(val).toFixed(2) + ' лв.'); } catch (e) { return val + ' лв.'; }
+  var BGN_PER_EUR = 1.95583;
+  function formatDualCurrency(val) {
+    var bgn = parseFloat(val);
+    if (isNaN(bgn)) { return val; }
+    var eur = bgn / BGN_PER_EUR;
+    var fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+    var eurText = eur.toLocaleString('bg-BG', fmt) + ' €';
+    var bgnText = bgn.toLocaleString('bg-BG', fmt) + ' лв.';
+    return eurText + ' / ' + bgnText;
   }
 
   function recompute(cfg) {
@@ -30,10 +37,10 @@
     var newRegular = cfg.baseRegular + delta;
     if (cfg.hasSale) {
       var newSale = (cfg.baseSale || 0) + delta;
-      if (saleEl) saleEl.textContent = formatBGN(newSale);
-      regEls.forEach(function (el) { el.textContent = formatBGN(newRegular); });
+      if (saleEl) saleEl.textContent = formatDualCurrency(newSale);
+      regEls.forEach(function (el) { el.textContent = formatDualCurrency(newRegular); });
     } else {
-      regEls.forEach(function (el) { el.textContent = formatBGN(newRegular); });
+      regEls.forEach(function (el) { el.textContent = formatDualCurrency(newRegular); });
     }
 
     if (stockEl && qty !== null) {

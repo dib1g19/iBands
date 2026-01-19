@@ -43,7 +43,7 @@
                                 <span class="display-6 text-danger"><i class="fas fa-wallet text-warning"></i></span>
                                 <div class="ms-4">
                                     <div class="d-flex">
-                                        <h5 class="mb-0 fw-bold">{{ total_spent|floatformat:2|intcomma|default:'0.00' }} лв.</h5>
+                                        <h5 class="mb-0 fw-bold">{{ total_spent|default:'0'|dual_price }}</h5>
                                     </div>
                                     <p class="mb-0 h6 fw-semibold">Общо изразходвано</p>
                                 </div>
@@ -107,11 +107,11 @@
                                                     {% if item.product.sale_price and item.product.sale_price < item.product.price %}
                                                         <div class="d-flex align-items-center gap-2">
                                                             {% regular_plus_delta item.product item.size item.model as reg_plus %}
-                                                            <span class="text-muted text-decoration-line-through mb-0">{{ reg_plus|intcomma }} лв.</span>
-                                                            <h4 class="fs-sm fw-semibold mb-0">{{ item.price|intcomma }} лв.</h4>
+                                                            <span class="text-muted text-decoration-line-through mb-0">{{ reg_plus|dual_price }}</span>
+                                                            <h4 class="fs-sm fw-semibold mb-0">{{ item.price|dual_price }}</h4>
                                                         </div>
                                                     {% else %}
-                                                        <h4 class="fs-sm fw-semibold mb-0">{{ item.price|intcomma }} лв.</h4>
+                                                        <h4 class="fs-sm fw-semibold mb-0">{{ item.price|dual_price }}</h4>
                                                     {% endif %}
                                                 </div>
                                             </div>
@@ -145,7 +145,7 @@
                                         </p>
                                     </div>
                                     <div class="float-end">
-                                        <h5 class="mb-0 fs-sm fw-semibold">Общо: {{ order.total|floatformat:2|intcomma }} лв.</h5>
+                                        <h5 class="mb-0 fs-sm fw-semibold">Общо: {{ order.total|dual_price }}</h5>
                                     </div>
                                 </div>
                             </div>

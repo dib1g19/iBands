@@ -11,6 +11,17 @@
     return m ? decodeURIComponent(m[1]) : null;
   }
 
+  var BGN_PER_EUR = 1.95583;
+  function formatDualCurrency(value) {
+    var bgn = parseFloat(value);
+    if (isNaN(bgn)) return '-';
+    var eur = bgn / BGN_PER_EUR;
+    var fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+    var eurText = eur.toLocaleString('bg-BG', fmt) + ' €';
+    var bgnText = bgn.toLocaleString('bg-BG', fmt) + ' лв.';
+    return eurText + ' / ' + bgnText;
+  }
+
   function startCountdown(targetIso, el){
     if (!targetIso || !el) return;
     var end = new Date(targetIso);
@@ -317,7 +328,7 @@
                 } else if (data.prize_type === 'free_shipping') {
                   couponEl.textContent = 'Спечели: Безплатна доставка за следваща поръчка.';
                 } else if (data.prize_type === 'mystery_box_min_total') {
-                  couponEl.textContent = 'Спечели: Mystery Box при поръчка над '+data.min_order_total+' лв.';
+                  couponEl.textContent = 'Спечели: Mystery Box при поръчка над '+formatDualCurrency(data.min_order_total);
                 }
                 if (data.milestone) {
                   var m = data.milestone;

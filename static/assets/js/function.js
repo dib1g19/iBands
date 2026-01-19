@@ -6,6 +6,21 @@ $(document).ready(function () {
         timer: 2000,
         timerProgressBar: true,
     });
+    const BGN_PER_EUR = 1.95583;
+    function parseNumber(value) {
+        if (value === null || value === undefined) return 0;
+        const text = String(value).replace(/\s/g, "").replace(/,/g, "");
+        const num = parseFloat(text);
+        return isNaN(num) ? 0 : num;
+    }
+    function formatDualCurrency(value) {
+        const bgn = parseNumber(value);
+        const eur = bgn / BGN_PER_EUR;
+        const fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+        const eurText = eur.toLocaleString("bg-BG", fmt) + " €";
+        const bgnText = bgn.toLocaleString("bg-BG", fmt) + " лв.";
+        return eurText + " / " + bgnText;
+    }
     function generateCartId() {
         // Retrieve the value of "cartId" from local storage and assign it to the variable 'ls_cartId'
         const ls_cartId = localStorage.getItem("cartId");
@@ -145,8 +160,8 @@ $(document).ready(function () {
                     button_el.html('<i class="fas fa-minus fa-xs"></i>');
                 }
                 $(".item-qty-" + item_id).val(response.current_qty);
-                $(".item_sub_total_" + item_id).text(response.item_sub_total);
-                $(".cart_sub_total").text(response.cart_sub_total);
+                $(".item_sub_total_" + item_id).text(formatDualCurrency(response.item_sub_total));
+                $(".cart_sub_total").text(formatDualCurrency(response.cart_sub_total));
                 var hiddenSub = document.getElementById('cart-order-subtotal');
                 if (hiddenSub) {
                     var numeric = (response.cart_sub_total || '0').toString().replace(/\s/g, '').replace(/,/g, '');
@@ -172,16 +187,15 @@ $(document).ready(function () {
                             var priceEl = document.getElementById('item-price-' + key);
                             if (priceEl && qtyVal !== null) {
                                 if (free >= qtyVal) {
-                                    priceEl.textContent = '0.00 лв.';
+                                    priceEl.textContent = formatDualCurrency(0);
                                 } else {
                                     // Restore to unit price text from data attribute
                                     var unit = priceEl.getAttribute('data-unit-price') || '';
                                     if (unit) {
                                         try {
-                                            var num = parseFloat(unit);
-                                            priceEl.textContent = (num.toLocaleString('bg-BG', {minimumFractionDigits: 2, maximumFractionDigits: 2})) + ' лв.';
+                                            priceEl.textContent = formatDualCurrency(unit);
                                         } catch(e) {
-                                            priceEl.textContent = unit + ' лв.';
+                                            priceEl.textContent = formatDualCurrency(unit);
                                         }
                                     }
                                 }
@@ -228,7 +242,7 @@ $(document).ready(function () {
                     title: response.message,
                 });
                 $(".total_cart_items").text(response.total_cart_items);
-                $(".cart_sub_total").text(response.cart_sub_total);
+                $(".cart_sub_total").text(formatDualCurrency(response.cart_sub_total));
                 var hiddenSub = document.getElementById('cart-order-subtotal');
                 if (hiddenSub) {
                     var numeric = (response.cart_sub_total || '0').toString().replace(/\s/g, '').replace(/,/g, '');

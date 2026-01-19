@@ -61,11 +61,11 @@
                                                 {% if item.product.sale_price and item.product.sale_price < item.product.price %}
                                                     <div class="d-flex flex-column lh-1">
                                                         {% regular_plus_delta item.product item.size item.model as reg_plus %}
-                                                        <span class="text-muted text-decoration-line-through">{{ reg_plus|intcomma }} лв.</span>
-                                                        <h4 class="fs-sm fw-semibold mb-0">{{ item.price|intcomma }} лв.</h4>
+                                                        <span class="text-muted text-decoration-line-through">{{ reg_plus|dual_price }}</span>
+                                                        <h4 class="fs-sm fw-semibold mb-0">{{ item.price|dual_price }}</h4>
                                                     </div>
                                                 {% else %}
-                                                    <h4 class="fs-sm fw-semibold mb-0 lh-1">{{ item.price|intcomma }} лв.</h4>
+                                                    <h4 class="fs-sm fw-semibold mb-0 lh-1">{{ item.price|dual_price }}</h4>
                                                 {% endif %}
                                             </div>
                                         </div>
@@ -109,12 +109,12 @@
                             </div>
                             <div class="card-body">
                                 <h6 class="fs-sm mb-2"><strong>Дата:</strong> {{ order.date }}</h6>
-                                <h6 class="fs-sm mb-2"><strong>Междинна сума:</strong> {{ order.sub_total|intcomma }} лв.</h6>
-                                <h6 class="fs-sm mb-2"><strong>Доставка:</strong> {{ order.shipping|intcomma }} лв.</h6>
+                                <h6 class="fs-sm mb-2"><strong>Междинна сума:</strong> {{ order.sub_total|dual_price }}</h6>
+                                <h6 class="fs-sm mb-2"><strong>Доставка:</strong> {{ order.shipping|dual_price }}</h6>
                                 {% if order.saved %}
-                                    <h6 class="fs-sm mb-2"><strong>Отстъпка:</strong> -{{ order.saved|intcomma }} лв.</h6>
+                                    <h6 class="fs-sm mb-2"><strong>Отстъпка:</strong> -{{ order.saved|dual_price }}</h6>
                                 {% endif %}
-                                <h6 class="fs-sm mb-0"><strong>Общо:</strong> {{ order.total|intcomma }} лв.</h6>
+                                <h6 class="fs-sm mb-0"><strong>Общо:</strong> {{ order.total|dual_price }}</h6>
                             </div>
                         </div>
 

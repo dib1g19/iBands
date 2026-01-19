@@ -1,4 +1,5 @@
 {% load static %}
+{% load pricing %}
 <div class="spin-section-edge spin-section-bg py-4" style="--spin-bg: url('{% static "assets/img/wheel-cover.avif" %}')">
     <div class="container">
         <div class="category-overlay d-flex justify-content-center">
@@ -15,7 +16,7 @@
                     {% if last_spin.coupon_code %}
                         <div class="mt-1">Код: <code>{{ last_spin.coupon_code }}</code></div>
                     {% elif last_spin.min_order_total %}
-                        <div class="mt-1">при поръчка над {{ last_spin.min_order_total }} лв.</div>
+                        <div class="mt-1">при поръчка над {{ last_spin.min_order_total|dual_price:0 }}</div>
                     {% endif %}
                 </div>
                 {% endif %}

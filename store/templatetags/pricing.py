@@ -1,8 +1,35 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from django import template
+from django.contrib.humanize.templatetags.humanize import intcomma
 from store import models as store_models
 
 register = template.Library()
+
+BGN_PER_EUR = Decimal("1.95583")
+
+
+def _to_decimal(value):
+    try:
+        return Decimal(str(value))
+    except Exception:
+        return Decimal("0")
+
+
+@register.filter
+def dual_price(value, decimals=2):
+    """
+    Format a BGN price as "X.XX € / Y.YY лв."
+    """
+    try:
+        decimals = int(decimals)
+    except Exception:
+        decimals = 2
+    q = Decimal("1." + ("0" * decimals))
+    amount_bgn = _to_decimal(value)
+    amount_eur = amount_bgn / BGN_PER_EUR if BGN_PER_EUR else Decimal("0")
+    bgn_str = intcomma(amount_bgn.quantize(q, rounding=ROUND_HALF_UP))
+    eur_str = intcomma(amount_eur.quantize(q, rounding=ROUND_HALF_UP))
+    return f"{eur_str} € / {bgn_str} лв."
 
 
 @register.simple_tag

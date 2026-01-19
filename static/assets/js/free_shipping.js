@@ -1,8 +1,21 @@
 ;(function(){
+  var BGN_PER_EUR = 1.95583
+  function formatDualCurrency(value) {
+    var bgn = parseFloat(value)
+    if (isNaN(bgn)) return '-'
+    var eur = bgn / BGN_PER_EUR
+    var fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+    var eurText = eur.toLocaleString('bg-BG', fmt) + ' €'
+    var bgnText = bgn.toLocaleString('bg-BG', fmt) + ' лв.'
+    return eurText + ' / ' + bgnText
+  }
   function parseNumeric(value) {
     if (value == null) return 0
     if (typeof value === 'number') return value
-    var txt = String(value).replace(/[^0-9.,]/g, '').replace(/\s+/g, '')
+    var raw = String(value)
+    var bgnMatch = raw.match(/([0-9.,]+)\s*лв/i)
+    var txt = (bgnMatch && bgnMatch[1]) ? bgnMatch[1] : raw
+    txt = String(txt).replace(/[^0-9.,]/g, '').replace(/\s+/g, '')
     // Replace comma with dot if dot absent
     if (txt.indexOf('.') === -1 && txt.indexOf(',') !== -1) {
       txt = txt.replace(',', '.')
@@ -52,7 +65,7 @@
       if (subtotal >= th) {
         textElem.textContent = 'Поздравления! Безплатна доставка до офис е активна.'
       } else {
-        textElem.textContent = 'Още ' + remaining.toFixed(2) + ' лв. до безплатна доставка до офис'
+        textElem.textContent = 'Още ' + formatDualCurrency(remaining) + ' до безплатна доставка до офис'
       }
     }
   }

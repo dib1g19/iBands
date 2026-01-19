@@ -1,3 +1,4 @@
+{% load pricing %}
 Поръчка #{{ order.order_id }} е {{ email_heading }}
 
 Здравейте {{ order.address.name }},
@@ -10,18 +11,18 @@
 
 Продукти:
 {% for item in order_items %}
-- {{ item.product.name }} {{ item.product.category.title }}{% if item.size %} (Дължина: {{ item.size }}){% endif %}{% if item.model %} (Модел: {{ item.model }}){% endif %} — {{ item.qty }} x {{ item.price }} лв.
+- {{ item.product.name }} {{ item.product.category.title }}{% if item.size %} (Дължина: {{ item.size }}){% endif %}{% if item.model %} (Модел: {{ item.model }}){% endif %} — {{ item.qty }} x {{ item.price|dual_price }}
 {% endfor %}
 
-Междинна сума: {{ order.sub_total }} лв.
+Междинна сума: {{ order.sub_total|dual_price }}
 {% for coupon in order.coupons.all %}
 Купон ({{ coupon.code }}): -{{ coupon.discount|floatformat:2 }}%
 {% endfor %}
 {% if order.saved and order.saved > 0 %}
-Отстъпка: -{{ order.saved|floatformat:2 }} лв.
+Отстъпка: -{{ order.saved|dual_price }}
 {% endif %}
-Доставка: {{ order.shipping }} лв.
-Общо: {{ order.total }} лв.
+Доставка: {{ order.shipping|dual_price }}
+Общо: {{ order.total|dual_price }}
 
 Адрес за доставка:
 - Име: {{ order.address.name }}

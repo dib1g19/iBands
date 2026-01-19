@@ -30,15 +30,15 @@
                                         {% include 'store/_product_card.html' with item=item %}
                                         <div class="col-xl-2 mb-xl-3">
                                             {% if item.product.sale_price and item.product.sale_price < item.product.price %}
-                                                <span class="text-decoration-line-through">{% regular_plus_delta item.product item.size item.model as reg_plus %}{{ reg_plus|intcomma }} лв.</span>
+                                                <span class="text-decoration-line-through">{% regular_plus_delta item.product item.size item.model as reg_plus %}{{ reg_plus|dual_price }}</span>
                                             {% else %}
-                                                <span class="invisible d-none d-xl-inline">0 лв.</span>
+                                                <span class="invisible d-none d-xl-inline">{{ 0|dual_price }}</span>
                                             {% endif %}
                                             <h4 id="item-price-{{ item.id }}" class="fs-3 {% if item.product.sale_price and item.product.sale_price < item.product.price %}fw-bold text-danger{% else %}text-dark{% endif %}" data-unit-price="{{ item.price|floatformat:2 }}">
                                                 {% if item.product.has_active_promo and item.promo_free_units >= item.qty %}
-                                                    0.00 лв.
+                                                    {{ 0|dual_price }}
                                                 {% else %}
-                                                    {{ item.price|intcomma }} лв.
+                                                    {{ item.price|dual_price }}
                                                 {% endif %}
                                             </h4>
                                             <div id="promo-free-{{ item.id }}" class="small text-success {% if not item.product.has_active_promo or item.promo_free_units <= 0 %}d-none{% endif %}">
@@ -51,8 +51,8 @@
                                             <button type="button" class="btn btn-primary btn-xs update_cart_qty" data-update_type="increase" data-item_id="{{ item.id }}"><i class="fas fa-plus fa-xs"></i></button>
                                         </div>
                                         <div class="col-xl-2 mb-xl-3">
-                                            <span class="invisible d-none d-xl-block">0 лв.</span>
-                                            <h4 class="fs-3"><span class="item_sub_total_{{ item.id }}">{{ item.sub_total|intcomma }}</span> лв.</h4>
+                                            <span class="invisible d-none d-xl-block">{{ 0|dual_price }}</span>
+                                            <h4 class="fs-3"><span class="item_sub_total_{{ item.id }}">{{ item.sub_total|dual_price }}</span></h4>
                                         </div>
                                         <div class="col-xl-1">
                                             <button type="button" class="btn btn-danger btn-sm rounded delete_cart_item" data-item_id="{{ item.id }}" data-product_id="{{ item.product.id }}"><i class="fas fa-trash"></i></button>
@@ -71,7 +71,7 @@
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <p class="fw-bold fs-5">Общо</p>
                                 <p class="fw-bold fs-5">
-                                    <span class="cart_sub_total">{{ cart_sub_total|intcomma }}</span> лв.
+                                    <span class="cart_sub_total">{{ cart_sub_total|dual_price }}</span>
                                 </p>
                                 <span id="cart-order-subtotal" data-value="{{ cart_sub_total|floatformat:2 }}" class="d-none"></span>
                             </div>

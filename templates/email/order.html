@@ -555,11 +555,11 @@
                                                                             {% regular_plus_delta item.product item.size item.model as reg_plus %}
                                                                             {% if reg_plus and reg_plus > item.price %}
                                                                                 <div style="display:flex;flex-direction:column;align-items:flex-end;">
-                                                                                    <span style="text-decoration:line-through;color:#888;font-size:12px;">{{ reg_plus|floatformat:2 }} лв.</span>
-                                                                                    <span style="font-weight:bold;">{{ item.price|floatformat:2 }} лв.</span>
+                                                                                    <span style="text-decoration:line-through;color:#888;font-size:12px;">{{ reg_plus|dual_price }}</span>
+                                                                                    <span style="font-weight:bold;">{{ item.price|dual_price }}</span>
                                                                                 </div>
                                                                             {% else %}
-                                                                                <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#000000;font-size:14px">{{ item.price|floatformat:2 }} лв.</p>
+                                                                                <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#000000;font-size:14px">{{ item.price|dual_price }}</p>
                                                                             {% endif %}
                                                                         </td>
                                                                     </tr>
@@ -596,16 +596,16 @@
                                                 <table cellpadding="0" cellspacing="0" class="esdev-mso-table" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:560px">
                                                     <tr>
                                                         <td colspan="3" align="right" style="padding:0;Margin:0">
-                                                            <p>Междинна сума: {{ order.sub_total }} лв.</p>
+                                                            <p>Междинна сума: {{ order.sub_total|dual_price }}</p>
                                                             {% for coupon in order.coupons.all %}
                                                                 <p style="color:#198754">Купон ({{ coupon.code }}): -{{ coupon.discount|floatformat:2 }}%</p>
                                                             {% endfor %}
                                                             {% if order.saved and order.saved > 0 %}
-                                                                <p>Отстъпка: -{{ order.saved|floatformat:2 }} лв.</p>
+                                                                <p>Отстъпка: -{{ order.saved|dual_price }}</p>
                                                             {% endif %}
-                                                            <p>Доставка: {{ order.shipping }} лв.</p>
+                                                            <p>Доставка: {{ order.shipping|dual_price }}</p>
                                                             <p>
-                                                                <strong>Общо: {{ order.total }} лв.</strong>
+                                                                <strong>Общо: {{ order.total|dual_price }}</strong>
                                                             </p>
                                                         </td>
                                                     </tr>

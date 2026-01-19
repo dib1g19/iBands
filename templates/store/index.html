@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load pricing %}
 
 {% block title %}
     Онлайн Магазин за Каишки и Аксесоари | iBands
@@ -146,10 +147,10 @@
                             <h3 class="fw-semibold m-0 mb-2">{{ band_of_the_week.category.title }} — {{ band_of_the_week.name }}</h3>
                             <div class="mb-3 flex-column align-items-center">
                                 {% if band_price %}
-                                    <span class="text-muted text-decoration-line-through me-2">{{ band_of_the_week.price }} лв.</span>
-                                    <span class="fw-semibold text-danger fs-4">{{ band_price|floatformat:2 }} лв.</span>
+                                    <span class="text-muted text-decoration-line-through me-2">{{ band_of_the_week.price|dual_price }}</span>
+                                    <span class="fw-semibold text-danger fs-4">{{ band_price|dual_price }}</span>
                                 {% else %}
-                                    <span class="fw-semibold fs-4">{{ band_of_the_week.price }} лв.</span>
+                                    <span class="fw-semibold fs-4">{{ band_of_the_week.price|dual_price }}</span>
                                 {% endif %}
                             </div>
                             <div class="d-flex flex-wrap gap-2">

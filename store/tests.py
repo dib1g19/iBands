@@ -4,6 +4,7 @@ from django.utils import timezone
 from unittest.mock import patch
 from decimal import Decimal
 from django.template.loader import render_to_string
+from store.templatetags import pricing as pricing_tags
 
 from store import models as store_models
 from customer import models as customer_models
@@ -106,6 +107,6 @@ class EmailPriceRenderingTests(TestCase):
         html = render_to_string("email/order.html", context)
 
         # Should contain a struck-through regular price (100.00) and the bold discounted price (50.00)
-        self.assertIn("100.00 лв.", html)
-        self.assertIn("50.00 лв.", html)
+        self.assertIn(pricing_tags.dual_price(Decimal("100.00")), html)
+        self.assertIn(pricing_tags.dual_price(Decimal("50.00")), html)
 

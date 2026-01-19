@@ -11,16 +11,16 @@
                         <p class="mb-0">Цена</p>
                         {% with original_price=item.product.price %}
                             {% if item.product.sale_price and item.product.sale_price < item.product.price %}
-                                <span class="text-decoration-line-through">{% regular_plus_delta item.product item.size item.model as reg_plus %}{{ reg_plus|intcomma }} лв.</span>
+                                <span class="text-decoration-line-through">{% regular_plus_delta item.product item.size item.model as reg_plus %}{{ reg_plus|dual_price }}</span>
                             {% else %}
-                                <span class="invisible d-none d-xl-inline">0 лв.</span>
+                                <span class="invisible d-none d-xl-inline">{{ 0|dual_price }}</span>
                             {% endif %}
                             <h4 class="fs-3 {% if item.product.sale_price and item.product.sale_price < item.product.price %}
                                     fw-bold text-danger
                                 {% else %}
                                     text-dark
                                 {% endif %}">
-                                {{ item.price|intcomma }} лв.
+                                {{ item.price|dual_price }}
                             </h4>
                             {% if item.product.has_active_promo and item.promo_free_units > 0 %}
                                 <div class="small text-success mt-1">+{{ item.promo_free_units }} бр. безплатно</div>
@@ -29,13 +29,13 @@
                     </div>
                     <div class="col-xl-2">
                         <p class="mb-0">Количество</p>
-                        <span class="invisible d-none d-xl-block">0 лв.</span>
+                        <span class="invisible d-none d-xl-block">{{ 0|dual_price }}</span>
                         <h4 class="fs-3">{{ item.qty }}</h4>
                     </div>
                     <div class="col-xl-2">
                         <p class="mb-0">Общо</p>
-                        <span class="invisible d-none d-xl-block">0 лв.</span>
-                        <h4 class="fs-3">{{ item.sub_total|intcomma }} лв.</h4>
+                        <span class="invisible d-none d-xl-block">{{ 0|dual_price }}</span>
+                        <h4 class="fs-3">{{ item.sub_total|dual_price }}</h4>
                     </div>
                     <div class="col-xl-1">
                         <a href="{% url 'store:cart' %}" class="btn btn-primary btn-sm rounded"><i class="fas fa-edit"></i></a>

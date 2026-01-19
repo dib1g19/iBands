@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load humanize %}
 {% load static %}
+{% load pricing %}
 
 {% block robots %}
     <meta name="robots" content="noindex, nofollow">
@@ -236,7 +237,7 @@
                         {% elif request.session.spin_reward.type == 'free_shipping' %}
                             <br>Безплатна доставка при финализиране.
                         {% elif request.session.spin_reward.type == 'mystery_box_min_total' %}
-                            <br>Mystery Box при поръчка над {{ request.session.spin_reward.min_order_total }} лв.
+                            <br>Mystery Box при поръчка над {{ request.session.spin_reward.min_order_total|dual_price:0 }}
                         {% endif %}
                     </div>
                     {% endif %}
@@ -560,6 +561,17 @@
     // Track last saved address to avoid redundant autosaves
     let lastSavedAddressKey = null; // Econt autosave key
     let lastSavedSpeedyKey = null;  // Speedy autosave key
+    const BGN_PER_EUR = 1.95583;
+
+    function formatDualCurrency(value) {
+        const bgn = parseFloat(value);
+        if (isNaN(bgn)) return '-';
+        const eur = bgn / BGN_PER_EUR;
+        const fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+        const eurText = eur.toLocaleString('bg-BG', fmt) + ' €';
+        const bgnText = bgn.toLocaleString('bg-BG', fmt) + ' лв.';
+        return eurText + ' / ' + bgnText;
+    }
 
     function updateSummaryForPayment() {
         const shippingSummaryElem = document.getElementById('shipping-summary-value');
@@ -579,14 +591,14 @@
                 if (lastEcontShipping.shipping_price_cod !== undefined && lastEcontShipping.shipping_price_cod !== null) {
                     shipping = lastEcontShipping.shipping_price_cod;
                     showShipping = true;
-                    shippingText = shipping + ' ' + (lastEcontShipping.currency_sign || "лв.");
+                    shippingText = formatDualCurrency(shipping);
                     shippingVal = parseFloat(shipping);
                 }
             } else if (selectedPayment === 'card') {
                 if (lastEcontShipping.shipping_price_cod !== undefined && lastEcontShipping.shipping_price_cod !== null) {
                     shipping = lastEcontShipping.shipping_price_cod;
                     showShipping = true;
-                    shippingText = shipping + ' ' + (lastEcontShipping.currency_sign || "лв.");
+                    shippingText = formatDualCurrency(shipping);
                     shippingVal = parseFloat(shipping);
                 }
             }
@@ -595,14 +607,14 @@
                 if (lastSpeedyShipping.shipping_price_cod !== undefined && lastSpeedyShipping.shipping_price_cod !== null) {
                     shipping = lastSpeedyShipping.shipping_price_cod;
                     showShipping = true;
-                    shippingText = shipping + ' ' + (lastSpeedyShipping.currency_sign || "лв.");
+                    shippingText = formatDualCurrency(shipping);
                     shippingVal = parseFloat(shipping);
                 }
             } else if (selectedPayment === 'card') {
                 if (lastSpeedyShipping.shipping_price_cod !== undefined && lastSpeedyShipping.shipping_price_cod !== null) {
                     shipping = lastSpeedyShipping.shipping_price_cod;
                     showShipping = true;
-                    shippingText = shipping + ' ' + (lastSpeedyShipping.currency_sign || "лв.");
+                    shippingText = formatDualCurrency(shipping);
                     shippingVal = parseFloat(shipping);
                 }
             }
@@ -630,7 +642,7 @@
                 shippingSummaryElem.textContent = "Безплатна доставка до офис";
             }
             if (totalSummaryElem) {
-                totalSummaryElem.textContent = backendTotal.toFixed(2) + ' ' + currencySign;
+                totalSummaryElem.textContent = formatDualCurrency(backendTotal);
             }
         } else {
             if (showShipping) {
@@ -645,7 +657,7 @@
             }
             if (totalSummaryElem) {
                 if (total !== null && !isNaN(total)) {
-                    totalSummaryElem.textContent = total.toFixed(2) + ' ' + currencySign;
+                    totalSummaryElem.textContent = formatDualCurrency(total);
                 } else {
                     totalSummaryElem.textContent = '-';
                 }

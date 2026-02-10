@@ -844,11 +844,13 @@ class StoreThemeSettings(models.Model):
     CAMPAIGN_DEFAULT = "default"
     CAMPAIGN_HALLOWEEN = "halloween"
     CAMPAIGN_BLACK_FRIDAY = "black-friday"  # reserved for future use
+    CAMPAIGN_VALENTINE = "valentine"
 
     CAMPAIGN_CHOICES = (
         (CAMPAIGN_DEFAULT, "Default"),
         (CAMPAIGN_HALLOWEEN, "Halloween"),
         (CAMPAIGN_BLACK_FRIDAY, "Black Friday"),
+        (CAMPAIGN_VALENTINE, "Valentine"),
     )
 
     active_campaign = models.CharField(

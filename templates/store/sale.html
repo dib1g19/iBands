@@ -19,6 +19,8 @@
                 {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_top %}
             {% elif campaign.key == 'black-friday' %}
                 <div class="bf-divider mb-2"></div>
+            {% elif campaign.key == 'valentine' %}
+                <div class="valentine-divider mb-2"></div>
             {% endif %}
             <div class="row align-items-center rows-products" id="products-list">
                 {% for product in products %}
@@ -32,6 +34,8 @@
                 <div class="halloween-divider mb-2"></div>
             {% elif campaign.key == 'black-friday' %}
                 <div class="bf-divider mb-2"></div>
+            {% elif campaign.key == 'valentine' %}
+                <div class="valentine-divider mb-2"></div>
             {% endif %}
             {% include 'partials/_pagination.html' with is_shop=False %}
         </div>

@@ -112,6 +112,16 @@ def theme_settings(request):
             "home_sale_title": "Black Friday",
             "sale_title": "Black Friday Разпродажба – Намалени продукти",
         },
+        "valentine": {
+            "key": "valentine",
+            "nav_label": "Valentine",
+            "nav_icon": "fas fa-heart",
+            "nav_icon_class": "text-danger",
+            "nav_text_class": "text-danger",
+            "section_class": "valentine-section",
+            "home_sale_title": "Valentine",
+            "sale_title": "Valentine Разпродажба – Намалени продукти",
+        },
     }
 
     campaign = campaigns.get(active_key) or campaigns["default"]

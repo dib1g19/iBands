@@ -21,6 +21,7 @@
                 <div class="bf-divider mb-2"></div>
             {% elif campaign.key == 'valentine' %}
                 <div class="valentine-divider mb-2"></div>
+                {% include 'partials/_valentine_swarm.html' with hearts=valentine_hearts_top %}
             {% endif %}
             <div class="row align-items-center rows-products" id="products-list">
                 {% for product in products %}
@@ -35,6 +36,7 @@
             {% elif campaign.key == 'black-friday' %}
                 <div class="bf-divider mb-2"></div>
             {% elif campaign.key == 'valentine' %}
+                {% include 'partials/_valentine_swarm.html' with hearts=valentine_hearts_bottom %}
                 <div class="valentine-divider mb-2"></div>
             {% endif %}
             {% include 'partials/_pagination.html' with is_shop=False %}

@@ -99,6 +99,39 @@ def _generate_halloween_bats(count: int):
         })
     return bats
 
+def _generate_valentine_hearts(count: int):
+    paths = ["", "heart-path-b", "heart-path-c", "heart-path-d"]
+    sizes = ["", "heart-sm", "heart-lg"]
+    colors = ["rose", "pink", "fuchsia", "red"]
+    hearts = []
+    for _ in range(int(count)):
+        top_px = random.randint(6, 32)
+        start_pct = -random.randint(20, 50)
+        speed_s = round(random.uniform(11.0, 16.5), 1)
+        delay_s = round(-random.uniform(0.2, 8.0), 1)
+        amp_y_px = random.randint(8, 14)
+        rot_deg = random.randint(5, 12)
+        cls = ["heart-fly"]
+        p = random.choice(paths)
+        if p:
+            cls.append(p)
+        s = random.choices(sizes, weights=[6, 3, 2], k=1)[0]
+        if s:
+            cls.append(s)
+        c = random.choice(colors)
+        if c:
+            cls.append(c)
+        hearts.append({
+            "classes": " ".join(cls),
+            "top": top_px,
+            "startPct": start_pct,
+            "speed": speed_s,
+            "delay": delay_s,
+            "ampY": amp_y_px,
+            "rot": rot_deg,
+        })
+    return hearts
+
 def send_order_to_econt(order):
     url = settings.ECONT_UPDATE_ORDER_ENDPOINT
     headers = {
@@ -913,14 +946,23 @@ def index(request):
         achieved_thresholds = []
         achieved_details = []
 
-    # --- Seasonal decorations (Halloween swarms) ---
+    # --- Seasonal decorations (Halloween + Valentine swarms) ---
     active_campaign = store_models.StoreThemeSettings.get_active_campaign()
     if active_campaign == "halloween":
         halloween_bats_top = _generate_halloween_bats(5)
         halloween_bats_bottom = _generate_halloween_bats(5)
+        valentine_hearts_top = []
+        valentine_hearts_bottom = []
+    elif active_campaign == "valentine":
+        halloween_bats_top = []
+        halloween_bats_bottom = []
+        valentine_hearts_top = _generate_valentine_hearts(6)
+        valentine_hearts_bottom = _generate_valentine_hearts(6)
     else:
         halloween_bats_top = []
         halloween_bats_bottom = []
+        valentine_hearts_top = []
+        valentine_hearts_bottom = []
 
     context = {
         "products": products,
@@ -949,6 +991,9 @@ def index(request):
         # Halloween swarms
         "halloween_bats_top": halloween_bats_top,
         "halloween_bats_bottom": halloween_bats_bottom,
+        # Valentine swarms
+        "valentine_hearts_top": valentine_hearts_top,
+        "valentine_hearts_bottom": valentine_hearts_bottom,
     }
     return render(request, "store/index.html", context)
 
@@ -1281,14 +1326,23 @@ def sale(request):
         {"label": "Разпродажба", "url": ""},
     ]
 
-    # Seasonal decorations (Halloween swarms) for sale page
+    # Seasonal decorations (Halloween + Valentine swarms) for sale page
     active_campaign = store_models.StoreThemeSettings.get_active_campaign()
     if active_campaign == "halloween":
         halloween_bats_top = _generate_halloween_bats(5)
         halloween_bats_bottom = _generate_halloween_bats(5)
+        valentine_hearts_top = []
+        valentine_hearts_bottom = []
+    elif active_campaign == "valentine":
+        halloween_bats_top = []
+        halloween_bats_bottom = []
+        valentine_hearts_top = _generate_valentine_hearts(6)
+        valentine_hearts_bottom = _generate_valentine_hearts(6)
     else:
         halloween_bats_top = []
         halloween_bats_bottom = []
+        valentine_hearts_top = []
+        valentine_hearts_bottom = []
 
     context = {
         "products": products,
@@ -1304,6 +1358,8 @@ def sale(request):
     context["is_shop"] = True
     context["halloween_bats_top"] = halloween_bats_top
     context["halloween_bats_bottom"] = halloween_bats_bottom
+    context["valentine_hearts_top"] = valentine_hearts_top
+    context["valentine_hearts_bottom"] = valentine_hearts_bottom
     return render(request, "store/sale.html", context)
 
 

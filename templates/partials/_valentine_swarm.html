@@ -1,0 +1,8 @@
+{% if hearts %}
+<div class="valentine-swarm {{ extra_classes|default:'' }}" aria-hidden="true">
+    {% for h in hearts %}
+    <span class="heart {{ h.classes }}" style="top:{{ h.top }}px; --startLeftPct:{{ h.startPct|default:-20 }}%; --speed: {{ h.speed }}s; --delay: {{ h.delay }}s; --ampY: {{ h.ampY }}px; --rot: {{ h.rot }};"></span>
+    {% endfor %}
+</div>
+{% endif %}
+

@@ -78,6 +78,8 @@
                     </div>
                     {% if campaign.key == 'halloween' %}
                         {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_top %}
+                    {% elif campaign.key == 'valentine' %}
+                        {% include 'partials/_valentine_swarm.html' with hearts=valentine_hearts_top %}
                     {% endif %}
                 </div>
             </div>
@@ -92,6 +94,8 @@
 
             {% if campaign.key == 'halloween' %}
                 {% include 'partials/_halloween_swarm.html' with bats=halloween_bats_bottom %}
+            {% elif campaign.key == 'valentine' %}
+                {% include 'partials/_valentine_swarm.html' with hearts=valentine_hearts_bottom %}
             {% endif %}
 
             <div class="row justify-content-center">

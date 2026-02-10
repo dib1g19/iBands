@@ -2376,6 +2376,86 @@ input[type="number"] {
     75% { transform: translateY(calc(var(--ampY, 11px) * -0.5)) rotate(calc(var(--rot, 7) * -0.15deg)); }
     100% { left: calc(var(--startLeftPct, -12%) + 150%); transform: translateY(0) rotate(0deg); }
 }
+
+/* ==========================
+   Valentine: floating hearts
+   ========================== */
+.valentine-swarm {
+    position: relative;
+    overflow: hidden;
+    height: 56px;
+    pointer-events: none;
+}
+
+.heart {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: currentColor;
+    color: #ff4d88;
+    transform: rotate(-45deg);
+    border-radius: 2px;
+    opacity: 0.85;
+}
+.heart::before,
+.heart::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: currentColor;
+    border-radius: 50%;
+}
+.heart::before { top: -7px; left: 0; }
+.heart::after { left: 7px; top: 0; }
+
+.heart-sm { transform: rotate(-45deg) scale(.85); }
+.heart-lg { transform: rotate(-45deg) scale(1.25); }
+
+.heart.rose { color: #ff6fa6; }
+.heart.pink { color: #ff4d88; }
+.heart.fuchsia { color: #e91e63; }
+.heart.red { color: #ff3355; }
+
+.heart-fly {
+    position: absolute;
+    left: -12%;
+    animation: heartDrift var(--speed, 12s) linear infinite;
+    animation-delay: var(--delay, 0s);
+}
+.heart-path-b { animation-name: heartDriftB !important; }
+.heart-path-c { animation-name: heartDriftC !important; }
+.heart-path-d { animation-name: heartDriftD !important; }
+
+@keyframes heartDrift {
+    0%   { left: calc(var(--startLeftPct, -12%) + 0%);  transform: translateY(0) rotate(calc(var(--rot, 8) * 0.0deg)); }
+    25%  { transform: translateY(calc(var(--ampY, 10px) * 0.6)) rotate(calc(var(--rot, 8) * 0.2deg)); }
+    50%  { transform: translateY(calc(var(--ampY, 10px) * -0.5)) rotate(calc(var(--rot, 8) * -0.15deg)); }
+    75%  { transform: translateY(calc(var(--ampY, 10px) * 0.4)) rotate(calc(var(--rot, 8) * 0.12deg)); }
+    100% { left: calc(var(--startLeftPct, -12%) + 150%); transform: translateY(0) rotate(0deg); }
+}
+@keyframes heartDriftB {
+    0% { left: calc(var(--startLeftPct, -12%) + 0%); transform: translateY(0) rotate(calc(var(--rot, 9) * 0.0deg)); }
+    25% { transform: translateY(calc(var(--ampY, 12px) * -0.5)) rotate(calc(var(--rot, 9) * -0.2deg)); }
+    50% { transform: translateY(calc(var(--ampY, 12px) * 0.4)) rotate(calc(var(--rot, 9) * 0.15deg)); }
+    75% { transform: translateY(calc(var(--ampY, 12px) * -0.6)) rotate(calc(var(--rot, 9) * -0.2deg)); }
+    100% { left: calc(var(--startLeftPct, -12%) + 150%); transform: translateY(0) rotate(0deg); }
+}
+@keyframes heartDriftC {
+    0% { left: calc(var(--startLeftPct, -12%) + 0%); transform: translateY(calc(var(--ampY, 10px) * 0.1)) rotate(calc(var(--rot, 7) * 0.05deg)); }
+    25% { transform: translateY(calc(var(--ampY, 10px) * 0.8)) rotate(calc(var(--rot, 7) * 0.25deg)); }
+    50% { transform: translateY(calc(var(--ampY, 10px) * -0.6)) rotate(calc(var(--rot, 7) * -0.18deg)); }
+    75% { transform: translateY(calc(var(--ampY, 10px) * 0.5)) rotate(calc(var(--rot, 7) * 0.15deg)); }
+    100% { left: calc(var(--startLeftPct, -12%) + 150%); transform: translateY(0) rotate(0deg); }
+}
+@keyframes heartDriftD {
+    0% { left: calc(var(--startLeftPct, -12%) + 0%); transform: translateY(calc(var(--ampY, 14px) * -0.2)) rotate(calc(var(--rot, 10) * -0.1deg)); }
+    25% { transform: translateY(calc(var(--ampY, 14px) * 0.4)) rotate(calc(var(--rot, 10) * 0.2deg)); }
+    50% { transform: translateY(calc(var(--ampY, 14px) * -0.8)) rotate(calc(var(--rot, 10) * -0.25deg)); }
+    75% { transform: translateY(calc(var(--ampY, 14px) * 0.3)) rotate(calc(var(--rot, 10) * 0.18deg)); }
+    100% { left: calc(var(--startLeftPct, -12%) + 150%); transform: translateY(0) rotate(0deg); }
+}
+
 @media (max-width: 409.98px) {
     .ann-hide-under-410 { display: none !important; }
 }
@@ -2565,7 +2645,7 @@ input[type="number"] {
     border-color: #ff4d88;
 }
 
-.valentine-section a { color: #ff8fb5; }
+.valentine-section a { color: #e91e63; }
 
 /* ==========================
    Home: Sale Section Title (bigger)

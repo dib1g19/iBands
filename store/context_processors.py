@@ -1,7 +1,19 @@
+import time
+
 from django.core.cache import cache
 from django.conf import settings
 from .models import Category, Cart, CategoryLink, StoreThemeSettings
 from customer.models import Wishlist
+
+# Per-worker cache to avoid a Redis read on every page view.
+_category_tree_local = {"tree": None, "expires_at": 0.0}
+_CATEGORY_TREE_LOCAL_TTL = 300
+
+
+def invalidate_category_tree_cache():
+    _category_tree_local["tree"] = None
+    _category_tree_local["expires_at"] = 0.0
+    cache.delete("category_tree")
 
 
 def build_category_tree(categories):
@@ -35,12 +47,18 @@ def build_category_tree(categories):
     return tree
 
 def navigation_context(request):
-    # Fetch category tree from cache
-    category_tree = cache.get("category_tree")
-    if category_tree is None:
-        categories = list(Category.objects.all().select_related('parent'))
-        category_tree = build_category_tree(categories)
-        cache.set("category_tree", category_tree, timeout=None)
+    now = time.monotonic()
+    category_tree = None
+    if _category_tree_local["tree"] is not None and now < _category_tree_local["expires_at"]:
+        category_tree = _category_tree_local["tree"]
+    else:
+        category_tree = cache.get("category_tree")
+        if category_tree is None:
+            categories = list(Category.objects.all().select_related('parent'))
+            category_tree = build_category_tree(categories)
+            cache.set("category_tree", category_tree, timeout=None)
+        _category_tree_local["tree"] = category_tree
+        _category_tree_local["expires_at"] = now + _CATEGORY_TREE_LOCAL_TTL
 
     try:
         cart_id = request.session.get("cart_id")

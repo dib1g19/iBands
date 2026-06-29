@@ -87,6 +87,8 @@ CACHES = {
         "LOCATION": env("REDIS_URL"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            # Keep the site up when Redis is unavailable or over quota.
+            "IGNORE_EXCEPTIONS": True,
         },
     }
 }

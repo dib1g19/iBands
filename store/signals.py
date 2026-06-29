@@ -2,7 +2,7 @@ from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from .models import Order, Category, CategoryLink
 from .emails import send_order_notification_email
-from django.core.cache import cache
+from .context_processors import invalidate_category_tree_cache
 
 @receiver(pre_save, sender=Order)
 def order_status_signal(sender, instance, **kwargs):
@@ -29,9 +29,9 @@ def order_status_signal(sender, instance, **kwargs):
 
 @receiver([post_save, post_delete], sender=Category)
 def clear_category_cache(sender, **kwargs):
-    cache.delete("category_tree")
+    invalidate_category_tree_cache()
 
 
 @receiver([post_save, post_delete], sender=CategoryLink)
 def clear_category_link_cache(sender, **kwargs):
-    cache.delete("category_tree")
+    invalidate_category_tree_cache()

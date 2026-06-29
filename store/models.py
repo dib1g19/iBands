@@ -877,24 +877,33 @@ class StoreThemeSettings(models.Model):
 
     # Cached getter for active campaign (single DB hit, then cache)
     CACHE_KEY = "store.active_campaign"
+    _local_active_campaign = None
 
     @classmethod
     def get_active_campaign(cls) -> str:
+        if cls._local_active_campaign:
+            return cls._local_active_campaign
         cached = cache.get(cls.CACHE_KEY)
         if cached:
+            cls._local_active_campaign = cached
             return cached
         try:
             obj = cls.get_solo()
             value = getattr(obj, "active_campaign", cls.CAMPAIGN_DEFAULT)
         except Exception:
             value = cls.CAMPAIGN_DEFAULT
+        cls._local_active_campaign = value
         cache.set(cls.CACHE_KEY, value, timeout=None)
         return value
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # Invalidate cache after changes in admin
+    @classmethod
+    def invalidate_active_campaign_cache(cls):
+        cls._local_active_campaign = None
         try:
-            cache.delete(self.CACHE_KEY)
+            cache.delete(cls.CACHE_KEY)
         except Exception:
             pass
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.invalidate_active_campaign_cache()

@@ -89,7 +89,9 @@ def wishlist(request):
         cart_id = request.session.get("cart_id")
         wishlist_qs = customer_models.Wishlist.objects.filter(wishlist_id=cart_id)
 
-    wishlist_list = wishlist_qs.select_related(
+    wishlist_list = wishlist_qs.filter(
+        product__status="published"
+    ).select_related(
         "product__category", "product__category__parent", "product__category__parent__parent"
     )
     wishlist = paginate_queryset(request, wishlist_list, 6)
@@ -126,7 +128,7 @@ def toggle_wishlist(request, id):
         if not created:
             wishlist_item.delete()
             total_wishlist_items = customer_models.Wishlist.objects.filter(
-                user=request.user
+                user=request.user, product__status="published"
             ).count()
             return JsonResponse(
                 {
@@ -140,7 +142,7 @@ def toggle_wishlist(request, id):
             wishlist_item.wishlist_id = cart_id
             wishlist_item.save(update_fields=["wishlist_id"])
             total_wishlist_items = customer_models.Wishlist.objects.filter(
-                user=request.user
+                user=request.user, product__status="published"
             ).count()
             return JsonResponse(
                 {
@@ -156,7 +158,7 @@ def toggle_wishlist(request, id):
         if not created:
             wishlist_item.delete()
             total_wishlist_items = customer_models.Wishlist.objects.filter(
-                wishlist_id=cart_id
+                wishlist_id=cart_id, product__status="published"
             ).count()
             return JsonResponse(
                 {
@@ -167,7 +169,7 @@ def toggle_wishlist(request, id):
             )
         else:
             total_wishlist_items = customer_models.Wishlist.objects.filter(
-                wishlist_id=cart_id
+                wishlist_id=cart_id, product__status="published"
             ).count()
             return JsonResponse(
                 {

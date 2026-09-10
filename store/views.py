@@ -849,6 +849,8 @@ def index(request):
     # Band of the Week (50% off)
     band_of_the_week = BandOfTheWeek.get_current_week()
     band_product = getattr(band_of_the_week, "product", None)
+    if band_product and band_product.status != "published":
+        band_product = None
     # Ensure gallery_images are prefetched for band product (homepage card)
     if band_product:
         try:
@@ -1012,7 +1014,7 @@ def band_of_the_week(request):
         deal = BandOfTheWeek.get_current_week()
         # Keep selected_date unchanged; we still need it for calendar positioning
     product = getattr(deal, "product", None) if deal else None
-    if not product:
+    if not product or product.status != "published":
         messages.info(request, "Няма избрана каишка за тази дата.")
         return redirect("store:index")
 
@@ -1114,7 +1116,7 @@ def band_of_the_week(request):
     history_starts = [start_base - dt_timedelta(weeks=i) for i in range(history_weeks_count)]
     weekly_history = (
         BandOfTheWeek.objects
-        .filter(week_start__in=history_starts)
+        .filter(week_start__in=history_starts, product__status="published")
         .select_related("product__category")
         .prefetch_related("product__gallery_images")
         .order_by("-week_start")
@@ -1131,6 +1133,7 @@ def band_of_the_week(request):
     # Determine if we can paginate further back/forward
     min_week_start = (
         BandOfTheWeek.objects
+        .filter(product__status="published")
         .order_by("week_start")
         .values_list("week_start", flat=True)
         .first()
@@ -1197,7 +1200,7 @@ def band_of_the_week_history(request):
 
     weekly_history = (
         BandOfTheWeek.objects
-        .filter(week_start__in=history_starts)
+        .filter(week_start__in=history_starts, product__status="published")
         .select_related("product__category")
         .order_by("-week_start")
     )
@@ -1212,6 +1215,7 @@ def band_of_the_week_history(request):
 
     min_week_start = (
         BandOfTheWeek.objects
+        .filter(product__status="published")
         .order_by("week_start")
         .values_list("week_start", flat=True)
         .first()
@@ -1569,7 +1573,7 @@ def product_detail(request, category_path, product_slug):
 
     # Prepare related products (from the same category, exclude self)
     related_products_list = (
-        Product.objects.filter(category=category)
+        Product.objects.filter(category=category, status="published")
         .exclude(id=product.id)
         .select_related('category', 'category__parent', 'category__parent__parent')
         .prefetch_related('gallery_images')
@@ -2589,7 +2593,7 @@ def set_payment_method(request, order_id):
 
 
 def filter_products(request):
-    products = store_models.Product.objects.all()
+    products = store_models.Product.objects.filter(status="published")
 
     # Get filters from the AJAX request
     categories = request.GET.getlist("categories[]")

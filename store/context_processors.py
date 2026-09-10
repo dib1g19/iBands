@@ -68,11 +68,17 @@ def navigation_context(request):
 
     try:
         if request.user.is_authenticated:
-            wishlist_count = Wishlist.objects.filter(user=request.user).count()
+            wishlist_count = Wishlist.objects.filter(
+                user=request.user, product__status="published"
+            ).count()
         else:
             cart_id = request.session.get("cart_id")
             wishlist_count = (
-                Wishlist.objects.filter(wishlist_id=cart_id).count() if cart_id else 0
+                Wishlist.objects.filter(
+                    wishlist_id=cart_id, product__status="published"
+                ).count()
+                if cart_id
+                else 0
             )
     except Exception:
         wishlist_count = 0

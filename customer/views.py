@@ -9,6 +9,7 @@ from django.urls import reverse
 from store.utils import paginate_queryset
 from store import models as store_models
 from customer import models as customer_models
+from customer.utils import get_order_for_customer
 
 
 @login_required
@@ -51,21 +52,21 @@ def dashboard(request):
 
 @login_required
 def order_detail(request, order_id):
-    order = (
-        store_models.Order.objects
-        .prefetch_related(
-            models.Prefetch(
-                "order_items",
-                queryset=store_models.OrderItem.objects.select_related(
-                    "product",
-                    "product__category",
-                    "product__category__parent",
-                    "product__category__parent__parent"
-                ),
-            )
+    order_qs = store_models.Order.objects.prefetch_related(
+        models.Prefetch(
+            "order_items",
+            queryset=store_models.OrderItem.objects.select_related(
+                "product",
+                "product__category",
+                "product__category__parent",
+                "product__category__parent__parent"
+            ),
         )
-        .get(customer=request.user, order_id=order_id)
     )
+    order = get_order_for_customer(request.user, order_id, queryset=order_qs)
+    if not order:
+        messages.error(request, "Поръчката не беше намерена в този профил.")
+        return redirect("customer:dashboard")
 
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},

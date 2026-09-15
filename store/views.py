@@ -29,7 +29,7 @@ from store.utils import (
 from store import models as store_models
 from customer import models as customer_models
 from userauths import models as userauths_models
-from customer.utils import get_user_wishlist_products
+from customer.utils import get_user_wishlist_products, get_order_for_customer
 from store.emails import send_order_notification_email
 from django.db.models import Q
 from store.utils import increment_500_error_count
@@ -2712,6 +2712,10 @@ def filter_products(request):
 
 def order_tracker_page(request):
     if request.method == "POST":
+        if not request.user.is_authenticated:
+            messages.error(request, "Моля, влезте в профила си, за да проследите поръчка.")
+            return redirect("store:order_tracker_page")
+
         key = request.POST.get("item_id", "").strip()
         order = store_models.Order.objects.filter(order_id=key).first()
         if not order:
@@ -2721,7 +2725,16 @@ def order_tracker_page(request):
             messages.error(request, "Поръчката не беше намерена.")
             return redirect("store:order_tracker_page")
 
-        return redirect("customer:order_detail", order.order_id)
+        owned = get_order_for_customer(request.user, order.order_id)
+        if not owned:
+            messages.error(
+                request,
+                "Тази поръчка не е свързана с профила, в който сте влезли. "
+                "Влезте с имейла, използван при поръчката, или поръчайте докато сте в профила си.",
+            )
+            return redirect("store:order_tracker_page")
+
+        return redirect("customer:order_detail", owned.order_id)
 
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},

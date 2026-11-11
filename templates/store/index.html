@@ -20,15 +20,20 @@
                     <div class="carousel-item active">
                         <div class="position-relative">
                             {% if campaign.key == 'black-friday' %}
-                            <img class="d-block w-100 hero" src="{% static 'assets/img/black-friday.avif' %}" alt="Black Friday" onerror="this.onerror=null;this.src='{% static 'assets/img/cover.avif' %}';" />
+                            <a href="{% url 'store:shop' %}" class="d-block" aria-label="Пазарувай сега">
+                                <img class="d-block w-100 hero" src="{% static 'assets/img/black-friday.avif' %}" alt="Black Friday" onerror="this.onerror=null;this.src='{% static 'assets/img/cover.avif' %}';" />
+                            </a>
                             {% elif campaign.key == 'valentine' %}
                             <img class="d-block w-100 hero" src="{% static 'assets/img/valentine.avif' %}" alt="Valentine" onerror="this.onerror=null;this.src='{% static 'assets/img/cover.avif' %}';" />
-                            {% else %}
-                            <img class="d-block w-100 hero" src="{% static 'assets/img/cover.avif' %}" alt="Hero Cover" />
-                            {% endif %}
                             <div class="hero-cta position-absolute text-center w-100">
                                 <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
                             </div>
+                            {% else %}
+                            <img class="d-block w-100 hero" src="{% static 'assets/img/cover.avif' %}" alt="Hero Cover" />
+                            <div class="hero-cta position-absolute text-center w-100">
+                                <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="carousel-item">

@@ -1062,7 +1062,7 @@ h6 {
     overflow: hidden !important;
 }
 
-@media (max-width: 424.98px) {
+@media (max-width: 439.98px) {
     .nav-menu-social > li > a.btn {
         padding: 10px 5px;
     }
@@ -1074,11 +1074,27 @@ h6 {
     }
 }
 
-@media (max-width: 991.98px) {
-    .nav-menu > li:last-child {
-        border-bottom: solid 1px #f0f0f0;
+@media (max-width: 575.98px) {
+    .nav-header {
+        min-width: 0;
     }
+    .nav-menu-social {
+        flex-shrink: 0;
+    }
+    .nav-logo {
+        min-width: 0;
+    }
+    .nav-logo picture {
+        display: block;
+        max-width: 100%;
+    }
+    .nav-logo img {
+        max-width: min(120px, 100%);
+        height: auto;
+    }
+}
 
+@media (max-width: 991.98px) {
     /* Deeper dropdowns: increase left padding for indentation effect */
     .nav-dropdown ul li > a { padding-left: 50px; }
     .nav-dropdown ul ul li > a { padding-left: 70px; }

@@ -16,15 +16,16 @@
         <div class="container-fluid p-0">
             <div id="homeHeroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
                 <div class="carousel-inner">
-                    {# PROMO SLIDE — uncomment and swap the image src to activate a promotional banner #}
-                    {# <div class="carousel-item active">
-                        <div class="position-relative">
-                            <img class="d-block w-100 hero" src="{% static 'assets/img/valentine.avif' %}" alt="Valentine" onerror="this.onerror=null;this.src='{% static 'assets/img/cover.avif' %}';" />
-                        </div>
-                    </div> #}
+                    {# PROMO SLIDE — first cover follows the active campaign in Store theme settings #}
                     <div class="carousel-item active">
                         <div class="position-relative">
+                            {% if campaign.key == 'black-friday' %}
+                            <img class="d-block w-100 hero" src="{% static 'assets/img/black-friday.avif' %}" alt="Black Friday" onerror="this.onerror=null;this.src='{% static 'assets/img/cover.avif' %}';" />
+                            {% elif campaign.key == 'valentine' %}
+                            <img class="d-block w-100 hero" src="{% static 'assets/img/valentine.avif' %}" alt="Valentine" onerror="this.onerror=null;this.src='{% static 'assets/img/cover.avif' %}';" />
+                            {% else %}
                             <img class="d-block w-100 hero" src="{% static 'assets/img/cover.avif' %}" alt="Hero Cover" />
+                            {% endif %}
                             <div class="hero-cta position-absolute text-center w-100">
                                 <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
                             </div>

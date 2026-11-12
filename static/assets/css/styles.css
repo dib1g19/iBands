@@ -1318,17 +1318,20 @@ h6 {
     }
 }
 
-/* Hero cover */
+/* Hero cover. 2:1 on phones and portrait tablets, 3:1 on landscape desktops. */
 .hero {
-    height: 32vh;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
     object-fit: cover;
     object-position: center center;
+    max-height: 100vh;
 }
-.hero-cta { bottom: 1rem; left: 0; right: 0; }
+.hero-cta { bottom: 0.75rem; left: 0; right: 0; }
 
-@media (max-width: 576px) {
-    .hero { height: 24vh; object-position: center top; }
-    .hero-cta { bottom: 0.5rem; }
+@media (min-width: 992px) and (orientation: landscape) {
+    .hero { aspect-ratio: 3 / 1; }
+    .hero-cta { bottom: 1.5rem; }
 }
 
 .band-of-the-day-pill {
@@ -1341,21 +1344,6 @@ h6 {
     padding: .5rem .9rem;
     font-weight: 700;
     font-size: 1.5rem;
-}
-
-@media (min-width: 768px) {
-    .hero { height: 38vh; }
-    .hero-cta { bottom: 1.25rem; }
-}
-
-@media (min-width: 992px) {
-    .hero { height: 48vh; }
-    .hero-cta { bottom: 1.5rem; }
-}
-
-@media (min-width: 1200px) {
-    .hero { height: 52vh; }
-    .hero-cta { bottom: 2rem; }
 }
 
 /*-------------- Form Elements (Bootstrap defaults with minimal tweaks) ----------------*/

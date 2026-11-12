@@ -21,15 +21,24 @@
                         <div class="position-relative">
                             {% if campaign.key == 'black-friday' %}
                             <a href="{% url 'store:shop' %}" class="d-block" aria-label="Пазарувай сега">
-                                <img class="d-block w-100 hero" src="{% static 'assets/img/black-friday.avif' %}" alt="Black Friday" onerror="this.onerror=null;this.src='{% static 'assets/img/cover.avif' %}';" />
+                                <picture class="d-block w-100">
+                                    <source media="(max-width: 991.98px), (orientation: portrait)" srcset="{% static 'assets/img/black-friday-2x1.avif' %}">
+                                    <img class="d-block w-100 hero" src="{% static 'assets/img/black-friday-3x1.avif' %}" alt="Black Friday" onerror="this.onerror=null;this.src='{% static 'assets/img/cover-3x1.avif' %}';" />
+                                </picture>
                             </a>
                             {% elif campaign.key == 'valentine' %}
-                            <img class="d-block w-100 hero" src="{% static 'assets/img/valentine.avif' %}" alt="Valentine" onerror="this.onerror=null;this.src='{% static 'assets/img/cover.avif' %}';" />
+                            <picture class="d-block w-100">
+                                <source media="(max-width: 991.98px), (orientation: portrait)" srcset="{% static 'assets/img/valentine-2x1.avif' %}">
+                                <img class="d-block w-100 hero" src="{% static 'assets/img/valentine-3x1.avif' %}" alt="Valentine" onerror="this.onerror=null;this.src='{% static 'assets/img/cover-3x1.avif' %}';" />
+                            </picture>
                             <div class="hero-cta position-absolute text-center w-100">
                                 <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
                             </div>
                             {% else %}
-                            <img class="d-block w-100 hero" src="{% static 'assets/img/cover.avif' %}" alt="Hero Cover" />
+                            <picture class="d-block w-100">
+                                <source media="(max-width: 991.98px), (orientation: portrait)" srcset="{% static 'assets/img/cover-2x1.avif' %}">
+                                <img class="d-block w-100 hero" src="{% static 'assets/img/cover-3x1.avif' %}" alt="Hero Cover" />
+                            </picture>
                             <div class="hero-cta position-absolute text-center w-100">
                                 <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
                             </div>
@@ -38,7 +47,10 @@
                     </div>
                     <div class="carousel-item">
                         <div class="position-relative">
-                            <img class="d-block w-100 hero" src="{% static 'assets/img/mystery-box.avif' %}" alt="Mystery Box" onerror="this.onerror=null;this.src='{% static 'assets/img/wheel-cover.avif' %}';" />
+                            <picture class="d-block w-100">
+                                <source media="(max-width: 991.98px), (orientation: portrait)" srcset="{% static 'assets/img/mystery-box-2x1.avif' %}">
+                                <img class="d-block w-100 hero" src="{% static 'assets/img/mystery-box-3x1.avif' %}" alt="Mystery Box" onerror="this.onerror=null;this.src='{% static 'assets/img/wheel-cover.avif' %}';" />
+                            </picture>
                             <div class="hero-cta position-absolute text-center w-100">
                                 <a href="{% url 'store:category' 'mystery-box' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Купи Mystery Box</a>
                             </div>

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block title %}Май се изгубихме | iBands{% endblock %}
+
+{% block content %}
+    <section class="error-screen">
+        <div class="error-layout">
+            <div class="error-copy">
+                <h1>Май се<br>изгубихме.</h1>
+                <p class="error-lead">Тази страница не е открита.</p>
+                <a class="error-button" href="{% url 'store:index' %}">Към магазина <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                <div>
+                    <a class="error-back" id="error-back" href="{% url 'store:index' %}">Назад</a>
+                </div>
+            </div>
+            <img class="error-art" src="{% static 'assets/img/not-found.avif' %}" alt="" />
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        var back = document.getElementById("error-back");
+        if (window.history.length > 1) {
+            back.addEventListener("click", function (event) {
+                event.preventDefault();
+                window.history.back();
+            });
+        } else {
+            back.parentElement.remove();
+        }
+    </script>
+{% endblock %}

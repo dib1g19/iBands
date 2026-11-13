@@ -2668,7 +2668,7 @@ input[type="number"] {
 }
 
 /* ==========================
-   Server error page
+   Error pages
    ========================== */
 .error-screen {
     min-height: 62vh;
@@ -2699,7 +2699,7 @@ input[type="number"] {
     line-height: 1.45;
     margin: 0 0 1.75rem;
 }
-.error-retry {
+.error-button {
     display: inline-flex;
     align-items: center;
     gap: 0.7rem;
@@ -2712,12 +2712,12 @@ input[type="number"] {
     font-weight: 500;
     line-height: 1;
 }
-.error-retry:hover,
-.error-retry:focus {
+.error-button:hover,
+.error-button:focus {
     background: #2b2b2b;
     color: #ffffff;
 }
-.error-retry:focus-visible {
+.error-button:focus-visible {
     outline: 2px solid #111111;
     outline-offset: 3px;
 }

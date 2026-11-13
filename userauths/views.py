@@ -224,17 +224,3 @@ def logout_view(request):
     request.session["cart_id"] = cart_id
     messages.success(request, "Успешно излязохте от профила си.")
     return redirect("userauths:sign-in")
-
-
-def handler404(request, exception, *args, **kwargs):
-    context = {}
-    response = render(request, "userauths/404.html", context)
-    response.status_code = 404
-    return response
-
-
-def handler500(request, *args, **kwargs):
-    context = {}
-    response = render(request, "userauths/500.html", context)
-    response.status_code = 500
-    return response

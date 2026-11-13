@@ -84,3 +84,40 @@ class RequestCounterMiddleware:
         user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
         bot_signatures = ['bot', 'crawl', 'spider', 'slurp']
         return any(bot_sig in user_agent for bot_sig in bot_signatures)
+
+
+class ServerErrorMiddleware:
+    """Log every unhandled error. Admin errors stay inside the admin."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        return self.get_response(request)
+
+    def process_exception(self, request, exception):
+        from django.contrib import messages
+        from django.http import HttpResponseRedirect
+        from store.error_log import (
+            admin_error_notice,
+            admin_error_return_url,
+            is_admin_request,
+            record_server_error,
+            should_record,
+        )
+
+        if not should_record(exception):
+            return None
+
+        log = record_server_error(request, exception)
+        if not is_admin_request(request):
+            return None
+
+        try:
+            messages.error(request, admin_error_notice(exception, log), extra_tags="safe")
+        except Exception:
+            logger.exception("Could not add the admin error notice")
+        target = admin_error_return_url(request)
+        if target:
+            return HttpResponseRedirect(target)
+        return None

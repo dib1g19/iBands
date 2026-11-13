@@ -32,7 +32,7 @@ from userauths import models as userauths_models
 from customer.utils import get_user_wishlist_products, get_order_for_customer
 from store.emails import send_order_notification_email
 from django.db.models import Q
-from store.utils import increment_500_error_count
+from store.error_log import record_server_error
 from urllib.parse import urlencode
 import json
 import requests
@@ -2834,20 +2834,13 @@ def is_bot_request(request):
     return any(bot in user_agent for bot in bot_keywords)
 
 
-def get_client_ip(request):
-    # Prefer HTTP_X_FORWARDED_FOR if behind a proxy (e.g., nginx, cloudflare)
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        # Sometimes X-Forwarded-For can contain multiple IPs, use the first
-        ip = x_forwarded_for.split(',')[0].strip()
-    else:
-        ip = request.META.get('REMOTE_ADDR', '')
-    return ip
-
 def custom_server_error(request):
+    import sys
+
+    exc = sys.exc_info()[1]
+    if exc is not None:
+        record_server_error(request, exc)
     is_bot = is_bot_request(request)
-    ip = get_client_ip(request)
-    increment_500_error_count(is_bot=is_bot, ip=ip)
     if is_bot:
         return render(request, "500_bot.html", status=500)
     else:

@@ -509,3 +509,32 @@ class ProductItemAdmin(iBandsModelAdmin):
     def device_models_display(self, obj):
         names = [dm.name for dm in obj.device_models.all()]
         return ", ".join(names) if names else "-"
+
+
+@admin.register(store_models.ServerErrorLog)
+class ServerErrorLogAdmin(iBandsModelAdmin):
+    list_display = ["created_at", "exception_type", "short_message", "path", "user_label", "is_staff", "is_bot"]
+    list_filter = ["is_staff", "is_bot", "exception_type", "created_at"]
+    search_fields = ["exception_type", "message", "path", "user_label", "user__email"]
+    date_hierarchy = "created_at"
+    list_select_related = ["user"]
+    readonly_fields = [
+        "created_at", "exception_type", "message", "traceback_display", "method", "path",
+        "query_string", "user", "user_label", "is_staff", "is_bot", "ip_address", "user_agent",
+    ]
+    fields = readonly_fields
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+    @admin.display(description="Message")
+    def short_message(self, obj):
+        text = obj.message or ""
+        return text if len(text) <= 80 else f"{text[:77]}..."
+
+    @admin.display(description="Traceback")
+    def traceback_display(self, obj):
+        return format_html("<pre style='white-space:pre-wrap;margin:0'>{}</pre>", obj.traceback or "")

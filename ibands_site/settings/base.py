@@ -57,6 +57,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "ibands_site.middleware.RequestCounterMiddleware",
+    "ibands_site.middleware.ServerErrorMiddleware",
 ]
 
 ROOT_URLCONF = "ibands_site.urls"

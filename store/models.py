@@ -907,3 +907,35 @@ class StoreThemeSettings(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         self.invalidate_active_campaign_cache()
+
+
+class ServerErrorLog(models.Model):
+    """One row for each unhandled server error, including customer and admin requests."""
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    exception_type = models.CharField(max_length=200)
+    message = models.TextField(blank=True)
+    traceback = models.TextField(blank=True)
+    method = models.CharField(max_length=10, blank=True)
+    path = models.CharField(max_length=500, blank=True)
+    query_string = models.CharField(max_length=1000, blank=True)
+    user = models.ForeignKey(
+        user_models.User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="server_error_logs",
+    )
+    user_label = models.CharField(max_length=255, blank=True)
+    is_staff = models.BooleanField(default=False)
+    is_bot = models.BooleanField(default=False)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Server error"
+        verbose_name_plural = "Server errors"
+
+    def __str__(self):
+        return f"{self.exception_type} on {self.path}"

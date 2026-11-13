@@ -110,3 +110,69 @@ class EmailPriceRenderingTests(TestCase):
         self.assertIn(pricing_tags.dual_price(Decimal("100.00")), html)
         self.assertIn(pricing_tags.dual_price(Decimal("50.00")), html)
 
+
+class ServerErrorLogTests(TestCase):
+    def _request(self, path, user):
+        from django.contrib.sessions.middleware import SessionMiddleware
+        from django.test import RequestFactory
+
+        request = RequestFactory().get(path)
+        SessionMiddleware(lambda req: None).process_request(request)
+        request.session.save()
+        request.user = user
+        return request
+
+    def test_admin_error_returns_to_the_admin_with_a_notice(self):
+        from django.contrib.auth import get_user_model
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        from ibands_site.middleware import ServerErrorMiddleware
+
+        user = get_user_model().objects.create_user(
+            email="staff@example.com",
+            username="staff",
+            password="secret",
+            is_staff=True,
+        )
+        request = self._request("/admin/store/product/", user)
+        request._messages = FallbackStorage(request)
+        response = ServerErrorMiddleware(lambda req: None).process_exception(
+            request, RuntimeError("stock row missing")
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/admin/")
+        stored = [message.message for message in request._messages]
+        self.assertIn("stock row missing", stored[0])
+        self.assertIn("See more", stored[0])
+        log = store_models.ServerErrorLog.objects.get()
+        self.assertEqual(log.exception_type, "RuntimeError")
+        self.assertTrue(log.is_staff)
+        self.assertEqual(log.user, user)
+        self.assertIn("RuntimeError", log.traceback)
+
+    def test_customer_error_is_stored_without_replacing_the_response(self):
+        from django.contrib.auth.models import AnonymousUser
+        from ibands_site.middleware import ServerErrorMiddleware
+
+        request = self._request("/shop/", AnonymousUser())
+        response = ServerErrorMiddleware(lambda req: None).process_exception(
+            request, RuntimeError("secret boom")
+        )
+
+        self.assertIsNone(response)
+        log = store_models.ServerErrorLog.objects.get()
+        self.assertEqual(log.message, "secret boom")
+        self.assertFalse(log.is_staff)
+        self.assertEqual(log.path, "/shop/")
+
+    def test_missing_pages_are_not_stored(self):
+        from django.contrib.auth.models import AnonymousUser
+        from django.http import Http404
+        from ibands_site.middleware import ServerErrorMiddleware
+
+        request = self._request("/missing/", AnonymousUser())
+        response = ServerErrorMiddleware(lambda req: None).process_exception(request, Http404())
+
+        self.assertIsNone(response)
+        self.assertFalse(store_models.ServerErrorLog.objects.exists())
+

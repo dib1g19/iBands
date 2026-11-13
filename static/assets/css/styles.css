@@ -2666,3 +2666,84 @@ input[type="number"] {
 @media (min-width: 992px) {
     .home-sale-title { font-size: 3.2rem; }
 }
+
+/* ==========================
+   Server error page
+   ========================== */
+.error-screen {
+    min-height: 62vh;
+    display: flex;
+    align-items: center;
+    padding: 3.5rem 1.25rem 4.5rem;
+}
+.error-layout {
+    width: min(1080px, 100%);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    text-align: center;
+}
+.error-copy { max-width: 34rem; }
+.error-screen h1 {
+    font-size: clamp(1.75rem, 7.2vw, 2.8rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    margin: 0 0 1rem;
+}
+.error-lead {
+    color: #1c1c1c;
+    font-size: clamp(1.05rem, 2vw, 1.35rem);
+    line-height: 1.45;
+    margin: 0 0 1.75rem;
+}
+.error-retry {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    background: #111111;
+    color: #ffffff;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.9rem 1.35rem 0.9rem 1.5rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1;
+}
+.error-retry:hover,
+.error-retry:focus {
+    background: #2b2b2b;
+    color: #ffffff;
+}
+.error-retry:focus-visible {
+    outline: 2px solid #111111;
+    outline-offset: 3px;
+}
+.error-back {
+    display: inline-block;
+    margin-top: 1rem;
+    color: #111111;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+.error-art {
+    width: min(100%, 26rem);
+    height: auto;
+    display: block;
+}
+@media (min-width: 992px) {
+    .error-screen { padding: 4rem 2.5rem 5rem; }
+    .error-layout {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+        gap: 2.5rem;
+    }
+    .error-screen h1 { font-size: clamp(2.4rem, 2.8vw, 3.2rem); }
+    .error-copy { flex: 1 1 28rem; }
+    .error-art { width: min(44%, 32rem); flex: 0 1 32rem; }
+}

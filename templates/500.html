@@ -1,17 +1,42 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block title %}Малка пауза | iBands{% endblock %}
+
 {% block content %}
-    <section>
-        <div class="container d-flex align-items-center justify-content-center" style="min-height: 50vh;">
-            <div class="text-center">
-                <h1 class="fw-semibold pt-3" style="font-size:2.2rem;">Временен проблем със сървъра</h1>
-                <p class="fs-lg mb-3">Моля, опитайте да презаредите страницата след малко.</p>
-                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                    <span class="visually-hidden">Зареждане...</span>
+    <section class="error-screen">
+        <div class="error-layout">
+            <div class="error-copy">
+                <h1>Малка пауза.<br>Скоро сме обратно.</h1>
+                <p class="error-lead">Възникна временен проблем.</p>
+                <button type="button" class="error-retry" id="error-retry">
+                    Опитай отново
+                    <i class="fas fa-rotate-right" aria-hidden="true"></i>
+                </button>
+                <div>
+                    <a class="error-back" id="error-back" href="{% url 'store:index' %}">Назад</a>
                 </div>
-                <p class="text-muted mt-3" style="font-size:0.95rem;">
-                    Ако проблемът продължава, свържете се с нас чрез контактната форма или по имейл.
-                </p>
             </div>
+            <img class="error-art" src="{% static 'assets/img/server-error.avif' %}" alt="" />
         </div>
     </section>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        document.getElementById("error-retry").addEventListener("click", function () {
+            window.location.reload();
+        });
+        var back = document.getElementById("error-back");
+        if (window.history.length > 1) {
+            back.addEventListener("click", function (event) {
+                event.preventDefault();
+                window.history.back();
+            });
+        } else {
+            back.textContent = "Към началото";
+        }
+    </script>
 {% endblock %}

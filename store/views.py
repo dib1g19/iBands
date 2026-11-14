@@ -2825,23 +2825,10 @@ def subscribe_newsletter(request):
         return JsonResponse({"success": False, "message": "Невалиден имейл адрес."})
 
 
-def is_bot_request(request):
-    user_agent = request.META.get("HTTP_USER_AGENT", "").lower()
-    bot_keywords = [
-        "bot", "crawl", "slurp", "spider", "mediapartners", "facebookexternalhit",
-        "meta-externalagent", "twitterbot", "bingpreview", "yandex", "duckduckbot"
-    ]
-    return any(bot in user_agent for bot in bot_keywords)
-
-
 def custom_server_error(request):
     import sys
 
     exc = sys.exc_info()[1]
     if exc is not None:
         record_server_error(request, exc)
-    is_bot = is_bot_request(request)
-    if is_bot:
-        return render(request, "500_bot.html", status=500)
-    else:
-        return render(request, "500.html", status=500)
+    return render(request, "500.html", status=500)

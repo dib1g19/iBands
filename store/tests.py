@@ -1,4 +1,6 @@
+from django.db import connection
 from django.test import TestCase, Client
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 from unittest.mock import patch
@@ -201,4 +203,109 @@ class SlugStabilityTests(TestCase):
         product.refresh_from_db()
 
         self.assertEqual(product.slug, "classic-box")
+
+
+class OrderAdminProductLabelTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+
+        user = get_user_model().objects.create_superuser(
+            email="orders@example.com",
+            username="orders",
+            password="secret",
+        )
+        self.client.force_login(user)
+
+    def _order_with_item(self, name, sku, qty=2, model="Ultra", size="49mm"):
+        product = store_models.Product.objects.create(
+            name=name,
+            sku=sku,
+            description="Band",
+        )
+        order = store_models.Order.objects.create(total=Decimal("20.00"))
+        store_models.OrderItem.objects.create(
+            order=order,
+            product=product,
+            qty=qty,
+            model=model,
+            size=size,
+            price=Decimal("10.00"),
+            sub_total=Decimal("20.00"),
+        )
+        return order, product
+
+    def test_order_list_shows_each_line_without_a_query_per_order(self):
+        long_name = "Силиконова каишка за Apple Watch Ultra 2 с много дълго име"
+        order, product = self._order_with_item(long_name, "SKU-ULTRA-49")
+        self._order_with_item("Втора каишка", "SKU-TWO", qty=1, model="", size="")
+
+        url = reverse("admin:store_order_changelist")
+        with CaptureQueriesContext(connection) as first:
+            response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, long_name)
+        self.assertContains(response, "SKU-ULTRA-49")
+        self.assertContains(response, reverse("admin:store_product_change", args=[product.pk]))
+        self.assertContains(response, "×2")
+        self.assertContains(response, "Ultra")
+        self.assertContains(response, "49mm")
+        self.assertEqual(
+            sum("store_orderitem" in query["sql"] for query in first.captured_queries),
+            1,
+        )
+
+        self._order_with_item("Трета каишка", "SKU-THREE")
+        with CaptureQueriesContext(connection) as second:
+            again = self.client.get(url)
+
+        self.assertEqual(again.status_code, 200)
+        self.assertContains(again, "SKU-THREE")
+        self.assertEqual(len(second.captured_queries), len(first.captured_queries))
+
+        found = self.client.get(url, {"q": "SKU-ULTRA-49"})
+        self.assertContains(found, order.order_id)
+        self.assertNotContains(found, "SKU-THREE")
+
+    def test_order_page_shows_the_full_product_from_the_loaded_row(self):
+        long_name = "Силиконова каишка за Apple Watch Ultra 2 с много дълго име"
+        order, first = self._order_with_item(long_name, "SKU-ULTRA-49")
+        second = store_models.Product.objects.create(
+            name="Найлонова каишка за Garmin Fenix",
+            sku="SKU-FENIX",
+            description="Band",
+        )
+        store_models.OrderItem.objects.create(
+            order=order,
+            product=second,
+            qty=1,
+            price=Decimal("15.00"),
+            sub_total=Decimal("15.00"),
+        )
+
+        url = reverse("admin:store_order_change", args=[order.pk])
+        with CaptureQueriesContext(connection) as ctx:
+            response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, long_name)
+        self.assertContains(response, "SKU-ULTRA-49")
+        self.assertContains(response, "SKU-FENIX")
+        self.assertContains(response, reverse("admin:store_product_change", args=[first.pk]))
+        self.assertContains(response, reverse("admin:store_product_change", args=[second.pk]))
+        self.assertNotContains(response, "order_items-0-product")
+        self.assertNotContains(response, "order_items-1-product")
+        item_queries = [
+            query["sql"]
+            for query in ctx.captured_queries
+            if "store_orderitem" in query["sql"]
+        ]
+        self.assertEqual(len(item_queries), 1)
+        self.assertIn("store_product", item_queries[0])
+        product_lookups = [
+            query["sql"]
+            for query in ctx.captured_queries
+            if 'FROM "store_product"' in query["sql"]
+        ]
+        self.assertEqual(product_lookups, [])
 

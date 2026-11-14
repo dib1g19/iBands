@@ -1,11 +1,13 @@
 from django.contrib import admin
 from django.db import models
+from django.db.models import Prefetch
 from django.http import HttpResponseRedirect
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
+from django.utils.safestring import mark_safe
 from ibands_site.admin import iBandsModelAdmin
 from store import models as store_models
 from store.admin_forms import DuplicateProductForm
-from store.admin_helpers import product_path_label
+from store.admin_helpers import order_product_label, product_path_label
 from itertools import product as cartesian_product
 
 
@@ -220,30 +222,30 @@ class CartAdmin(iBandsModelAdmin):
 
 class OrderItemInline(admin.TabularInline):
     model = store_models.OrderItem
-    fields = ["product", "model", "size", "qty", "price", "sub_total", "note"]
-    readonly_fields = ["note"]
-    autocomplete_fields = ["product"]
+    fields = ["product_label", "model", "size", "qty", "price", "sub_total", "note"]
+    readonly_fields = ["product_label", "note"]
     extra = 0
 
     def get_queryset(self, request):
-        return (
-            super()
-            .get_queryset(request)
-            .select_related("product__category__parent__parent")
-        )
-        
+        return super().get_queryset(request).select_related("product")
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
     @admin.display(description="Product")
-    def product_path(self, obj):
-        return product_path_label(obj.product, link=True)
+    def product_label(self, obj):
+        if not getattr(obj, "product_id", None):
+            return "-"
+        return order_product_label(obj.product, link=True)
 
 
 @admin.register(store_models.Order)
 class OrderAdmin(iBandsModelAdmin):
-    list_display = ["order_id", "customer", "address", "total", "order_status", "shipping_service", "tracking_id", "payment_method", "date"]
+    list_display = ["order_id", "items_summary", "customer", "address", "total", "order_status", "shipping_service", "tracking_id", "payment_method", "date"]
     list_editable = [ "order_status", "shipping_service", "tracking_id"]
     list_filter = ["payment_status", "order_status"]
-    search_fields = ["order_id", "customer__username"]
-    list_select_related = ["address"]
+    search_fields = ["order_id", "customer__username", "customer__email", "order_items__product__name", "order_items__product__sku"]
+    list_select_related = ["address", "customer"]
 
     inlines = [OrderItemInline]
     readonly_fields = ["address_display",]
@@ -294,17 +296,51 @@ class OrderAdmin(iBandsModelAdmin):
         return "-"
     address_display.short_description = "Address"
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        match = getattr(request, "resolver_match", None)
+        if match and match.url_name == "store_order_changelist":
+            qs = qs.prefetch_related(
+                Prefetch(
+                    "order_items",
+                    queryset=store_models.OrderItem.objects.select_related("product"),
+                )
+            )
+        return qs
+
+    @admin.display(description="Items")
+    def items_summary(self, obj):
+        lines = []
+        for item in obj.order_items.all():
+            extra = " · ".join(
+                part
+                for part in (
+                    f"×{item.qty}" if item.qty else "",
+                    item.model or "",
+                    item.size or "",
+                )
+                if part
+            )
+            lines.append((order_product_label(item.product, link=True), extra))
+        if not lines:
+            return "-"
+        return format_html_join(
+            mark_safe("<br>"),
+            '{} <span style="color:#666">{}</span>',
+            lines,
+        )
+
 
 @admin.register(store_models.OrderItem)
 class OrderItemAdmin(iBandsModelAdmin):
-    list_display = ["order", "product_path", "model", "size" ,"qty", "price", "sub_total", "note"]
+    list_display = ["order", "product_label", "model", "size" ,"qty", "price", "sub_total", "note"]
     list_filter = ["order__date"]
-    search_fields = ["order__order_id", "product__name"]
-    list_select_related = ["order", "product__category__parent__parent"]
+    search_fields = ["order__order_id", "product__name", "product__sku"]
+    list_select_related = ["order", "product"]
 
     @admin.display(description="Product")
-    def product_path(self, obj):
-        return product_path_label(obj.product, link=True)
+    def product_label(self, obj):
+        return order_product_label(obj.product, link=True)
 
 
 class VariantItemInline(admin.TabularInline):

@@ -100,7 +100,6 @@ def login_view(request):
         if form.is_valid():
             email = form.cleaned_data["email"].lower().strip()
             password = form.cleaned_data["password"]
-            # Captcha temporarily disabled; proceed directly
             try:
                     user_authenticate = authenticate(
                         request, email=email, password=password

@@ -1,13 +1,17 @@
 import re
 
+from captcha.fields import ReCaptchaField
+from captcha.widgets import ReCaptchaV2Checkbox
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
-# Captcha temporarily disabled
-# from captcha.fields import ReCaptchaField
-# from captcha.widgets import ReCaptchaV2Checkbox
-
 from userauths.models import User
+
+CAPTCHA_ERRORS = {
+    "required": "Моля, потвърдете, че не сте робот.",
+    "captcha_invalid": "Проверката не мина. Моля, опитайте отново.",
+    "captcha_error": "Проверката не мина. Моля, опитайте отново.",
+}
 
 
 class UserRegisterForm(UserCreationForm):
@@ -49,11 +53,14 @@ class UserRegisterForm(UserCreationForm):
         ),
         required=True,
     )
-    # captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox())
+    captcha = ReCaptchaField(
+        widget=ReCaptchaV2Checkbox(),
+        error_messages=CAPTCHA_ERRORS,
+    )
 
     class Meta:
         model = User
-        fields = ["full_name", "mobile", "email", "password1", "password2"]
+        fields = ["full_name", "mobile", "email", "password1", "password2", "captcha"]
 
     def clean_email(self):
         email = self.cleaned_data.get("email", "").strip().lower()
@@ -112,11 +119,14 @@ class LoginForm(forms.Form):
         required=True,
         error_messages={"required": "Моля, въведете парола."},
     )
-    # captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox())
+    captcha = ReCaptchaField(
+        widget=ReCaptchaV2Checkbox(),
+        error_messages=CAPTCHA_ERRORS,
+    )
 
     class Meta:
         model = User
-        fields = ["email", "password"]
+        fields = ["email", "password", "captcha"]
 
     def clean_email(self):
         return (self.cleaned_data.get("email") or "").strip().lower()

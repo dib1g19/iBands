@@ -130,11 +130,7 @@ class Category(models.Model):
         return reverse("store:category", args=[self.get_full_path()])
 
     def save(self, *args, **kwargs):
-        if self.pk:
-            orig = Category.objects.get(pk=self.pk)
-            if orig.title != self.title:
-                self.slug = slugify(self.title)
-        else:
+        if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
 
@@ -324,11 +320,7 @@ class Product(models.Model):
         return 0
 
     def save(self, *args, **kwargs):
-        if self.pk:
-            orig = Product.objects.get(pk=self.pk)
-            if orig.name != self.name:
-                self.slug = slugify(self.name)
-        else:
+        if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 

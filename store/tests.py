@@ -176,3 +176,29 @@ class ServerErrorLogTests(TestCase):
         self.assertIsNone(response)
         self.assertFalse(store_models.ServerErrorLog.objects.exists())
 
+
+class SlugStabilityTests(TestCase):
+    def test_category_keeps_its_address_when_the_title_changes(self):
+        category = store_models.Category.objects.create(title="Mystery Box", sku="MB")
+        self.assertEqual(category.slug, "mystery-box")
+
+        category.title = "Мистериозни кутии"
+        category.save()
+        category.refresh_from_db()
+
+        self.assertEqual(category.slug, "mystery-box")
+
+    def test_product_keeps_its_address_when_the_name_changes(self):
+        product = store_models.Product.objects.create(
+            name="Classic box",
+            sku="MB-CLASSIC",
+            description="A box",
+        )
+        self.assertEqual(product.slug, "classic-box")
+
+        product.name = "Classic Мистериозна кутия"
+        product.save()
+        product.refresh_from_db()
+
+        self.assertEqual(product.slug, "classic-box")
+

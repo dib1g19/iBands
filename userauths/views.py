@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout
+from django.db import transaction
 from django.urls import reverse
 
 from userauths import models as userauths_models
@@ -22,20 +23,23 @@ def register_view(request):
     if form.is_valid():
         # Preserve anonymous session cart before login (session rotates on login)
         preserved_cart_id = request.session.get("cart_id")
+        full_name = form.cleaned_data.get("full_name")
+        email = form.cleaned_data.get("email")
+        mobile = form.cleaned_data.get("mobile")
+        password = form.cleaned_data.get("password1")
         try:
-            user = form.save()
-        except Exception as e:
-            # Surface any model/DB errors as non-field errors
+            with transaction.atomic():
+                user = form.save()
+                userauths_models.Profile.objects.get_or_create(
+                    user=user,
+                    defaults={"full_name": full_name, "mobile": mobile},
+                )
+        except Exception:
             form.add_error(None, "Възникна грешка при създаването на профила. Моля, опитайте отново.")
             return render(request, "userauths/sign-up.html", {"form": form, "breadcrumbs": [
                 {"label": "Начална Страница", "url": reverse("store:index")},
                 {"label": "Създай акаунт", "url": ""},
             ]})
-
-        full_name = form.cleaned_data.get("full_name")
-        email = form.cleaned_data.get("email")
-        mobile = form.cleaned_data.get("mobile")
-        password = form.cleaned_data.get("password1")
 
         user = authenticate(request, email=email, password=password)
         if not user:
@@ -52,11 +56,6 @@ def register_view(request):
                 pass
 
         messages.success(request, f"Профилът беше създаден успешно.")
-        # Ensure a profile exists; idempotent across retries/races
-        profile, _ = userauths_models.Profile.objects.get_or_create(
-            user=user,
-            defaults={"full_name": full_name, "mobile": mobile},
-        )
 
         # Send welcome email (fail silently on errors)
         try:
@@ -199,7 +198,7 @@ def login_view(request):
                     else:
                         messages.error(request, "Грешен имейл или парола")
             except userauths_models.User.DoesNotExist:
-                messages.error(request, "Потребителят не съществува")
+                messages.error(request, "Грешен имейл или парола")
     else:
         form = userauths_forms.LoginForm()
 

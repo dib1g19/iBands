@@ -26,10 +26,20 @@
                         <div class="form-group mb-4">
                             <label>Имейл *</label>
                             {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for err in form.email.errors %}{{ err }}{% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="form-group mb-4">
                             <label>Парола *</label>
                             {{ form.password }}
+                            {% if form.password.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for err in form.password.errors %}{{ err }}{% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                         {# Captcha temporarily disabled #}
                         <div class="form-group mb-4">

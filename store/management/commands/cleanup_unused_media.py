@@ -94,7 +94,7 @@ class Command(BaseCommand):
         # Determine media prefix from default storage
         media_prefix = "media"
         try:
-            storage_class = import_string(settings.DEFAULT_FILE_STORAGE)
+            storage_class = import_string(settings.STORAGES["default"]["BACKEND"])
             location = getattr(storage_class, "location", None)
             if location:
                 media_prefix = location.strip("/")

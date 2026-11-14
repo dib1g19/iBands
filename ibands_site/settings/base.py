@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "storages",
     "django_ckeditor_5",
     "anymail",
-    "captcha",
+    "django_recaptcha",
     "django_extensions",
 ]
 
@@ -174,6 +174,20 @@ SPEEDY_DEFAULT_SERVICE_ID = env("SPEEDY_DEFAULT_SERVICE_ID", default="505")
 SPEEDY_DROPOFF_OFFICE_ID = env("SPEEDY_DROPOFF_OFFICE_ID", default=867)
 SPEEDY_OBPD_OPTION = env("SPEEDY_OBPD_OPTION", default="TEST")  # Allowed: OPEN or TEST
 
+
+def admin_user_avatar(user):
+    """Profile photo for the admin sidebar. Jazzmin only accepts a user field or a callable."""
+    from django.core.files.storage import default_storage
+
+    image = getattr(getattr(user, "profile", None), "image", None)
+    if image:
+        try:
+            return image.url
+        except ValueError:
+            pass
+    return default_storage.url("default/default-user.avif")
+
+
 # --- Jazzmin Admin Theme ---
 JAZZMIN_SETTINGS = {
     "site_title": "iBands",
@@ -183,7 +197,7 @@ JAZZMIN_SETTINGS = {
     "site_logo": "assets/img/logo-black.avif",
     "welcome_sign": "Welcome To iBands",
     "copyright": "iBands",
-    "user_avatar": "images/photos/logo.jpg",
+    "user_avatar": admin_user_avatar,
     "show_sidebar": True,
     "navigation_expanded": True,
     "order_with_respect_to": [
@@ -260,8 +274,9 @@ JAZZMIN_SETTINGS = {
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-arrow-circle-right",
     "related_modal_active": False,
+    "custom_css": "assets/css/admin.css",
     "custom_js": None,
-    "show_ui_builder": True,
+    "show_ui_builder": False,
     "changeform_format": "horizontal_tabs",
     "changeform_format_overrides": {
         "auth.user": "collapsible",

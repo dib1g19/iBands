@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from captcha.client import RecaptchaResponse
+from django_recaptcha.client import RecaptchaResponse
 from userauths.forms import LoginForm, UserRegisterForm
 from userauths.models import User
 
@@ -33,7 +33,7 @@ class SignUpValidationTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("Моля, въведете валиден телефонен номер.", form.errors["mobile"])
 
-    @patch("captcha.fields.client.submit", return_value=RecaptchaResponse(is_valid=True))
+    @patch("django_recaptcha.fields.client.submit", return_value=RecaptchaResponse(is_valid=True))
     def test_phone_keeps_the_digits(self, _submit):
         form = UserRegisterForm(data={
             "full_name": "Иван Петров",

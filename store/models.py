@@ -158,7 +158,7 @@ class CategoryLink(models.Model):
         unique_together = ("parent", "child")
         constraints = [
             models.CheckConstraint(
-                check=~models.Q(parent=models.F("child")),
+                condition=~models.Q(parent=models.F("child")),
                 name="catlink_parent_not_child",
             )
         ]

@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='categorylink',
-            constraint=models.CheckConstraint(check=models.Q(('parent', models.F('child')), _negated=True), name='catlink_parent_not_child'),
+            constraint=models.CheckConstraint(condition=models.Q(('parent', models.F('child')), _negated=True), name='catlink_parent_not_child'),
         ),
         migrations.AlterUniqueTogether(
             name='categorylink',

@@ -1,0 +1,20 @@
+/* Jazzmin 3 renders the sidebar photo at its file size. Keep it a small circle. */
+#jazzy-sidebar .user-panel .image img {
+    width: 2.25rem;
+    height: 2.25rem;
+    max-width: 2.25rem;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+#jazzy-sidebar .user-panel .info {
+    min-width: 0;
+    overflow: hidden;
+}
+
+#jazzy-sidebar .user-panel .info a,
+#jazzy-sidebar .user-panel .info span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

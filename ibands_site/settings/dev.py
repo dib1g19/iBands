@@ -4,12 +4,18 @@ DEBUG = True
 
 # ✅ Static files are served locally
 STATIC_URL = "static/"
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # ✅ Media files are still stored on S3
 MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
-DEFAULT_FILE_STORAGE = "ibands_site.storages.MediaStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "ibands_site.storages.MediaStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 # EMAIL_FILE_PATH = BASE_DIR / "sent_emails"

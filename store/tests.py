@@ -3,8 +3,9 @@ from django.test import TestCase, Client
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
-from unittest.mock import patch
 from decimal import Decimal
+from unittest.mock import patch
+import re
 from django.template.loader import render_to_string
 from store.templatetags import pricing as pricing_tags
 
@@ -281,6 +282,7 @@ class OrderAdminProductLabelTests(TestCase):
             qty=1,
             price=Decimal("15.00"),
             sub_total=Decimal("15.00"),
+            note="Blue strap if possible",
         )
 
         url = reverse("admin:store_order_change", args=[order.pk])
@@ -291,10 +293,18 @@ class OrderAdminProductLabelTests(TestCase):
         self.assertContains(response, long_name)
         self.assertContains(response, "SKU-ULTRA-49")
         self.assertContains(response, "SKU-FENIX")
+        self.assertNotContains(response, "Blue strap if possible")
+        self.assertContains(response, "order_items-0-product")
+        self.assertContains(response, "order_items-1-product")
         self.assertContains(response, reverse("admin:store_product_change", args=[first.pk]))
-        self.assertContains(response, reverse("admin:store_product_change", args=[second.pk]))
-        self.assertNotContains(response, "order_items-0-product")
-        self.assertNotContains(response, "order_items-1-product")
+        self.assertContains(response, 'name="order_items-0-model"')
+        self.assertContains(response, "<textarea")
+        self.assertNotContains(response, "column-note")
+        self.assertNotContains(response, "change_id_order_items-0-product")
+        self.assertNotContains(response, "add_id_order_items-0-product")
+        self.assertNotContains(response, "view_id_order_items-0-product")
+        self.assertContains(response, "Address")
+        self.assertNotContains(response, 'id="order-items-tab"')
         item_queries = [
             query["sql"]
             for query in ctx.captured_queries
@@ -308,4 +318,104 @@ class OrderAdminProductLabelTests(TestCase):
             if 'FROM "store_product"' in query["sql"]
         ]
         self.assertEqual(product_lookups, [])
+
+    def _save_order(self, order, items, delete_pks=(), product_ids=None):
+        product_ids = product_ids or {}
+        url = reverse("admin:store_order_change", args=[order.pk])
+        page = self.client.get(url)
+        token = re.search(
+            r'name="csrfmiddlewaretoken" value="([^"]+)"',
+            page.content.decode(),
+        ).group(1)
+        posted_at = timezone.localtime(order.date)
+        data = {
+            "csrfmiddlewaretoken": token,
+            "order_status": order.order_status,
+            "shipping_service": order.shipping_service or "",
+            "tracking_id": order.tracking_id or "",
+            "total": str(order.total),
+            "sub_total": str(order.sub_total),
+            "shipping": str(order.shipping),
+            "saved": str(order.saved or 0),
+            "payment_status": order.payment_status,
+            "payment_method": order.payment_method or "",
+            "order_id": order.order_id,
+            "payment_id": order.payment_id or "",
+            "date_0": posted_at.strftime("%Y-%m-%d"),
+            "date_1": posted_at.strftime("%H:%M:%S"),
+            "order_items-TOTAL_FORMS": str(len(items)),
+            "order_items-INITIAL_FORMS": str(len(items)),
+            "order_items-MIN_NUM_FORMS": "0",
+            "order_items-MAX_NUM_FORMS": "1000",
+            "_save": "Save",
+        }
+        for index, item in enumerate(items):
+            prefix = f"order_items-{index}"
+            data.update({
+                f"{prefix}-id": str(item.pk),
+                f"{prefix}-product": str(product_ids.get(item.pk, item.product_id)),
+                f"{prefix}-model": item.model or "",
+                f"{prefix}-size": item.size or "",
+                f"{prefix}-qty": str(item.qty),
+                f"{prefix}-price": str(item.price),
+                f"{prefix}-sub_total": str(item.sub_total),
+            })
+            if item.pk in delete_pks:
+                data[f"{prefix}-DELETE"] = "on"
+        return self.client.post(url, data)
+
+    def test_deleting_a_line_updates_the_order_subtotal(self):
+        order, kept = self._order_with_item("Keep", "SKU-KEEP", qty=1)
+        kept_item = order.order_items.get()
+        kept_item.price = Decimal("20.00")
+        kept_item.sub_total = Decimal("20.00")
+        kept_item.save()
+        removed_product = store_models.Product.objects.create(
+            name="Remove", sku="SKU-REMOVE", description="Band", price=Decimal("10.00")
+        )
+        removed = store_models.OrderItem.objects.create(
+            order=order,
+            product=removed_product,
+            qty=1,
+            price=Decimal("10.00"),
+            sub_total=Decimal("10.00"),
+        )
+        order.sub_total = Decimal("30.00")
+        order.shipping = Decimal("5.00")
+        order.total = Decimal("35.00")
+        order.save()
+
+        response = self._save_order(order, [kept_item, removed], delete_pks={removed.pk})
+
+        self.assertEqual(response.status_code, 302, getattr(response, "content", b"")[:1500])
+        order.refresh_from_db()
+        self.assertFalse(store_models.OrderItem.objects.filter(pk=removed.pk).exists())
+        self.assertEqual(order.sub_total, Decimal("20.00"))
+        self.assertEqual(order.total, Decimal("25.00"))
+
+    def test_switching_a_line_uses_the_new_product_price(self):
+        order, _old = self._order_with_item("Old band", "SKU-OLD", qty=2)
+        item = order.order_items.get()
+        item.qty = 2
+        item.price = Decimal("10.00")
+        item.sub_total = Decimal("20.00")
+        item.save()
+        order.sub_total = Decimal("20.00")
+        order.shipping = Decimal("4.00")
+        order.total = Decimal("24.00")
+        order.save()
+        replacement = store_models.Product.objects.create(
+            name="New band", sku="SKU-NEW", description="Band", price=Decimal("15.00")
+        )
+
+        response = self._save_order(order, [item], product_ids={item.pk: replacement.pk})
+
+        self.assertEqual(response.status_code, 302, getattr(response, "content", b"")[:1500])
+        item.refresh_from_db()
+        order.refresh_from_db()
+        self.assertEqual(item.product, replacement)
+        self.assertEqual(item.price, Decimal("15.00"))
+        self.assertEqual(item.sub_total, Decimal("30.00"))
+        self.assertEqual(order.sub_total, Decimal("30.00"))
+        self.assertEqual(order.total, Decimal("34.00"))
 

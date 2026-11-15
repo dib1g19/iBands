@@ -1,6 +1,10 @@
+from decimal import Decimal
+
 from django.contrib import admin
+from django.contrib.admin.widgets import AutocompleteSelect, RelatedFieldWidgetWrapper
 from django.db import models
 from django.db.models import Prefetch
+from django import forms
 from django.http import HttpResponseRedirect
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
@@ -30,7 +34,7 @@ class ProductAdmin(iBandsModelAdmin):
     list_display = ["category", "sku", "name", "image", "price", "sale_price", "on_sale", "featured", "promo_type", "promo_buy_qty", "promo_get_qty"]
     list_editable = ["sku", "name", "image", "price", "sale_price", "on_sale", "featured", "promo_type", "promo_buy_qty", "promo_get_qty"]
     list_filter = ["status", "featured", "on_sale", "promo_type", "category"]
-    search_fields = ["name", "category__title"]
+    search_fields = ["name", "sku", "category__title"]
     list_select_related = ["category"]
 
     inlines = [GalleryInline]
@@ -220,32 +224,94 @@ class CartAdmin(iBandsModelAdmin):
         return product_path_label(obj.product, link=True)
 
 
+class CachedProductAutocompleteSelect(AutocompleteSelect):
+    """Use the product already loaded on the order line."""
+
+    cached_obj = None
+
+    def optgroups(self, name, value, attr=None):
+        cached = self.cached_obj
+        selected_choices = {
+            str(v) for v in value if str(v) not in self.choices.field.empty_values
+        }
+        if cached is not None and selected_choices == {str(cached.pk)}:
+            label = self.choices.field.label_from_instance(cached)
+            option = self.create_option(name, cached.pk, label, selected_choices, 0)
+            return [(None, [option], 0)]
+        return super().optgroups(name, value, attr)
+
+    def render(self, name, value, attrs=None, renderer=None):
+        rendered = super().render(name, value, attrs, renderer)
+        if self.cached_obj is None:
+            return rendered
+        return format_html(
+            '<div class="order-line-product">{}{}</div>',
+            order_product_label(self.cached_obj, link=True),
+            rendered,
+        )
+
+
+class OrderItemInlineForm(forms.ModelForm):
+    class Meta:
+        model = store_models.OrderItem
+        fields = ("product", "model", "size", "qty", "price", "sub_total")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        product_field = self.fields.get("product")
+        widget = getattr(product_field, "widget", None)
+        if not isinstance(widget, CachedProductAutocompleteSelect):
+            return
+        if not getattr(self.instance, "product_id", None):
+            return
+        try:
+            widget.cached_obj = self.instance._meta.get_field("product").get_cached_value(self.instance)
+        except KeyError:
+            return
+
+    def save(self, commit=True):
+        changed = set(self.changed_data)
+        instance = super().save(commit=False)
+        if instance.product_id and "product" in changed and "price" not in changed:
+            instance.price = Decimal(str(instance.product.effective_price or 0))
+        if "sub_total" not in changed and changed.intersection({"product", "price", "qty"}):
+            instance.sub_total = Decimal(str(instance.price or 0)) * Decimal(instance.qty or 0)
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
+
 class OrderItemInline(admin.TabularInline):
     model = store_models.OrderItem
-    fields = ["product_label", "model", "size", "qty", "price", "sub_total", "note"]
-    readonly_fields = ["product_label", "note"]
+    form = OrderItemInlineForm
+    fields = OrderItemInlineForm.Meta.fields
+    autocomplete_fields = ["product"]
     extra = 0
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("product")
 
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    @admin.display(description="Product")
-    def product_label(self, obj):
-        if not getattr(obj, "product_id", None):
-            return "-"
-        return order_product_label(obj.product, link=True)
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "product":
+            kwargs["widget"] = CachedProductAutocompleteSelect(
+                db_field, self.admin_site, using=kwargs.get("using")
+            )
+        elif db_field.name in ("model", "size"):
+            kwargs["widget"] = forms.Textarea(attrs={"rows": 2})
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if isinstance(getattr(formfield, "widget", None), RelatedFieldWidgetWrapper):
+            formfield.widget = formfield.widget.widget
+        return formfield
 
 
 @admin.register(store_models.Order)
 class OrderAdmin(iBandsModelAdmin):
-    list_display = ["order_id", "items_summary", "customer", "address", "total", "order_status", "shipping_service", "tracking_id", "payment_method", "date"]
+    list_display = ["order_id", "items_summary", "address", "total", "order_status", "shipping_service", "tracking_id", "payment_method", "date"]
     list_editable = [ "order_status", "shipping_service", "tracking_id"]
     list_filter = ["payment_status", "order_status"]
     search_fields = ["order_id", "customer__username", "customer__email", "order_items__product__name", "order_items__product__sku"]
-    list_select_related = ["address", "customer"]
+    list_select_related = ["address"]
 
     inlines = [OrderItemInline]
     readonly_fields = ["address_display",]
@@ -308,6 +374,16 @@ class OrderAdmin(iBandsModelAdmin):
             )
         return qs
 
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        items_changed = any(
+            formset.model is store_models.OrderItem
+            and (formset.new_objects or formset.changed_objects or formset.deleted_objects)
+            for formset in formsets
+        )
+        if items_changed:
+            form.instance.refresh_totals_from_items()
+
     @admin.display(description="Items")
     def items_summary(self, obj):
         lines = []
@@ -326,7 +402,7 @@ class OrderAdmin(iBandsModelAdmin):
             return "-"
         return format_html_join(
             mark_safe("<br>"),
-            '{} <span style="color:#666">{}</span>',
+            '{} <span class="order-product-meta">{}</span>',
             lines,
         )
 

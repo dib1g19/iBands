@@ -6,7 +6,7 @@ from slugify import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 from userauths import models as user_models
 from django.urls import reverse
-from decimal import Decimal, ROUND_FLOOR
+from decimal import Decimal, ROUND_FLOOR, ROUND_HALF_UP
 from store.utils import floor_to_cent
 
 STATUS = (
@@ -514,6 +514,27 @@ class Order(models.Model):
 
     def __str__(self):
         return self.order_id
+
+    def refresh_totals_from_items(self):
+        """Set subtotal and total from the lines still on the order."""
+        def money(value):
+            return Decimal(str(value or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+        sub_total = money(self.order_items.aggregate(amount=models.Sum("sub_total"))["amount"])
+        shipping = money(self.shipping)
+        saved = money(self.saved)
+        coupon = self.coupons.order_by("id").first()
+        if coupon:
+            saved = money(sub_total * Decimal(coupon.discount) / Decimal("100"))
+        total = money(sub_total + shipping - saved)
+        self.sub_total = sub_total
+        self.saved = saved
+        self.total = total
+        type(self).objects.filter(pk=self.pk).update(
+            sub_total=sub_total,
+            saved=saved,
+            total=total,
+        )
 
     def order_items(self):
         return OrderItem.objects.filter(order=self)

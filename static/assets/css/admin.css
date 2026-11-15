@@ -18,3 +18,117 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* Order lines sit in their own box inside the order form. */
+.card-body > .card:has(#order_items-group) {
+    margin-top: 1.5rem;
+    overflow: hidden;
+}
+
+.card-body > .card:has(#order_items-group) > .card-header {
+    background: var(--bs-tertiary-bg);
+}
+
+.card-body > .card:has(#order_items-group) > .card-body {
+    padding: 0;
+}
+
+#order_items-group .inline-heading {
+    display: none;
+}
+
+#order_items-group table {
+    width: 100%;
+    margin: 0;
+    table-layout: fixed;
+    /* Jazzmin's tabular table uses Bootstrap text-nowrap. */
+    white-space: normal !important;
+}
+
+#order_items-group th,
+#order_items-group td {
+    min-width: 0;
+    vertical-align: middle;
+}
+
+#order_items-group .tabular tr.has_original td {
+    padding-top: 0.65rem;
+}
+
+#order_items-group .column-product,
+#order_items-group .field-product {
+    width: 32%;
+}
+
+#order_items-group .column-model,
+#order_items-group .field-model,
+#order_items-group .column-size,
+#order_items-group .field-size {
+    width: 18%;
+}
+
+#order_items-group .column-qty,
+#order_items-group .field-qty,
+#order_items-group .column-price,
+#order_items-group .field-price,
+#order_items-group .column-sub_total,
+#order_items-group .field-sub_total,
+#order_items-group th:last-child,
+#order_items-group td.delete {
+    width: 6.25rem;
+}
+
+#order_items-group .order-line-product {
+    display: flex;
+    align-items: flex-start;
+    column-gap: 0.5rem;
+    max-width: 100%;
+    min-width: 0;
+}
+
+#order_items-group .order-line-product > .order-product-label {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+#order_items-group .order-line-product .select2-container {
+    width: 2.25rem !important;
+    flex: 0 0 2.25rem;
+}
+
+#order_items-group .order-line-product .select2-selection--single {
+    height: 2rem;
+}
+
+#order_items-group .order-line-product .select2-selection__rendered {
+    display: none;
+}
+
+.select2-dropdown {
+    min-width: 20rem;
+}
+
+#order_items-group input,
+#order_items-group textarea {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+#order_items-group textarea {
+    min-height: 2.6rem;
+    resize: vertical;
+    line-height: 1.35;
+    field-sizing: content;
+}
+
+.order-product-label,
+.order-product-label a {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.order-product-label .sku,
+.order-product-meta {
+    color: #666;
+}

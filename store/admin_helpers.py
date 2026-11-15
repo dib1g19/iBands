@@ -19,14 +19,11 @@ def order_product_label(product, *, link=False):
         name_html = format_html("{}", name)
     if sku:
         return format_html(
-            '<span style="white-space:normal;display:inline-block;max-width:28rem">{} <span style="color:#666">({})</span></span>',
+            '<span class="order-product-label">{} <span class="sku">({})</span></span>',
             name_html,
             sku,
         )
-    return format_html(
-        '<span style="white-space:normal;display:inline-block;max-width:28rem">{}</span>',
-        name_html,
-    )
+    return format_html('<span class="order-product-label">{}</span>', name_html)
 
 
 def product_path_label(product, *, link=False, max_depth=3):

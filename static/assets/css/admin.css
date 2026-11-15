@@ -132,3 +132,14 @@
 .order-product-meta {
     color: #666;
 }
+
+/* Order list. Django draws every text box at 20em, and Jazzmin stretches every
+   dropdown to the cell, so the tracking box stays wide while the status labels clip. */
+body.model-order.change-list #result_list td.field-tracking_id input {
+    width: calc(13ch + 1rem);
+}
+
+body.model-order.change-list #result_list td.field-order_status select,
+body.model-order.change-list #result_list td.field-shipping_service select {
+    width: auto;
+}

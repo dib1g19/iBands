@@ -307,7 +307,7 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(store_models.Order)
 class OrderAdmin(iBandsModelAdmin):
-    list_display = ["order_id", "items_summary", "address", "total", "order_status", "shipping_service", "tracking_id", "payment_method", "date"]
+    list_display = ["order_id", "items_summary", "recipient_name", "total", "order_status", "shipping_service", "tracking_id", "date"]
     list_editable = [ "order_status", "shipping_service", "tracking_id"]
     list_filter = ["payment_status", "order_status"]
     search_fields = ["order_id", "customer__username", "customer__email", "order_items__product__name", "order_items__product__sku"]
@@ -383,6 +383,21 @@ class OrderAdmin(iBandsModelAdmin):
         )
         if items_changed:
             form.instance.refresh_totals_from_items()
+
+    @admin.display(description="Name")
+    def recipient_name(self, obj):
+        address = obj.address
+        if address is None:
+            return "-"
+        name = (address.name or "").strip()
+        phone = (address.phone or "").strip()
+        if name and phone:
+            return format_html(
+                '{}<br><span class="order-product-meta">{}</span>',
+                name,
+                phone,
+            )
+        return name or phone or "-"
 
     @admin.display(description="Items")
     def items_summary(self, obj):

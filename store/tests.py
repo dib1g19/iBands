@@ -238,6 +238,11 @@ class OrderAdminProductLabelTests(TestCase):
     def test_order_list_shows_each_line_without_a_query_per_order(self):
         long_name = "Силиконова каишка за Apple Watch Ultra 2 с много дълго име"
         order, product = self._order_with_item(long_name, "SKU-ULTRA-49")
+        order.address = customer_models.Address.objects.create(
+            name="Dimitar test",
+            phone="0888123456",
+        )
+        order.save(update_fields=["address"])
         self._order_with_item("Втора каишка", "SKU-TWO", qty=1, model="", size="")
 
         url = reverse("admin:store_order_changelist")
@@ -251,6 +256,9 @@ class OrderAdminProductLabelTests(TestCase):
         self.assertContains(response, "×2")
         self.assertContains(response, "Ultra")
         self.assertContains(response, "49mm")
+        self.assertContains(response, "Dimitar test")
+        self.assertContains(response, "0888123456")
+        self.assertContains(response, "field-recipient_name")
         self.assertEqual(
             sum("store_orderitem" in query["sql"] for query in first.captured_queries),
             1,

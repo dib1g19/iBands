@@ -403,15 +403,9 @@ class OrderAdmin(iBandsModelAdmin):
     def items_summary(self, obj):
         lines = []
         for item in obj.order_items.all():
-            extra = " · ".join(
-                part
-                for part in (
-                    f"×{item.qty}" if item.qty else "",
-                    item.model or "",
-                    item.size or "",
-                )
-                if part
-            )
+            variant = " ".join(part for part in (item.model or "", item.size or "") if part)
+            qty = f"×{item.qty}" if item.qty else ""
+            extra = " ".join(part for part in (variant, qty) if part)
             lines.append((order_product_label(item.product, link=True), extra))
         if not lines:
             return "-"

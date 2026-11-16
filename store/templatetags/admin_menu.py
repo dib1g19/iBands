@@ -1,4 +1,9 @@
+import json
+from datetime import timedelta
+
 from django import template
+from django.contrib.admin.models import LogEntry
+from django.utils import timezone
 
 register = template.Library()
 
@@ -127,3 +132,158 @@ def admin_menu_sections(side_menu_list):
     if leftover:
         sections.append({"name": "More", "icon": "fas fa-ellipsis", "models": leftover})
     return sections
+
+
+def _join(parts):
+    parts = [part for part in parts if part]
+    if not parts:
+        return ""
+    if len(parts) == 1:
+        return parts[0]
+    if len(parts) == 2:
+        return f"{parts[0]} and {parts[1]}"
+    return f"{', '.join(parts[:-1])}, and {parts[-1]}"
+
+
+def _fields_phrase(fields):
+    words = []
+    for field in fields or []:
+        text = str(field).strip()
+        if not text:
+            continue
+        if text.isupper():
+            words.append(text)
+        else:
+            words.append(text[:1].lower() + text[1:])
+    return _join(words)
+
+
+def _article(name):
+    return "an" if name[:1].lower() in "aeiou" else "a"
+
+
+def _inline_label(part):
+    name = str(part.get("name") or "item").strip() or "item"
+    name = name[:1].lower() + name[1:]
+    obj = part.get("object")
+    if obj and str(obj) not in {"None", "null"}:
+        return f"{name} {obj}"
+    return f"{_article(name)} {name[:1].lower() + name[1:]}"
+
+
+def _line_from_part(part):
+    if "added" in part:
+        added = part.get("added") or {}
+        if added.get("name"):
+            return f"Added {_inline_label(added)}"
+        return "Added"
+    if "deleted" in part:
+        deleted = part.get("deleted") or {}
+        if deleted.get("name"):
+            return f"Deleted {_inline_label(deleted)}"
+        return "Deleted"
+    if "changed" in part:
+        changed = part.get("changed") or {}
+        fields = _fields_phrase(changed.get("fields"))
+        if changed.get("name"):
+            target = _inline_label(changed)
+            if fields:
+                return f"Changed {fields} on {target}"
+            return f"Changed {target}"
+        if fields:
+            return f"Changed {fields}"
+        return "Changed"
+    return ""
+
+
+def _change_lines(entry):
+    if entry.is_deletion():
+        return ["Deleted"]
+    raw = entry.change_message or ""
+    if raw.startswith("["):
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError:
+            return [raw]
+        lines = [line for part in payload if (line := _line_from_part(part))]
+        if lines:
+            return lines
+    elif raw:
+        return [raw]
+    if entry.is_addition():
+        return ["Added"]
+    return ["Changed"]
+
+
+def _object_title(entry):
+    content_type = entry.content_type
+    model = content_type.model_class() if content_type else None
+    if model:
+        kind = str(model._meta.verbose_name)
+    elif content_type:
+        kind = content_type.model
+    else:
+        kind = "Item"
+    kind = kind[:1].upper() + kind[1:]
+
+    name = (entry.object_repr or "").strip() or "Untitled"
+    extra = []
+    if content_type and content_type.model == "product" and name.endswith(")"):
+        short, _, sku = name.rpartition(" (")
+        if short and sku.endswith(")"):
+            name = short
+            extra.append(f"SKU {sku[:-1]}")
+    shown = name if len(name) <= 70 else name[:69].rstrip() + "…"
+    if shown != name:
+        extra.insert(0, name)
+    return f"{kind} {shown}", extra
+
+
+def _when(action_time):
+    local = timezone.localtime(action_time)
+    today = timezone.localdate()
+    clock = local.strftime("%H:%M")
+    if local.date() == today:
+        return f"Today, {clock}"
+    if local.date() == today - timedelta(days=1):
+        return f"Yesterday, {clock}"
+    return f"{local.day} {local.strftime('%b')}, {clock}"
+
+
+def _actor(user):
+    full_name = user.get_full_name().strip()
+    return full_name or user.get_username()
+
+
+def _present_action(entry):
+    title, extra = _object_title(entry)
+    lines = _change_lines(entry)
+    visible = lines[:2]
+    details = lines[2:] + extra
+    if entry.is_addition():
+        verb = "added"
+    elif entry.is_deletion():
+        verb = "deleted"
+    else:
+        verb = "changed"
+    return {
+        "title": title,
+        "url": "" if entry.is_deletion() else (entry.get_admin_url() or ""),
+        "verb": verb,
+        "lines": visible,
+        "details": details,
+        "actor": _actor(entry.user),
+        "when": _when(entry.action_time),
+    }
+
+
+@register.simple_tag
+def recent_admin_actions(limit=20):
+    """Recent admin edits for the home page, labelled by model and object."""
+    try:
+        limit = int(limit)
+    except (TypeError, ValueError):
+        limit = 20
+    limit = min(max(limit, 1), 50)
+    entries = LogEntry.objects.select_related("user", "content_type").order_by("-action_time")[:limit]
+    return [_present_action(entry) for entry in entries]

@@ -17,6 +17,11 @@
 
 {% block content %}
     {% include 'partials/_breadcrumbs.html' %}
+    {% if staff_preview %}
+        <div class="container pt-3">
+            <div class="alert alert-warning mb-0" role="status">Този продукт е скрит от сайта. Само вие го виждате от админа.</div>
+        </div>
+    {% endif %}
 
     <!-- Product Detail Section -->
     <section class="middle">

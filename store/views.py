@@ -1512,12 +1512,16 @@ def product_detail(request, category_path, product_slug):
         category = get_object_or_404(Category, slug=slug, parent=parent)
         parent = category
 
-    # Fetch the product with all related data to minimize queries
+    # Fetch the product with all related data to minimize queries.
+    # Staff can open a disabled product from the admin "View" link.
+    lookup = {"slug": product_slug, "category": category}
+    if not request.user.is_staff:
+        lookup["status"] = "published"
     product = get_object_or_404(
         Product.objects
             .select_related('category', 'category__parent', 'category__parent__parent')
             .prefetch_related('gallery_images', 'colors', 'variants__variant_items'),
-        slug=product_slug, category=category, status="published"
+        **lookup,
     )
 
     # Load SKU items for size/model options
@@ -1614,6 +1618,7 @@ def product_detail(request, category_path, product_slug):
         "device_models": model_list,
         "sku_data_json": json.dumps(sku_data),
         "total_stock": total_stock,
+        "staff_preview": request.user.is_staff and product.status != "published",
     }
     # For mystery box, provide only the product's model groups as-is
     if getattr(product, "is_mystery_box", False):

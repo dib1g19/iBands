@@ -143,3 +143,7 @@ body.model-order.change-list #result_list td.field-order_status select,
 body.model-order.change-list #result_list td.field-shipping_service select {
     width: auto;
 }
+
+body.model-product.change-list #result_list td.field-view_on_site_link {
+    white-space: nowrap;
+}

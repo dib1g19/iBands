@@ -31,11 +31,12 @@ class GalleryInline(admin.TabularInline):
 
 @admin.register(store_models.Product)
 class ProductAdmin(iBandsModelAdmin):
-    list_display = ["category", "sku", "name", "image", "price", "sale_price", "on_sale", "featured", "promo_type", "promo_buy_qty", "promo_get_qty"]
+    list_display = ["category", "sku", "name", "view_on_site_link", "image", "price", "sale_price", "on_sale", "featured", "promo_type", "promo_buy_qty", "promo_get_qty"]
     list_editable = ["sku", "name", "image", "price", "sale_price", "on_sale", "featured", "promo_type", "promo_buy_qty", "promo_get_qty"]
     list_filter = ["status", "featured", "on_sale", "promo_type", "category"]
     search_fields = ["name", "sku", "category__title"]
-    list_select_related = ["category"]
+    list_select_related = ["category", "category__parent", "category__parent__parent"]
+    readonly_fields = ["view_on_site_link"]
 
     inlines = [GalleryInline]
     prepopulated_fields = {"slug": ("name",)}
@@ -43,7 +44,7 @@ class ProductAdmin(iBandsModelAdmin):
 
     fieldsets = (
         (None, {
-            "fields": ("category", "sku", "name", "slug", "image", "description", "price", "sale_price", "stock", "shipping", "on_sale", "featured", "is_mystery_box", "status", "date")
+            "fields": ("view_on_site_link", "category", "sku", "name", "slug", "image", "description", "price", "sale_price", "stock", "shipping", "on_sale", "featured", "is_mystery_box", "status", "date")
         }),
         ("Promotion", {
             "fields": ("promo_type", "promo_buy_qty", "promo_get_qty", "promo_label_override"),
@@ -58,6 +59,27 @@ class ProductAdmin(iBandsModelAdmin):
     
     action_form = DuplicateProductForm
     actions = ["duplicate_product", "generate_product_items_from_groups"]
+
+    def _storefront_path(self, obj):
+        if not obj or not obj.pk or not obj.category_id or not obj.slug:
+            return None
+        try:
+            return obj.get_absolute_url()
+        except Exception:
+            return None
+
+    def view_on_site(self, obj):
+        return self._storefront_path(obj)
+
+    @admin.display(description="Site")
+    def view_on_site_link(self, obj):
+        url = self._storefront_path(obj)
+        if not url:
+            return "—"
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener noreferrer">View</a>',
+            url,
+        )
 
     def duplicate_product(self, request, queryset):
         number = int(request.POST.get("number_of_copies", 1))

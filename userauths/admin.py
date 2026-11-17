@@ -5,7 +5,8 @@ from userauths import models as userauths_models
 
 @admin.register(userauths_models.User)
 class UserAdmin(iBandsModelAdmin):
-    list_display = ["username", "email"]
+    list_display = ["full_name", "mobile", "email", "username"]
+    search_fields = ["full_name", "mobile", "email", "username"]
     exclude = ['user_permissions']  # Hide this field to avoid content type queries
 
 

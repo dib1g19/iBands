@@ -20,6 +20,10 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+    def get_full_name(self):
+        name = (self.full_name or "").strip()
+        return name or super().get_full_name()
+
     def save(self, *args, **kwargs):
         email_username, _ = self.email.split("@")
         if self.username == "" or self.username == None:

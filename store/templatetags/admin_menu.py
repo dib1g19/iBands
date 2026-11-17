@@ -277,13 +277,47 @@ def _present_action(entry):
     }
 
 
-@register.simple_tag
-def recent_admin_actions(limit=20):
-    """Recent admin edits for the home page, labelled by model and object."""
+ACTIONS_PAGE_PARAM = "actions_page"
+ACTIONS_MAX_PAGE = 400
+
+
+def _actions_page(request):
+    try:
+        page = int(request.GET.get(ACTIONS_PAGE_PARAM, 1))
+    except (TypeError, ValueError):
+        page = 1
+    return min(max(page, 1), ACTIONS_MAX_PAGE)
+
+
+def _actions_page_url(request, page):
+    params = request.GET.copy()
+    if page <= 1:
+        params.pop(ACTIONS_PAGE_PARAM, None)
+    else:
+        params[ACTIONS_PAGE_PARAM] = str(page)
+    query = params.urlencode()
+    return f"{request.path}?{query}" if query else request.path
+
+
+@register.simple_tag(takes_context=True)
+def recent_admin_actions(context, limit=20):
+    """One page of admin edits. The next page is loaded only when requested."""
     try:
         limit = int(limit)
     except (TypeError, ValueError):
         limit = 20
     limit = min(max(limit, 1), 50)
-    entries = LogEntry.objects.select_related("user", "content_type").order_by("-action_time")[:limit]
-    return [_present_action(entry) for entry in entries]
+    request = context["request"]
+    page = _actions_page(request)
+    start = (page - 1) * limit
+    rows = list(
+        LogEntry.objects.select_related("user", "content_type").order_by("-action_time")[
+            start : start + limit + 1
+        ]
+    )
+    has_older = len(rows) > limit
+    return {
+        "actions": [_present_action(entry) for entry in rows[:limit]],
+        "newer_url": _actions_page_url(request, page - 1) if page > 1 else "",
+        "older_url": _actions_page_url(request, page + 1) if has_older else "",
+    }

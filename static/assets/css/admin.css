@@ -218,6 +218,17 @@ body.model-product.change-list #result_list td.field-view_on_site_link {
     cursor: pointer;
 }
 
+.admin-activity-pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.25rem;
+}
+
+.admin-activity-pager a {
+    font-weight: 600;
+}
+
 @media (max-width: 720px) {
     .admin-activity-top {
         flex-direction: column;

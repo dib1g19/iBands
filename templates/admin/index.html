@@ -14,12 +14,12 @@
 
 {% block content %}
     <div class="col-12">
-        {% recent_admin_actions 20 as actions %}
-        {% if not actions %}
+        {% recent_admin_actions 20 as activity %}
+        <div class="admin-activity">
+        {% if not activity.actions %}
             <p>{% trans "None available" %}</p>
         {% else %}
-            <div class="admin-activity">
-                {% for action in actions %}
+                {% for action in activity.actions %}
                     <article class="admin-activity-item">
                         <div class="admin-activity-top">
                             <div>
@@ -49,7 +49,17 @@
                         {% endif %}
                     </article>
                 {% endfor %}
-            </div>
         {% endif %}
+            {% if activity.newer_url or activity.older_url %}
+                <nav class="admin-activity-pager" aria-label="{% trans 'Recent actions pages' %}">
+                    {% if activity.newer_url %}
+                        <a href="{{ activity.newer_url }}">{% trans "Newer" %}</a>
+                    {% endif %}
+                    {% if activity.older_url %}
+                        <a href="{{ activity.older_url }}">{% trans "Older" %}</a>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        </div>
     </div>
 {% endblock %}

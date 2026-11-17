@@ -179,7 +179,7 @@ def admin_user_avatar(user):
     """Profile photo for the admin sidebar. Jazzmin only accepts a user field or a callable."""
     from django.core.files.storage import default_storage
 
-    image = getattr(getattr(user, "profile", None), "image", None)
+    image = getattr(user, "image", None)
     if image:
         try:
             return image.url
@@ -225,7 +225,6 @@ JAZZMIN_SETTINGS = {
         "store.SpinMilestoneAward": "fas fa-medal",
         "store.StoreThemeSettings": "fas fa-palette",
         "store.Stats": "fas fa-chart-bar",
-        "userauths.Profile": "fas fa-address-card",
         "userauths.ContactMessage": "fas fa-envelope-open-text",
         "userauths.NewsletterSubscription": "fas fa-newspaper",
         "customer.Address": "fas fa-location-arrow",

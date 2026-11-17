@@ -69,13 +69,7 @@ def send_welcome_email(user=None, to_email=None, full_name=None):
             if not to_email:
                 to_email = getattr(user, "email", None)
             if not full_name:
-                # Try user.profile.full_name first; fallback to any attribute
-                try:
-                    full_name = getattr(user, "profile", None) and getattr(user.profile, "full_name", None)
-                except Exception:
-                    full_name = None
-                if not full_name:
-                    full_name = getattr(user, "full_name", None) or getattr(user, "username", None) or ""
+                full_name = getattr(user, "full_name", None) or getattr(user, "username", None) or ""
         if not to_email:
             return
 

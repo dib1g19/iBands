@@ -23,17 +23,11 @@ def register_view(request):
     if form.is_valid():
         # Preserve anonymous session cart before login (session rotates on login)
         preserved_cart_id = request.session.get("cart_id")
-        full_name = form.cleaned_data.get("full_name")
         email = form.cleaned_data.get("email")
-        mobile = form.cleaned_data.get("mobile")
         password = form.cleaned_data.get("password1")
         try:
             with transaction.atomic():
                 user = form.save()
-                userauths_models.Profile.objects.get_or_create(
-                    user=user,
-                    defaults={"full_name": full_name, "mobile": mobile},
-                )
         except Exception:
             form.add_error(None, "Възникна грешка при създаването на профила. Моля, опитайте отново.")
             return render(request, "userauths/sign-up.html", {"form": form, "breadcrumbs": [

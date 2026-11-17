@@ -358,7 +358,7 @@ def delete_address(request, id):
 
 @login_required
 def profile(request):
-    profile = request.user.profile
+    user = request.user
 
     if request.method == "POST":
         image = request.FILES.get("image")
@@ -366,13 +366,11 @@ def profile(request):
         mobile = request.POST.get("mobile")
 
         if image != None:
-            profile.image = image
+            user.image = image
 
-        profile.full_name = full_name
-        profile.mobile = mobile
-
-        request.user.save()
-        profile.save()
+        user.full_name = full_name
+        user.mobile = mobile
+        user.save()
 
         messages.success(request, "Профилът е обновен успешно.")
         return redirect("customer:profile")
@@ -382,7 +380,6 @@ def profile(request):
         {"label": "Профил", "url": ""},
     ]
     context = {
-        "profile": profile,
         "breadcrumbs": breadcrumbs,
     }
 

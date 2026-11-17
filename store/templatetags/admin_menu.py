@@ -72,7 +72,6 @@ MENU_SECTIONS = [
         "icon": "fas fa-users",
         "items": [
             "userauths.user",
-            "userauths.profile",
             "userauths.contactmessage",
             "userauths.newslettersubscription",
         ],

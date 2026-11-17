@@ -8,7 +8,7 @@ from django.db.models.fields.files import FieldFile
 from django.utils.module_loading import import_string
 
 from store.models import Category, Product, Gallery
-from userauths.models import Profile
+from userauths.models import User
 
 
 def normalize_key_from_field(field_file: FieldFile, media_prefix: str) -> str | None:
@@ -144,9 +144,8 @@ class Command(BaseCommand):
             if key:
                 used_keys.add(key)
 
-        # User profiles
-        for profile in Profile.objects.all().only("image"):
-            key = normalize_key_from_field(profile.image, media_prefix)
+        for user in User.objects.all().only("image"):
+            key = normalize_key_from_field(user.image, media_prefix)
             if key:
                 used_keys.add(key)
 

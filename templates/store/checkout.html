@@ -1167,8 +1167,8 @@
                 o_face: "{{ order.address.face|default_if_none:''|escapejs }}",
                 o_phone: "{{ order.address.phone|default_if_none:''|escapejs }}",
                 o_email: "{{ order.address.email|default_if_none:''|escapejs }}",
-                user_name: "{{ request.user.profile.full_name|default_if_none:''|escapejs }}",
-                user_phone: "{{ request.user.profile.mobile|default_if_none:''|escapejs }}",
+                user_name: "{{ request.user.full_name|default_if_none:''|escapejs }}",
+                user_phone: "{{ request.user.mobile|default_if_none:''|escapejs }}",
                 user_email: "{{ request.user.email|default_if_none:''|escapejs }}",
             };
 

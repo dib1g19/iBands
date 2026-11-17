@@ -37,21 +37,21 @@
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
                                     <label class="small fw-medium">Пълно име</label>
-                                    <input type="text" name="full_name" class="form-control rounded" value="{{ profile.full_name }}" />
+                                    <input type="text" name="full_name" class="form-control rounded" value="{{ request.user.full_name }}" />
                                 </div>
                             </div>
 
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
                                     <label class="small fw-medium">Имейл</label>
-                                    <input type="email" name="email" class="form-control rounded bg-light" readonly value="{{ profile.user.email }}" />
+                                    <input type="email" name="email" class="form-control rounded bg-light" readonly value="{{ request.user.email }}" />
                                 </div>
                             </div>
 
                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-4">
                                 <div class="form-group">
                                     <label class="small fw-medium">Мобилен телефон</label>
-                                    <input type="text" name="mobile" class="form-control rounded" value="{{ profile.mobile }}" />
+                                    <input type="text" name="mobile" class="form-control rounded" value="{{ request.user.mobile }}" />
                                 </div>
                             </div>
 

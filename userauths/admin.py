@@ -9,11 +9,6 @@ class UserAdmin(iBandsModelAdmin):
     exclude = ['user_permissions']  # Hide this field to avoid content type queries
 
 
-@admin.register(userauths_models.Profile)
-class ProfileAdmin(iBandsModelAdmin):
-    list_display = ["user", "full_name"]
-
-
 @admin.register(userauths_models.ContactMessage)
 class ContactMessageAdmin(iBandsModelAdmin):
     list_display = ["full_name", "email", "subject", "date"]

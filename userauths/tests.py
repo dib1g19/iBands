@@ -47,6 +47,24 @@ class SignUpValidationTests(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.cleaned_data["mobile"], "0888123456")
 
+    @patch("django_recaptcha.fields.client.submit", return_value=RecaptchaResponse(is_valid=True))
+    def test_signup_saves_name_and_phone_on_the_user(self, _submit):
+        form = UserRegisterForm(data={
+            "full_name": "Иван Петров",
+            "mobile": "+359 88 812 3456",
+            "email": "saved@example.com",
+            "password1": "A-strong-pass-1",
+            "password2": "A-strong-pass-1",
+            "g-recaptcha-response": "ok",
+        })
+
+        self.assertTrue(form.is_valid(), form.errors)
+        user = form.save()
+        user.refresh_from_db()
+        self.assertEqual(user.full_name, "Иван Петров")
+        self.assertEqual(user.mobile, "+359888123456")
+        self.assertEqual(user.image, "default/default-user.avif")
+
     def test_signup_without_captcha_does_not_create_an_account(self):
         response = self.client.post("/auth/sign-up/", {
             "full_name": "Иван Петров",

@@ -526,18 +526,42 @@ class Order(models.Model):
     def __str__(self):
         return self.order_id
 
-    def refresh_totals_from_items(self):
-        """Set subtotal and total from the lines still on the order."""
-        def money(value):
-            return Decimal(str(value or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    @staticmethod
+    def as_money(value):
+        return Decimal(str(value or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-        sub_total = money(self.order_items.aggregate(amount=models.Sum("sub_total"))["amount"])
-        shipping = money(self.shipping)
-        saved = money(self.saved)
+    def discount_for_subtotal(self, sub_total, *, without_coupon):
+        """Percent off the merchandise subtotal for the first coupon.
+
+        ``without_coupon`` is the amount to keep when no coupon is attached.
+        Checkout passes 0 so clearing a code removes the reduction. The admin
+        refresh passes the current ``saved`` so a hand-entered amount stays.
+        """
         coupon = self.coupons.order_by("id").first()
-        if coupon:
-            saved = money(sub_total * Decimal(coupon.discount) / Decimal("100"))
-        total = money(sub_total + shipping - saved)
+        if coupon is None:
+            return self.as_money(without_coupon)
+        return self.as_money(
+            self.as_money(sub_total) * Decimal(coupon.discount) / Decimal("100")
+        )
+
+    def totals_for_merchandise(self, sub_total, saved):
+        """Merchandise subtotal, the single reduction, and the amount due."""
+        sub_total = self.as_money(sub_total)
+        saved = self.as_money(saved)
+        shipping = self.as_money(self.shipping)
+        total = self.as_money(sub_total + shipping - saved)
+        return sub_total, saved, total
+
+    def refresh_totals_from_items(self):
+        """Set subtotal and total from the lines still on the order.
+
+        Line prices stay as stored. A coupon reduces the order once, through saved.
+        """
+        sub_total = self.as_money(
+            self.order_items.aggregate(amount=models.Sum("sub_total"))["amount"]
+        )
+        saved = self.discount_for_subtotal(sub_total, without_coupon=self.saved)
+        sub_total, saved, total = self.totals_for_merchandise(sub_total, saved)
         self.sub_total = sub_total
         self.saved = saved
         self.total = total

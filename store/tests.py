@@ -101,6 +101,118 @@ class SpeedyCODAmountTests(TestCase):
             self.assertEqual(top_level_cod.get("amount"), float(Decimal("100.00")))
 
 
+class CouponDiscountTests(TestCase):
+    def _order(self, sub_total, shipping, price, qty=1):
+        product = store_models.Product.objects.create(
+            name="Band",
+            sku=f"SKU-{sub_total}-{shipping}",
+            description="Band",
+            price=price,
+        )
+        order = store_models.Order.objects.create(
+            sub_total=sub_total,
+            shipping=shipping,
+            total=sub_total + shipping,
+        )
+        item = store_models.OrderItem.objects.create(
+            order=order,
+            product=product,
+            qty=qty,
+            price=price,
+            sub_total=sub_total,
+        )
+        return order, item
+
+    def test_applying_a_coupon_reduces_the_order_once_and_leaves_line_prices(self):
+        order, item = self._order(Decimal("40.00"), Decimal("5.00"), Decimal("20.00"), qty=2)
+        item.product.category = store_models.Category.objects.create(
+            title="Bands", sku="CAT-COUPON", slug="bands"
+        )
+        item.product.save()
+        store_models.Coupon.objects.create(code="SAVE10", discount=10)
+
+        response = self.client.post(
+            reverse("store:coupon_apply", args=[order.order_id]),
+            {"coupon_code": "SAVE10"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["success"])
+        self.assertIn("SAVE10", payload["summary_html"])
+        self.assertIn("4.00", payload["summary_html"])
+        self.assertIn("41.00", payload["summary_html"])
+        self.assertIn("20.00", payload["items_html"])
+        self.assertIn("40.00", payload["items_html"])
+        order.refresh_from_db()
+        item.refresh_from_db()
+        self.assertEqual(item.price, Decimal("20.00"))
+        self.assertEqual(item.sub_total, Decimal("40.00"))
+        self.assertEqual(order.sub_total, Decimal("40.00"))
+        self.assertEqual(order.saved, Decimal("4.00"))
+        self.assertEqual(order.total, Decimal("41.00"))
+
+    def test_shipping_save_keeps_the_same_discount(self):
+        order, item = self._order(Decimal("100.00"), Decimal("5.00"), Decimal("100.00"))
+        order.coupons.add(store_models.Coupon.objects.create(code="SAVE10", discount=10))
+
+        response = self.client.post(
+            reverse("store:save_econt_address", args=[order.order_id]),
+            data={
+                "name": "Test User",
+                "phone": "0888123456",
+                "email": "test@example.com",
+                "city": "София",
+                "address": "",
+                "office_code": "1234",
+                "office_name": "Офис Еконт",
+                "post_code": "1000",
+                "face": "",
+                "shipping_price": 6.20,
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        item.refresh_from_db()
+        self.assertEqual(item.price, Decimal("100.00"))
+        self.assertEqual(item.sub_total, Decimal("100.00"))
+        self.assertEqual(order.shipping, Decimal("0.00"))
+        self.assertEqual(order.saved, Decimal("10.00"))
+        self.assertEqual(order.total, Decimal("90.00"))
+
+    def test_admin_refresh_applies_the_coupon_to_the_original_line_totals(self):
+        order, item = self._order(Decimal("40.00"), Decimal("5.00"), Decimal("20.00"), qty=2)
+        order.coupons.add(store_models.Coupon.objects.create(code="SAVE10", discount=10))
+        order.saved = Decimal("4.00")
+        order.total = Decimal("41.00")
+        order.save(update_fields=["saved", "total"])
+
+        order.refresh_totals_from_items()
+
+        order.refresh_from_db()
+        item.refresh_from_db()
+        self.assertEqual(item.price, Decimal("20.00"))
+        self.assertEqual(item.sub_total, Decimal("40.00"))
+        self.assertEqual(order.sub_total, Decimal("40.00"))
+        self.assertEqual(order.saved, Decimal("4.00"))
+        self.assertEqual(order.total, Decimal("41.00"))
+
+    def test_admin_refresh_keeps_a_manual_discount_when_no_coupon_is_attached(self):
+        order, _item = self._order(Decimal("40.00"), Decimal("5.00"), Decimal("40.00"))
+        order.saved = Decimal("3.00")
+        order.save(update_fields=["saved"])
+
+        order.refresh_totals_from_items()
+
+        order.refresh_from_db()
+        self.assertEqual(order.sub_total, Decimal("40.00"))
+        self.assertEqual(order.saved, Decimal("3.00"))
+        self.assertEqual(order.total, Decimal("42.00"))
+
+
 class EmailPriceRenderingTests(TestCase):
     def test_email_renders_discount_with_strike_when_item_price_below_regular(self):
         # Create product priced at 100; mark as Band of the Week so effective price is 50

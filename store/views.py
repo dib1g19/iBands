@@ -612,65 +612,15 @@ def save_speedy_address(request, order_id):
 
 
 def apply_coupon_discount(order):
+    """Recalculate saved and total from the merchandise subtotal.
+
+    Line prices stay as snapshotted at checkout. ``saved`` is the only reduction.
     """
-    Helper to recalculate coupon discount, saved, and total for an order.
-    Also updates order item prices.
-    """
-    coupons = order.coupons.all()
-    shipping = Decimal(str(order.shipping or 0))
-    if coupons.exists():
-        coupon = coupons.first()
-        total_discount = round2(order.sub_total * coupon.discount / 100)
-        order.saved = round2(total_discount)
-        order.total = round2(order.sub_total + shipping - total_discount)
-        apply_item_discounts(order, coupon)
-    else:
-        order.saved = round2(0)
-        order.total = round2(order.sub_total + shipping)
-        apply_item_discounts(order, None)
+    saved = order.discount_for_subtotal(order.sub_total, without_coupon=0)
+    _sub_total, saved, total = order.totals_for_merchandise(order.sub_total, saved)
+    order.saved = saved
+    order.total = total
     order.save()
-
-
-def apply_item_discounts(order, coupon=None):
-    """
-    Apply coupon discounts to each order item if coupon is provided.
-    """
-    if not coupon:
-        coupons = order.coupons.all()
-        coupon = coupons.first() if coupons.exists() else None
-    for item in order.order_items.all():
-        # Compute base price from the specific SKU (product item) if possible
-        try:
-            sku_qs = store_models.ProductItem.objects.filter(product=item.product)
-            if item.size:
-                sku_qs = sku_qs.filter(size__name=item.size)
-            else:
-                sku_qs = sku_qs.filter(size__isnull=True)
-            if item.model:
-                sku_qs = sku_qs.filter(device_models__name=item.model)
-            sku = sku_qs.first()
-        except Exception:
-            sku = None
-
-        if sku:
-            base_price = Decimal(str(sku.effective_price or 0))
-        else:
-            base_price = Decimal(str(item.product.effective_price or 0))
-        # Determine chargeable (paid) units from current line allocation (not recomputed)
-        try:
-            paid_units = int(getattr(item, "promo_paid_units", item.qty) or item.qty)
-        except Exception:
-            paid_units = item.qty
-
-        if coupon:
-            discount = Decimal(str(coupon.discount)) / Decimal("100")
-            discounted_price = round2(base_price * (Decimal("1") - discount))
-            item.price = discounted_price
-            item.sub_total = round2(discounted_price * paid_units)
-        else:
-            item.price = base_price
-            item.sub_total = round2(base_price * paid_units)
-        item.save()
 
 
 @csrf_exempt

@@ -7,6 +7,7 @@ from django_ckeditor_5.fields import CKEditor5Field
 from userauths import models as user_models
 from django.urls import reverse
 from decimal import Decimal, ROUND_FLOOR, ROUND_HALF_UP
+from ibands_site.images import convert_uploaded_images
 from store.utils import floor_to_cent
 
 STATUS = (
@@ -132,6 +133,7 @@ class Category(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        convert_uploaded_images(self, "marketing_image", "hover_image")
         super().save(*args, **kwargs)
 
     @property
@@ -322,6 +324,7 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+        convert_uploaded_images(self, "image")
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -410,6 +413,10 @@ class Gallery(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - image"
+
+    def save(self, *args, **kwargs):
+        convert_uploaded_images(self, "image")
+        super().save(*args, **kwargs)
 
 
 class Cart(models.Model):

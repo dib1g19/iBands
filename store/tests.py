@@ -1,5 +1,11 @@
+import io
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
-from django.test import TestCase, Client
+from django.test import TestCase, Client, SimpleTestCase
+from PIL import Image
+
+from ibands_site.images import convert_uploaded_images
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
@@ -424,4 +430,21 @@ class OrderAdminProductLabelTests(TestCase):
         self.assertEqual(item.sub_total, Decimal("30.00"))
         self.assertEqual(order.sub_total, Decimal("30.00"))
         self.assertEqual(order.total, Decimal("34.00"))
+
+
+class AvifUploadTests(SimpleTestCase):
+    def test_png_upload_becomes_avif_and_stored_files_stay(self):
+        buf = io.BytesIO()
+        Image.new("RGB", (4, 4), (255, 0, 0)).save(buf, format="PNG")
+        product = store_models.Product(name="Band")
+        product.image = SimpleUploadedFile("band.png", buf.getvalue(), content_type="image/png")
+
+        convert_uploaded_images(product, "image")
+
+        self.assertTrue(product.image.name.endswith("band.avif"))
+        self.assertIn(b"ftyp", product.image.read())
+
+        product.image = "images/already.png"
+        convert_uploaded_images(product, "image")
+        self.assertEqual(product.image.name, "images/already.png")
 

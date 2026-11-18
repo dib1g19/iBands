@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 
+from ibands_site.images import convert_uploaded_images
+
 
 class User(AbstractUser):
     username = models.CharField(max_length=255, null=True, blank=True)
@@ -28,6 +30,7 @@ class User(AbstractUser):
         email_username, _ = self.email.split("@")
         if self.username == "" or self.username == None:
             self.username = email_username
+        convert_uploaded_images(self, "image")
         super(User, self).save(*args, **kwargs)
 
 

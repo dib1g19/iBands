@@ -24,9 +24,52 @@ class ColorSwatchMixin:
         )
 
 
+class MultiFileInput(forms.FileInput):
+    allow_multiple_selected = True
+
+
+class MultiFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultiFileInput(attrs={"multiple": True, "accept": "image/*"}))
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        if not data:
+            return []
+        if not isinstance(data, (list, tuple)):
+            data = [data]
+        return [super().clean(item, initial) for item in data if item]
+
+
+class ProductAdminForm(forms.ModelForm):
+    extra_images = MultiFileField(
+        required=False,
+        label="Extra photos",
+        help_text="Може да се изберат няколко файла наведнъж. Първият получава най-малката позиция, която е втора снимка и при задържане. В таб Gallerys могат да се редактират и преподреждат.",
+    )
+
+    class Meta:
+        model = store_models.Product
+        fields = "__all__"
+
+
+def add_gallery_uploads(product, files):
+    if not files:
+        return
+    last = product.gallery_images.order_by("-position").values_list("position", flat=True).first()
+    start = 0 if last is None else last + 1
+    for offset, uploaded in enumerate(files):
+        store_models.Gallery.objects.create(
+            product=product,
+            image=uploaded,
+            position=start + offset,
+        )
+
+
 class GalleryInline(admin.TabularInline):
     model = store_models.Gallery
     extra = 0
+    fields = ["image", "position"]
 
 
 @admin.register(store_models.Product)
@@ -38,13 +81,14 @@ class ProductAdmin(iBandsModelAdmin):
     list_select_related = ["category", "category__parent", "category__parent__parent"]
     readonly_fields = ["view_on_site_link"]
 
+    form = ProductAdminForm
     inlines = [GalleryInline]
     prepopulated_fields = {"slug": ("name",)}
     filter_horizontal = ["additional_categories", "variants", "colors", "model_groups"]
 
     fieldsets = (
         (None, {
-            "fields": ("view_on_site_link", "category", "sku", "name", "slug", "image", "description", "price", "sale_price", "stock", "shipping", "on_sale", "featured", "is_mystery_box", "status", "date")
+            "fields": ("view_on_site_link", "category", "sku", "name", "slug", "image", "extra_images", "description", "price", "sale_price", "stock", "shipping", "on_sale", "featured", "is_mystery_box", "status", "date")
         }),
         ("Promotion", {
             "fields": ("promo_type", "promo_buy_qty", "promo_get_qty", "promo_label_override"),
@@ -107,6 +151,10 @@ class ProductAdmin(iBandsModelAdmin):
         self.message_user(request, f"{count} product copies created successfully.")
 
     duplicate_product.short_description = "Duplicate selected Products"
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        add_gallery_uploads(form.instance, form.cleaned_data.get("extra_images"))
 
     def generate_product_items_from_groups(self, request, queryset):
         created_total = 0
@@ -485,7 +533,8 @@ class VariantItemAdmin(iBandsModelAdmin):
 
 @admin.register(store_models.Gallery)
 class GalleryAdmin(iBandsModelAdmin):
-    list_display = ["product", "gallery_id"]
+    list_display = ["product", "position", "gallery_id"]
+    list_editable = ["position"]
     search_fields = ["product__name", "gallery_id"]
     list_select_related = ["product"]
 

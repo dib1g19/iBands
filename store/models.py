@@ -409,7 +409,11 @@ class VariantItem(models.Model):
 class Gallery(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, related_name='gallery_images')
     image = models.FileField(upload_to="images", default="gallery.jpg")
+    position = models.PositiveIntegerField(default=0, verbose_name="Position")
     gallery_id = ShortUUIDField(length=6, max_length=10, alphabet="1234567890")
+
+    class Meta:
+        ordering = ["position", "id"]
 
     def __str__(self):
         return f"{self.product.name} - image"

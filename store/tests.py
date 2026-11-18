@@ -6,6 +6,7 @@ from django.test import TestCase, Client, SimpleTestCase
 from PIL import Image
 
 from ibands_site.images import convert_uploaded_images
+from store.admin import add_gallery_uploads
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
@@ -447,4 +448,26 @@ class AvifUploadTests(SimpleTestCase):
         product.image = "images/already.png"
         convert_uploaded_images(product, "image")
         self.assertEqual(product.image.name, "images/already.png")
+
+
+class GalleryUploadTests(TestCase):
+    def test_new_photos_keep_the_lower_position_first(self):
+        product = store_models.Product.objects.create(name="Band", sku="GAL-1", price=Decimal("10.00"))
+        store_models.Gallery.objects.create(product=product, position=2)
+        store_models.Gallery.objects.create(product=product, position=0)
+        png = io.BytesIO()
+        Image.new("RGB", (4, 4), (0, 0, 255)).save(png, format="PNG")
+        uploads = [
+            SimpleUploadedFile("one.png", png.getvalue(), content_type="image/png"),
+            SimpleUploadedFile("two.png", png.getvalue(), content_type="image/png"),
+        ]
+
+        storage = store_models.Gallery._meta.get_field("image").storage
+        with patch.object(storage, "save", side_effect=lambda name, content, max_length=None: name):
+            add_gallery_uploads(product, uploads)
+
+        rows = list(product.gallery_images.values_list("position", "image"))
+        self.assertEqual([row[0] for row in rows], [0, 2, 3, 4])
+        self.assertTrue(rows[2][1].endswith("one.avif"))
+        self.assertTrue(rows[3][1].endswith("two.avif"))
 

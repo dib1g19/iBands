@@ -31,7 +31,7 @@ from customer import models as customer_models
 from userauths import forms as userauths_forms
 from userauths import models as userauths_models
 from customer.utils import get_user_wishlist_products, get_order_for_customer
-from store.emails import send_order_notification_email
+from store.emails import send_contact_notification_email, send_order_notification_email
 from django.db.models import Q
 from store.error_log import record_server_error
 from urllib.parse import urlencode
@@ -2767,6 +2767,12 @@ def contact(request):
             email=form.cleaned_data["email"],
             subject=form.cleaned_data["subject"],
             message=form.cleaned_data["message"],
+        )
+        send_contact_notification_email(
+            form.cleaned_data["full_name"],
+            form.cleaned_data["email"],
+            form.cleaned_data["subject"],
+            form.cleaned_data["message"],
         )
         messages.success(request, "Съобщението е изпратено успешно")
         return redirect("store:contact")

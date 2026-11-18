@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from django_recaptcha.client import RecaptchaResponse
@@ -93,6 +94,10 @@ class ContactMessageTests(TestCase):
         self.assertContains(response, "Моля, потвърдете, че не сте робот.")
         self.assertFalse(ContactMessage.objects.exists())
 
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        ORDER_NOTIFICATION_EMAIL="shop@ibands.online",
+    )
     @patch("django_recaptcha.fields.client.submit", return_value=RecaptchaResponse(is_valid=True))
     def test_contact_with_captcha_is_saved(self, _submit):
         response = self.client.post(reverse("store:contact"), {
@@ -107,6 +112,11 @@ class ContactMessageTests(TestCase):
         saved = ContactMessage.objects.get()
         self.assertEqual(saved.full_name, "Иван Петров")
         self.assertEqual(saved.email, "ivan@example.com")
+        self.assertEqual(len(mail.outbox), 1)
+        sent = mail.outbox[0]
+        self.assertEqual(sent.to, ["shop@ibands.online"])
+        self.assertEqual(sent.reply_to, ["ivan@example.com"])
+        self.assertIn("Имам въпрос.", sent.body)
 
 
 class LoginValidationTests(TestCase):

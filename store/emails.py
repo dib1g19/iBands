@@ -59,6 +59,32 @@ def send_order_notification_email(order, email_heading, email_title, to_email):
         pass
 
 
+def send_contact_notification_email(full_name, email, subject, message):
+    recipient = _validated_email(settings.ORDER_NOTIFICATION_EMAIL)
+    if not recipient:
+        return
+    heading = " ".join((subject or full_name or "без основание").split())
+    body = "\n".join([
+        f"Име: {full_name or ''}",
+        f"Имейл: {email or ''}",
+        f"Основание: {subject or ''}",
+        "",
+        message or "",
+    ])
+    reply_to = _validated_email(email)
+    msg = EmailMultiAlternatives(
+        subject=f"Съобщение от контакти: {heading}"[:200],
+        body=body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[recipient],
+        reply_to=[reply_to] if reply_to else None,
+    )
+    try:
+        msg.send()
+    except Exception:
+        pass
+
+
 def send_welcome_email(user=None, to_email=None, full_name=None):
     """
     Send a welcome email to a newly registered user.

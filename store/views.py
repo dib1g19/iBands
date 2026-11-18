@@ -28,6 +28,7 @@ from store.utils import (
 )
 from store import models as store_models
 from customer import models as customer_models
+from userauths import forms as userauths_forms
 from userauths import models as userauths_models
 from customer.utils import get_user_wishlist_products, get_order_for_customer
 from store.emails import send_order_notification_email
@@ -2759,17 +2760,13 @@ def about(request):
 
 
 def contact(request):
-    if request.method == "POST":
-        full_name = request.POST.get("full_name")
-        email = request.POST.get("email")
-        subject = request.POST.get("subject")
-        message = request.POST.get("message")
-
+    form = userauths_forms.ContactForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
         userauths_models.ContactMessage.objects.create(
-            full_name=full_name,
-            email=email,
-            subject=subject,
-            message=message,
+            full_name=form.cleaned_data["full_name"],
+            email=form.cleaned_data["email"],
+            subject=form.cleaned_data["subject"],
+            message=form.cleaned_data["message"],
         )
         messages.success(request, "Съобщението е изпратено успешно")
         return redirect("store:contact")
@@ -2778,7 +2775,9 @@ def contact(request):
         {"label": "Начална Страница", "url": reverse("store:index")},
         {"label": "Контакти", "url": ""},
     ]
-    return render(request, "pages/contact.html", {"breadcrumbs": breadcrumbs})
+    return render(
+        request, "pages/contact.html", {"breadcrumbs": breadcrumbs, "form": form}
+    )
 
 
 def faqs(request):

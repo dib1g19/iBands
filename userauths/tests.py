@@ -1,10 +1,11 @@
 from unittest.mock import patch
 
 from django.test import TestCase
+from django.urls import reverse
 
 from django_recaptcha.client import RecaptchaResponse
 from userauths.forms import LoginForm, UserRegisterForm
-from userauths.models import User
+from userauths.models import ContactMessage, User
 
 
 class SignUpValidationTests(TestCase):
@@ -77,6 +78,35 @@ class SignUpValidationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Моля, потвърдете, че не сте робот.")
         self.assertFalse(User.objects.filter(email="no-captcha@example.com").exists())
+
+
+class ContactMessageTests(TestCase):
+    def test_contact_without_captcha_is_not_saved(self):
+        response = self.client.post(reverse("store:contact"), {
+            "full_name": "Bot",
+            "email": "bot@example.com",
+            "subject": "seo",
+            "message": "buy links",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Моля, потвърдете, че не сте робот.")
+        self.assertFalse(ContactMessage.objects.exists())
+
+    @patch("django_recaptcha.fields.client.submit", return_value=RecaptchaResponse(is_valid=True))
+    def test_contact_with_captcha_is_saved(self, _submit):
+        response = self.client.post(reverse("store:contact"), {
+            "full_name": "Иван Петров",
+            "email": "ivan@example.com",
+            "subject": "Поръчка",
+            "message": "Имам въпрос.",
+            "g-recaptcha-response": "ok",
+        })
+
+        self.assertEqual(response.status_code, 302)
+        saved = ContactMessage.objects.get()
+        self.assertEqual(saved.full_name, "Иван Петров")
+        self.assertEqual(saved.email, "ivan@example.com")
 
 
 class LoginValidationTests(TestCase):

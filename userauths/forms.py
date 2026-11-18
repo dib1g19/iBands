@@ -130,3 +130,41 @@ class LoginForm(forms.Form):
 
     def clean_email(self):
         return (self.cleaned_data.get("email") or "").strip().lower()
+
+
+class ContactForm(forms.Form):
+    full_name = forms.CharField(
+        required=False,
+        max_length=255,
+        widget=forms.TextInput(
+            attrs={"class": "form-control rounded", "placeholder": "Име"}
+        ),
+    )
+    email = forms.CharField(
+        required=False,
+        max_length=255,
+        widget=forms.TextInput(
+            attrs={"class": "form-control rounded", "placeholder": "Имейл"}
+        ),
+    )
+    subject = forms.CharField(
+        required=False,
+        max_length=255,
+        widget=forms.TextInput(
+            attrs={"class": "form-control rounded", "placeholder": "Основание"}
+        ),
+    )
+    message = forms.CharField(
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control rounded",
+                "placeholder": "Причина за контакт",
+                "rows": 4,
+            }
+        ),
+    )
+    captcha = ReCaptchaField(
+        widget=ReCaptchaV2Checkbox(),
+        error_messages=CAPTCHA_ERRORS,
+    )

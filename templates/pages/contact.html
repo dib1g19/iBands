@@ -45,19 +45,27 @@
                         {% csrf_token %}
                         <div class="mb-3">
                             <label class="small fw-medium">Име *</label>
-                            <input type="text" name="full_name" class="form-control rounded" placeholder="Име" />
+                            {{ form.full_name }}
                         </div>
                         <div class="mb-3">
                             <label class="small fw-medium">Имейл *</label>
-                            <input type="text" name="email" class="form-control rounded" placeholder="Имейл" />
+                            {{ form.email }}
                         </div>
                         <div class="mb-3">
                             <label class="small fw-medium">Основание</label>
-                            <input type="text" name="subject" class="form-control rounded" placeholder="Основание" />
+                            {{ form.subject }}
                         </div>
                         <div class="mb-3">
                             <label class="small fw-medium">Съобщение</label>
-                            <textarea name="message" class="form-control rounded" placeholder="Причина за контакт"></textarea>
+                            {{ form.message }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.captcha }}
+                            {% if form.captcha.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for err in form.captcha.errors %}{{ err }}{% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary btn-sm rounded">Изпрати съобщение <i class="fas fa-envelope"></i></button>

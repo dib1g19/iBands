@@ -1,7 +1,7 @@
 import io
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import connection
+from django.db import IntegrityError, connection, transaction
 from django.test import TestCase, Client, SimpleTestCase
 from PIL import Image
 
@@ -10,7 +10,9 @@ from store.admin import add_gallery_uploads
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
+from datetime import timedelta
 from decimal import Decimal
+from django.contrib.auth import get_user_model
 from unittest.mock import patch
 import re
 from django.template.loader import render_to_string
@@ -211,6 +213,228 @@ class CouponDiscountTests(TestCase):
         self.assertEqual(order.sub_total, Decimal("40.00"))
         self.assertEqual(order.saved, Decimal("3.00"))
         self.assertEqual(order.total, Decimal("42.00"))
+
+
+class CouponRulesTests(TestCase):
+    def _user(self, email):
+        return get_user_model().objects.create_user(
+            email=email,
+            username=email.split("@")[0],
+            password="secret",
+        )
+
+    def _order(self, sub_total="40.00", price="20.00", qty=2, customer=None):
+        n = store_models.Product.objects.count() + 1
+        category = store_models.Category.objects.create(
+            title=f"Bands {n}",
+            sku=f"CAT-R-{n}",
+            slug=f"bands-r-{n}",
+        )
+        product = store_models.Product.objects.create(
+            name="Band",
+            sku=f"SKU-R-{n}",
+            description="Band",
+            price=Decimal(price),
+            category=category,
+        )
+        order = store_models.Order.objects.create(
+            customer=customer,
+            sub_total=Decimal(sub_total),
+            shipping=Decimal("5.00"),
+            total=Decimal(sub_total) + Decimal("5.00"),
+        )
+        store_models.OrderItem.objects.create(
+            order=order,
+            product=product,
+            qty=qty,
+            price=Decimal(price),
+            sub_total=Decimal(sub_total),
+        )
+        return order
+
+    def _apply(self, order, code):
+        return self.client.post(
+            reverse("store:coupon_apply", args=[order.order_id]),
+            {"coupon_code": code},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+    def test_lookup_ignores_case_and_spaces(self):
+        order = self._order()
+        store_models.Coupon.objects.create(code=" save10 ", discount=10)
+
+        response = self._apply(order, "SaVe10")
+
+        self.assertTrue(response.json()["success"])
+        order.refresh_from_db()
+        self.assertEqual(order.saved, Decimal("4.00"))
+
+    def test_duplicate_codes_cannot_be_stored(self):
+        store_models.Coupon.objects.create(code="SAVE10", discount=10)
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                store_models.Coupon.objects.create(code="save10", discount=5)
+
+    def test_discount_is_clamped_to_the_percent_range(self):
+        high = store_models.Coupon.objects.create(code="HIGH", discount=150)
+        low = store_models.Coupon.objects.create(code="LOW", discount=0)
+        self.assertEqual(high.discount, 100)
+        self.assertEqual(low.discount, 1)
+
+    def test_inactive_expired_and_early_coupons_are_rejected(self):
+        order = self._order()
+        inactive = store_models.Coupon.objects.create(code="OFF", discount=10, active=False)
+        early = store_models.Coupon.objects.create(
+            code="EARLY",
+            discount=10,
+            valid_from=timezone.now() + timedelta(days=1),
+        )
+        expired = store_models.Coupon.objects.create(
+            code="OLD",
+            discount=10,
+            valid_until=timezone.now() - timedelta(minutes=1),
+        )
+
+        self.assertIn("не е активен", self._apply(order, inactive.code).json()["message"])
+        self.assertIn("още не е валиден", self._apply(order, early.code).json()["message"])
+        self.assertIn("изтекъл", self._apply(order, expired.code).json()["message"])
+        order.refresh_from_db()
+        self.assertEqual(order.saved, Decimal("0.00"))
+
+    def test_minimum_subtotal_is_required(self):
+        order = self._order(sub_total="40.00")
+        store_models.Coupon.objects.create(code="MIN50", discount=10, min_subtotal=Decimal("50.00"))
+
+        response = self._apply(order, "min50")
+
+        self.assertIn("50.00", response.json()["message"])
+        order.refresh_from_db()
+        self.assertFalse(order.coupons.exists())
+
+    def test_a_paid_use_counts_against_the_global_limit(self):
+        coupon = store_models.Coupon.objects.create(code="ONCE", discount=10, usage_limit=1)
+        first = self._order()
+        self.assertTrue(self._apply(first, "ONCE").json()["success"])
+        store_models.Coupon.mark_order_redeemed(first)
+
+        second = self._order()
+        response = self._apply(second, "ONCE")
+
+        self.assertIn("вече е използван", response.json()["message"])
+        self.assertEqual(coupon.redemptions.count(), 1)
+
+    def test_per_customer_limit_lets_another_customer_use_the_code(self):
+        store_models.Coupon.objects.create(code="PER", discount=10, per_customer_limit=1)
+        first_user = self._user("first@example.com")
+        second_user = self._user("second@example.com")
+        first = self._order(customer=first_user)
+        self.client.force_login(first_user)
+        self.assertTrue(self._apply(first, "PER").json()["success"])
+        store_models.Coupon.mark_order_redeemed(first)
+
+        again = self._order(customer=first_user)
+        self.assertIn("Вече сте използвали", self._apply(again, "PER").json()["message"])
+
+        self.client.force_login(second_user)
+        other = self._order(customer=second_user)
+        self.assertTrue(self._apply(other, "PER").json()["success"])
+
+    def test_personal_coupon_requires_its_owner(self):
+        owner = self._user("owner@example.com")
+        other = self._user("other@example.com")
+        store_models.Coupon.issue_personal(code="MINE", discount=10, user=owner)
+        order = self._order()
+
+        self.assertIn("влезли", self._apply(order, "MINE").json()["message"])
+        self.client.force_login(other)
+        self.assertIn("вашия акаунт", self._apply(order, "MINE").json()["message"])
+        self.client.force_login(owner)
+        self.assertTrue(self._apply(order, "MINE").json()["success"])
+
+    def test_single_use_code_leaves_the_previous_open_checkout(self):
+        store_models.Coupon.objects.create(code="MOVE", discount=10, usage_limit=1)
+        first = self._order()
+        second = self._order()
+        self.assertTrue(self._apply(first, "MOVE").json()["success"])
+
+        self.assertTrue(self._apply(second, "MOVE").json()["success"])
+
+        first.refresh_from_db()
+        second.refresh_from_db()
+        self.assertFalse(first.coupons.exists())
+        self.assertEqual(first.saved, Decimal("0.00"))
+        self.assertEqual(first.total, Decimal("45.00"))
+        self.assertTrue(second.coupons.filter(code="MOVE").exists())
+
+    def test_cash_payment_marks_the_coupon_redeemed(self):
+        order = self._order()
+        order.address = customer_models.Address.objects.create(
+            name="Test",
+            phone="0888",
+            email="t@example.com",
+            delivery_method="econt",
+            city="София",
+        )
+        order.save(update_fields=["address"])
+        store_models.Coupon.objects.create(code="COD", discount=10)
+        self.assertTrue(self._apply(order, "COD").json()["success"])
+
+        with patch("store.views.send_order_notification_email"), \
+             patch("store.views.send_order_to_econt", return_value=None), \
+             patch("store.views.send_meta_purchase_event"):
+            response = self.client.post(reverse("store:cod_payment", args=[order.order_id]))
+
+        self.assertEqual(response.status_code, 302)
+        redemption = store_models.CouponRedemption.objects.get(order=order)
+        self.assertEqual(redemption.coupon.code, "COD")
+
+    def test_spin_and_milestone_codes_carry_their_rules(self):
+        user = self._user("spin@example.com")
+        self.client.force_login(user)
+        store_models.SpinPrize.objects.create(
+            label="Отстъпка 10%",
+            prize_type="discount_percent",
+            discount_percent=10,
+            min_order_total=Decimal("25.00"),
+            weight=1,
+            active=True,
+        )
+        store_models.SpinMilestone.objects.create(
+            threshold_spins=1,
+            prize_type="discount_percent",
+            discount_percent=15,
+            min_order_total=Decimal("30.00"),
+            label="Лоялност",
+            active=True,
+        )
+
+        response = self.client.post(reverse("store:spin_perform"))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        coupon = store_models.Coupon.objects.get(code=payload["coupon_code"])
+        self.assertEqual(coupon.owner, user)
+        self.assertEqual(coupon.discount, 10)
+        self.assertEqual(coupon.usage_limit, 1)
+        self.assertEqual(coupon.per_customer_limit, 1)
+        self.assertEqual(coupon.min_subtotal, Decimal("25.00"))
+        self.assertEqual(coupon.valid_until, store_models.Coupon.end_of_local_day(timezone.localdate()))
+        milestone = store_models.Coupon.objects.get(code=payload["milestone"]["coupon_code"])
+        self.assertEqual(milestone.owner, user)
+        self.assertEqual(milestone.discount, 15)
+        self.assertEqual(milestone.usage_limit, 1)
+        self.assertEqual(milestone.min_subtotal, Decimal("30.00"))
+        self.assertIsNone(milestone.valid_until)
+
+    def test_a_code_named_like_a_spin_prize_has_no_special_prefix_rule(self):
+        order = self._order()
+        store_models.Coupon.objects.create(code="SPIN-9-9", discount=5)
+
+        response = self._apply(order, "spin-9-9")
+
+        self.assertTrue(response.json()["success"])
+        order.refresh_from_db()
+        self.assertEqual(order.saved, Decimal("2.00"))
 
 
 class EmailPriceRenderingTests(TestCase):

@@ -4,7 +4,7 @@ from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
@@ -621,6 +621,20 @@ def apply_coupon_discount(order):
     order.saved = saved
     order.total = total
     order.save()
+
+
+def release_single_use_coupon(coupon, order):
+    """A one-use code stays on the checkout that applied it last."""
+    if coupon.usage_limit != 1:
+        return
+    others = store_models.Order.objects.filter(
+        coupons=coupon,
+        order_status="initiated",
+        coupon_redemption__isnull=True,
+    ).exclude(pk=order.pk)
+    for other in others:
+        other.coupons.remove(coupon)
+        apply_coupon_discount(other)
 
 
 @csrf_exempt
@@ -2010,52 +2024,31 @@ def coupon_apply(request, order_id):
     if request.method == "POST":
         coupon_code = request.POST.get("coupon_code")
 
-        if not coupon_code:
-            msg = "Моля, въведете купон."
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': msg})
+        def reject(msg):
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "message": msg})
             messages.error(request, msg)
             return redirect("store:checkout", order.order_id)
 
-        try:
-            coupon = store_models.Coupon.objects.get(code=coupon_code)
-        except store_models.Coupon.DoesNotExist:
-            msg = "Купонът не съществува."
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': msg})
-            messages.error(request, msg)
-            return redirect("store:checkout", order.order_id)
+        normalized = store_models.Coupon.normalize_code(coupon_code)
+        if not normalized:
+            return reject("Моля, въведете купон.")
 
-        # Enforce SPIN coupon validity: same user, same day
-        if coupon.code.startswith("SPIN-"):
-            if not request.user.is_authenticated:
-                msg = "Трябва да сте влезли, за да използвате този купон."
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'message': msg})
-                messages.error(request, msg)
-                return redirect("store:checkout", order.order_id)
-            spin = store_models.SpinEntry.objects.filter(user=request.user, coupon_code=coupon.code).first()
-            if not spin:
-                msg = "Този купон не е валиден за вашия акаунт."
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'message': msg})
-                messages.error(request, msg)
-                return redirect("store:checkout", order.order_id)
-            if spin.date != timezone.localdate():
-                msg = "Купонът от колелото е валиден само за днес."
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'message': msg})
-                messages.error(request, msg)
-                return redirect("store:checkout", order.order_id)
-
-        # Always clear any existing coupons and reset saved and total
-        order.coupons.clear()
-        order.saved = round2(0)
-        order.total = round2(order.sub_total + (order.shipping or 0))
-
-        # Apply coupon, recalculate everything in one place!
-        order.coupons.add(coupon)
-        apply_coupon_discount(order)
+        with transaction.atomic():
+            coupon = (
+                store_models.Coupon.objects.select_for_update()
+                .filter(code=normalized)
+                .first()
+            )
+            if coupon is None:
+                return reject("Купонът не съществува.")
+            reason = coupon.rejection_reason(order, request.user)
+            if reason:
+                return reject(reason)
+            release_single_use_coupon(coupon, order)
+            order.coupons.clear()
+            order.coupons.add(coupon)
+            apply_coupon_discount(order)
 
         msg = "Купонът е активиран."
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -2152,6 +2145,7 @@ def cod_payment(request, order_id):
         except Exception:
             pass
         order.save()
+        store_models.Coupon.mark_order_redeemed(order)
         send_order_notification_email(
             order=order,
             email_heading=f"Потвърдена поръчка #{order.order_id}",
@@ -2320,7 +2314,18 @@ def spin_perform(request):
         # Generate a unique coupon code
         # Keep it short but not easily guessable
         code = f"SPIN-{request.user.id}-{random.randint(100000, 999999)}"
-        coupon = Coupon.objects.create(code=code, discount=int(selected["discount_percent"]))
+        min_subtotal = (
+            Decimal(str(selected["min_order_total"]))
+            if selected.get("min_order_total")
+            else None
+        )
+        coupon = Coupon.issue_personal(
+            code=code,
+            discount=int(selected["discount_percent"]),
+            user=request.user,
+            valid_until=Coupon.end_of_local_day(today),
+            min_subtotal=min_subtotal,
+        )
         coupon_code = coupon.code
 
     entry = SpinEntry.objects.create(
@@ -2348,8 +2353,13 @@ def spin_perform(request):
             ms_coupon_code = None
             if ms.prize_type == 'discount_percent' and ms.discount_percent:
                 ms_code = f"MS-{request.user.id}-{ms.threshold_spins}-{random.randint(100000,999999)}"
-                Coupon.objects.create(code=ms_code, discount=int(ms.discount_percent))
-                ms_coupon_code = ms_code
+                ms_coupon = Coupon.issue_personal(
+                    code=ms_code,
+                    discount=int(ms.discount_percent),
+                    user=request.user,
+                    min_subtotal=ms.min_order_total,
+                )
+                ms_coupon_code = ms_coupon.code
             SpinMilestoneAward.objects.create(user=request.user, milestone=ms, coupon_code=ms_coupon_code)
             milestone_payload = {
                 "threshold_spins": ms.threshold_spins,
@@ -2471,6 +2481,7 @@ def stripe_payment_verify(request, order_id):
             except Exception:
                 pass
             order.save()
+            store_models.Coupon.mark_order_redeemed(order)
             send_order_notification_email(
                 order=order,
                 email_heading=f"Потвърдена поръчка #{order.order_id}",

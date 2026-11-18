@@ -263,16 +263,52 @@ class ProductAdmin(iBandsModelAdmin):
 
 @admin.register(store_models.Category)
 class CategoryAdmin(iBandsModelAdmin):
-    list_display = ["title", "sku", "marketing_image", "hover_image", "is_popular", "parent"]
+    list_display = ["title", "view_on_site_link", "sku", "marketing_image", "hover_image", "is_popular", "parent"]
     list_editable = ["sku", "marketing_image", "hover_image", "is_popular"]
     list_filter = ["parent", "is_popular"]
     search_fields = ["title", "sku"]
-    list_select_related = ["parent"]
+    list_select_related = ["parent", "parent__parent"]
+    readonly_fields = ["view_on_site_link"]
+    fields = (
+        "view_on_site_link",
+        "title",
+        "description",
+        "sku",
+        "parent",
+        "marketing_image",
+        "hover_image",
+        "show_banner",
+        "slug",
+        "meta_title",
+        "meta_description",
+        "is_popular",
+    )
 
     prepopulated_fields = {"slug": ("title",)}
 
     class Media:
         js = ('assets/js/admin_char_count.js',)
+
+    def _storefront_path(self, obj):
+        if not obj or not obj.pk or not obj.slug:
+            return None
+        try:
+            return obj.get_absolute_url()
+        except Exception:
+            return None
+
+    def view_on_site(self, obj):
+        return self._storefront_path(obj)
+
+    @admin.display(description="Site")
+    def view_on_site_link(self, obj):
+        url = self._storefront_path(obj)
+        if not url:
+            return "—"
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener noreferrer">View</a>',
+            url,
+        )
 
 
 @admin.register(store_models.CategoryLink)

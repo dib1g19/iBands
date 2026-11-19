@@ -50,6 +50,7 @@ MENU_SECTIONS = [
         "icon": "fas fa-bullhorn",
         "items": [
             "store.coupon",
+            "store.couponredemption",
             "store.bandoftheweek",
             "store.review",
             "store.spinprize",

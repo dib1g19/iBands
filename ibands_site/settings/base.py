@@ -216,6 +216,7 @@ JAZZMIN_SETTINGS = {
         "store.VariantItem": "fas fa-shapes",
         "store.Gallery": "fas fa-images",
         "store.Coupon": "fas fa-ticket-alt",
+        "store.CouponRedemption": "fas fa-receipt",
         "store.Review": "fas fa-star fa-beat",
         "store.ColorGroup": "fas fa-palette",
         "store.Color": "fas fa-eye-dropper",

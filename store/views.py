@@ -1417,6 +1417,8 @@ def category(request, category_path):
 # Utility functions for category tree traversal (for zero-query descendant lookup)
 def find_category_node(tree, cat_id):
     """Find a node in the tree by ID."""
+    if not tree:
+        return None
     for node in tree:
         if node.id == cat_id:
             return node
@@ -1443,8 +1445,9 @@ def category_all_sub(request, category_path):
         category = get_object_or_404(Category, slug=slug, parent=parent)
         parent = category
 
-    # Get descendant ids from the cached category tree (zero queries)
-    category_tree = cache.get("category_tree")
+    # Get descendant ids from the cached category tree (zero queries once warm)
+    from .context_processors import get_category_tree
+    category_tree = get_category_tree()
     node = find_category_node(category_tree, category.id)
     if node:
         descendant_ids = [node.id] + collect_descendant_ids(node)
@@ -2666,7 +2669,8 @@ def filter_products(request):
     # Apply category filtering
     if categories:
         # Use the cached category tree for descendant lookup
-        category_tree = cache.get("category_tree")
+        from .context_processors import get_category_tree
+        category_tree = get_category_tree()
         all_category_ids = []
         for cid in categories:
             try:

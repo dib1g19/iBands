@@ -1376,3 +1376,23 @@ class SpinPrizeFulfillmentTests(TestCase):
         self.assertEqual(prize.product.name, "Premium")
         self.assertEqual(prize.price, Decimal("0.00"))
 
+
+class CategoryAllSubTests(TestCase):
+    def test_all_page_includes_child_products_when_tree_cache_is_empty(self):
+        from store.context_processors import invalidate_category_tree_cache
+
+        parent = store_models.Category.objects.create(title="Bands", sku="ALL-P", slug="bands")
+        child = store_models.Category.objects.create(title="Silicone", sku="ALL-C", slug="silicone", parent=parent)
+        store_models.Product.objects.create(
+            name="Blue Band",
+            sku="ALL-PROD",
+            description="Band",
+            category=child,
+        )
+        invalidate_category_tree_cache()
+
+        response = Client().get(reverse("store:category_all_sub", kwargs={"category_path": "bands"}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Blue Band")
+

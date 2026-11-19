@@ -46,19 +46,22 @@ def build_category_tree(categories):
         cat.url = cat.get_absolute_url()
     return tree
 
-def navigation_context(request):
+def get_category_tree():
     now = time.monotonic()
-    category_tree = None
     if _category_tree_local["tree"] is not None and now < _category_tree_local["expires_at"]:
-        category_tree = _category_tree_local["tree"]
-    else:
-        category_tree = cache.get("category_tree")
-        if category_tree is None:
-            categories = list(Category.objects.all().select_related('parent'))
-            category_tree = build_category_tree(categories)
-            cache.set("category_tree", category_tree, timeout=None)
-        _category_tree_local["tree"] = category_tree
-        _category_tree_local["expires_at"] = now + _CATEGORY_TREE_LOCAL_TTL
+        return _category_tree_local["tree"]
+    category_tree = cache.get("category_tree")
+    if not category_tree:
+        categories = list(Category.objects.all().select_related("parent"))
+        category_tree = build_category_tree(categories)
+        cache.set("category_tree", category_tree, timeout=None)
+    _category_tree_local["tree"] = category_tree
+    _category_tree_local["expires_at"] = now + _CATEGORY_TREE_LOCAL_TTL
+    return category_tree
+
+
+def navigation_context(request):
+    category_tree = get_category_tree()
 
     try:
         cart_id = request.session.get("cart_id")

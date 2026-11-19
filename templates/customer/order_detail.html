@@ -25,6 +25,11 @@
                 <div class="col-12 col-md-12 col-lg-8 col-xl-8">
                     <div class="row mb-4">
                         <h4 class="mb-0 mb-2 fw-bold">Номер на поръчка: #{{ order.order_id }}</h4>
+                        {% if order.order_status == "initiated" %}
+                            <div>
+                                <a href="{% url 'store:checkout' order.order_id %}" class="btn btn-sm btn-primary rounded">Продължи поръчката</a>
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="order-data">

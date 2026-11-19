@@ -621,6 +621,33 @@ class CouponRulesTests(TestCase):
         self.assertTrue(owned.coupons.filter(code="SAVE10").exists())
 
 
+class UnfinishedOrderLinkTests(TestCase):
+    def test_an_unfinished_order_links_back_to_its_checkout(self):
+        user = get_user_model().objects.create_user(
+            email="buyer@example.com", username="buyer", password="secret",
+        )
+        open_order = store_models.Order.objects.create(
+            customer=user, order_status="initiated", sub_total=Decimal("10.00"), total=Decimal("10.00"),
+        )
+        open_order.address = customer_models.Address.objects.create(
+            name="Test", phone="0888", email="buyer@example.com", city="София",
+        )
+        open_order.save(update_fields=["address"])
+        store_models.Order.objects.create(
+            customer=user, order_status="received", sub_total=Decimal("20.00"), total=Decimal("20.00"),
+        )
+        self.client.force_login(user)
+        checkout_url = reverse("store:checkout", args=[open_order.order_id])
+
+        dashboard = self.client.get(reverse("customer:dashboard"))
+        detail = self.client.get(reverse("customer:order_detail", args=[open_order.order_id]))
+
+        self.assertContains(dashboard, checkout_url)
+        self.assertEqual(dashboard.content.decode().count("Продължи поръчката"), 1)
+        self.assertContains(detail, checkout_url)
+        self.assertContains(detail, "Продължи поръчката")
+
+
 class EmailPriceRenderingTests(TestCase):
     def test_email_renders_discount_with_strike_when_item_price_below_regular(self):
         # Create product priced at 100; mark as Band of the Week so effective price is 50

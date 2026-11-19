@@ -189,6 +189,9 @@ class CouponDiscountTests(TestCase):
         )
         item.product.save()
         store_models.Coupon.objects.create(code="SAVE10", discount=10)
+        session = self.client.session
+        session["checkout_order_ids"] = [str(order.order_id)]
+        session.save()
 
         response = self.client.post(
             reverse("store:coupon_apply", args=[order.order_id]),
@@ -310,6 +313,14 @@ class CouponRulesTests(TestCase):
         return order
 
     def _apply(self, order, code):
+        if order.customer_id is None:
+            session = self.client.session
+            owned = [str(item) for item in (session.get("checkout_order_ids") or [])]
+            token = str(order.order_id)
+            if token not in owned:
+                owned.append(token)
+                session["checkout_order_ids"] = owned
+                session.save()
         return self.client.post(
             reverse("store:coupon_apply", args=[order.order_id]),
             {"coupon_code": code},
@@ -492,6 +503,66 @@ class CouponRulesTests(TestCase):
         self.assertTrue(response.json()["success"])
         order.refresh_from_db()
         self.assertEqual(order.saved, Decimal("2.00"))
+
+    def test_only_the_customer_who_started_an_unpaid_order_can_change_the_code(self):
+        store_models.Coupon.objects.create(code="SAVE10", discount=10)
+        category = store_models.Category.objects.create(
+            title="Bands own", sku="CAT-OWN", slug="bands-own",
+        )
+        product = store_models.Product.objects.create(
+            name="Band", sku="SKU-OWN", description="Band",
+            price=Decimal("40.00"), category=category,
+        )
+        store_models.Cart.objects.create(
+            cart_id="guest-cart", product=product, qty=1,
+            price=Decimal("40.00"), sub_total=Decimal("40.00"),
+        )
+        session = self.client.session
+        session["cart_id"] = "guest-cart"
+        session.save()
+        self.client.post(reverse("store:create_order"))
+        order = store_models.Order.objects.get()
+
+        stranger = Client()
+        denied = stranger.post(
+            reverse("store:coupon_apply", args=[order.order_id]),
+            {"coupon_code": "SAVE10"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertIn("не е ваша", denied.json()["message"])
+
+        self.assertTrue(self._apply(order, "SAVE10").json()["success"])
+        page = self.client.get(reverse("store:checkout", args=[order.order_id]))
+        self.assertContains(page, "Премахни кода")
+        removed = self.client.post(
+            reverse("store:coupon_remove", args=[order.order_id]),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertTrue(removed.json()["success"])
+        self.assertIn("премахнат", removed.json()["message"])
+        order.refresh_from_db()
+        self.assertFalse(order.coupons.exists())
+        self.assertEqual(order.saved, Decimal("0.00"))
+        self.assertEqual(order.total, order.sub_total + order.shipping)
+
+        buyer = self._user("buyer@example.com")
+        owned = self._order(customer=buyer)
+        self.client.force_login(self._user("thief@example.com"))
+        self.assertIn("не е ваша", self._apply(owned, "SAVE10").json()["message"])
+
+        self.client.force_login(buyer)
+        self.assertTrue(self._apply(owned, "SAVE10").json()["success"])
+        owned.order_status = "received"
+        owned.save(update_fields=["order_status"])
+        blocked = self._apply(owned, "SAVE10")
+        self.assertIn("преди плащане", blocked.json()["message"])
+        still_on = self.client.post(
+            reverse("store:coupon_remove", args=[owned.order_id]),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertIn("преди плащане", still_on.json()["message"])
+        owned.refresh_from_db()
+        self.assertTrue(owned.coupons.filter(code="SAVE10").exists())
 
 
 class EmailPriceRenderingTests(TestCase):

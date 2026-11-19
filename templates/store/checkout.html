@@ -213,10 +213,13 @@
 
                     <div id="coupon-box" class="shadow rounded p-3 mt-3">
                         <h4 class="fw-bold">Купони</h4>
-                        <form id="coupon-form" class="mb-3 d-flex" action="{% url 'store:coupon_apply' order.order_id %}" method="POST">
+                        <form id="coupon-form" class="mb-0 d-flex" action="{% url 'store:coupon_apply' order.order_id %}" method="POST">
                             {% csrf_token %}
                             <input type="text" class="form-control" name="coupon_code" placeholder="Код за отстъпка" />
                             <button type="submit" class="btn btn-success"><i class="fas fa-check-circle"></i></button>
+                        </form>
+                        <form id="coupon-remove-form" class="d-none" action="{% url 'store:coupon_remove' order.order_id %}" method="POST">
+                            {% csrf_token %}
                         </form>
                         <div id="coupon-feedback"></div>
                     </div>

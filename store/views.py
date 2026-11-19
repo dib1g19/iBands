@@ -2002,12 +2002,43 @@ def create_order(request):
         )
 
     apply_mystery_box_prizes(order, request.user)
+    _remember_checkout(request, order)
     return redirect("store:checkout", order.order_id)
 
 
-def coupon_apply(request, order_id):
-    print("Order Id ========", order_id)
+def _remember_checkout(request, order):
+    owned = [str(item) for item in (request.session.get("checkout_order_ids") or [])]
+    token = str(order.order_id)
+    if token not in owned:
+        owned.append(token)
+        request.session["checkout_order_ids"] = owned
+        request.session.modified = True
 
+
+def _coupon_change_denied(request, order):
+    """Why this visitor cannot change the coupon, or None when they can."""
+    if order.order_status != "initiated":
+        return "Купонът може да се промени само преди плащане."
+    if order.customer_id:
+        if request.user.is_authenticated and request.user.id == order.customer_id:
+            return None
+        return "Тази поръчка не е ваша."
+    owned = [str(item) for item in (request.session.get("checkout_order_ids") or [])]
+    if str(order.order_id) in owned:
+        return None
+    return "Тази поръчка не е ваша."
+
+
+def _coupon_json(order, message):
+    return JsonResponse({
+        "success": True,
+        "message": message,
+        "summary_html": render_to_string("store/_checkout_summary.html", {"order": order}),
+        "items_html": render_to_string("store/_checkout_items.html", {"order": order}),
+    })
+
+
+def coupon_apply(request, order_id):
     try:
         order = store_models.Order.objects.get(order_id=order_id)
     except store_models.Order.DoesNotExist:
@@ -2025,6 +2056,10 @@ def coupon_apply(request, order_id):
                 return JsonResponse({"success": False, "message": msg})
             messages.error(request, msg)
             return redirect("store:checkout", order.order_id)
+
+        denied = _coupon_change_denied(request, order)
+        if denied:
+            return reject(denied)
 
         normalized = store_models.Coupon.normalize_code(coupon_code)
         if not normalized:
@@ -2048,19 +2083,40 @@ def coupon_apply(request, order_id):
 
         msg = "Купонът е активиран."
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            # Render the updated summary and items HTML
-            summary_html = render_to_string("store/_checkout_summary.html", {"order": order})
-            items_html = render_to_string("store/_checkout_items.html", {"order": order})
-            return JsonResponse({
-                'success': True,
-                'message': msg,
-                'summary_html': summary_html,
-                'items_html': items_html,
-            })
+            return _coupon_json(order, msg)
         messages.success(request, msg)
         return redirect("store:checkout", order.order_id)
 
     return redirect("store:checkout", order_id)
+
+
+def coupon_remove(request, order_id):
+    try:
+        order = store_models.Order.objects.get(order_id=order_id)
+    except store_models.Order.DoesNotExist:
+        msg = "Поръчката не беше намерена."
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "message": msg})
+        messages.error(request, msg)
+        return redirect("store:cart")
+
+    if request.method != "POST":
+        return redirect("store:checkout", order.order_id)
+
+    denied = _coupon_change_denied(request, order)
+    if denied:
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "message": denied})
+        messages.error(request, denied)
+        return redirect("store:checkout", order.order_id)
+
+    order.coupons.clear()
+    apply_coupon_discount(order)
+    msg = "Купонът е премахнат."
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return _coupon_json(order, msg)
+    messages.success(request, msg)
+    return redirect("store:checkout", order.order_id)
 
 
 def checkout(request, order_id):

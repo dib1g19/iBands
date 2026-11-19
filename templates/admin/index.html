@@ -3,63 +3,114 @@
 
 {% block bodyclass %}{{ block.super }} dashboard{% endblock %}
 
-{% block content_title %}{% trans "Recent actions" %}{% endblock %}
+{% block content_title %}{% trans "Dashboard" %}{% endblock %}
 
 {% block breadcrumbs %}
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">{% trans "Home" %}</a></li>
-        <li class="breadcrumb-item">{% trans "Recent actions" %}</li>
+        <li class="breadcrumb-item">{% trans "Dashboard" %}</li>
     </ol>
 {% endblock %}
 
 {% block content %}
     <div class="col-12">
-        {% recent_admin_actions 20 as activity %}
-        <div class="admin-activity">
-        {% if not activity.actions %}
-            <p>{% trans "None available" %}</p>
-        {% else %}
-                {% for action in activity.actions %}
-                    <article class="admin-activity-item">
-                        <div class="admin-activity-top">
-                            <div>
-                                <span class="admin-activity-verb {{ action.verb }}">{{ action.verb }}</span>
-                                {% if action.url %}
-                                    <a class="admin-activity-title" href="{{ action.url }}">{{ action.title }}</a>
-                                {% else %}
-                                    <span class="admin-activity-title">{{ action.title }}</span>
-                                {% endif %}
-                            </div>
-                            <div class="admin-activity-meta">{{ action.actor }} · {{ action.when }}</div>
-                        </div>
-                        <ul class="admin-activity-lines">
-                            {% for line in action.lines %}
-                                <li>{{ line }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% if action.details %}
-                            <details class="admin-activity-more">
-                                <summary>More</summary>
-                                <ul>
-                                    {% for line in action.details %}
+        <div class="admin-home">
+            <section>
+                <h2>{% trans "Recent actions" %}</h2>
+                {% recent_admin_actions 20 as activity %}
+                <div class="admin-activity">
+                {% if not activity.actions %}
+                    <p>{% trans "None available" %}</p>
+                {% else %}
+                        {% for action in activity.actions %}
+                            <article class="admin-activity-item">
+                                <div class="admin-activity-top">
+                                    <div>
+                                        <span class="admin-activity-verb {{ action.verb }}">{{ action.verb }}</span>
+                                        {% if action.url %}
+                                            <a class="admin-activity-title" href="{{ action.url }}">{{ action.title }}</a>
+                                        {% else %}
+                                            <span class="admin-activity-title">{{ action.title }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="admin-activity-meta">{{ action.actor }} · {{ action.when }}</div>
+                                </div>
+                                <ul class="admin-activity-lines">
+                                    {% for line in action.lines %}
                                         <li>{{ line }}</li>
                                     {% endfor %}
                                 </ul>
-                            </details>
-                        {% endif %}
-                    </article>
-                {% endfor %}
-        {% endif %}
-            {% if activity.newer_url or activity.older_url %}
-                <nav class="admin-activity-pager" aria-label="{% trans 'Recent actions pages' %}">
-                    {% if activity.newer_url %}
-                        <a href="{{ activity.newer_url }}">{% trans "Newer" %}</a>
+                                {% if action.details %}
+                                    <details class="admin-activity-more">
+                                        <summary>More</summary>
+                                        <ul>
+                                            {% for line in action.details %}
+                                                <li>{{ line }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </details>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                {% endif %}
+                    {% if activity.newer_url or activity.older_url %}
+                        <nav class="admin-activity-pager" aria-label="{% trans 'Recent actions pages' %}">
+                            {% if activity.newer_url %}
+                                <a href="{{ activity.newer_url }}">{% trans "Newer" %}</a>
+                            {% endif %}
+                            {% if activity.older_url %}
+                                <a href="{{ activity.older_url }}">{% trans "Older" %}</a>
+                            {% endif %}
+                        </nav>
                     {% endif %}
-                    {% if activity.older_url %}
-                        <a href="{{ activity.older_url }}">{% trans "Older" %}</a>
+                </div>
+            </section>
+
+            <section class="admin-home-updates">
+                <h2>{% trans "What's new" %}</h2>
+                {% recent_staff_updates 20 as updates %}
+                <div class="admin-activity">
+                {% if not updates.notes %}
+                    <p>{% trans "Nothing here yet." %}</p>
+                {% else %}
+                        {% for note in updates.notes %}
+                            <article class="admin-activity-item">
+                                <div class="admin-activity-top">
+                                    <a class="admin-activity-title" href="{{ note.url }}">{{ note.title }}</a>
+                                    <div class="admin-activity-meta">{% if note.actor %}{{ note.actor }} · {% endif %}{{ note.when }}</div>
+                                </div>
+                                {% if note.lines %}
+                                    <ul class="admin-activity-lines">
+                                        {% for line in note.lines %}
+                                            <li>{{ line }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if note.details %}
+                                    <details class="admin-activity-more">
+                                        <summary>More</summary>
+                                        <ul>
+                                            {% for line in note.details %}
+                                                <li>{{ line }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </details>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                {% endif %}
+                    {% if updates.newer_url or updates.older_url %}
+                        <nav class="admin-activity-pager" aria-label="{% trans "What's new pages" %}">
+                            {% if updates.newer_url %}
+                                <a href="{{ updates.newer_url }}">{% trans "Newer" %}</a>
+                            {% endif %}
+                            {% if updates.older_url %}
+                                <a href="{{ updates.older_url }}">{% trans "Older" %}</a>
+                            {% endif %}
+                        </nav>
                     {% endif %}
-                </nav>
-            {% endif %}
+                </div>
+            </section>
         </div>
     </div>
 {% endblock %}

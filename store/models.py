@@ -1115,6 +1115,32 @@ class StoreThemeSettings(models.Model):
         self.invalidate_active_campaign_cache()
 
 
+class StaffUpdate(models.Model):
+    """One shipped change, written for the people who use the admin."""
+
+    summary = models.CharField(max_length=200)
+    details = models.TextField(
+        blank=True,
+        help_text="What to try. One point per line.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_by = models.ForeignKey(
+        user_models.User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="staff_updates",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "What's new"
+        verbose_name_plural = "What's new"
+
+    def __str__(self):
+        return self.summary
+
+
 class ServerErrorLog(models.Model):
     """One row for each unhandled server error, including customer and admin requests."""
 

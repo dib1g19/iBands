@@ -224,6 +224,7 @@ JAZZMIN_SETTINGS = {
         "store.SpinMilestone": "fas fa-trophy",
         "store.SpinEntry": "fas fa-dice",
         "store.SpinMilestoneAward": "fas fa-medal",
+        "store.StaffUpdate": "fas fa-code-branch",
         "store.StoreThemeSettings": "fas fa-palette",
         "store.Stats": "fas fa-chart-bar",
         "userauths.ContactMessage": "fas fa-envelope-open-text",

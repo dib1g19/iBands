@@ -148,11 +148,50 @@ body.model-product.change-list #result_list td.field-view_on_site_link {
     white-space: nowrap;
 }
 
+.admin-home {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+    width: 100%;
+}
+
+.admin-home h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.admin-home-updates .admin-activity-top {
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.admin-home-updates .admin-activity-meta {
+    white-space: normal;
+}
+
+.admin-home-updates .admin-activity-lines,
+.admin-home-updates .admin-activity-more {
+    padding-left: 0;
+}
+
 .admin-activity {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     max-width: 46rem;
+}
+
+.admin-home .admin-activity {
+    max-width: none;
+    width: 100%;
+}
+
+@media (max-width: 860px) {
+    .admin-home {
+        grid-template-columns: 1fr;
+    }
 }
 
 .admin-activity-item {

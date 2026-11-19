@@ -1396,3 +1396,53 @@ class CategoryAllSubTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Blue Band")
 
+
+class StaffUpdateTests(TestCase):
+    def _staff(self):
+        return get_user_model().objects.create_superuser(
+            email="staff-note@example.com",
+            username="staff-note",
+            password="secret",
+        )
+
+    def test_the_dashboard_lists_the_latest_updates_beside_recent_actions(self):
+        user = self._staff()
+        user.full_name = "Dimitar"
+        user.save(update_fields=["full_name"])
+        base = timezone.now()
+        for index in range(21):
+            note = store_models.StaffUpdate.objects.create(
+                summary=f"Update {index}",
+                details="- Check the coupon page.\n- Confirm the redemption list.",
+                created_by=user,
+            )
+            store_models.StaffUpdate.objects.filter(pk=note.pk).update(
+                created_at=base - timedelta(minutes=index)
+            )
+
+        client = Client()
+        client.force_login(user)
+        response = client.get(reverse("admin:index"), HTTP_HOST="127.0.0.1")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "admin-home")
+        self.assertContains(response, "Recent actions")
+        self.assertContains(response, "What's new")
+        self.assertContains(response, "Update 0")
+        self.assertContains(response, "Check the coupon page.")
+        self.assertContains(response, "Dimitar")
+        self.assertNotContains(response, "Update 20")
+        self.assertContains(response, "updates_page=2")
+
+        older = client.get(reverse("admin:index") + "?updates_page=2", HTTP_HOST="127.0.0.1")
+        self.assertContains(older, "Update 20")
+        self.assertNotContains(older, "Update 0")
+
+    def test_an_empty_update_list_says_so(self):
+        store_models.StaffUpdate.objects.all().delete()
+        client = Client()
+        client.force_login(self._staff())
+        response = client.get(reverse("admin:index"), HTTP_HOST="127.0.0.1")
+
+        self.assertContains(response, "Nothing here yet.")
+

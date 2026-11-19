@@ -658,6 +658,24 @@ class ColorAdmin(ColorSwatchMixin, iBandsModelAdmin):
     list_editable = ["name_en", "name_bg", "hex_code"]
 
 
+@admin.register(store_models.StaffUpdate)
+class StaffUpdateAdmin(iBandsModelAdmin):
+    list_display = ["summary", "created_by", "created_at"]
+    search_fields = ["summary", "details", "created_by__email"]
+    list_select_related = ["created_by"]
+    readonly_fields = ["created_by", "created_at"]
+
+    def get_fields(self, request, obj=None):
+        if obj:
+            return ["summary", "details", "created_by", "created_at"]
+        return ["summary", "details"]
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+
 @admin.register(store_models.StoreThemeSettings)
 class StoreThemeSettingsAdmin(iBandsModelAdmin):
     list_display = ["active_campaign"]

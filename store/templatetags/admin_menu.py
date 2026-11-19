@@ -3,7 +3,10 @@ from datetime import timedelta
 
 from django import template
 from django.contrib.admin.models import LogEntry
+from django.urls import reverse
 from django.utils import timezone
+
+from store.models import StaffUpdate
 
 register = template.Library()
 
@@ -63,6 +66,7 @@ MENU_SECTIONS = [
         "name": "Site",
         "icon": "fas fa-gear",
         "items": [
+            "store.staffupdate",
             "store.storethemesettings",
             "stats",
             "store.servererrorlog",
@@ -278,25 +282,49 @@ def _present_action(entry):
 
 
 ACTIONS_PAGE_PARAM = "actions_page"
-ACTIONS_MAX_PAGE = 400
+UPDATES_PAGE_PARAM = "updates_page"
+PAGE_MAX = 400
 
 
-def _actions_page(request):
+def _page_number(request, param):
     try:
-        page = int(request.GET.get(ACTIONS_PAGE_PARAM, 1))
+        page = int(request.GET.get(param, 1))
     except (TypeError, ValueError):
         page = 1
-    return min(max(page, 1), ACTIONS_MAX_PAGE)
+    return min(max(page, 1), PAGE_MAX)
 
 
-def _actions_page_url(request, page):
+def _page_url(request, param, page):
     params = request.GET.copy()
     if page <= 1:
-        params.pop(ACTIONS_PAGE_PARAM, None)
+        params.pop(param, None)
     else:
-        params[ACTIONS_PAGE_PARAM] = str(page)
+        params[param] = str(page)
     query = params.urlencode()
     return f"{request.path}?{query}" if query else request.path
+
+
+def _update_lines(details):
+    lines = []
+    for raw in (details or "").splitlines():
+        line = raw.strip()
+        if line.startswith("- ") or line == "-":
+            line = line[1:].strip()
+        if line:
+            lines.append(line)
+    return lines
+
+
+def _present_update(note):
+    lines = _update_lines(note.details)
+    return {
+        "title": note.summary,
+        "url": reverse("admin:store_staffupdate_change", args=[note.pk]),
+        "lines": lines[:6],
+        "details": lines[6:],
+        "actor": _actor(note.created_by) if note.created_by_id else "",
+        "when": _when(note.created_at),
+    }
 
 
 @register.simple_tag(takes_context=True)
@@ -308,7 +336,7 @@ def recent_admin_actions(context, limit=20):
         limit = 20
     limit = min(max(limit, 1), 50)
     request = context["request"]
-    page = _actions_page(request)
+    page = _page_number(request, ACTIONS_PAGE_PARAM)
     start = (page - 1) * limit
     rows = list(
         LogEntry.objects.select_related("user", "content_type").order_by("-action_time")[
@@ -318,6 +346,30 @@ def recent_admin_actions(context, limit=20):
     has_older = len(rows) > limit
     return {
         "actions": [_present_action(entry) for entry in rows[:limit]],
-        "newer_url": _actions_page_url(request, page - 1) if page > 1 else "",
-        "older_url": _actions_page_url(request, page + 1) if has_older else "",
+        "newer_url": _page_url(request, ACTIONS_PAGE_PARAM, page - 1) if page > 1 else "",
+        "older_url": _page_url(request, ACTIONS_PAGE_PARAM, page + 1) if has_older else "",
+    }
+
+
+@register.simple_tag(takes_context=True)
+def recent_staff_updates(context, limit=20):
+    """One page of What's new notes, newest first."""
+    try:
+        limit = int(limit)
+    except (TypeError, ValueError):
+        limit = 20
+    limit = min(max(limit, 1), 50)
+    request = context["request"]
+    page = _page_number(request, UPDATES_PAGE_PARAM)
+    start = (page - 1) * limit
+    rows = list(
+        StaffUpdate.objects.select_related("created_by").order_by("-created_at", "-pk")[
+            start : start + limit + 1
+        ]
+    )
+    has_older = len(rows) > limit
+    return {
+        "notes": [_present_update(note) for note in rows[:limit]],
+        "newer_url": _page_url(request, UPDATES_PAGE_PARAM, page - 1) if page > 1 else "",
+        "older_url": _page_url(request, UPDATES_PAGE_PARAM, page + 1) if has_older else "",
     }

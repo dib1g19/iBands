@@ -61,10 +61,40 @@
     return 0
   }
 
-  function update(threshold) {
-    var th = typeof threshold === 'number' ? threshold : 75
+  function rulesSource() {
+    return document.getElementById('free-ship-box')
+  }
+
+  function prizeReminder() {
+    var source = rulesSource()
+    if (!source || !source.dataset.prizeMinimums) return null
+    var minimums
+    try { minimums = JSON.parse(source.dataset.prizeMinimums) } catch (e) { return null }
+    if (!Array.isArray(minimums) || !minimums.length) return null
+    if (minimums.indexOf(null) !== -1) return { minimum: null }
+    var nums = minimums.map(Number).filter(function (n) { return !isNaN(n) })
+    if (!nums.length) return null
+    nums.sort(function (a, b) { return a - b })
+    return { minimum: nums[0] }
+  }
+
+  function officeThreshold() {
+    var source = rulesSource()
+    var parsed = source ? parseFloat(source.dataset.officeThreshold) : NaN
+    return isNaN(parsed) ? 40 : parsed
+  }
+
+  function prizeApplies() {
+    var prize = prizeReminder()
+    if (!prize) return false
+    return prize.minimum == null || getEffectiveSubtotal() >= prize.minimum
+  }
+
+  function update() {
+    var prize = prizeReminder()
     var subtotal = getEffectiveSubtotal()
-    var progress = Math.max(0, Math.min(100, (subtotal / th) * 100))
+    var th = prize ? (prize.minimum == null ? 0 : prize.minimum) : officeThreshold()
+    var progress = th <= 0 ? 100 : Math.max(0, Math.min(100, (subtotal / th) * 100))
     var remaining = Math.max(0, th - subtotal)
 
     var barElem = document.getElementById('free-ship-bar')
@@ -76,16 +106,23 @@
       barElem.setAttribute('aria-valuenow', String(pct))
     }
     if (textElem) {
-      if (subtotal >= th) {
-        textElem.textContent = 'Поздравления! Безплатна доставка до офис е активна.'
+      if (prize && (prize.minimum == null || subtotal >= prize.minimum)) {
+        textElem.textContent = 'Имаш безплатна доставка до офис или автомат от колелото.'
+      } else if (prize) {
+        textElem.textContent = 'Имаш безплатна доставка до офис или автомат от колелото. Още ' + formatDualCurrency(remaining) + ' до нея.'
+      } else if (subtotal >= th) {
+        textElem.textContent = 'Поздравления! Безплатна доставка до офис или автомат е активна.'
       } else {
-        textElem.textContent = 'Още ' + formatDualCurrency(remaining) + ' до безплатна доставка до офис'
+        textElem.textContent = 'Още ' + formatDualCurrency(remaining) + ' до безплатна доставка до офис или автомат'
       }
     }
   }
 
   window.FreeShippingWidget = {
     update: update,
+    goods: getEffectiveSubtotal,
+    officeThreshold: officeThreshold,
+    prizeApplies: prizeApplies,
   }
 })();
 

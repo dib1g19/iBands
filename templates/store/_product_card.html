@@ -15,7 +15,11 @@
                 </p>
             {% endif %}
             {% if item.note %}
-                <p class="mb-0"><span class="fw-bold">Бележка:</span> {{ item.note }}</p>
+                {% if item.is_wheel_prize %}
+                    <p class="mb-0 text-success">Награда от колелото</p>
+                {% else %}
+                    <p class="mb-0"><span class="fw-bold">Бележка:</span> {{ item.note }}</p>
+                {% endif %}
             {% endif %}
             {% if item.mystery_device_models %}
                 <p class="mb-0">

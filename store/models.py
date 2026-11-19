@@ -642,6 +642,10 @@ class Order(models.Model):
 
     sub_total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
     shipping = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
+    prize_free_shipping = models.BooleanField(
+        default=False,
+        help_text="Shipping was set to zero because of a spin or milestone prize.",
+    )
     total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
     saved = models.DecimalField(
         max_digits=12,
@@ -724,6 +728,11 @@ class OrderItem(models.Model):
 
     def order_id(self):
         return f"{self.order.order_id}"
+
+    @property
+    def is_wheel_prize(self):
+        note = self.note or ""
+        return note.startswith("prize:spin:") or note.startswith("prize:milestone:")
 
     def __str__(self):
         return str(self.id)
@@ -947,6 +956,13 @@ class SpinEntry(models.Model):
     free_shipping = models.BooleanField(default=False)
     min_order_total = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     coupon_code = models.CharField(max_length=100, null=True, blank=True, db_index=True)
+    redeemed_order = models.ForeignKey(
+        "Order",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="redeemed_spin_prizes",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -1004,6 +1020,13 @@ class SpinMilestoneAward(models.Model):
     milestone = models.ForeignKey(SpinMilestone, on_delete=models.CASCADE, related_name="awards")
     awarded_at = models.DateTimeField(auto_now_add=True)
     coupon_code = models.CharField(max_length=100, null=True, blank=True, db_index=True)
+    redeemed_order = models.ForeignKey(
+        "Order",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="redeemed_milestone_prizes",
+    )
 
     class Meta:
         unique_together = ("user", "milestone")

@@ -67,6 +67,63 @@ class FreeShippingPersistenceTests(TestCase):
         self.assertEqual(order.shipping, Decimal("0.00"))
         self.assertEqual(order.total, Decimal("80.00"))
 
+    def _save_office(self, order, price=6.20):
+        return self.client.post(
+            reverse("store:save_econt_address", args=[order.order_id]),
+            data={
+                "name": "Test User",
+                "phone": "0888123456",
+                "email": "test@example.com",
+                "city": "София",
+                "address": "",
+                "office_code": "1234",
+                "office_name": "Офис Еконт",
+                "post_code": "1000",
+                "face": "",
+                "shipping_price": price,
+            },
+            content_type="application/json",
+        )
+
+    def test_office_free_shipping_starts_at_40(self):
+        order = store_models.Order.objects.create(sub_total=Decimal("40.00"), shipping=Decimal("5.00"), total=Decimal("45.00"))
+
+        self._save_office(order)
+
+        order.refresh_from_db()
+        self.assertEqual(order.shipping, Decimal("0.00"))
+        self.assertEqual(order.total, Decimal("40.00"))
+
+    def test_office_shipping_is_charged_under_40(self):
+        order = store_models.Order.objects.create(sub_total=Decimal("39.99"), shipping=Decimal("5.00"), total=Decimal("44.99"))
+
+        self._save_office(order)
+
+        order.refresh_from_db()
+        self.assertEqual(order.shipping, Decimal("6.20"))
+        self.assertEqual(order.total, Decimal("46.19"))
+
+    def test_coupon_changes_the_total_that_counts_toward_free_office_shipping(self):
+        qualifies = store_models.Order.objects.create(sub_total=Decimal("50.00"), shipping=Decimal("5.00"), total=Decimal("55.00"))
+        qualifies.coupons.add(store_models.Coupon.objects.create(code="OFF20", discount=20))
+
+        self._save_office(qualifies)
+
+        qualifies.refresh_from_db()
+        self.assertEqual(qualifies.saved, Decimal("10.00"))
+        self.assertEqual(qualifies.shipping, Decimal("0.00"))
+        self.assertEqual(qualifies.total, Decimal("40.00"))
+
+        misses = store_models.Order.objects.create(sub_total=Decimal("50.00"), shipping=Decimal("5.00"), total=Decimal("55.00"))
+        misses.coupons.add(store_models.Coupon.objects.create(code="OFF30", discount=30))
+
+        self._save_office(misses)
+
+        misses.refresh_from_db()
+        self.assertEqual(misses.saved, Decimal("15.00"))
+        self.assertEqual(misses.shipping, Decimal("6.20"))
+        self.assertEqual(misses.total, Decimal("41.20"))
+
 
 class SpeedyCODAmountTests(TestCase):
     def setUp(self):
@@ -806,4 +863,362 @@ class GalleryUploadTests(TestCase):
         self.assertEqual([row[0] for row in rows], [0, 2, 3, 4])
         self.assertTrue(rows[2][1].endswith("one.avif"))
         self.assertTrue(rows[3][1].endswith("two.avif"))
+
+
+class SpinPrizeFulfillmentTests(TestCase):
+    def _user(self):
+        return get_user_model().objects.create_user(
+            email="spin-prize@example.com",
+            username="spin-prize",
+            password="secret",
+        )
+
+    def _order(self, user, sub_total="40.00"):
+        return store_models.Order.objects.create(
+            customer=user,
+            sub_total=Decimal(sub_total),
+            shipping=Decimal("5.00"),
+            total=Decimal(sub_total) + Decimal("5.00"),
+        )
+
+    def _save_shipping(self, order, price="6.20", office=False):
+        return self.client.post(
+            reverse("store:save_econt_address", args=[order.order_id]),
+            data={
+                "name": "Test User",
+                "phone": "0888123456",
+                "email": "test@example.com",
+                "city": "София",
+                "address": "" if office else "ул. Тест 1",
+                "office_code": "1234" if office else "",
+                "office_name": "Офис Еконт" if office else "",
+                "post_code": "1000",
+                "face": "",
+                "shipping_price": price,
+            },
+            content_type="application/json",
+        )
+
+    def test_cart_bar_names_the_free_shipping_prize_minimum(self):
+        user = self._user()
+        self.client.force_login(user)
+        store_models.SpinEntry.objects.create(
+            user=user,
+            date=timezone.localdate(),
+            result_label="Безплатна доставка",
+            prize_type="free_shipping",
+            free_shipping=True,
+            min_order_total=Decimal("20.00"),
+        )
+        category = store_models.Category.objects.create(title="Bands", sku="BAR-CAT", slug="bar-cat")
+        product = store_models.Product.objects.create(
+            name="Band",
+            sku="SKU-BAR",
+            description="Band",
+            price=Decimal("10.00"),
+            category=category,
+        )
+        store_models.Cart.objects.create(
+            cart_id="prize-cart",
+            product=product,
+            qty=1,
+            price=Decimal("10.00"),
+            sub_total=Decimal("10.00"),
+        )
+        session = self.client.session
+        session["cart_id"] = "prize-cart"
+        session.save()
+
+        page = self.client.get(reverse("store:cart"))
+
+        self.assertContains(page, 'data-office-threshold="40"')
+        self.assertContains(page, 'data-prize-minimums="[20.0]"')
+
+    def test_free_shipping_prize_covers_office_below_the_standing_threshold(self):
+        user = self._user()
+        self.client.force_login(user)
+        store_models.SpinEntry.objects.create(
+            user=user,
+            date=timezone.localdate(),
+            result_label="Безплатна доставка",
+            prize_type="free_shipping",
+            free_shipping=True,
+            min_order_total=Decimal("20.00"),
+        )
+        home = self._order(user, sub_total="30.00")
+        self._save_shipping(home)
+        home.refresh_from_db()
+        self.assertEqual(home.shipping, Decimal("6.20"))
+        self.assertFalse(home.prize_free_shipping)
+
+        office = self._order(user, sub_total="30.00")
+        response = self._save_shipping(office, office=True)
+
+        self.assertEqual(response.status_code, 200)
+        office.refresh_from_db()
+        self.assertEqual(office.shipping, Decimal("0.00"))
+        self.assertTrue(office.prize_free_shipping)
+        self.assertEqual(office.total, Decimal("30.00"))
+        page = self.client.get(reverse("store:checkout", args=[office.order_id]))
+        self.assertContains(page, 'data-office-threshold="40"')
+        self.assertContains(page, 'data-prize-minimums="[20.0]"')
+
+    def test_free_shipping_prize_waits_for_its_minimum(self):
+        user = self._user()
+        self.client.force_login(user)
+        store_models.SpinEntry.objects.create(
+            user=user,
+            date=timezone.localdate(),
+            result_label="Безплатна доставка",
+            prize_type="free_shipping",
+            free_shipping=True,
+            min_order_total=Decimal("25.00"),
+        )
+        small = self._order(user, sub_total="20.00")
+
+        self._save_shipping(small, office=True)
+
+        small.refresh_from_db()
+        self.assertEqual(small.shipping, Decimal("6.20"))
+        self.assertFalse(small.prize_free_shipping)
+        page = self.client.get(reverse("store:checkout", args=[small.order_id]))
+        self.assertContains(page, 'data-office-threshold="40"')
+        self.assertContains(page, 'data-prize-minimums="[25.0]"')
+
+        large = self._order(user, sub_total="25.00")
+        self._save_shipping(large, office=True)
+        large.refresh_from_db()
+        self.assertEqual(large.shipping, Decimal("0.00"))
+        self.assertTrue(large.prize_free_shipping)
+
+    def test_coupon_changes_whether_the_free_shipping_prize_applies(self):
+        user = self._user()
+        self.client.force_login(user)
+        store_models.SpinEntry.objects.create(
+            user=user,
+            date=timezone.localdate(),
+            result_label="Безплатна доставка",
+            prize_type="free_shipping",
+            free_shipping=True,
+            min_order_total=Decimal("20.00"),
+        )
+        below = self._order(user, sub_total="25.00")
+        below.coupons.add(store_models.Coupon.objects.create(code="PRIZE30", discount=30))
+
+        self._save_shipping(below, office=True)
+
+        below.refresh_from_db()
+        self.assertEqual(below.saved, Decimal("7.50"))
+        self.assertEqual(below.shipping, Decimal("6.20"))
+        self.assertFalse(below.prize_free_shipping)
+        self.assertEqual(below.total, Decimal("23.70"))
+
+        above = self._order(user, sub_total="25.00")
+        above.coupons.add(store_models.Coupon.objects.create(code="PRIZE10", discount=10))
+
+        self._save_shipping(above, office=True)
+
+        above.refresh_from_db()
+        self.assertEqual(above.saved, Decimal("2.50"))
+        self.assertEqual(above.shipping, Decimal("0.00"))
+        self.assertTrue(above.prize_free_shipping)
+        self.assertEqual(above.total, Decimal("22.50"))
+
+    def test_office_threshold_does_not_spend_the_free_shipping_prize(self):
+        user = self._user()
+        self.client.force_login(user)
+        store_models.SpinEntry.objects.create(
+            user=user,
+            date=timezone.localdate(),
+            result_label="Безплатна доставка",
+            prize_type="free_shipping",
+            free_shipping=True,
+        )
+        order = self._order(user, sub_total="100.00")
+
+        response = self.client.post(
+            reverse("store:save_econt_address", args=[order.order_id]),
+            data={
+                "name": "Test User",
+                "phone": "0888123456",
+                "email": "test@example.com",
+                "city": "София",
+                "address": "",
+                "office_code": "1234",
+                "office_name": "Офис Еконт",
+                "post_code": "1000",
+                "face": "",
+                "shipping_price": 6.20,
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(order.shipping, Decimal("0.00"))
+        self.assertFalse(order.prize_free_shipping)
+        self.assertEqual(order.total, Decimal("100.00"))
+
+    def test_yesterdays_free_shipping_prize_is_not_applied(self):
+        user = self._user()
+        self.client.force_login(user)
+        store_models.SpinEntry.objects.create(
+            user=user,
+            date=timezone.localdate() - timedelta(days=1),
+            result_label="Безплатна доставка",
+            prize_type="free_shipping",
+            free_shipping=True,
+        )
+        order = self._order(user, sub_total="30.00")
+
+        self._save_shipping(order, office=True)
+
+        order.refresh_from_db()
+        self.assertEqual(order.shipping, Decimal("6.20"))
+        self.assertFalse(order.prize_free_shipping)
+        self.assertEqual(order.total, Decimal("36.20"))
+
+    def test_paying_redeems_free_shipping_for_the_next_order(self):
+        user = self._user()
+        self.client.force_login(user)
+        entry = store_models.SpinEntry.objects.create(
+            user=user,
+            date=timezone.localdate(),
+            result_label="Безплатна доставка",
+            prize_type="free_shipping",
+            free_shipping=True,
+        )
+        order = self._order(user, sub_total="30.00")
+        self._save_shipping(order, office=True)
+        order.refresh_from_db()
+
+        with patch("store.views.send_order_notification_email"), \
+             patch("store.views.send_order_to_econt", return_value=None), \
+             patch("store.views.send_meta_purchase_event"):
+            self.client.post(reverse("store:cod_payment", args=[order.order_id]))
+
+        entry.refresh_from_db()
+        self.assertEqual(entry.redeemed_order, order)
+        later = self._order(user, sub_total="30.00")
+        self._save_shipping(later, office=True)
+        later.refresh_from_db()
+        self.assertEqual(later.shipping, Decimal("6.20"))
+        self.assertFalse(later.prize_free_shipping)
+
+    def _cart(self, cart_id, price):
+        product = store_models.Product.objects.create(
+            name="Band",
+            sku=f"SKU-{cart_id}",
+            description="Band",
+            price=price,
+        )
+        store_models.Cart.objects.create(
+            cart_id=cart_id,
+            product=product,
+            qty=1,
+            price=price,
+            sub_total=price,
+        )
+
+    def _start_order(self, cart_id):
+        session = self.client.session
+        session["cart_id"] = cart_id
+        session.save()
+        return self.client.post(reverse("store:create_order"))
+
+    def test_mystery_box_is_added_only_when_the_merchandise_total_qualifies(self):
+        user = self._user()
+        self.client.force_login(user)
+        store_models.SpinEntry.objects.create(
+            user=user,
+            date=timezone.localdate(),
+            result_label="Mystery Box",
+            prize_type="mystery_box_min_total",
+            min_order_total=Decimal("20.00"),
+        )
+        box = store_models.Product.objects.create(
+            name="Мистериозен продукт",
+            slug="mystery-gift",
+            sku="SKU-MYSTERY",
+            description="Gift",
+            price=Decimal("9.99"),
+        )
+        self._cart("under", Decimal("10.00"))
+
+        self._start_order("under")
+
+        small = store_models.Order.objects.get(customer=user)
+        self.assertEqual(small.sub_total, Decimal("10.00"))
+        self.assertFalse(small.order_items.filter(product=box).exists())
+
+        self._cart("over", Decimal("30.00"))
+        self._start_order("over")
+        large = store_models.Order.objects.exclude(pk=small.pk).get(customer=user)
+        prize = large.order_items.get(product=box)
+        self.assertEqual(prize.price, Decimal("0.00"))
+        self.assertEqual(prize.sub_total, Decimal("0.00"))
+        self.assertEqual(prize.qty, 1)
+        self.assertTrue(prize.note.startswith("prize:spin:"))
+        self.assertEqual(large.sub_total, Decimal("30.00"))
+        self.assertEqual(large.total, Decimal("30.00"))
+
+    def test_milestone_mystery_box_uses_its_own_minimum(self):
+        user = self._user()
+        self.client.force_login(user)
+        milestone = store_models.SpinMilestone.objects.create(
+            threshold_spins=5,
+            prize_type="mystery_box_min_total",
+            min_order_total=Decimal("25.00"),
+            label="Кутия",
+        )
+        award = store_models.SpinMilestoneAward.objects.create(user=user, milestone=milestone)
+        category = store_models.Category.objects.create(title="Мистериозни кутии", sku="MS-BOX", slug="mystery-box")
+        store_models.Product.objects.create(
+            name="Mini Мистериозна кутия",
+            sku="SKU-MS-BOX",
+            description="Box",
+            price=Decimal("24.99"),
+            category=category,
+        )
+        self._cart("milestone", Decimal("25.00"))
+
+        self._start_order("milestone")
+
+        order = store_models.Order.objects.get(customer=user)
+        prize = order.order_items.get(note=f"prize:milestone:{award.pk}")
+        self.assertEqual(prize.product.name, "Mini Мистериозна кутия")
+        self.assertEqual(prize.price, Decimal("0.00"))
+        self.assertEqual(prize.sub_total, Decimal("0.00"))
+        self.assertEqual(order.sub_total, Decimal("25.00"))
+
+    def test_milestone_adds_the_shop_box_closest_to_its_minimum(self):
+        user = self._user()
+        self.client.force_login(user)
+        milestone = store_models.SpinMilestone.objects.create(
+            threshold_spins=100,
+            prize_type="mystery_box_min_total",
+            min_order_total=Decimal("75.00"),
+            label="Premium",
+        )
+        award = store_models.SpinMilestoneAward.objects.create(user=user, milestone=milestone)
+        category = store_models.Category.objects.create(title="Мистериозни кутии", sku="MS-ALL", slug="mystery-box")
+        for name, sku, price in (
+            ("Mini", "SKU-MINI", "24.99"),
+            ("Classic", "SKU-CLASSIC", "49.99"),
+            ("Premium", "SKU-PREMIUM", "99.99"),
+        ):
+            store_models.Product.objects.create(
+                name=name,
+                sku=sku,
+                description="Box",
+                price=Decimal(price),
+                category=category,
+            )
+        self._cart("closest", Decimal("75.00"))
+
+        self._start_order("closest")
+
+        prize = store_models.Order.objects.get(customer=user).order_items.get(note=f"prize:milestone:{award.pk}")
+        self.assertEqual(prize.product.name, "Premium")
+        self.assertEqual(prize.price, Decimal("0.00"))
 

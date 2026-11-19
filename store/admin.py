@@ -611,7 +611,7 @@ class CouponRedemptionAdmin(iBandsModelAdmin):
 
 @admin.register(store_models.SpinEntry)
 class SpinEntryAdmin(iBandsModelAdmin):
-    list_display = ["user", "date", "result_label", "prize_type", "coupon_discount_percent", "min_order_total", "free_shipping", "created_at"]
+    list_display = ["user", "date", "result_label", "prize_type", "coupon_discount_percent", "min_order_total", "free_shipping", "redeemed_order", "created_at"]
     list_filter = ["date", "prize_type"]
     search_fields = ["user__email", "result_label"]
 
@@ -634,7 +634,7 @@ class SpinMilestoneAdmin(iBandsModelAdmin):
 
 @admin.register(store_models.SpinMilestoneAward)
 class SpinMilestoneAwardAdmin(iBandsModelAdmin):
-    list_display = ["user", "milestone", "coupon_code", "awarded_at"]
+    list_display = ["user", "milestone", "coupon_code", "redeemed_order", "awarded_at"]
     list_filter = ["awarded_at", "milestone__threshold_spins"]
     search_fields = ["user__email", "coupon_code", "milestone__label"]
 

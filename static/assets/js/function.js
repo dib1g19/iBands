@@ -203,7 +203,7 @@ $(document).ready(function () {
                         });
                     } catch (e) {}
                 }
-                try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) {}
+                try { if (window.FreeShippingWidget) window.FreeShippingWidget.update() } catch(e) {}
             },
             error: function (xhr, status, error) {
                 // Rollback change if there is an error
@@ -248,7 +248,7 @@ $(document).ready(function () {
                     var numeric = (response.cart_sub_total || '0').toString().replace(/\s/g, '').replace(/,/g, '');
                     hiddenSub.setAttribute('data-value', numeric);
                 }
-                try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) {}
+                try { if (window.FreeShippingWidget) window.FreeShippingWidget.update() } catch(e) {}
                 $(".item_div_" + item_id).addClass("d-none");
             },
             error: function (xhr, status, error) {

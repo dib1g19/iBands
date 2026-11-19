@@ -88,7 +88,7 @@
             { label: 'Отстъпка 3%', color: '#fff9c4' },
             { label: 'Отстъпка 5%', color: '#ffe082' },
             { label: 'Безплатна доставка', color: '#fff59d' },
-            { label: 'Mystery Box', color: '#ffecb3' }
+            { label: 'Mystery gift', color: '#ffecb3' }
           ];
     } catch(e) {
       segments = [
@@ -96,7 +96,7 @@
         { label: 'Отстъпка 3%', color: '#fff9c4' },
         { label: 'Отстъпка 5%', color: '#ffe082' },
         { label: 'Безплатна доставка', color: '#fff59d' },
-        { label: 'Mystery Box', color: '#ffecb3' }
+        { label: 'Mystery gift', color: '#ffecb3' }
       ];
     }
 
@@ -326,9 +326,9 @@
                 if (data.coupon_code) {
                   couponEl.innerHTML = 'Код за отстъпка: <strong>'+data.coupon_code+'</strong> ( -'+data.discount_percent+'% )';
                 } else if (data.prize_type === 'free_shipping') {
-                  couponEl.textContent = 'Спечели: Безплатна доставка за следваща поръчка.';
+                  couponEl.textContent = 'Спечели: Безплатна доставка до офис или автомат' + (data.min_order_total ? ' при поръчка над ' + formatDualCurrency(data.min_order_total) : '');
                 } else if (data.prize_type === 'mystery_box_min_total') {
-                  couponEl.textContent = 'Спечели: Mystery Box при поръчка над '+formatDualCurrency(data.min_order_total);
+                  couponEl.textContent = 'Спечели: Mystery gift при поръчка над '+formatDualCurrency(data.min_order_total);
                 }
                 if (data.milestone) {
                   var m = data.milestone;

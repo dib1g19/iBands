@@ -32,6 +32,15 @@ from userauths import forms as userauths_forms
 from userauths import models as userauths_models
 from customer.utils import get_user_wishlist_products, get_order_for_customer
 from store.emails import send_contact_notification_email, send_order_notification_email
+from store.prizes import (
+    FREE_SHIPPING_THRESHOLD,
+    apply_mystery_box_prizes,
+    apply_quoted_shipping,
+    free_shipping_minimums,
+    mystery_gift_shortfall,
+    mystery_milestone_shortfall,
+    redeem_prizes,
+)
 from django.db.models import Q
 from store.error_log import record_server_error
 from urllib.parse import urlencode
@@ -525,16 +534,7 @@ def save_econt_address(request, order_id):
                     address_kwargs['user'] = user
                 address = customer_models.Address.objects.create(**address_kwargs)
             order.address = address
-            # Backend free-shipping enforcement: if subtotal >= 75 and office delivery selected -> free
-            free_shipping_threshold = Decimal("75")
-            is_office_delivery = delivery_method == 'econt_office'
-            if (order.sub_total or 0) is not None and Decimal(str(order.sub_total)) >= free_shipping_threshold and is_office_delivery:
-                order.shipping = Decimal("0.00")
-            else:
-                # Update shipping only when a valid shipping price was provided
-                if shipping_price is not None:
-                    order.shipping = Decimal(str(shipping_price))
-            # Recalculate totals (and item prices if coupon present)
+            apply_quoted_shipping(order, user, shipping_price, delivery_method == "econt_office")
             apply_coupon_discount(order)
             return JsonResponse({"success": True})
         except Exception as e:
@@ -586,14 +586,7 @@ def save_speedy_address(request, order_id):
                 address = customer_models.Address.objects.create(**address_kwargs)
 
             order.address = address
-            # Backend free-shipping enforcement: if subtotal >= 75 and office delivery selected -> free
-            free_shipping_threshold = Decimal("75")
-            is_office_delivery = delivery_method == 'speedy_office'
-            if (order.sub_total or 0) is not None and Decimal(str(order.sub_total)) >= free_shipping_threshold and is_office_delivery:
-                order.shipping = Decimal("0.00")
-            else:
-                if shipping_price is not None:
-                    order.shipping = Decimal(str(shipping_price))
+            apply_quoted_shipping(order, user, shipping_price, delivery_method == "speedy_office")
             # Cache extra Speedy options for shipment creation
             from django.core.cache import cache
             speedy_opts = {
@@ -1907,6 +1900,8 @@ def cart(request):
         "items": items,
         "cart_sub_total": cart_sub_total,
         "breadcrumbs": breadcrumbs,
+        "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+        "shipping_prize_minimums": json.dumps(free_shipping_minimums(request.user)),
     }
     return render(request, "store/cart.html", context)
 
@@ -2006,6 +2001,7 @@ def create_order(request):
             mystery_device_models=getattr(i, "mystery_device_models", None),
         )
 
+    apply_mystery_box_prizes(order, request.user)
     return redirect("store:checkout", order.order_id)
 
 
@@ -2127,6 +2123,12 @@ def checkout(request, order_id):
         "econt_url": econt_url,
         # Expose user's primary (main) address for checkout autofill
         "primary_address": address,
+        "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+        "shipping_prize_minimums": json.dumps(free_shipping_minimums(request.user)),
+        "mystery_gift_added": order.order_items.filter(note__startswith="prize:spin:").exists(),
+        "mystery_gift_shortfall": mystery_gift_shortfall(request.user, order.sub_total),
+        "mystery_milestone_added": order.order_items.filter(note__startswith="prize:milestone:").exists(),
+        "mystery_milestone_shortfall": mystery_milestone_shortfall(request.user, order.sub_total),
     }
 
     return render(request, "store/checkout.html", context)
@@ -2146,6 +2148,7 @@ def cod_payment(request, order_id):
             pass
         order.save()
         store_models.Coupon.mark_order_redeemed(order)
+        redeem_prizes(order)
         send_order_notification_email(
             order=order,
             email_heading=f"Потвърдена поръчка #{order.order_id}",
@@ -2296,7 +2299,7 @@ def spin_perform(request):
             {"label": "Отстъпка 3%", "type": "discount_percent", "discount_percent": 3, "min_order_total": None, "weight": 0.25, "color": "#fff9c4"},
             {"label": "Отстъпка 5%", "type": "discount_percent", "discount_percent": 5, "min_order_total": None, "weight": 0.15, "color": "#ffe082"},
             {"label": "Безплатна доставка", "type": "free_shipping", "discount_percent": 0, "min_order_total": None, "weight": 0.07, "color": "#fff59d"},
-            {"label": "Mystery Box", "type": "mystery_box_min_total", "discount_percent": 0, "min_order_total": 20.00, "weight": 0.08, "color": "#ffecb3"},
+            {"label": "Mystery gift", "type": "mystery_box_min_total", "discount_percent": 0, "min_order_total": 20.00, "weight": 0.08, "color": "#ffecb3"},
         ]
 
     r = random.random()
@@ -2482,6 +2485,7 @@ def stripe_payment_verify(request, order_id):
                 pass
             order.save()
             store_models.Coupon.mark_order_redeemed(order)
+            redeem_prizes(order)
             send_order_notification_email(
                 order=order,
                 email_heading=f"Потвърдена поръчка #{order.order_id}",

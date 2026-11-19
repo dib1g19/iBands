@@ -142,6 +142,36 @@ def _generate_valentine_hearts(count: int):
         })
     return hearts
 
+def econt_item_prices(order):
+    """Line totals for the Econt request, with the coupon spread across paid lines.
+
+    Stored line prices stay the checkout snapshot. The last paid line absorbs
+    any rounding so the sent prices add up to the merchandise total after the coupon.
+    """
+    items = list(order.order_items.all())
+    original = {item.pk: store_models.Order.as_money(item.sub_total) for item in items}
+    payable = store_models.Order.as_money(order.sub_total) - store_models.Order.as_money(order.saved)
+    if payable < Decimal("0.00"):
+        payable = Decimal("0.00")
+    paid = [item for item in items if original[item.pk] > 0]
+    goods = sum((original[item.pk] for item in paid), Decimal("0.00"))
+    if not paid or payable == goods:
+        return original
+
+    prices = dict(original)
+    remaining = payable
+    for index, item in enumerate(paid):
+        if index == len(paid) - 1:
+            price = remaining
+        else:
+            price = store_models.Order.as_money(original[item.pk] / goods * payable)
+            if price > remaining:
+                price = remaining
+            remaining -= price
+        prices[item.pk] = price
+    return prices
+
+
 def send_order_to_econt(order):
     url = settings.ECONT_UPDATE_ORDER_ENDPOINT
     headers = {
@@ -149,13 +179,14 @@ def send_order_to_econt(order):
         "Authorization": settings.ECONT_PRIVATE_KEY,
         "X-ID-Shop": str(settings.ECONT_SHOP_ID),
     }
+    sent_prices = econt_item_prices(order)
     items = []
     for item in order.order_items.all():
         items.append({
             "name": item.product.name,
             "SKU": getattr(item.product, "sku", ""),
             "count": item.qty,
-            "totalPrice": float(item.sub_total),
+            "totalPrice": float(sent_prices[item.pk]),
             "totalWeight": float(getattr(item.product, "weight", 0.1)) * item.qty,
         })
     address = order.address

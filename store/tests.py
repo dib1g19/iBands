@@ -160,6 +160,62 @@ class SpeedyCODAmountTests(TestCase):
             self.assertEqual(top_level_cod.get("amount"), float(Decimal("100.00")))
 
 
+class EcontShipmentPriceTests(TestCase):
+    def _order(self, lines, saved="0.00", shipping="5.00"):
+        goods = sum((Decimal(sub_total) for _name, sub_total in lines), Decimal("0.00"))
+        saved_amount = Decimal(saved)
+        order = store_models.Order.objects.create(
+            sub_total=goods,
+            saved=saved_amount,
+            shipping=Decimal(shipping),
+            total=goods - saved_amount + Decimal(shipping),
+            payment_method="cash_on_delivery",
+        )
+        order.address = customer_models.Address.objects.create(
+            name="Test", phone="0888", email="t@example.com",
+            delivery_method="econt_office", city="София", office_code="1234",
+        )
+        order.save(update_fields=["address"])
+        created = []
+        for index, (name, sub_total) in enumerate(lines, start=1):
+            product = store_models.Product.objects.create(
+                name=name, sku=f"SKU-E-{index}", description="Band", price=Decimal(sub_total),
+            )
+            created.append(store_models.OrderItem.objects.create(
+                order=order, product=product, qty=1,
+                price=Decimal(sub_total), sub_total=Decimal(sub_total),
+            ))
+        return order, created
+
+    @patch("store.views.requests.post")
+    def test_econt_item_prices_include_the_coupon_without_changing_the_order(self, post):
+        response = post.return_value
+        response.status_code = 200
+        response.json.return_value = {"shipmentNumber": "EC1"}
+        order, items = self._order([("Band", "30.00"), ("Case", "10.00"), ("Gift", "0.00")], saved="4.00")
+
+        from store.views import send_order_to_econt
+        send_order_to_econt(order)
+
+        payload = post.call_args.kwargs["json"]
+        prices = {row["name"]: row["totalPrice"] for row in payload["items"]}
+        self.assertEqual(prices, {"Band": 27.0, "Case": 9.0, "Gift": 0.0})
+        self.assertEqual(payload["orderSum"], 41.0)
+        self.assertEqual(payload["cod"], 41.0)
+        for item in items:
+            item.refresh_from_db()
+        self.assertEqual([item.sub_total for item in items], [Decimal("30.00"), Decimal("10.00"), Decimal("0.00")])
+
+    def test_the_last_paid_line_absorbs_the_rounding(self):
+        order, _items = self._order([("One", "10.00"), ("Two", "10.00")], saved="0.01", shipping="0.00")
+
+        from store.views import econt_item_prices
+        prices = list(econt_item_prices(order).values())
+
+        self.assertEqual(prices, [Decimal("10.00"), Decimal("9.99")])
+        self.assertEqual(sum(prices, Decimal("0.00")), Decimal("19.99"))
+
+
 class CouponDiscountTests(TestCase):
     def _order(self, sub_total, shipping, price, qty=1):
         product = store_models.Product.objects.create(

@@ -26,8 +26,18 @@ class FreeShippingPersistenceTests(TestCase):
     def setUp(self):
         self.client = Client()
 
+    def _claim(self, order):
+        session = self.client.session
+        owned = [str(item) for item in (session.get("checkout_order_ids") or [])]
+        token = str(order.order_id)
+        if token not in owned:
+            owned.append(token)
+        session["checkout_order_ids"] = owned
+        session.save()
+
     def test_econt_office_free_shipping_applies_when_subtotal_over_threshold(self):
         order = store_models.Order.objects.create(sub_total=Decimal("100.00"), shipping=Decimal("5.00"), total=Decimal("105.00"))
+        self._claim(order)
         url = reverse("store:save_econt_address", args=[order.order_id])
         payload = {
             "name": "Test User",
@@ -49,6 +59,7 @@ class FreeShippingPersistenceTests(TestCase):
 
     def test_speedy_office_free_shipping_applies_when_subtotal_over_threshold(self):
         order = store_models.Order.objects.create(sub_total=Decimal("80.00"), shipping=Decimal("5.00"), total=Decimal("85.00"))
+        self._claim(order)
         url = reverse("store:save_speedy_address", args=[order.order_id])
         payload = {
             "name": "Test User",
@@ -68,6 +79,7 @@ class FreeShippingPersistenceTests(TestCase):
         self.assertEqual(order.total, Decimal("80.00"))
 
     def _save_office(self, order, price=6.20):
+        self._claim(order)
         return self.client.post(
             reverse("store:save_econt_address", args=[order.order_id]),
             data={
@@ -274,6 +286,9 @@ class CouponDiscountTests(TestCase):
     def test_shipping_save_keeps_the_same_discount(self):
         order, item = self._order(Decimal("100.00"), Decimal("5.00"), Decimal("100.00"))
         order.coupons.add(store_models.Coupon.objects.create(code="SAVE10", discount=10))
+        session = self.client.session
+        session["checkout_order_ids"] = [str(order.order_id)]
+        session.save()
 
         response = self.client.post(
             reverse("store:save_econt_address", args=[order.order_id]),
@@ -619,6 +634,56 @@ class CouponRulesTests(TestCase):
         self.assertIn("преди плащане", still_on.json()["message"])
         owned.refresh_from_db()
         self.assertTrue(owned.coupons.filter(code="SAVE10").exists())
+
+    def test_another_customer_opening_checkout_does_not_replace_the_address(self):
+        owner = self._user("owner-addr@example.com")
+        original = customer_models.Address.objects.create(
+            user=owner,
+            name="Owner",
+            phone="0888000001",
+            email="owner-addr@example.com",
+            city="Пловдив",
+            address="ул. Първа 1",
+            is_main=True,
+        )
+        order = self._order(customer=owner)
+        order.address = original
+        order.save(update_fields=["address"])
+        stranger = self._user("stranger-addr@example.com")
+        customer_models.Address.objects.create(
+            user=stranger,
+            name="Stranger",
+            phone="0888000002",
+            email="stranger-addr@example.com",
+            city="София",
+            address="ул. Втора 2",
+            is_main=True,
+        )
+        self.client.force_login(stranger)
+
+        page = self.client.get(reverse("store:checkout", args=[order.order_id]))
+        saved = self.client.post(
+            reverse("store:save_econt_address", args=[order.order_id]),
+            data={
+                "name": "Stranger",
+                "phone": "0888000002",
+                "email": "stranger-addr@example.com",
+                "city": "София",
+                "address": "ул. Втора 2",
+                "office_code": "",
+                "office_name": "",
+                "post_code": "",
+                "face": "",
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(page.status_code, 200)
+        self.assertNotContains(page, "0888000002")
+        self.assertEqual(saved.status_code, 403)
+        order.refresh_from_db()
+        self.assertEqual(order.address_id, original.pk)
+        self.assertEqual(order.address.phone, "0888000001")
 
 
 class UnfinishedOrderLinkTests(TestCase):

@@ -426,6 +426,7 @@
         return cookieValue
     }
     const csrftoken = getCookie('csrftoken')
+    window.ownsCheckout = {{ owns_checkout|yesno:"true,false" }};
 
     // Persist selected payment method immediately so it survives refresh/failure
     function persistPaymentMethod(method) {
@@ -763,8 +764,8 @@
                 post_code: data.post_code || ''
             });
 
-            // Auto-save address to backend only if it changed
-            if (currentAddressKey !== lastSavedAddressKey) {
+            // Auto-save address to backend only if it changed, and only on this customer's checkout
+            if (window.ownsCheckout && currentAddressKey !== lastSavedAddressKey) {
                 const officeName = data.office_name || '';
                 const payload = {
                     name: data.name || '',
@@ -1159,7 +1160,7 @@
             speedyAddressFields.forEach(el => el.style.display = isOffice ? 'none' : 'block');
             speedyOfficeFields.forEach(el => el.style.display = isOffice ? 'block' : 'none');
             updateQuote();
-            autoSaveSpeedyAddress();
+            if (window.ownsCheckout) autoSaveSpeedyAddress();
         }
         if (modeAddress && modeOffice){
             // Default to office
@@ -1199,10 +1200,12 @@
             };
 
             let changed = false;
-            if (speedyName && !speedyName.value && desired.name) { speedyName.value = desired.name; changed = true; }
-            if (speedyFace && !speedyFace.value && desired.face) { speedyFace.value = desired.face; changed = true; }
-            if (speedyPhone && !speedyPhone.value && desired.phone) { speedyPhone.value = desired.phone; changed = true; }
-            if (speedyEmail && !speedyEmail.value && desired.email) { speedyEmail.value = desired.email; changed = true; }
+            if (window.ownsCheckout) {
+                if (speedyName && !speedyName.value && desired.name) { speedyName.value = desired.name; changed = true; }
+                if (speedyFace && !speedyFace.value && desired.face) { speedyFace.value = desired.face; changed = true; }
+                if (speedyPhone && !speedyPhone.value && desired.phone) { speedyPhone.value = desired.phone; changed = true; }
+                if (speedyEmail && !speedyEmail.value && desired.email) { speedyEmail.value = desired.email; changed = true; }
+            }
             // Save the prefilled data so backend knows them; city/address left blank to trigger quote later
             if (changed) { autoSaveSpeedyAddress(); }
         } catch (e) { /* no-op */ }

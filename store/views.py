@@ -513,6 +513,8 @@ def save_econt_address(request, order_id):
     if request.method == "POST":
         try:
             order = store_models.Order.objects.get(order_id=order_id)
+            if not _checkout_owned(request, order):
+                return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
             data = json.loads(request.body)
 
             # Parse shipping price only if provided; otherwise leave as None
@@ -578,6 +580,8 @@ def save_speedy_address(request, order_id):
     if request.method == "POST":
         try:
             order = store_models.Order.objects.get(order_id=order_id)
+            if not _checkout_owned(request, order):
+                return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
             data = json.loads(request.body)
 
             shipping_price = None
@@ -2049,18 +2053,23 @@ def _remember_checkout(request, order):
         request.session.modified = True
 
 
+def _checkout_owned(request, order):
+    """The visitor started this unpaid checkout."""
+    if order.order_status != "initiated":
+        return False
+    if order.customer_id:
+        return request.user.is_authenticated and request.user.id == order.customer_id
+    owned = [str(item) for item in (request.session.get("checkout_order_ids") or [])]
+    return str(order.order_id) in owned
+
+
 def _coupon_change_denied(request, order):
     """Why this visitor cannot change the coupon, or None when they can."""
     if order.order_status != "initiated":
         return "Купонът може да се промени само преди плащане."
-    if order.customer_id:
-        if request.user.is_authenticated and request.user.id == order.customer_id:
-            return None
+    if not _checkout_owned(request, order):
         return "Тази поръчка не е ваша."
-    owned = [str(item) for item in (request.session.get("checkout_order_ids") or [])]
-    if str(order.order_id) in owned:
-        return None
-    return "Тази поръчка не е ваша."
+    return None
 
 
 def _coupon_json(order, message):
@@ -2181,8 +2190,9 @@ def checkout(request, order_id):
     for item in order.order_items.all():
         cart_total_weight += 0.1 * item.qty
 
+    owns_checkout = _checkout_owned(request, order)
     address = None
-    if request.user.is_authenticated:
+    if owns_checkout and request.user.is_authenticated:
         # Prefer main address for autofill; fallback to most recent if no main exists
         main_address = customer_models.Address.objects.filter(user=request.user, is_main=True).first()
         if main_address:
@@ -2213,6 +2223,7 @@ def checkout(request, order_id):
         "econt_url": econt_url,
         # Expose user's primary (main) address for checkout autofill
         "primary_address": address,
+        "owns_checkout": owns_checkout,
         "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
         "shipping_prize_minimums": json.dumps(free_shipping_minimums(request.user)),
         "mystery_gift_added": order.order_items.filter(note__startswith="prize:spin:").exists(),

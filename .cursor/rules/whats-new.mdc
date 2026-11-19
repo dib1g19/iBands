@@ -1,0 +1,21 @@
+---
+description: Add a What's new note on production when a commit is worth testing
+alwaysApply: true
+---
+
+# What's new on commit
+
+What's new is a `StaffUpdate` on the admin home. Employees use it to see what changed on the shop or in the admin, where it shows up, and how it behaves. Read the notes already stored and match them.
+
+When you commit a change you are also going to push, add a note if there is something they can look at. That includes the shop, checkout, the account, and the admin.
+
+Skip refactors, tests, and dependency bumps that leave nothing to see.
+
+Insert the row into the production database only. Do not add it to the dev database, and do not add a migration.
+
+- `summary`: one sentence, English, under 200 characters. Say what is different.
+- `details`: where the change is and what it does. Not instructions. No "open this" or "check that".
+- `get_or_create` on the summary so a second run does not add a duplicate.
+- Leave `created_by` empty.
+
+Production is `DATABASE_URL`. Open it as a second connection named `prod`: copy the default connection and overlay `ENGINE`, `NAME`, `USER`, `PASSWORD`, `HOST`, `PORT`, and `OPTIONS` from `dj_database_url.parse`. Then `StaffUpdate.objects.using("prod").get_or_create(...)`.

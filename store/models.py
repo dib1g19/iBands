@@ -1116,7 +1116,7 @@ class StoreThemeSettings(models.Model):
 
 
 class StaffUpdate(models.Model):
-    """One shipped change, written for the people who use the admin."""
+    """One shipped change, so employees can see what is different and how to test it."""
 
     summary = models.CharField(max_length=200)
     details = models.TextField(

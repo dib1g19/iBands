@@ -1249,6 +1249,24 @@ h6 {
     }
 }
 
+.cart_selected_single_thumb {
+    flex: 0 0 100px;
+    width: 100px;
+    height: 100px;
+}
+.cart_selected_single_thumb a {
+    display: flex;
+    width: 100px;
+    height: 100px;
+}
+.cart_selected_single_thumb img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border-radius: 0.375rem;
+    background: #f4f4f5;
+}
+
 /*------------ Product Grid Styles -----------------*/
 
 /* Wishlist action buttons (add/remove) */

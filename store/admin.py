@@ -577,13 +577,41 @@ class GalleryAdmin(iBandsModelAdmin):
 
 @admin.register(store_models.Coupon)
 class CouponAdmin(iBandsModelAdmin):
-    list_display = ["code", "discount"]
-    search_fields = ["code"]
+    list_display = [
+        "code",
+        "discount",
+        "active",
+        "min_subtotal",
+        "usage_limit",
+        "per_customer_limit",
+        "valid_from",
+        "valid_until",
+        "owner",
+        "redemption_count",
+    ]
+    list_filter = ["active"]
+    search_fields = ["code", "owner__email"]
+    autocomplete_fields = ["owner"]
+    list_select_related = ["owner"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_redemptions=models.Count("redemptions"))
+
+    @admin.display(description="Redeemed")
+    def redemption_count(self, obj):
+        return obj._redemptions
+
+
+@admin.register(store_models.CouponRedemption)
+class CouponRedemptionAdmin(iBandsModelAdmin):
+    list_display = ["coupon", "order", "user", "created_at"]
+    search_fields = ["coupon__code", "order__order_id", "user__email"]
+    list_select_related = ["coupon", "order", "user"]
 
 
 @admin.register(store_models.SpinEntry)
 class SpinEntryAdmin(iBandsModelAdmin):
-    list_display = ["user", "date", "result_label", "prize_type", "coupon_discount_percent", "min_order_total", "free_shipping", "created_at"]
+    list_display = ["user", "date", "result_label", "prize_type", "coupon_discount_percent", "min_order_total", "free_shipping", "redeemed_order", "created_at"]
     list_filter = ["date", "prize_type"]
     search_fields = ["user__email", "result_label"]
 
@@ -606,7 +634,7 @@ class SpinMilestoneAdmin(iBandsModelAdmin):
 
 @admin.register(store_models.SpinMilestoneAward)
 class SpinMilestoneAwardAdmin(iBandsModelAdmin):
-    list_display = ["user", "milestone", "coupon_code", "awarded_at"]
+    list_display = ["user", "milestone", "coupon_code", "redeemed_order", "awarded_at"]
     list_filter = ["awarded_at", "milestone__threshold_spins"]
     search_fields = ["user__email", "coupon_code", "milestone__label"]
 

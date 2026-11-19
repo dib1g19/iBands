@@ -468,11 +468,146 @@ class Cart(models.Model):
 
 
 class Coupon(models.Model):
-    code = models.CharField(max_length=100)
-    discount = models.IntegerField(default=1)
+    code = models.CharField(max_length=100, unique=True)
+    discount = models.PositiveIntegerField(default=1)
+    active = models.BooleanField(default=True)
+    valid_from = models.DateTimeField(null=True, blank=True)
+    valid_until = models.DateTimeField(null=True, blank=True)
+    min_subtotal = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Minimum merchandise subtotal required to use this coupon.",
+    )
+    usage_limit = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="How many paid orders can use this coupon. Blank means unlimited.",
+    )
+    per_customer_limit = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="How many paid orders one customer can use this coupon on. Blank means unlimited.",
+    )
+    owner = models.ForeignKey(
+        user_models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="owned_coupons",
+    )
 
     def __str__(self):
         return self.code
+
+    @staticmethod
+    def normalize_code(code):
+        return (code or "").strip().upper()
+
+    @classmethod
+    def end_of_local_day(cls, day):
+        from datetime import datetime, time, timedelta
+
+        tz = timezone.get_current_timezone()
+        start = datetime.combine(day + timedelta(days=1), time.min)
+        return timezone.make_aware(start, tz)
+
+    @classmethod
+    def issue_personal(cls, *, code, discount, user, valid_until=None, min_subtotal=None):
+        """A one-use coupon that only its owner can redeem."""
+        return cls.objects.create(
+            code=code,
+            discount=discount,
+            owner=user,
+            valid_until=valid_until,
+            min_subtotal=min_subtotal,
+            usage_limit=1,
+            per_customer_limit=1,
+        )
+
+    def clamp_discount(self):
+        try:
+            discount = int(self.discount)
+        except (TypeError, ValueError):
+            discount = 1
+        self.discount = min(100, max(1, discount))
+
+    def clean(self):
+        super().clean()
+        self.code = self.normalize_code(self.code)
+        self.clamp_discount()
+
+    def save(self, *args, **kwargs):
+        self.code = self.normalize_code(self.code)
+        self.clamp_discount()
+        super().save(*args, **kwargs)
+
+    def rejection_reason(self, order, user):
+        """Why this coupon cannot be applied, or None when it can."""
+        now = timezone.now()
+        if not self.active:
+            return "Този купон не е активен."
+        if self.valid_from and now < self.valid_from:
+            return "Този купон още не е валиден."
+        if self.valid_until and now >= self.valid_until:
+            return "Този купон е изтекъл."
+
+        authenticated = user is not None and getattr(user, "is_authenticated", False)
+        if self.owner_id or self.per_customer_limit is not None:
+            if not authenticated:
+                return "Трябва да сте влезли, за да използвате този купон."
+        if self.owner_id and self.owner_id != user.pk:
+            return "Този купон не е валиден за вашия акаунт."
+
+        if self.min_subtotal is not None:
+            required = Order.as_money(self.min_subtotal)
+            if Order.as_money(order.sub_total) < required:
+                return f"Купонът е валиден при междинна сума от поне {required} €."
+
+        already = self.redemptions.exclude(order=order)
+        if self.usage_limit is not None and already.count() >= self.usage_limit:
+            return "Този купон вече е използван."
+        if self.per_customer_limit is not None:
+            used_by_customer = already.filter(user=user).count()
+            if used_by_customer >= self.per_customer_limit:
+                return "Вече сте използвали този купон."
+        return None
+
+    def mark_redeemed(self, order):
+        redemption, _created = CouponRedemption.objects.get_or_create(
+            order=order,
+            defaults={"coupon": self, "user": order.customer},
+        )
+        return redemption
+
+    @classmethod
+    def mark_order_redeemed(cls, order):
+        coupon = order.coupons.order_by("id").first()
+        if coupon is None:
+            return None
+        return coupon.mark_redeemed(order)
+
+
+class CouponRedemption(models.Model):
+    """A coupon was used on an order whose payment succeeded."""
+
+    coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE, related_name="redemptions")
+    order = models.OneToOneField("Order", on_delete=models.CASCADE, related_name="coupon_redemption")
+    user = models.ForeignKey(
+        user_models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="coupon_redemptions",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.coupon.code} on {self.order.order_id}"
 
 
 class Order(models.Model):
@@ -507,6 +642,10 @@ class Order(models.Model):
 
     sub_total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
     shipping = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
+    prize_free_shipping = models.BooleanField(
+        default=False,
+        help_text="Shipping was set to zero because of a spin or milestone prize.",
+    )
     total = models.DecimalField(default=0.00, max_digits=12, decimal_places=2)
     saved = models.DecimalField(
         max_digits=12,
@@ -526,18 +665,42 @@ class Order(models.Model):
     def __str__(self):
         return self.order_id
 
-    def refresh_totals_from_items(self):
-        """Set subtotal and total from the lines still on the order."""
-        def money(value):
-            return Decimal(str(value or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    @staticmethod
+    def as_money(value):
+        return Decimal(str(value or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-        sub_total = money(self.order_items.aggregate(amount=models.Sum("sub_total"))["amount"])
-        shipping = money(self.shipping)
-        saved = money(self.saved)
+    def discount_for_subtotal(self, sub_total, *, without_coupon):
+        """Percent off the merchandise subtotal for the first coupon.
+
+        ``without_coupon`` is the amount to keep when no coupon is attached.
+        Checkout passes 0 so clearing a code removes the reduction. The admin
+        refresh passes the current ``saved`` so a hand-entered amount stays.
+        """
         coupon = self.coupons.order_by("id").first()
-        if coupon:
-            saved = money(sub_total * Decimal(coupon.discount) / Decimal("100"))
-        total = money(sub_total + shipping - saved)
+        if coupon is None:
+            return self.as_money(without_coupon)
+        return self.as_money(
+            self.as_money(sub_total) * Decimal(coupon.discount) / Decimal("100")
+        )
+
+    def totals_for_merchandise(self, sub_total, saved):
+        """Merchandise subtotal, the single reduction, and the amount due."""
+        sub_total = self.as_money(sub_total)
+        saved = self.as_money(saved)
+        shipping = self.as_money(self.shipping)
+        total = self.as_money(sub_total + shipping - saved)
+        return sub_total, saved, total
+
+    def refresh_totals_from_items(self):
+        """Set subtotal and total from the lines still on the order.
+
+        Line prices stay as stored. A coupon reduces the order once, through saved.
+        """
+        sub_total = self.as_money(
+            self.order_items.aggregate(amount=models.Sum("sub_total"))["amount"]
+        )
+        saved = self.discount_for_subtotal(sub_total, without_coupon=self.saved)
+        sub_total, saved, total = self.totals_for_merchandise(sub_total, saved)
         self.sub_total = sub_total
         self.saved = saved
         self.total = total
@@ -565,6 +728,11 @@ class OrderItem(models.Model):
 
     def order_id(self):
         return f"{self.order.order_id}"
+
+    @property
+    def is_wheel_prize(self):
+        note = self.note or ""
+        return note.startswith("prize:spin:") or note.startswith("prize:milestone:")
 
     def __str__(self):
         return str(self.id)
@@ -788,6 +956,13 @@ class SpinEntry(models.Model):
     free_shipping = models.BooleanField(default=False)
     min_order_total = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     coupon_code = models.CharField(max_length=100, null=True, blank=True, db_index=True)
+    redeemed_order = models.ForeignKey(
+        "Order",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="redeemed_spin_prizes",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -845,6 +1020,13 @@ class SpinMilestoneAward(models.Model):
     milestone = models.ForeignKey(SpinMilestone, on_delete=models.CASCADE, related_name="awards")
     awarded_at = models.DateTimeField(auto_now_add=True)
     coupon_code = models.CharField(max_length=100, null=True, blank=True, db_index=True)
+    redeemed_order = models.ForeignKey(
+        "Order",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="redeemed_milestone_prizes",
+    )
 
     class Meta:
         unique_together = ("user", "milestone")

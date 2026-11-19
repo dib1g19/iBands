@@ -76,7 +76,7 @@
                                 <span id="cart-order-subtotal" data-value="{{ cart_sub_total|floatformat:2 }}" class="d-none"></span>
                             </div>
                         </div>
-                        <div class="mt-3 p-3 rounded shadow border free-ship-widget" role="region" aria-label="Прогрес до безплатна доставка">
+                        <div id="free-ship-box" class="mt-3 p-3 rounded shadow border free-ship-widget" role="region" aria-label="Прогрес до безплатна доставка" data-office-threshold="{{ free_shipping_threshold }}" data-prize-minimums="{{ shipping_prize_minimums }}">
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <div class="text-dark fw-semibold free-ship-title">
                                     <i class="fas fa-shipping-fast me-1"></i>
@@ -113,7 +113,7 @@
 <script src="{% static 'assets/js/free_shipping.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) {}
+    try { if (window.FreeShippingWidget) window.FreeShippingWidget.update() } catch(e) {}
 });
 </script>
 {% endblock %}

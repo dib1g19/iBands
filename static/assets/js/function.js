@@ -203,7 +203,7 @@ $(document).ready(function () {
                         });
                     } catch (e) {}
                 }
-                try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) {}
+                try { if (window.FreeShippingWidget) window.FreeShippingWidget.update() } catch(e) {}
             },
             error: function (xhr, status, error) {
                 // Rollback change if there is an error
@@ -248,7 +248,7 @@ $(document).ready(function () {
                     var numeric = (response.cart_sub_total || '0').toString().replace(/\s/g, '').replace(/,/g, '');
                     hiddenSub.setAttribute('data-value', numeric);
                 }
-                try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) {}
+                try { if (window.FreeShippingWidget) window.FreeShippingWidget.update() } catch(e) {}
                 $(".item_div_" + item_id).addClass("d-none");
             },
             error: function (xhr, status, error) {
@@ -472,7 +472,6 @@ $(document).ready(function () {
                     if (data.items_html) {
                         $('#order-items-block').replaceWith(data.items_html);
                     }
-                    // No reload!
                     if (typeof updateSummaryForPayment === "function") {
                         updateSummaryForPayment();
                     }
@@ -482,6 +481,37 @@ $(document).ready(function () {
             },
             error: function () {
                 $feedback.html('<div class="alert alert-danger">Възникна грешка при опита за прилагане на купон.</div>');
+            }
+        });
+    });
+    $(document).on("submit", "#coupon-remove-form", function (e) {
+        e.preventDefault();
+        var $form = $(this);
+        var $feedback = $("#coupon-feedback");
+        $.ajax({
+            url: $form.attr("action"),
+            type: "POST",
+            data: { csrfmiddlewaretoken: $form.find('input[name="csrfmiddlewaretoken"]').val() },
+            dataType: "json",
+            success: function (data) {
+                if (data.success) {
+                    $feedback.html('<div class="alert alert-success">' + data.message + '</div>');
+                    if (data.summary_html) {
+                        $("#order-summary-block").replaceWith(data.summary_html);
+                    }
+                    if (data.items_html) {
+                        $("#order-items-block").replaceWith(data.items_html);
+                    }
+                    $('#coupon-form input[name="coupon_code"]').val("");
+                    if (typeof updateSummaryForPayment === "function") {
+                        updateSummaryForPayment();
+                    }
+                } else {
+                    $feedback.html('<div class="alert alert-danger">' + data.message + '</div>');
+                }
+            },
+            error: function () {
+                $feedback.html('<div class="alert alert-danger">Възникна грешка при премахване на купона.</div>');
             }
         });
     });

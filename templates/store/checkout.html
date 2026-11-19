@@ -213,10 +213,13 @@
 
                     <div id="coupon-box" class="shadow rounded p-3 mt-3">
                         <h4 class="fw-bold">Купони</h4>
-                        <form id="coupon-form" class="mb-3 d-flex" action="{% url 'store:coupon_apply' order.order_id %}" method="POST">
+                        <form id="coupon-form" class="mb-0 d-flex" action="{% url 'store:coupon_apply' order.order_id %}" method="POST">
                             {% csrf_token %}
                             <input type="text" class="form-control" name="coupon_code" placeholder="Код за отстъпка" />
                             <button type="submit" class="btn btn-success"><i class="fas fa-check-circle"></i></button>
+                        </form>
+                        <form id="coupon-remove-form" class="d-none" action="{% url 'store:coupon_remove' order.order_id %}" method="POST">
+                            {% csrf_token %}
                         </form>
                         <div id="coupon-feedback"></div>
                     </div>
@@ -228,22 +231,31 @@
                         <button id="cod-payment" style="display:none;" type="button"></button>
                     </div>
 
-                    {% if request.session.spin_reward %}
+                    {% if request.session.spin_reward.coupon_code %}
                     <div class="alert alert-success shadow-sm small" role="status" aria-live="polite">
                         <i class="fas fa-gift me-1"></i>
                         Награда от колелото: <strong>{{ request.session.spin_reward.label }}</strong>
-                        {% if request.session.spin_reward.coupon_code %}
-                            <br>Код: <code>{{ request.session.spin_reward.coupon_code }}</code>
-                        {% elif request.session.spin_reward.type == 'free_shipping' %}
-                            <br>Безплатна доставка при финализиране.
-                        {% elif request.session.spin_reward.type == 'mystery_box_min_total' %}
-                            <br>Mystery Box при поръчка над {{ request.session.spin_reward.min_order_total|dual_price:0 }}
+                        <br>Код: <code>{{ request.session.spin_reward.coupon_code }}</code>
+                    </div>
+                    {% endif %}
+                    {% if mystery_gift_added or mystery_gift_shortfall or mystery_milestone_added or mystery_milestone_shortfall %}
+                    <div class="alert alert-success shadow-sm small" role="status" aria-live="polite">
+                        <i class="fas fa-gift me-1"></i>
+                        {% if mystery_gift_added %}
+                            Mystery gift е добавен към поръчката.
+                        {% elif mystery_gift_shortfall %}
+                            Mystery gift при поръчка над {{ mystery_gift_shortfall|dual_price:0 }}
+                        {% endif %}
+                        {% if mystery_milestone_added %}
+                            Mystery Box е добавен към поръчката.
+                        {% elif mystery_milestone_shortfall %}
+                            Mystery Box при поръчка над {{ mystery_milestone_shortfall|dual_price:0 }}
                         {% endif %}
                     </div>
                     {% endif %}
 
                     <div id="free-ship-anchor" class="d-none"></div>
-                    <div id="free-ship-box" class="mt-3 mb-4 p-3 rounded shadow border free-ship-widget" role="region" aria-label="Прогрес до безплатна доставка">
+                    <div id="free-ship-box" class="mt-3 mb-4 p-3 rounded shadow border free-ship-widget" role="region" aria-label="Прогрес до безплатна доставка" data-office-threshold="{{ free_shipping_threshold }}" data-prize-minimums="{{ shipping_prize_minimums }}">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <div class="text-dark fw-semibold free-ship-title">
                                 <i class="fas fa-shipping-fast me-1"></i>
@@ -635,11 +647,21 @@
         }
         let total = backendTotal;
 
-        // Free delivery only if order >= 75 and office is selected
-        let freeDeliveryThreshold = 75;
-        if (backendTotal >= freeDeliveryThreshold && showShipping && officeSelected) {
+        const shippingWidget = window.FreeShippingWidget;
+        let goods = 0;
+        let freeDeliveryThreshold = 40;
+        let prizeNow = false;
+        try {
+            if (shippingWidget) {
+                shippingWidget.update();
+                if (shippingWidget.goods) goods = shippingWidget.goods();
+                if (shippingWidget.officeThreshold) freeDeliveryThreshold = shippingWidget.officeThreshold();
+                if (shippingWidget.prizeApplies) prizeNow = shippingWidget.prizeApplies();
+            }
+        } catch (e) {}
+        if ((prizeNow || goods >= freeDeliveryThreshold) && showShipping && officeSelected) {
             if (shippingSummaryElem) {
-                shippingSummaryElem.textContent = "Безплатна доставка до офис";
+                shippingSummaryElem.textContent = "Безплатна доставка до офис или автомат";
             }
             if (totalSummaryElem) {
                 totalSummaryElem.textContent = formatDualCurrency(backendTotal);
@@ -663,8 +685,6 @@
                 }
             }
         }
-        // Update the free shipping progress bar
-        try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) { console.log(e) }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -705,7 +725,6 @@
         }
         // Set summary on load (no shipping/payment selected)
         updateSummaryForPayment();
-        try { if (window.FreeShippingWidget) window.FreeShippingWidget.update(75) } catch(e) { }
     });
 
     // Econt iframe postMessage

@@ -12,7 +12,7 @@
                 {% if last_spin %}
                 <div class="alert alert-success text-center">
                     <div class="fw-bold mb-1"><i class="fas fa-gift me-1"></i> Днешна награда (изтича след: <span id="{{ widget_id }}-prize-countdown">--:--:--</span>)</div>
-                    <div>{{ last_spin.result_label }}</div>
+                    <div>{% if last_spin.prize_type == "mystery_box_min_total" %}Mystery gift{% elif last_spin.free_shipping or last_spin.prize_type == "free_shipping" %}Безплатна доставка до офис или автомат{% else %}{{ last_spin.result_label }}{% endif %}</div>
                     {% if last_spin.coupon_code %}
                         <div class="mt-1">Код: <code>{{ last_spin.coupon_code }}</code></div>
                     {% elif last_spin.min_order_total %}

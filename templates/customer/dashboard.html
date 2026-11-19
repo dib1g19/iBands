@@ -74,6 +74,9 @@
                                 </div>
                                 <div class="olh_flex">
                                     <a href="{% url 'customer:order_detail' order.order_id %}" class="btn btn-sm btn-primary rounded">Виж поръчката <i class="fas fa-arrow-right ms-2"></i></a>
+                                    {% if order.order_status == "initiated" %}
+                                        <a href="{% url 'store:checkout' order.order_id %}" class="btn btn-sm btn-primary rounded ms-2">Продължи поръчката</a>
+                                    {% endif %}
 
                                     {% if order.payment_status == 'Failed' %}
                                         <a href="{% url 'store:checkout' order.order_id %}" class="btn btn-sm btn-danger rounded">Повтори плащането <i class="fas fa-rotate ms-2"></i></a>

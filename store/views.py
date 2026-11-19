@@ -4,7 +4,7 @@ from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
@@ -32,6 +32,15 @@ from userauths import forms as userauths_forms
 from userauths import models as userauths_models
 from customer.utils import get_user_wishlist_products, get_order_for_customer
 from store.emails import send_contact_notification_email, send_order_notification_email
+from store.prizes import (
+    FREE_SHIPPING_THRESHOLD,
+    apply_mystery_box_prizes,
+    apply_quoted_shipping,
+    free_shipping_minimums,
+    mystery_gift_shortfall,
+    mystery_milestone_shortfall,
+    redeem_prizes,
+)
 from django.db.models import Q
 from store.error_log import record_server_error
 from urllib.parse import urlencode
@@ -133,6 +142,36 @@ def _generate_valentine_hearts(count: int):
         })
     return hearts
 
+def econt_item_prices(order):
+    """Line totals for the Econt request, with the coupon spread across paid lines.
+
+    Stored line prices stay the checkout snapshot. The last paid line absorbs
+    any rounding so the sent prices add up to the merchandise total after the coupon.
+    """
+    items = list(order.order_items.all())
+    original = {item.pk: store_models.Order.as_money(item.sub_total) for item in items}
+    payable = store_models.Order.as_money(order.sub_total) - store_models.Order.as_money(order.saved)
+    if payable < Decimal("0.00"):
+        payable = Decimal("0.00")
+    paid = [item for item in items if original[item.pk] > 0]
+    goods = sum((original[item.pk] for item in paid), Decimal("0.00"))
+    if not paid or payable == goods:
+        return original
+
+    prices = dict(original)
+    remaining = payable
+    for index, item in enumerate(paid):
+        if index == len(paid) - 1:
+            price = remaining
+        else:
+            price = store_models.Order.as_money(original[item.pk] / goods * payable)
+            if price > remaining:
+                price = remaining
+            remaining -= price
+        prices[item.pk] = price
+    return prices
+
+
 def send_order_to_econt(order):
     url = settings.ECONT_UPDATE_ORDER_ENDPOINT
     headers = {
@@ -140,13 +179,14 @@ def send_order_to_econt(order):
         "Authorization": settings.ECONT_PRIVATE_KEY,
         "X-ID-Shop": str(settings.ECONT_SHOP_ID),
     }
+    sent_prices = econt_item_prices(order)
     items = []
     for item in order.order_items.all():
         items.append({
             "name": item.product.name,
             "SKU": getattr(item.product, "sku", ""),
             "count": item.qty,
-            "totalPrice": float(item.sub_total),
+            "totalPrice": float(sent_prices[item.pk]),
             "totalWeight": float(getattr(item.product, "weight", 0.1)) * item.qty,
         })
     address = order.address
@@ -525,16 +565,7 @@ def save_econt_address(request, order_id):
                     address_kwargs['user'] = user
                 address = customer_models.Address.objects.create(**address_kwargs)
             order.address = address
-            # Backend free-shipping enforcement: if subtotal >= 75 and office delivery selected -> free
-            free_shipping_threshold = Decimal("75")
-            is_office_delivery = delivery_method == 'econt_office'
-            if (order.sub_total or 0) is not None and Decimal(str(order.sub_total)) >= free_shipping_threshold and is_office_delivery:
-                order.shipping = Decimal("0.00")
-            else:
-                # Update shipping only when a valid shipping price was provided
-                if shipping_price is not None:
-                    order.shipping = Decimal(str(shipping_price))
-            # Recalculate totals (and item prices if coupon present)
+            apply_quoted_shipping(order, user, shipping_price, delivery_method == "econt_office")
             apply_coupon_discount(order)
             return JsonResponse({"success": True})
         except Exception as e:
@@ -586,14 +617,7 @@ def save_speedy_address(request, order_id):
                 address = customer_models.Address.objects.create(**address_kwargs)
 
             order.address = address
-            # Backend free-shipping enforcement: if subtotal >= 75 and office delivery selected -> free
-            free_shipping_threshold = Decimal("75")
-            is_office_delivery = delivery_method == 'speedy_office'
-            if (order.sub_total or 0) is not None and Decimal(str(order.sub_total)) >= free_shipping_threshold and is_office_delivery:
-                order.shipping = Decimal("0.00")
-            else:
-                if shipping_price is not None:
-                    order.shipping = Decimal(str(shipping_price))
+            apply_quoted_shipping(order, user, shipping_price, delivery_method == "speedy_office")
             # Cache extra Speedy options for shipment creation
             from django.core.cache import cache
             speedy_opts = {
@@ -612,65 +636,29 @@ def save_speedy_address(request, order_id):
 
 
 def apply_coupon_discount(order):
+    """Recalculate saved and total from the merchandise subtotal.
+
+    Line prices stay as snapshotted at checkout. ``saved`` is the only reduction.
     """
-    Helper to recalculate coupon discount, saved, and total for an order.
-    Also updates order item prices.
-    """
-    coupons = order.coupons.all()
-    shipping = Decimal(str(order.shipping or 0))
-    if coupons.exists():
-        coupon = coupons.first()
-        total_discount = round2(order.sub_total * coupon.discount / 100)
-        order.saved = round2(total_discount)
-        order.total = round2(order.sub_total + shipping - total_discount)
-        apply_item_discounts(order, coupon)
-    else:
-        order.saved = round2(0)
-        order.total = round2(order.sub_total + shipping)
-        apply_item_discounts(order, None)
+    saved = order.discount_for_subtotal(order.sub_total, without_coupon=0)
+    _sub_total, saved, total = order.totals_for_merchandise(order.sub_total, saved)
+    order.saved = saved
+    order.total = total
     order.save()
 
 
-def apply_item_discounts(order, coupon=None):
-    """
-    Apply coupon discounts to each order item if coupon is provided.
-    """
-    if not coupon:
-        coupons = order.coupons.all()
-        coupon = coupons.first() if coupons.exists() else None
-    for item in order.order_items.all():
-        # Compute base price from the specific SKU (product item) if possible
-        try:
-            sku_qs = store_models.ProductItem.objects.filter(product=item.product)
-            if item.size:
-                sku_qs = sku_qs.filter(size__name=item.size)
-            else:
-                sku_qs = sku_qs.filter(size__isnull=True)
-            if item.model:
-                sku_qs = sku_qs.filter(device_models__name=item.model)
-            sku = sku_qs.first()
-        except Exception:
-            sku = None
-
-        if sku:
-            base_price = Decimal(str(sku.effective_price or 0))
-        else:
-            base_price = Decimal(str(item.product.effective_price or 0))
-        # Determine chargeable (paid) units from current line allocation (not recomputed)
-        try:
-            paid_units = int(getattr(item, "promo_paid_units", item.qty) or item.qty)
-        except Exception:
-            paid_units = item.qty
-
-        if coupon:
-            discount = Decimal(str(coupon.discount)) / Decimal("100")
-            discounted_price = round2(base_price * (Decimal("1") - discount))
-            item.price = discounted_price
-            item.sub_total = round2(discounted_price * paid_units)
-        else:
-            item.price = base_price
-            item.sub_total = round2(base_price * paid_units)
-        item.save()
+def release_single_use_coupon(coupon, order):
+    """A one-use code stays on the checkout that applied it last."""
+    if coupon.usage_limit != 1:
+        return
+    others = store_models.Order.objects.filter(
+        coupons=coupon,
+        order_status="initiated",
+        coupon_redemption__isnull=True,
+    ).exclude(pk=order.pk)
+    for other in others:
+        other.coupons.remove(coupon)
+        apply_coupon_discount(other)
 
 
 @csrf_exempt
@@ -1943,6 +1931,8 @@ def cart(request):
         "items": items,
         "cart_sub_total": cart_sub_total,
         "breadcrumbs": breadcrumbs,
+        "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+        "shipping_prize_minimums": json.dumps(free_shipping_minimums(request.user)),
     }
     return render(request, "store/cart.html", context)
 
@@ -2042,12 +2032,44 @@ def create_order(request):
             mystery_device_models=getattr(i, "mystery_device_models", None),
         )
 
+    apply_mystery_box_prizes(order, request.user)
+    _remember_checkout(request, order)
     return redirect("store:checkout", order.order_id)
 
 
-def coupon_apply(request, order_id):
-    print("Order Id ========", order_id)
+def _remember_checkout(request, order):
+    owned = [str(item) for item in (request.session.get("checkout_order_ids") or [])]
+    token = str(order.order_id)
+    if token not in owned:
+        owned.append(token)
+        request.session["checkout_order_ids"] = owned
+        request.session.modified = True
 
+
+def _coupon_change_denied(request, order):
+    """Why this visitor cannot change the coupon, or None when they can."""
+    if order.order_status != "initiated":
+        return "Купонът може да се промени само преди плащане."
+    if order.customer_id:
+        if request.user.is_authenticated and request.user.id == order.customer_id:
+            return None
+        return "Тази поръчка не е ваша."
+    owned = [str(item) for item in (request.session.get("checkout_order_ids") or [])]
+    if str(order.order_id) in owned:
+        return None
+    return "Тази поръчка не е ваша."
+
+
+def _coupon_json(order, message):
+    return JsonResponse({
+        "success": True,
+        "message": message,
+        "summary_html": render_to_string("store/_checkout_summary.html", {"order": order}),
+        "items_html": render_to_string("store/_checkout_items.html", {"order": order}),
+    })
+
+
+def coupon_apply(request, order_id):
     try:
         order = store_models.Order.objects.get(order_id=order_id)
     except store_models.Order.DoesNotExist:
@@ -2060,68 +2082,72 @@ def coupon_apply(request, order_id):
     if request.method == "POST":
         coupon_code = request.POST.get("coupon_code")
 
-        if not coupon_code:
-            msg = "Моля, въведете купон."
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': msg})
+        def reject(msg):
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "message": msg})
             messages.error(request, msg)
             return redirect("store:checkout", order.order_id)
 
-        try:
-            coupon = store_models.Coupon.objects.get(code=coupon_code)
-        except store_models.Coupon.DoesNotExist:
-            msg = "Купонът не съществува."
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': msg})
-            messages.error(request, msg)
-            return redirect("store:checkout", order.order_id)
+        denied = _coupon_change_denied(request, order)
+        if denied:
+            return reject(denied)
 
-        # Enforce SPIN coupon validity: same user, same day
-        if coupon.code.startswith("SPIN-"):
-            if not request.user.is_authenticated:
-                msg = "Трябва да сте влезли, за да използвате този купон."
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'message': msg})
-                messages.error(request, msg)
-                return redirect("store:checkout", order.order_id)
-            spin = store_models.SpinEntry.objects.filter(user=request.user, coupon_code=coupon.code).first()
-            if not spin:
-                msg = "Този купон не е валиден за вашия акаунт."
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'message': msg})
-                messages.error(request, msg)
-                return redirect("store:checkout", order.order_id)
-            if spin.date != timezone.localdate():
-                msg = "Купонът от колелото е валиден само за днес."
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'message': msg})
-                messages.error(request, msg)
-                return redirect("store:checkout", order.order_id)
+        normalized = store_models.Coupon.normalize_code(coupon_code)
+        if not normalized:
+            return reject("Моля, въведете купон.")
 
-        # Always clear any existing coupons and reset saved and total
-        order.coupons.clear()
-        order.saved = round2(0)
-        order.total = round2(order.sub_total + (order.shipping or 0))
-
-        # Apply coupon, recalculate everything in one place!
-        order.coupons.add(coupon)
-        apply_coupon_discount(order)
+        with transaction.atomic():
+            coupon = (
+                store_models.Coupon.objects.select_for_update()
+                .filter(code=normalized)
+                .first()
+            )
+            if coupon is None:
+                return reject("Купонът не съществува.")
+            reason = coupon.rejection_reason(order, request.user)
+            if reason:
+                return reject(reason)
+            release_single_use_coupon(coupon, order)
+            order.coupons.clear()
+            order.coupons.add(coupon)
+            apply_coupon_discount(order)
 
         msg = "Купонът е активиран."
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            # Render the updated summary and items HTML
-            summary_html = render_to_string("store/_checkout_summary.html", {"order": order})
-            items_html = render_to_string("store/_checkout_items.html", {"order": order})
-            return JsonResponse({
-                'success': True,
-                'message': msg,
-                'summary_html': summary_html,
-                'items_html': items_html,
-            })
+            return _coupon_json(order, msg)
         messages.success(request, msg)
         return redirect("store:checkout", order.order_id)
 
     return redirect("store:checkout", order_id)
+
+
+def coupon_remove(request, order_id):
+    try:
+        order = store_models.Order.objects.get(order_id=order_id)
+    except store_models.Order.DoesNotExist:
+        msg = "Поръчката не беше намерена."
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "message": msg})
+        messages.error(request, msg)
+        return redirect("store:cart")
+
+    if request.method != "POST":
+        return redirect("store:checkout", order.order_id)
+
+    denied = _coupon_change_denied(request, order)
+    if denied:
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "message": denied})
+        messages.error(request, denied)
+        return redirect("store:checkout", order.order_id)
+
+    order.coupons.clear()
+    apply_coupon_discount(order)
+    msg = "Купонът е премахнат."
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return _coupon_json(order, msg)
+    messages.success(request, msg)
+    return redirect("store:checkout", order.order_id)
 
 
 def checkout(request, order_id):
@@ -2184,6 +2210,12 @@ def checkout(request, order_id):
         "econt_url": econt_url,
         # Expose user's primary (main) address for checkout autofill
         "primary_address": address,
+        "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
+        "shipping_prize_minimums": json.dumps(free_shipping_minimums(request.user)),
+        "mystery_gift_added": order.order_items.filter(note__startswith="prize:spin:").exists(),
+        "mystery_gift_shortfall": mystery_gift_shortfall(request.user, order.sub_total),
+        "mystery_milestone_added": order.order_items.filter(note__startswith="prize:milestone:").exists(),
+        "mystery_milestone_shortfall": mystery_milestone_shortfall(request.user, order.sub_total),
     }
 
     return render(request, "store/checkout.html", context)
@@ -2202,6 +2234,8 @@ def cod_payment(request, order_id):
         except Exception:
             pass
         order.save()
+        store_models.Coupon.mark_order_redeemed(order)
+        redeem_prizes(order)
         send_order_notification_email(
             order=order,
             email_heading=f"Потвърдена поръчка #{order.order_id}",
@@ -2352,7 +2386,7 @@ def spin_perform(request):
             {"label": "Отстъпка 3%", "type": "discount_percent", "discount_percent": 3, "min_order_total": None, "weight": 0.25, "color": "#fff9c4"},
             {"label": "Отстъпка 5%", "type": "discount_percent", "discount_percent": 5, "min_order_total": None, "weight": 0.15, "color": "#ffe082"},
             {"label": "Безплатна доставка", "type": "free_shipping", "discount_percent": 0, "min_order_total": None, "weight": 0.07, "color": "#fff59d"},
-            {"label": "Mystery Box", "type": "mystery_box_min_total", "discount_percent": 0, "min_order_total": 20.00, "weight": 0.08, "color": "#ffecb3"},
+            {"label": "Mystery gift", "type": "mystery_box_min_total", "discount_percent": 0, "min_order_total": 20.00, "weight": 0.08, "color": "#ffecb3"},
         ]
 
     r = random.random()
@@ -2370,7 +2404,18 @@ def spin_perform(request):
         # Generate a unique coupon code
         # Keep it short but not easily guessable
         code = f"SPIN-{request.user.id}-{random.randint(100000, 999999)}"
-        coupon = Coupon.objects.create(code=code, discount=int(selected["discount_percent"]))
+        min_subtotal = (
+            Decimal(str(selected["min_order_total"]))
+            if selected.get("min_order_total")
+            else None
+        )
+        coupon = Coupon.issue_personal(
+            code=code,
+            discount=int(selected["discount_percent"]),
+            user=request.user,
+            valid_until=Coupon.end_of_local_day(today),
+            min_subtotal=min_subtotal,
+        )
         coupon_code = coupon.code
 
     entry = SpinEntry.objects.create(
@@ -2398,8 +2443,13 @@ def spin_perform(request):
             ms_coupon_code = None
             if ms.prize_type == 'discount_percent' and ms.discount_percent:
                 ms_code = f"MS-{request.user.id}-{ms.threshold_spins}-{random.randint(100000,999999)}"
-                Coupon.objects.create(code=ms_code, discount=int(ms.discount_percent))
-                ms_coupon_code = ms_code
+                ms_coupon = Coupon.issue_personal(
+                    code=ms_code,
+                    discount=int(ms.discount_percent),
+                    user=request.user,
+                    min_subtotal=ms.min_order_total,
+                )
+                ms_coupon_code = ms_coupon.code
             SpinMilestoneAward.objects.create(user=request.user, milestone=ms, coupon_code=ms_coupon_code)
             milestone_payload = {
                 "threshold_spins": ms.threshold_spins,
@@ -2521,6 +2571,8 @@ def stripe_payment_verify(request, order_id):
             except Exception:
                 pass
             order.save()
+            store_models.Coupon.mark_order_redeemed(order)
+            redeem_prizes(order)
             send_order_notification_email(
                 order=order,
                 email_heading=f"Потвърдена поръчка #{order.order_id}",

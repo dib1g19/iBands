@@ -18,6 +18,7 @@ urlpatterns = [
     path("create-order/", views.create_order, name="create_order"),
     path("checkout/<order_id>/", views.checkout, name="checkout"),
     path("coupon-apply/<order_id>/", views.coupon_apply, name="coupon_apply"),
+    path("coupon-remove/<order_id>/", views.coupon_remove, name="coupon_remove"),
     path("payment-status/<order_id>/", views.payment_status, name="payment_status"),
     path("cod-payment/<order_id>/", views.cod_payment, name="cod_payment"),
     path("save-econt-address/<order_id>/", views.save_econt_address, name="save_econt_address"),

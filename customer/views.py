@@ -63,7 +63,10 @@ def order_detail(request, order_id):
             ),
         )
     )
-    order = get_order_for_customer(request.user, order_id, queryset=order_qs)
+    if request.user.is_staff:
+        order = order_qs.filter(order_id=order_id).select_related("address").first()
+    else:
+        order = get_order_for_customer(request.user, order_id, queryset=order_qs)
     if not order:
         messages.error(request, "Поръчката не беше намерена в този профил.")
         return redirect("customer:dashboard")

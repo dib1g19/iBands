@@ -712,6 +712,45 @@ class UnfinishedOrderLinkTests(TestCase):
         self.assertContains(detail, checkout_url)
         self.assertContains(detail, "Продължи поръчката")
 
+    def test_staff_can_view_another_customers_order_without_changing_it(self):
+        User = get_user_model()
+        owner = User.objects.create_user(email="owner-view@example.com", username="owner-view", password="secret")
+        address = customer_models.Address.objects.create(
+            name="Лидия Първанова", phone="0888000001", email="owner-view@example.com", city="София",
+        )
+        order = store_models.Order.objects.create(
+            customer=owner, address=address, order_status="received",
+            sub_total=Decimal("10.00"), total=Decimal("10.00"),
+        )
+        guest_address = customer_models.Address.objects.create(
+            name="Атанас Пинков", phone="0888000002", email="guest-view@example.com", city="София",
+        )
+        guest = store_models.Order.objects.create(
+            customer=None, address=guest_address, order_status="received",
+            sub_total=Decimal("12.00"), total=Decimal("12.00"),
+        )
+        stranger = User.objects.create_user(email="stranger-view@example.com", username="stranger-view", password="secret")
+        staff = User.objects.create_user(
+            email="staff-view@example.com", username="staff-view", password="secret", is_staff=True,
+        )
+        detail_url = reverse("customer:order_detail", args=[order.order_id])
+
+        self.client.force_login(stranger)
+        denied = self.client.get(detail_url)
+        self.assertRedirects(denied, reverse("customer:dashboard"))
+
+        self.client.force_login(staff)
+        page = self.client.get(detail_url)
+        self.assertContains(page, "Лидия Първанова")
+        self.assertContains(page, order.order_id)
+        order.refresh_from_db()
+        self.assertEqual(order.customer_id, owner.id)
+
+        guest_page = self.client.get(reverse("customer:order_detail", args=[guest.order_id]))
+        self.assertContains(guest_page, "Атанас Пинков")
+        guest.refresh_from_db()
+        self.assertIsNone(guest.customer_id)
+
 
 class EmailPriceRenderingTests(TestCase):
     def test_email_renders_discount_with_strike_when_item_price_below_regular(self):

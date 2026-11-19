@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models import Prefetch
 from django import forms
 from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from ibands_site.admin import iBandsModelAdmin
@@ -413,15 +414,16 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(store_models.Order)
 class OrderAdmin(iBandsModelAdmin):
-    list_display = ["order_id", "items_summary", "recipient_name", "total", "order_status", "shipping_service", "tracking_id", "date"]
+    list_display = ["order_id", "view_on_site_link", "items_summary", "recipient_name", "total", "order_status", "shipping_service", "tracking_id", "date"]
     list_editable = [ "order_status", "shipping_service", "tracking_id"]
     list_filter = ["payment_status", "order_status"]
     search_fields = ["order_id", "customer__username", "customer__email", "order_items__product__name", "order_items__product__sku"]
     list_select_related = ["address"]
 
     inlines = [OrderItemInline]
-    readonly_fields = ["address_display",]
+    readonly_fields = ["view_on_site_link", "address_display"]
     fields = [
+        "view_on_site_link",
         "customer",
         "address_display",
         "order_status",
@@ -438,6 +440,21 @@ class OrderAdmin(iBandsModelAdmin):
         "payment_id",
         "date",
     ]
+
+    def view_on_site(self, obj):
+        if not obj or not obj.order_id:
+            return None
+        return reverse("customer:order_detail", args=[obj.order_id])
+
+    @admin.display(description="Site")
+    def view_on_site_link(self, obj):
+        url = self.view_on_site(obj)
+        if not url:
+            return "—"
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener noreferrer">View</a>',
+            url,
+        )
 
     def address_display(self, obj):
         if obj.address:

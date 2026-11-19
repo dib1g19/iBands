@@ -123,6 +123,7 @@
                             </div>
                         </div>
 
+                        {% if order.address %}
                         <div class="card mb-4">
                             <div class="card-header bg-light">
                                 <h5 class="mb-0">Информация за клиента</h5>
@@ -151,6 +152,7 @@
                                 {% endif %}
                             </div>
                         </div>
+                        {% endif %}
                     </div>
 
                     <a href="{% url 'store:contact' %}" class="btn btn-primary rounded btn-sm ms-2">Свържете се с нас <i class="fas fa-phone ms-2"></i></a>

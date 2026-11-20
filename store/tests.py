@@ -1572,3 +1572,61 @@ class StaffUpdateTests(TestCase):
 
         self.assertContains(response, "Nothing here yet.")
 
+
+class ProductDuplicateTests(TestCase):
+    def test_a_full_length_sku_still_copies_the_product(self):
+        user = get_user_model().objects.create_superuser(
+            email="copies@example.com",
+            username="copies",
+            password="secret",
+        )
+        self.client.force_login(user)
+        category = store_models.Category.objects.create(title="Bands", sku="DUP-CAT", slug="dup-bands")
+        variant = store_models.Variant.objects.create(name="Sport")
+        size = store_models.Size.objects.create(name="49mm-dup")
+        device = store_models.DeviceModel.objects.create(name="Ultra dup")
+        product = store_models.Product.objects.create(
+            name="A" * 255,
+            sku="B" * 50,
+            description="Band",
+            category=category,
+            price=Decimal("12.00"),
+            status="published",
+            stock=4,
+            promo_type="buy_x_get_y",
+            promo_buy_qty=2,
+            promo_get_qty=1,
+            is_mystery_box=True,
+        )
+        product.variants.add(variant)
+        item = store_models.ProductItem.objects.create(
+            product=product, size=size, quantity=4, price_delta=Decimal("1.50"), sku="ITEM-DUP",
+        )
+        item.device_models.add(device)
+
+        response = self.client.post(
+            reverse("admin:store_product_changelist"),
+            {"action": "duplicate_product", "number_of_copies": "1", "_selected_action": [str(product.pk)]},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        copy = store_models.Product.objects.exclude(pk=product.pk).get()
+        self.assertLessEqual(len(copy.sku), 50)
+        self.assertTrue(copy.sku.endswith("-copy-1"))
+        self.assertLessEqual(len(copy.name), 255)
+        self.assertTrue(copy.name.endswith(" (Copy 1)"))
+        self.assertEqual(copy.status, "disabled")
+        self.assertEqual(copy.stock, 0)
+        self.assertEqual(copy.promo_buy_qty, 2)
+        self.assertTrue(copy.is_mystery_box)
+        self.assertEqual(list(copy.variants.all()), [variant])
+        copied_item = copy.items.get()
+        self.assertEqual(copied_item.quantity, 0)
+        self.assertEqual(copied_item.price_delta, Decimal("1.50"))
+        self.assertEqual(copied_item.size, size)
+        self.assertEqual(list(copied_item.device_models.all()), [device])
+        self.assertIsNone(copied_item.sku)
+        product.refresh_from_db()
+        self.assertEqual(product.sku, "B" * 50)
+        self.assertEqual(product.stock, 4)
+

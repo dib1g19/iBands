@@ -127,29 +127,63 @@ class ProductAdmin(iBandsModelAdmin):
         )
 
     def duplicate_product(self, request, queryset):
-        number = int(request.POST.get("number_of_copies", 1))
-        qs = queryset.select_related("category").prefetch_related("variants")
+        def clipped(value, suffix, limit):
+            suffix = suffix[-limit:]
+            return f"{(value or '')[: limit - len(suffix)]}{suffix}"
+
+        def copy_sku(source):
+            n = 1
+            while True:
+                sku = clipped(source, f"-copy-{n}", 50)
+                if not store_models.Product.objects.filter(sku=sku).exists():
+                    return sku, n
+                n += 1
+
+        number = int(request.POST.get("number_of_copies") or 1)
+        copied = (
+            "category", "description", "h1_override", "meta_description", "image",
+            "price", "sale_price", "shipping", "featured", "on_sale", "is_mystery_box",
+            "promo_type", "promo_buy_qty", "promo_get_qty", "promo_label_override", "size_group",
+        )
+        qs = queryset.select_related("category", "size_group").prefetch_related(
+            "variants", "colors", "model_groups", "additional_categories",
+            "gallery_images", "items__device_models",
+        )
         count = 0
 
         for product in qs:
-            for i in range(number):
+            for _ in range(number):
+                sku, n = copy_sku(product.sku)
                 new_product = store_models.Product(
-                    category=product.category,
-                    sku=f"{product.sku}-copy-{i+1}-{count}",
-                    name=f"{product.name} (Copy {i+1})",
-                    description=product.description,
-                    meta_description=product.meta_description,
-                    image=product.image,
-                    price=product.price,
-                    sale_price=product.sale_price,
-                    featured=product.featured,
-                    status=product.status,
+                    sku=sku,
+                    name=clipped(product.name, f" (Copy {n})", 255),
+                    status="disabled",
+                    stock=0,
+                    **{field: getattr(product, field) for field in copied},
                 )
                 new_product.save()
                 new_product.variants.set(product.variants.all())
+                new_product.colors.set(product.colors.all())
+                new_product.model_groups.set(product.model_groups.all())
+                new_product.additional_categories.set(product.additional_categories.all())
+                for shot in product.gallery_images.all():
+                    store_models.Gallery.objects.create(
+                        product=new_product, image=shot.image, position=shot.position,
+                    )
+                for item in product.items.all():
+                    copy = store_models.ProductItem.objects.create(
+                        product=new_product,
+                        size=item.size,
+                        quantity=0,
+                        price_delta=item.price_delta,
+                    )
+                    copy.device_models.set(item.device_models.all())
                 count += 1
 
-        self.message_user(request, f"{count} product copies created successfully.")
+        self.message_user(
+            request,
+            f"{count} product copies created. They stay disabled, with no stock, until you publish them.",
+        )
 
     duplicate_product.short_description = "Duplicate selected Products"
 

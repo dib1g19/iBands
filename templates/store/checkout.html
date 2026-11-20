@@ -27,6 +27,8 @@
         max-height: 2000px;
     }
     /* Ensure collapsed sections don't display content */
+    #speedy-shipping-block,
+    #pigeon-shipping-block { transition: none; }
     #speedy-shipping-block.open,
     #pigeon-shipping-block.open { overflow: visible; }
     @media (min-width: 992px) {
@@ -160,49 +162,53 @@
                                         </div>
                                     </div>
                                     <div class="card-wrap-body px-3 py-3">
-                                        <div class="mb-2">
-                                            <div class="alert alert-info">
-                                                Моля, попълнете вашите данни за доставка чрез формата на Спиди по-долу. След като попълните и потвърдите, ще използваме тази информация за изпращане на вашата поръчка.
-                                            </div>
-                                        </div>
                                         <div id="speedy-error-block"></div>
-                                        <div class="row g-2">
-                                            <div class="col-12 mb-1">
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="speedy_delivery_mode" id="speedy_mode_address" value="address">
-                                                    <label class="form-check-label" for="speedy_mode_address">Личен адрес</label>
+                                        <div class="delivery-form">
+                                            <div class="delivery-mode">
+                                                <div>
+                                                    <input type="radio" name="speedy_delivery_mode" id="speedy_mode_office" value="office">
+                                                    <label for="speedy_mode_office">Офис или автомат</label>
                                                 </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="speedy_delivery_mode" id="speedy_mode_office" value="office">
-                                                    <label class="form-check-label" for="speedy_mode_office">Офис или автомат</label>
+                                                <div>
+                                                    <input type="radio" name="speedy_delivery_mode" id="speedy_mode_address" value="address">
+                                                    <label for="speedy_mode_address">Личен адрес</label>
                                                 </div>
                                             </div>
-                                            <div class="col-12">
-                                                <input type="text" class="form-control" id="speedy_name" placeholder="Име и фамилия (за физически лица) / Име на фирма (за юридически лица)">
-                                            </div>
-                                            <div class="col-12">
-                                                <input type="text" class="form-control" id="speedy_face" placeholder="Лице за контакт (моля, попълнете, ако сте посочили фирма в горното поле)">
-                                            </div>
-                                            <div class="col-12">
-                                                <input type="text" class="form-control" id="speedy_phone" placeholder="Телефон">
-                                            </div>
-                                            <div class="col-12">
-                                                <input type="email" class="form-control" id="speedy_email" placeholder="Имейл">
-                                            </div>
-                                            <div class="col-12 position-relative">
-                                                <input type="text" class="form-control" id="speedy_city_search" placeholder="Град (започнете да пишете)">
-                                                <div id="speedy_city_suggestions" class="position-absolute w-100" style="z-index:1050"></div>
-                                                <input type="hidden" id="speedy_site_id">
-                                                <input type="hidden" id="speedy_post_code">
-                                            </div>
-                                            <div class="col-12 speedy-address-field">
-                                                <input type="text" class="form-control" id="speedy_address" placeholder="Адрес за доставка">
-                                            </div>
-                                            <div class="col-12 position-relative speedy-office-field">
-                                                <input type="text" class="form-control" id="speedy_office_search" placeholder="Офис или автомат (започнете да пишете)">
-                                                <div id="speedy_office_suggestions" class="list-group position-absolute w-100" style="z-index:1050"></div>
-                                                <input type="hidden" class="form-control" id="speedy_office_code" placeholder="ID на офис (по избор)">
-                                                <input type="hidden" class="form-control" id="speedy_office_name">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label" for="speedy_name">Име</label>
+                                                    <input type="text" class="form-control" id="speedy_name" placeholder="Име и фамилия или фирма">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label" for="speedy_phone">Телефон</label>
+                                                    <input type="text" class="form-control" id="speedy_phone" placeholder="Телефон">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label" for="speedy_email">Имейл</label>
+                                                    <input type="email" class="form-control" id="speedy_email" placeholder="Имейл">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label" for="speedy_face">Лице за контакт</label>
+                                                    <input type="text" class="form-control" id="speedy_face" placeholder="Ако получателят е фирма">
+                                                </div>
+                                                <div class="col-12 position-relative">
+                                                    <label class="form-label" for="speedy_city_search">Град</label>
+                                                    <input type="text" class="form-control" id="speedy_city_search" placeholder="Започнете да пишете" autocomplete="off">
+                                                    <div id="speedy_city_suggestions" class="list-group delivery-suggest position-absolute"></div>
+                                                    <input type="hidden" id="speedy_site_id">
+                                                    <input type="hidden" id="speedy_post_code">
+                                                </div>
+                                                <div class="col-12 speedy-address-field">
+                                                    <label class="form-label" for="speedy_address">Адрес</label>
+                                                    <input type="text" class="form-control" id="speedy_address" placeholder="Улица и номер">
+                                                </div>
+                                                <div class="col-12 position-relative speedy-office-field">
+                                                    <label class="form-label" for="speedy_office_search">Офис или автомат</label>
+                                                    <input type="text" class="form-control" id="speedy_office_search" placeholder="Започнете да пишете" autocomplete="off">
+                                                    <div id="speedy_office_suggestions" class="list-group delivery-suggest position-absolute"></div>
+                                                    <input type="hidden" id="speedy_office_code">
+                                                    <input type="hidden" id="speedy_office_name">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -218,55 +224,64 @@
                                         </div>
                                     </div>
                                     <div class="card-wrap-body px-3 py-3">
-                                        <div class="mb-2">
-                                            <div class="alert alert-info">
-                                                Моля, попълнете вашите данни за доставка с Pigeon Express. След като попълните и потвърдите, ще използваме тази информация за изпращане на вашата поръчка.
-                                            </div>
-                                        </div>
                                         <div id="pigeon-error-block"></div>
-                                        <div class="row g-2">
-                                            <div class="col-12 mb-1">
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="pigeon_delivery_mode" id="pigeon_mode_address" value="address">
-                                                    <label class="form-check-label" for="pigeon_mode_address">Личен адрес</label>
+                                        <div class="delivery-form">
+                                            <div class="delivery-mode">
+                                                <div>
+                                                    <input type="radio" name="pigeon_delivery_mode" id="pigeon_mode_office" value="office">
+                                                    <label for="pigeon_mode_office">Офис или автомат</label>
                                                 </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="pigeon_delivery_mode" id="pigeon_mode_office" value="office">
-                                                    <label class="form-check-label" for="pigeon_mode_office">Офис или автомат</label>
+                                                <div>
+                                                    <input type="radio" name="pigeon_delivery_mode" id="pigeon_mode_address" value="address">
+                                                    <label for="pigeon_mode_address">Личен адрес</label>
                                                 </div>
                                             </div>
-                                            <div class="col-12">
-                                                <input type="text" class="form-control" id="pigeon_name" placeholder="Име и фамилия (за физически лица) / Име на фирма (за юридически лица)">
-                                            </div>
-                                            <div class="col-12">
-                                                <input type="text" class="form-control" id="pigeon_face" placeholder="Лице за контакт (моля, попълнете, ако сте посочили фирма в горното поле)">
-                                            </div>
-                                            <div class="col-12">
-                                                <input type="text" class="form-control" id="pigeon_phone" placeholder="Телефон">
-                                            </div>
-                                            <div class="col-12">
-                                                <input type="email" class="form-control" id="pigeon_email" placeholder="Имейл">
-                                            </div>
-                                            <div class="col-12 position-relative">
-                                                <input type="text" class="form-control" id="pigeon_city_search" placeholder="Град (започнете да пишете)">
-                                                <div id="pigeon_city_suggestions" class="position-absolute w-100" style="z-index:1050"></div>
-                                                <input type="hidden" id="pigeon_city_id">
-                                                <input type="hidden" id="pigeon_post_code">
-                                            </div>
-                                            <div class="col-12 position-relative pigeon-address-field">
-                                                <input type="text" class="form-control" id="pigeon_street_search" placeholder="Улица (започнете да пишете)">
-                                                <div id="pigeon_street_suggestions" class="list-group position-absolute w-100" style="z-index:1050"></div>
-                                                <input type="hidden" id="pigeon_street_id">
-                                            </div>
-                                            <div class="col-12 pigeon-address-field">
-                                                <input type="text" class="form-control" id="pigeon_street_number" placeholder="Номер">
-                                            </div>
-                                            <div class="col-12 position-relative pigeon-office-field">
-                                                <input type="text" class="form-control" id="pigeon_office_search" placeholder="Офис или автомат (започнете да пишете)">
-                                                <div id="pigeon_office_suggestions" class="list-group position-absolute w-100" style="z-index:1050"></div>
-                                                <input type="hidden" id="pigeon_office_code">
-                                                <input type="hidden" id="pigeon_office_name">
-                                                <input type="hidden" id="pigeon_office_type">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label" for="pigeon_name">Име</label>
+                                                    <input type="text" class="form-control" id="pigeon_name" placeholder="Име и фамилия или фирма">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label" for="pigeon_phone">Телефон</label>
+                                                    <input type="text" class="form-control" id="pigeon_phone" placeholder="Телефон">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label" for="pigeon_email">Имейл</label>
+                                                    <input type="email" class="form-control" id="pigeon_email" placeholder="Имейл">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label" for="pigeon_face">Лице за контакт</label>
+                                                    <input type="text" class="form-control" id="pigeon_face" placeholder="Ако получателят е фирма">
+                                                </div>
+                                                <div class="col-12 position-relative">
+                                                    <label class="form-label" for="pigeon_city_search">Град</label>
+                                                    <input type="text" class="form-control" id="pigeon_city_search" placeholder="Започнете да пишете" autocomplete="off">
+                                                    <div id="pigeon_city_suggestions" class="list-group delivery-suggest position-absolute"></div>
+                                                    <input type="hidden" id="pigeon_city_id">
+                                                    <input type="hidden" id="pigeon_post_code">
+                                                </div>
+                                                <div class="col-12 pigeon-address-field">
+                                                    <div class="row g-3">
+                                                        <div class="col-8 position-relative">
+                                                            <label class="form-label" for="pigeon_street_search">Улица</label>
+                                                            <input type="text" class="form-control" id="pigeon_street_search" placeholder="Започнете да пишете" autocomplete="off">
+                                                            <div id="pigeon_street_suggestions" class="list-group delivery-suggest position-absolute"></div>
+                                                            <input type="hidden" id="pigeon_street_id">
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <label class="form-label" for="pigeon_street_number">Номер</label>
+                                                            <input type="text" class="form-control" id="pigeon_street_number" placeholder="Номер">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12 position-relative pigeon-office-field">
+                                                    <label class="form-label" for="pigeon_office_search">Офис или автомат</label>
+                                                    <input type="text" class="form-control" id="pigeon_office_search" placeholder="Започнете да пишете" autocomplete="off">
+                                                    <div id="pigeon_office_suggestions" class="list-group delivery-suggest position-absolute"></div>
+                                                    <input type="hidden" id="pigeon_office_code">
+                                                    <input type="hidden" id="pigeon_office_name">
+                                                    <input type="hidden" id="pigeon_office_type">
+                                                </div>
                                             </div>
                                         </div>
                                         <div id="pigeon-shipping-price-block"></div>

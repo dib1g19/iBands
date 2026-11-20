@@ -2101,6 +2101,61 @@ input[type="number"] {
     margin-left: 12px;
 }
 
+.delivery-form .form-label {
+    font-size: .8125rem;
+    font-weight: 600;
+    margin-bottom: .25rem;
+}
+
+.delivery-mode {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.delivery-mode input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.delivery-mode label {
+    display: block;
+    margin: 0;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+    font-weight: 600;
+    cursor: pointer;
+    background: #fff;
+}
+
+.delivery-mode input:checked + label {
+    border-color: #0d6efd;
+    background: #f8fbff;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, .15);
+}
+
+.delivery-suggest {
+    top: 100%;
+    left: calc(var(--bs-gutter-x, 1rem) * .5);
+    right: calc(var(--bs-gutter-x, 1rem) * .5);
+    z-index: 1050;
+    max-height: 220px;
+    overflow: auto;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+}
+
+.delivery-suggest .list-group-item {
+    border: 0;
+    border-bottom: 1px solid #f1f3f5;
+}
+
 /* ==========================
    Global announcement bar
    ========================== */

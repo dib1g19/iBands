@@ -6,7 +6,6 @@ $(document).ready(function () {
         timer: 2000,
         timerProgressBar: true,
     });
-    const BGN_PER_EUR = 1.95583;
     function parseNumber(value) {
         if (value === null || value === undefined) return 0;
         const text = String(value).replace(/\s/g, "").replace(/,/g, "");
@@ -15,11 +14,8 @@ $(document).ready(function () {
     }
     function formatDualCurrency(value) {
         const eur = parseNumber(value);
-        const bgn = eur * BGN_PER_EUR;
         const fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
-        const eurText = eur.toLocaleString("bg-BG", fmt) + " €";
-        const bgnText = bgn.toLocaleString("bg-BG", fmt) + " лв.";
-        return eurText + " / " + bgnText;
+        return eur.toLocaleString("bg-BG", fmt) + " €";
     }
     function generateCartId() {
         // Retrieve the value of "cartId" from local storage and assign it to the variable 'ls_cartId'

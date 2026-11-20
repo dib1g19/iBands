@@ -5,8 +5,6 @@ from store import models as store_models
 
 register = template.Library()
 
-BGN_PER_EUR = Decimal("1.95583")
-
 
 def _to_decimal(value):
     try:
@@ -17,19 +15,15 @@ def _to_decimal(value):
 
 @register.filter
 def dual_price(value, decimals=2):
-    """
-    Format a base-currency price as "X.XX € / Y.YY лв."
-    """
+    """Format a price in euro."""
     try:
         decimals = int(decimals)
     except Exception:
         decimals = 2
     q = Decimal("1." + ("0" * decimals))
     amount_eur = _to_decimal(value)
-    amount_bgn = amount_eur * BGN_PER_EUR if BGN_PER_EUR else Decimal("0")
-    bgn_str = intcomma(amount_bgn.quantize(q, rounding=ROUND_HALF_UP))
     eur_str = intcomma(amount_eur.quantize(q, rounding=ROUND_HALF_UP))
-    return f"{eur_str} € / {bgn_str} лв."
+    return f"{eur_str} €"
 
 
 @register.simple_tag

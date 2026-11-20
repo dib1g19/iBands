@@ -11,15 +11,11 @@
     return m ? decodeURIComponent(m[1]) : null;
   }
 
-  var BGN_PER_EUR = 1.95583;
   function formatDualCurrency(value) {
     var eur = parseFloat(value);
     if (isNaN(eur)) return '-';
-    var bgn = eur * BGN_PER_EUR;
     var fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
-    var eurText = eur.toLocaleString('bg-BG', fmt) + ' €';
-    var bgnText = bgn.toLocaleString('bg-BG', fmt) + ' лв.';
-    return eurText + ' / ' + bgnText;
+    return eur.toLocaleString('bg-BG', fmt) + ' €';
   }
 
   function startCountdown(targetIso, el){

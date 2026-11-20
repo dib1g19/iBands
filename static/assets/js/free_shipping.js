@@ -1,17 +1,12 @@
 ;(function(){
-  var BGN_PER_EUR = 1.95583
   function formatDualCurrency(value) {
     var eur = parseFloat(value)
     if (isNaN(eur)) return '-'
-    var bgn = eur * BGN_PER_EUR
     var fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-    var eurText = eur.toLocaleString('bg-BG', fmt) + ' €'
-    var bgnText = bgn.toLocaleString('bg-BG', fmt) + ' лв.'
-    return eurText + ' / ' + bgnText
+    return eur.toLocaleString('bg-BG', fmt) + ' €'
   }
-  function extractCurrencyValue(raw, symbol) {
-    var re = symbol === 'EUR' ? /([0-9.,]+)\s*€/i : /([0-9.,]+)\s*лв/i
-    var match = raw.match(re)
+  function extractCurrencyValue(raw) {
+    var match = String(raw).match(/([0-9.,]+)\s*€/i)
     if (!match) return null
     return match[1]
   }
@@ -19,15 +14,7 @@
     if (value == null) return 0
     if (typeof value === 'number') return value
     var raw = String(value)
-    var extracted = null
-    extracted = extractCurrencyValue(raw, 'EUR')
-    if (extracted == null) {
-      extracted = extractCurrencyValue(raw, 'BGN')
-      if (extracted != null) {
-        var bgnVal = parseFloat(extracted.replace(',', '.'))
-        if (!isNaN(bgnVal) && BGN_PER_EUR) return bgnVal / BGN_PER_EUR
-      }
-    }
+    var extracted = extractCurrencyValue(raw)
     var txt = extracted != null ? extracted : raw
     txt = String(txt).replace(/[^0-9.,]/g, '').replace(/\s+/g, '')
     // Replace comma with dot if dot absent

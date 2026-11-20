@@ -569,21 +569,17 @@
     // --- SHIPPING & PAYMENT METHOD LOGIC ---
     let selectedPayment = null;
     let selectedShipping = null;
-    let lastEcontShipping = { shipping_price: null, shipping_price_cod: null, currency_sign: "лв." };
-    let lastSpeedyShipping = { shipping_price: null, shipping_price_cod: null, currency_sign: "лв." };
+    let lastEcontShipping = { shipping_price: null, shipping_price_cod: null };
+    let lastSpeedyShipping = { shipping_price: null, shipping_price_cod: null };
     // Track last saved address to avoid redundant autosaves
     let lastSavedAddressKey = null; // Econt autosave key
     let lastSavedSpeedyKey = null;  // Speedy autosave key
-    const BGN_PER_EUR = 1.95583;
 
     function formatDualCurrency(value) {
         const eur = parseFloat(value);
         if (isNaN(eur)) return '-';
-        const bgn = eur * BGN_PER_EUR;
         const fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
-        const eurText = eur.toLocaleString('bg-BG', fmt) + ' €';
-        const bgnText = bgn.toLocaleString('bg-BG', fmt) + ' лв.';
-        return eurText + ' / ' + bgnText;
+        return eur.toLocaleString('bg-BG', fmt) + ' €';
     }
 
     function updateSummaryForPayment() {
@@ -597,7 +593,6 @@
         let officeNameE = document.getElementById('econt_customer_office_name')?.value || '';
         let officeNameS = document.getElementById('speedy_office_name')?.value || '';
         let officeSelected = (selectedShipping === 'econt') ? !!officeNameE : (selectedShipping === 'speedy' ? !!officeNameS : false);
-        let currencySign = (selectedShipping === 'speedy') ? (lastSpeedyShipping.currency_sign || "лв.") : (lastEcontShipping.currency_sign || "лв.");
 
         if (selectedShipping === 'econt' && selectedPayment) {
             if (selectedPayment === 'cash_on_delivery') {
@@ -735,8 +730,7 @@
         if (data && (data.shipping_price !== undefined || data.shipping_price_cod !== undefined)) {
             lastEcontShipping = {
                 shipping_price: data.shipping_price,
-                shipping_price_cod: data.shipping_price_cod,
-                currency_sign: data.shipping_price_currency_sign || "лв."
+                shipping_price_cod: data.shipping_price_cod
             };
             shippingChanged = true;
         }
@@ -990,7 +984,6 @@
                             const basePrice = parseFloat(data.quote.price);
                             // Update global shipping cache for summary block
                             lastSpeedyShipping.shipping_price_cod = basePrice.toFixed(2);
-                            lastSpeedyShipping.currency_sign = 'лв.';
                             // Also reflect in summary immediately
                             updateSummaryForPayment();
                             // Optional: suppress separate inline box to avoid duplication
@@ -1103,7 +1096,6 @@
                         if (typeof lastSpeedyShipping !== 'undefined') {
                             lastSpeedyShipping.shipping_price = null;
                             lastSpeedyShipping.shipping_price_cod = null;
-                            lastSpeedyShipping.currency_sign = 'лв.';
                         }
                         if (quoteBox) quoteBox.innerHTML = '';
                         if (typeof updateSummaryForPayment === 'function') {

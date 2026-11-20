@@ -39,6 +39,7 @@ ORDER_STATUS = (
 SHIPPING_SERVICE = (
     ("econt", "Еконт"),
     ("speedy", "Спиди"),
+    ("pigeon", "Pigeon Express"),
 )
 
 VARIANT_TYPE_CHOICES = (

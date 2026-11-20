@@ -35,6 +35,9 @@ class Address(models.Model):
         ("econt", "Еконт адрес"),
         ("speedy_office", "Спиди офис"),
         ("speedy", "Спиди адрес"),
+        ("pigeon_office", "Pigeon офис"),
+        ("pigeon_locker", "Pigeon автомат"),
+        ("pigeon", "Pigeon адрес"),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=200, null=True, blank=True, default=None)

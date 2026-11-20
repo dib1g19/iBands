@@ -2095,6 +2095,12 @@ input[type="number"] {
     height: 100%;
 }
 
+.pigeon-card-logo {
+    height: auto;
+    max-height: 40px;
+    margin-left: 12px;
+}
+
 /* ==========================
    Global announcement bar
    ========================== */

@@ -266,7 +266,7 @@ def address_detail(request, id):
         address.delivery_method = delivery_method
         address.city = city
 
-        if delivery_method in ["econt_office", "speedy_office"]:
+        if delivery_method in ["econt_office", "speedy_office", "pigeon_office", "pigeon_locker"]:
             address.address = ""
             address.office_name = office_name
         else:
@@ -305,7 +305,7 @@ def address_create(request):
         address = request.POST.get("address")
         office_name = request.POST.get("office_name")
 
-        if delivery_method in ["econt_office", "speedy_office"]:
+        if delivery_method in ["econt_office", "speedy_office", "pigeon_office", "pigeon_locker"]:
             address_to_save = ""
             office_name_to_save = office_name
         else:

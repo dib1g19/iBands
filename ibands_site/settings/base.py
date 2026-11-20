@@ -174,6 +174,12 @@ SPEEDY_DEFAULT_SERVICE_ID = env("SPEEDY_DEFAULT_SERVICE_ID", default="505")
 SPEEDY_DROPOFF_OFFICE_ID = env("SPEEDY_DROPOFF_OFFICE_ID", default=867)
 SPEEDY_OBPD_OPTION = env("SPEEDY_OBPD_OPTION", default="TEST")  # Allowed: OPEN or TEST
 
+# --- Pigeon Express ---
+PIGEON_API_KEY = env("PIGEON_API_KEY", default="")
+PIGEON_API_SECRET = env("PIGEON_API_SECRET", default="")
+PIGEON_API_BASE = env("PIGEON_API_BASE", default="https://api.pigeonexpress.com/v1")
+PIGEON_SENDER_ADDRESS_ID = env("PIGEON_SENDER_ADDRESS_ID", default="")
+
 
 def admin_user_avatar(user):
     """Profile photo for the admin sidebar. Jazzmin only accepts a user field or a callable."""

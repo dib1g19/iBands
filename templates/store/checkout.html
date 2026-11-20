@@ -27,7 +27,8 @@
         max-height: 2000px;
     }
     /* Ensure collapsed sections don't display content */
-    #speedy-shipping-block.open { overflow: visible; }
+    #speedy-shipping-block.open,
+    #pigeon-shipping-block.open { overflow: visible; }
     @media (min-width: 992px) {
         .sticky-order-summary {
             position: sticky;
@@ -99,6 +100,13 @@
                                         <input class="form-check-input" type="radio" name="shipping_method" id="shipping-speedy" value="speedy">
                                         <div class="shipping-card-inner">
                                             <img src="{% static 'assets/img/speedy-logo.svg' %}" alt="Speedy" class="shipping-card-logo" onerror="this.style.display='none'">
+                                            <span class="text-muted ms-auto small">(до офис/адрес)</span>
+                                        </div>
+                                    </label>
+                                    <label class="shipping-card" for="shipping-pigeon">
+                                        <input class="form-check-input" type="radio" name="shipping_method" id="shipping-pigeon" value="pigeon">
+                                        <div class="shipping-card-inner">
+                                            <img src="{% static 'assets/img/pigeon-express-logo.svg' %}" alt="Pigeon Express" class="shipping-card-logo pigeon-card-logo" onerror="this.style.display='none'">
                                             <span class="text-muted ms-auto small">(до офис/адрес)</span>
                                         </div>
                                     </label>
@@ -197,6 +205,71 @@
                                                 <input type="hidden" class="form-control" id="speedy_office_name">
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                            <div class="col-12">
+                            <div id="pigeon-shipping-block" class="collapsible-section">
+                                <div class="card-wrap rounded mb-4">
+                                    <div class="card-wrap-header px-3 py-2 border-bottom">
+                                        <div class="card-header-flex">
+                                            <h4 class="fs-md fw-semibold mb-1">Pigeon Express доставка</h4>
+                                        </div>
+                                    </div>
+                                    <div class="card-wrap-body px-3 py-3">
+                                        <div class="mb-2">
+                                            <div class="alert alert-info">
+                                                Моля, попълнете вашите данни за доставка с Pigeon Express. След като попълните и потвърдите, ще използваме тази информация за изпращане на вашата поръчка.
+                                            </div>
+                                        </div>
+                                        <div id="pigeon-error-block"></div>
+                                        <div class="row g-2">
+                                            <div class="col-12 mb-1">
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="pigeon_delivery_mode" id="pigeon_mode_address" value="address">
+                                                    <label class="form-check-label" for="pigeon_mode_address">Личен адрес</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="pigeon_delivery_mode" id="pigeon_mode_office" value="office">
+                                                    <label class="form-check-label" for="pigeon_mode_office">Офис или автомат</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="text" class="form-control" id="pigeon_name" placeholder="Име и фамилия (за физически лица) / Име на фирма (за юридически лица)">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="text" class="form-control" id="pigeon_face" placeholder="Лице за контакт (моля, попълнете, ако сте посочили фирма в горното поле)">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="text" class="form-control" id="pigeon_phone" placeholder="Телефон">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="email" class="form-control" id="pigeon_email" placeholder="Имейл">
+                                            </div>
+                                            <div class="col-12 position-relative">
+                                                <input type="text" class="form-control" id="pigeon_city_search" placeholder="Град (започнете да пишете)">
+                                                <div id="pigeon_city_suggestions" class="position-absolute w-100" style="z-index:1050"></div>
+                                                <input type="hidden" id="pigeon_city_id">
+                                                <input type="hidden" id="pigeon_post_code">
+                                            </div>
+                                            <div class="col-12 position-relative pigeon-address-field">
+                                                <input type="text" class="form-control" id="pigeon_street_search" placeholder="Улица (започнете да пишете)">
+                                                <div id="pigeon_street_suggestions" class="list-group position-absolute w-100" style="z-index:1050"></div>
+                                                <input type="hidden" id="pigeon_street_id">
+                                            </div>
+                                            <div class="col-12 pigeon-address-field">
+                                                <input type="text" class="form-control" id="pigeon_street_number" placeholder="Номер">
+                                            </div>
+                                            <div class="col-12 position-relative pigeon-office-field">
+                                                <input type="text" class="form-control" id="pigeon_office_search" placeholder="Офис или автомат (започнете да пишете)">
+                                                <div id="pigeon_office_suggestions" class="list-group position-absolute w-100" style="z-index:1050"></div>
+                                                <input type="hidden" id="pigeon_office_code">
+                                                <input type="hidden" id="pigeon_office_name">
+                                                <input type="hidden" id="pigeon_office_type">
+                                            </div>
+                                        </div>
+                                        <div id="pigeon-shipping-price-block"></div>
                                     </div>
                                 </div>
                             </div>
@@ -550,17 +623,22 @@
     document.addEventListener('DOMContentLoaded', function() {
         var econtRadio = document.getElementById('shipping-econt');
         var speedyRadio = document.getElementById('shipping-speedy');
+        var pigeonRadio = document.getElementById('shipping-pigeon');
         var econtBlock = document.getElementById('econt-shipping-block');
         var speedyBlock = document.getElementById('speedy-shipping-block');
+        var pigeonBlock = document.getElementById('pigeon-shipping-block');
         function updateShippingBlock() {
             const showE = !!(econtRadio && econtRadio.checked);
             const showS = !!(speedyRadio && speedyRadio.checked);
+            const showP = !!(pigeonRadio && pigeonRadio.checked);
             if (econtBlock) econtBlock.classList.toggle('open', showE);
             if (speedyBlock) speedyBlock.classList.toggle('open', showS);
+            if (pigeonBlock) pigeonBlock.classList.toggle('open', showP);
         }
         if (econtRadio && speedyRadio && econtBlock) {
             econtRadio.addEventListener('change', updateShippingBlock);
             speedyRadio.addEventListener('change', updateShippingBlock);
+            if (pigeonRadio) pigeonRadio.addEventListener('change', updateShippingBlock);
             updateShippingBlock();
         }
     });
@@ -571,6 +649,7 @@
     let selectedShipping = null;
     let lastEcontShipping = { shipping_price: null, shipping_price_cod: null };
     let lastSpeedyShipping = { shipping_price: null, shipping_price_cod: null };
+    let lastPigeonShipping = { shipping_price: null, shipping_price_cod: null };
     // Track last saved address to avoid redundant autosaves
     let lastSavedAddressKey = null; // Econt autosave key
     let lastSavedSpeedyKey = null;  // Speedy autosave key
@@ -592,7 +671,8 @@
 
         let officeNameE = document.getElementById('econt_customer_office_name')?.value || '';
         let officeNameS = document.getElementById('speedy_office_name')?.value || '';
-        let officeSelected = (selectedShipping === 'econt') ? !!officeNameE : (selectedShipping === 'speedy' ? !!officeNameS : false);
+        let officeNameP = document.getElementById('pigeon_office_name')?.value || '';
+        let officeSelected = (selectedShipping === 'econt') ? !!officeNameE : (selectedShipping === 'speedy' ? !!officeNameS : (selectedShipping === 'pigeon' ? !!officeNameP : false));
 
         if (selectedShipping === 'econt' && selectedPayment) {
             if (selectedPayment === 'cash_on_delivery') {
@@ -625,6 +705,13 @@
                     shippingText = formatDualCurrency(shipping);
                     shippingVal = parseFloat(shipping);
                 }
+            }
+        } else if (selectedShipping === 'pigeon' && selectedPayment) {
+            if (lastPigeonShipping.shipping_price_cod !== undefined && lastPigeonShipping.shipping_price_cod !== null) {
+                shipping = lastPigeonShipping.shipping_price_cod;
+                showShipping = true;
+                shippingText = formatDualCurrency(shipping);
+                shippingVal = parseFloat(shipping);
             }
         }
         if (shippingSummaryElem) {
@@ -689,6 +776,7 @@
         const continueBtn = document.getElementById('continue-payment');
         const shippingEcontRadio = document.getElementById('shipping-econt');
         const shippingSpeedyRadio = document.getElementById('shipping-speedy');
+        const shippingPigeonRadio = document.getElementById('shipping-pigeon');
         const errorBlock = document.getElementById('checkout-error-block');
 
         // Ensure no payment method is preselected
@@ -697,7 +785,8 @@
 
         function updateShippingSelection() {
             selectedShipping = shippingEcontRadio.checked ? 'econt' :
-                (shippingSpeedyRadio.checked ? 'speedy' : null);
+                (shippingSpeedyRadio.checked ? 'speedy' :
+                (shippingPigeonRadio && shippingPigeonRadio.checked ? 'pigeon' : null));
             updateSummaryForPayment();
         }
 
@@ -707,17 +796,20 @@
                 persistPaymentMethod('card');
                 updateSummaryForPayment();
                 if (selectedShipping === 'speedy') { updateQuote(); }
+                if (selectedShipping === 'pigeon' && window.updatePigeonQuote) { window.updatePigeonQuote(); }
             });
             paymentCodRadio.addEventListener('change', function(){
                 selectedPayment = 'cash_on_delivery';
                 persistPaymentMethod('cash_on_delivery');
                 updateSummaryForPayment();
                 if (selectedShipping === 'speedy') { updateQuote(); }
+                if (selectedShipping === 'pigeon' && window.updatePigeonQuote) { window.updatePigeonQuote(); }
             });
         }
         if (shippingEcontRadio && shippingSpeedyRadio) {
             shippingEcontRadio.addEventListener('change', updateShippingSelection);
             shippingSpeedyRadio.addEventListener('change', updateShippingSelection);
+            if (shippingPigeonRadio) shippingPigeonRadio.addEventListener('change', updateShippingSelection);
         }
         // Set summary on load (no shipping/payment selected)
         updateSummaryForPayment();
@@ -829,12 +921,16 @@
             if (selectedPayment === 'cash_on_delivery') {
                 if (selectedShipping === 'speedy') {
                     handleSpeedyPayment(document.getElementById('cod-payment'), 'cash_on_delivery');
+                } else if (selectedShipping === 'pigeon') {
+                    handlePigeonPayment(document.getElementById('cod-payment'), 'cash_on_delivery');
                 } else {
                     document.getElementById('cod-payment').click();
                 }
             } else if (selectedPayment === 'card') {
                 if (selectedShipping === 'speedy') {
                     handleSpeedyPayment(document.getElementById('stripe-payment'), 'card');
+                } else if (selectedShipping === 'pigeon') {
+                    handlePigeonPayment(document.getElementById('stripe-payment'), 'card');
                 } else {
                     document.getElementById('stripe-payment').click();
                 }
@@ -1200,6 +1296,356 @@
             }
             // Save the prefilled data so backend knows them; city/address left blank to trigger quote later
             if (changed) { autoSaveSpeedyAddress(); }
+        } catch (e) { /* no-op */ }
+    })();
+</script>
+<script>
+    function pigeonDeliveryMethod() {
+        var mode = document.querySelector('input[name="pigeon_delivery_mode"]:checked');
+        if (mode && mode.value === 'office') {
+            return document.getElementById('pigeon_office_type')?.value === 'locker' ? 'pigeon_locker' : 'pigeon_office';
+        }
+        return 'pigeon';
+    }
+    function pigeonAddressLine() {
+        var street = document.getElementById('pigeon_street_search')?.value || '';
+        var number = document.getElementById('pigeon_street_number')?.value || '';
+        return (street + ' ' + number).trim();
+    }
+    function handlePigeonPayment(button, paymentType) {
+        var method = pigeonDeliveryMethod();
+        var addressData = {
+            name: document.getElementById('pigeon_name').value,
+            phone: document.getElementById('pigeon_phone').value,
+            email: document.getElementById('pigeon_email').value,
+            delivery_method: method,
+            city: document.getElementById('pigeon_city_search').value,
+            address: method === 'pigeon' ? pigeonAddressLine() : '',
+            office_code: document.getElementById('pigeon_office_code')?.value || '',
+            office_name: method === 'pigeon' ? '' : (document.getElementById('pigeon_office_name')?.value || ''),
+            face: document.getElementById('pigeon_face').value,
+            post_code: document.getElementById('pigeon_post_code')?.value || '',
+            city_id: document.getElementById('pigeon_city_id')?.value || '',
+            street_id: document.getElementById('pigeon_street_id')?.value || '',
+            street_number: document.getElementById('pigeon_street_number')?.value || '',
+            shipping_price: lastPigeonShipping.shipping_price_cod || null
+        };
+        var errorBlock = document.getElementById('pigeon-error-block');
+        if (errorBlock) errorBlock.innerHTML = '';
+        var hasDestination = method === 'pigeon'
+            ? !!(addressData.street_id && addressData.street_number)
+            : !!addressData.office_code;
+        if (!addressData.phone || !addressData.city_id || !hasDestination) {
+            if (errorBlock) {
+                errorBlock.innerHTML = '<div class="alert alert-danger">Моля, попълнете адреса за доставка за Pigeon Express!</div>';
+                errorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            setContinueLoading(false);
+            return;
+        }
+        if (paymentType === 'card') {
+            button.innerHTML = 'Плащане с карта <i class="fas fa-spinner fa-spin ms-2"></i>';
+        } else {
+            button.innerHTML = 'Наложен платеж <i class="fas fa-spinner fa-spin"></i>';
+        }
+        fetch('/save-pigeon-address/{{ order.order_id }}/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+            body: JSON.stringify(addressData)
+        })
+        .then(function (resp) { return resp.json(); })
+        .then(function (respData) {
+            if (!respData.success) {
+                if (errorBlock) {
+                    errorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса (Pigeon Express). Моля, опитайте отново.</div>';
+                    errorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+                button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
+                setContinueLoading(false);
+                return;
+            }
+            if (paymentType === 'card') {
+                fetch('/stripe-payment/{{order.order_id}}/', {
+                    method: 'POST',
+                    body: JSON.stringify({ email: addressData.email })
+                })
+                .then(function (response) { return response.json(); })
+                .then(function (session) { return stripe.redirectToCheckout({ sessionId: session.sessionId }); })
+                .then(function (result) {
+                    if (result.error) {
+                        if (window.Toast) window.Toast.fire({ icon: "error", title: result.error.message });
+                        else alert(result.error.message);
+                    }
+                })
+                .catch(function (error) { console.log('Error: ', error); });
+            } else {
+                fetch("{% url 'store:cod_payment' order.order_id %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken }
+                }).then(function (response) {
+                    if (response.redirected) window.location.href = response.url;
+                });
+            }
+        })
+        .catch(function () {
+            if (errorBlock) {
+                errorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса (Pigeon Express). Моля, опитайте отново.</div>';
+                errorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
+            setContinueLoading(false);
+        });
+    }
+</script>
+<script>
+    (function(){
+        const citySearch = document.getElementById('pigeon_city_search');
+        const citySuggestions = document.getElementById('pigeon_city_suggestions');
+        const cityIdInput = document.getElementById('pigeon_city_id');
+        const streetSearch = document.getElementById('pigeon_street_search');
+        const streetSuggestions = document.getElementById('pigeon_street_suggestions');
+        const streetIdInput = document.getElementById('pigeon_street_id');
+        const streetNumber = document.getElementById('pigeon_street_number');
+        const officeSearch = document.getElementById('pigeon_office_search');
+        const officeSuggestions = document.getElementById('pigeon_office_suggestions');
+        const officeCodeInput = document.getElementById('pigeon_office_code');
+        const officeNameHidden = document.getElementById('pigeon_office_name');
+        const officeTypeInput = document.getElementById('pigeon_office_type');
+        let quoteTimer = null;
+        let saveTimer = null;
+        let lastSavedKey = null;
+
+        function clearSuggestions(el){ if (!el) return; el.innerHTML = ''; el.style.display = 'none'; }
+        function suggestion(text, onClick) {
+            const link = document.createElement('a');
+            link.href = '#';
+            link.className = 'list-group-item list-group-item-action';
+            link.textContent = text;
+            link.addEventListener('click', function(event){ event.preventDefault(); onClick(); });
+            return link;
+        }
+        function payload(withPrice) {
+            const method = pigeonDeliveryMethod();
+            const body = {
+                name: document.getElementById('pigeon_name')?.value || '',
+                phone: document.getElementById('pigeon_phone')?.value || '',
+                email: document.getElementById('pigeon_email')?.value || '',
+                delivery_method: method,
+                city: citySearch?.value || '',
+                address: method === 'pigeon' ? pigeonAddressLine() : '',
+                office_code: officeCodeInput?.value || '',
+                office_name: method === 'pigeon' ? '' : (officeNameHidden?.value || ''),
+                face: document.getElementById('pigeon_face')?.value || '',
+                post_code: document.getElementById('pigeon_post_code')?.value || '',
+                city_id: cityIdInput?.value || '',
+                street_id: streetIdInput?.value || '',
+                street_number: streetNumber?.value || ''
+            };
+            if (withPrice) body.shipping_price = lastPigeonShipping.shipping_price_cod || null;
+            return body;
+        }
+        function autoSave() {
+            const radio = document.getElementById('shipping-pigeon');
+            if (!window.ownsCheckout || !radio || !radio.checked) return;
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(function(){
+                const body = payload(false);
+                const key = JSON.stringify(body);
+                if (key === lastSavedKey) return;
+                fetch('/save-pigeon-address/{{ order.order_id }}/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                }).then(function(resp){ return resp.json(); }).then(function(data){
+                    if (data && data.success) lastSavedKey = key;
+                }).catch(function(){});
+            }, 400);
+        }
+        function updatePigeonQuote() {
+            clearTimeout(quoteTimer);
+            quoteTimer = setTimeout(function(){
+                const method = pigeonDeliveryMethod();
+                const params = new URLSearchParams();
+                params.set('delivery_type', method === 'pigeon_locker' ? 'locker' : (method === 'pigeon_office' ? 'office' : 'address'));
+                if (cityIdInput?.value) params.set('city_id', cityIdInput.value);
+                if (streetIdInput?.value) params.set('street_id', streetIdInput.value);
+                if (streetNumber?.value) params.set('street_number', streetNumber.value);
+                if (officeCodeInput?.value) params.set('office_id', officeCodeInput.value);
+                const postCode = document.getElementById('pigeon_post_code')?.value || '';
+                if (postCode) params.set('postal_code', postCode);
+                if (selectedPayment === 'cash_on_delivery') params.set('payment', 'cod');
+                const ready = method === 'pigeon' ? !!(cityIdInput?.value) : !!(officeCodeInput?.value);
+                if (!ready) return;
+                fetch('/pigeon/quote/{{ order.order_id }}/?' + params.toString())
+                    .then(function(resp){ return resp.json(); })
+                    .then(function(data){
+                        if (data && data.quote && data.quote.price != null) {
+                            lastPigeonShipping.shipping_price_cod = parseFloat(data.quote.price).toFixed(2);
+                            updateSummaryForPayment();
+                        }
+                    }).catch(function(){});
+            }, 300);
+        }
+        window.updatePigeonQuote = updatePigeonQuote;
+
+        function loadOffices(cityId) {
+            clearSuggestions(officeSuggestions);
+            if (!cityId) return;
+            fetch('/pigeon/offices/?city_id=' + encodeURIComponent(cityId))
+                .then(function(resp){ return resp.json(); })
+                .then(function(data){
+                    officeSuggestions._all = (data && data.offices) || [];
+                    renderOffices(officeSuggestions._all);
+                }).catch(function(){});
+        }
+        function renderCities(cities) {
+            clearSuggestions(citySuggestions);
+            (cities || []).slice(0, 10).forEach(function(city){
+                const label = ((city.type || '') + ' ' + (city.name || '')).trim();
+                citySuggestions.appendChild(suggestion(label, function(){
+                    citySearch.value = label;
+                    cityIdInput.value = city.id || '';
+                    const postCode = document.getElementById('pigeon_post_code');
+                    if (postCode) postCode.value = city.postal_code || '';
+                    if (streetIdInput) streetIdInput.value = '';
+                    if (streetSearch) streetSearch.value = '';
+                    if (officeCodeInput) officeCodeInput.value = '';
+                    if (officeNameHidden) officeNameHidden.value = '';
+                    if (officeTypeInput) officeTypeInput.value = '';
+                    if (officeSearch) officeSearch.value = '';
+                    clearSuggestions(citySuggestions);
+                    loadOffices(city.id);
+                    updatePigeonQuote();
+                    autoSave();
+                }));
+            });
+            if (citySuggestions.childElementCount) citySuggestions.style.display = 'block';
+        }
+        function renderStreets(streets) {
+            clearSuggestions(streetSuggestions);
+            (streets || []).forEach(function(street){
+                const label = ((street.type || '') + ' ' + (street.name || '')).trim();
+                streetSuggestions.appendChild(suggestion(label, function(){
+                    streetSearch.value = label;
+                    streetIdInput.value = street.id || '';
+                    const postCode = document.getElementById('pigeon_post_code');
+                    if (postCode && street.postal_code) postCode.value = street.postal_code;
+                    clearSuggestions(streetSuggestions);
+                    updatePigeonQuote();
+                    autoSave();
+                }));
+            });
+            if (streetSuggestions.childElementCount) streetSuggestions.style.display = 'block';
+        }
+        function renderOffices(offices) {
+            clearSuggestions(officeSuggestions);
+            (offices || []).slice(0, 10).forEach(function(office){
+                const kind = office.type === 'locker' ? 'Автомат' : 'Офис';
+                officeSuggestions.appendChild(suggestion(kind + ': ' + (office.name || ''), function(){
+                    officeSearch.value = office.name || '';
+                    officeCodeInput.value = office.id || '';
+                    officeNameHidden.value = office.name || '';
+                    officeTypeInput.value = office.type || 'office';
+                    const postCode = document.getElementById('pigeon_post_code');
+                    if (postCode && office.postal_code) postCode.value = office.postal_code;
+                    clearSuggestions(officeSuggestions);
+                    updatePigeonQuote();
+                    autoSave();
+                }));
+            });
+            if (officeSuggestions && officeSuggestions.childElementCount) officeSuggestions.style.display = 'block';
+        }
+        if (citySearch) {
+            let timer = null;
+            citySearch.addEventListener('input', function(){
+                clearTimeout(timer);
+                cityIdInput.value = '';
+                const query = this.value.trim();
+                timer = setTimeout(function(){
+                    if (query.length < 2) { clearSuggestions(citySuggestions); return; }
+                    fetch('/pigeon/cities/?q=' + encodeURIComponent(query))
+                        .then(function(resp){ return resp.json(); })
+                        .then(function(data){ renderCities(data.cities || []); })
+                        .catch(function(){});
+                }, 300);
+                autoSave();
+            });
+        }
+        if (streetSearch) {
+            let timer = null;
+            streetSearch.addEventListener('input', function(){
+                clearTimeout(timer);
+                streetIdInput.value = '';
+                const query = this.value.trim();
+                timer = setTimeout(function(){
+                    if (!cityIdInput.value || query.length < 2) { clearSuggestions(streetSuggestions); return; }
+                    fetch('/pigeon/streets/?city_id=' + encodeURIComponent(cityIdInput.value) + '&q=' + encodeURIComponent(query))
+                        .then(function(resp){ return resp.json(); })
+                        .then(function(data){ renderStreets(data.streets || []); })
+                        .catch(function(){});
+                }, 300);
+                updatePigeonQuote();
+                autoSave();
+            });
+        }
+        if (officeSearch) {
+            officeSearch.addEventListener('input', function(){
+                const all = officeSuggestions._all || [];
+                const query = this.value.toLowerCase();
+                officeCodeInput.value = '';
+                officeNameHidden.value = '';
+                renderOffices(query ? all.filter(function(office){ return (office.name || '').toLowerCase().indexOf(query) !== -1; }) : all);
+                autoSave();
+            });
+        }
+        if (streetNumber) {
+            streetNumber.addEventListener('input', function(){ updatePigeonQuote(); autoSave(); });
+        }
+        ['pigeon_name', 'pigeon_face', 'pigeon_phone', 'pigeon_email'].forEach(function(id){
+            const input = document.getElementById(id);
+            if (input) input.addEventListener('input', autoSave);
+        });
+        document.addEventListener('click', function(event){
+            if (citySuggestions && !citySuggestions.contains(event.target) && event.target !== citySearch) clearSuggestions(citySuggestions);
+            if (streetSuggestions && !streetSuggestions.contains(event.target) && event.target !== streetSearch) clearSuggestions(streetSuggestions);
+            if (officeSuggestions && !officeSuggestions.contains(event.target) && event.target !== officeSearch) clearSuggestions(officeSuggestions);
+        });
+        const modeAddress = document.getElementById('pigeon_mode_address');
+        const modeOffice = document.getElementById('pigeon_mode_office');
+        function setMode(mode) {
+            const office = mode === 'office';
+            document.querySelectorAll('.pigeon-address-field').forEach(function(el){ el.style.display = office ? 'none' : 'block'; });
+            document.querySelectorAll('.pigeon-office-field').forEach(function(el){ el.style.display = office ? 'block' : 'none'; });
+            updatePigeonQuote();
+            autoSave();
+        }
+        if (modeAddress && modeOffice) {
+            modeOffice.checked = true;
+            setMode('office');
+            modeAddress.addEventListener('change', function(){ if (this.checked) setMode('address'); });
+            modeOffice.addEventListener('change', function(){ if (this.checked) setMode('office'); });
+        }
+        const pigeonRadio = document.getElementById('shipping-pigeon');
+        if (pigeonRadio) {
+            pigeonRadio.addEventListener('change', function(){
+                if (!this.checked) return;
+                lastPigeonShipping.shipping_price_cod = null;
+                updateSummaryForPayment();
+            });
+        }
+        try {
+            const desired = {
+                name: ("{{ primary_address.name|default_if_none:''|escapejs }}" || "{{ order.address.name|default_if_none:''|escapejs }}" || "{{ request.user.full_name|default_if_none:''|escapejs }}").trim(),
+                face: ("{{ primary_address.face|default_if_none:''|escapejs }}" || "{{ order.address.face|default_if_none:''|escapejs }}").trim(),
+                phone: ("{{ primary_address.phone|default_if_none:''|escapejs }}" || "{{ order.address.phone|default_if_none:''|escapejs }}" || "{{ request.user.mobile|default_if_none:''|escapejs }}").trim(),
+                email: ("{{ primary_address.email|default_if_none:''|escapejs }}" || "{{ order.address.email|default_if_none:''|escapejs }}" || "{{ request.user.email|default_if_none:''|escapejs }}").trim()
+            };
+            if (window.ownsCheckout) {
+                if (desired.name && !document.getElementById('pigeon_name').value) document.getElementById('pigeon_name').value = desired.name;
+                if (desired.face && !document.getElementById('pigeon_face').value) document.getElementById('pigeon_face').value = desired.face;
+                if (desired.phone && !document.getElementById('pigeon_phone').value) document.getElementById('pigeon_phone').value = desired.phone;
+                if (desired.email && !document.getElementById('pigeon_email').value) document.getElementById('pigeon_email').value = desired.email;
+            }
         } catch (e) { /* no-op */ }
     })();
 </script>

@@ -264,6 +264,70 @@ def speedy_v1_create_shipment(shipment_request: dict):
     return r.json()
 
 
+def pigeon_request(method, path, payload=None, params=None):
+    base = getattr(settings, "PIGEON_API_BASE", "https://api.pigeonexpress.com/v1").rstrip("/")
+    headers = {
+        "X-API-Key": settings.PIGEON_API_KEY,
+        "X-API-Secret": settings.PIGEON_API_SECRET,
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "User-Agent": "ibands-checkout/1.0",
+    }
+    response = requests.request(method, base + path, json=payload, params=params, headers=headers, timeout=15)
+    if response.status_code >= 500:
+        response.raise_for_status()
+    try:
+        return response.json()
+    except ValueError:
+        response.raise_for_status()
+        return {}
+
+
+def pigeon_sender():
+    """Default saved pickup address. Calculate needs the address; create can use its id."""
+    from django.core.cache import cache
+
+    cached = cache.get("pigeon_sender")
+    if cached:
+        return cached
+    body = pigeon_request("GET", "/addresses")
+    rows = (body or {}).get("data") or []
+    wanted = str(getattr(settings, "PIGEON_SENDER_ADDRESS_ID", "") or "")
+    chosen = None
+    for row in rows:
+        if wanted and str(row.get("id")) == wanted:
+            chosen = row
+            break
+        if row.get("is_default") and chosen is None:
+            chosen = row
+    if chosen is None and rows:
+        chosen = rows[0]
+    if not chosen:
+        return None
+    address = chosen.get("address") or {}
+    sender = {
+        "id": chosen.get("id"),
+        "pickup_address": {
+            key: address.get(key)
+            for key in ("city_id", "street_id", "street_number", "postal_code")
+            if address.get(key) not in (None, "")
+        },
+    }
+    cache.set("pigeon_sender", sender, 60 * 60)
+    return sender
+
+
+def pigeon_package(order):
+    weight = 0.0
+    for item in order.order_items.all():
+        try:
+            weight += 0.1 * float(item.qty or 0)
+        except (TypeError, ValueError):
+            continue
+    # shortcut: one 20×15×5 cm box for every order, use product sizes if a parcel is refused for size
+    return {"weight": max(0.1, round(weight or 0.1, 3)), "length": 20, "width": 15, "height": 5}
+
+
 # --- Meta Conversions API ---
 def _sha256_lower(value: str) -> str:
     try:

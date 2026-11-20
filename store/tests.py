@@ -78,6 +78,31 @@ class FreeShippingPersistenceTests(TestCase):
         self.assertEqual(order.shipping, Decimal("0.00"))
         self.assertEqual(order.total, Decimal("80.00"))
 
+    def test_pigeon_office_free_shipping_applies_when_subtotal_over_threshold(self):
+        order = store_models.Order.objects.create(sub_total=Decimal("80.00"), shipping=Decimal("5.00"), total=Decimal("85.00"))
+        self._claim(order)
+        response = self.client.post(
+            reverse("store:save_pigeon_address", args=[order.order_id]),
+            data={
+                "name": "Test User",
+                "phone": "0888123456",
+                "email": "test@example.com",
+                "city": "София",
+                "address": "",
+                "office_code": "627",
+                "office_name": "Офис Pigeon",
+                "delivery_method": "pigeon_office",
+                "city_id": "759",
+                "shipping_price": 2.83,
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(order.shipping, Decimal("0.00"))
+        self.assertEqual(order.total, Decimal("80.00"))
+        self.assertEqual(order.address.delivery_method, "pigeon_office")
+
     def _save_office(self, order, price=6.20):
         self._claim(order)
         return self.client.post(
@@ -171,6 +196,50 @@ class SpeedyCODAmountTests(TestCase):
         if isinstance(top_level_cod, dict):
             self.assertEqual(top_level_cod.get("amount"), float(Decimal("100.00")))
             self.assertEqual(top_level_cod.get("currency"), "EUR")
+
+
+class PigeonShipmentTests(TestCase):
+    @patch("store.views.pigeon_sender")
+    @patch("store.views.pigeon_request")
+    def test_cod_uses_goods_total_and_saves_the_reference(self, pigeon_request, pigeon_sender):
+        pigeon_sender.return_value = {
+            "id": 5131,
+            "pickup_address": {"city_id": 2613, "street_id": 415496, "street_number": "56", "postal_code": "4000"},
+        }
+        pigeon_request.return_value = {"success": True, "data": {"reference_number": "PG123", "label_pdf": "abc"}}
+        product = store_models.Product.objects.create(name="Band X", price=Decimal("100.00"), sku="SKU-PG")
+        order = store_models.Order.objects.create(
+            sub_total=Decimal("100.00"),
+            shipping=Decimal("10.00"),
+            total=Decimal("110.00"),
+            payment_method="cash_on_delivery",
+        )
+        order.address = customer_models.Address.objects.create(
+            name="Test User",
+            phone="0888123456",
+            email="t@e.com",
+            delivery_method="pigeon_office",
+            city="София",
+            office_code="627",
+            office_name="Офис",
+        )
+        order.save(update_fields=["address"])
+        store_models.OrderItem.objects.create(
+            order=order, product=product, qty=1, price=Decimal("100.00"), sub_total=Decimal("100.00"),
+        )
+
+        from store import views as store_views
+        store_views.send_order_to_pigeon(order)
+
+        payload = pigeon_request.call_args.args[2]
+        self.assertEqual(payload["service_codes"]["cod_amount"], float(Decimal("100.00")))
+        self.assertEqual(payload["who_pays"], "receiver")
+        self.assertEqual(payload["delivery_office_id"], 627)
+        self.assertEqual(payload["sender_address_id"], 5131)
+        self.assertNotIn("label_pdf", pigeon_request.return_value["data"])
+        order.refresh_from_db()
+        self.assertEqual(order.tracking_id, "PG123")
+        self.assertEqual(order.shipping_service, "pigeon")
 
 
 class StripeCurrencyTests(TestCase):

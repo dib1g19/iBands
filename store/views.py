@@ -23,6 +23,9 @@ from store.utils import (
     speedy_v1_find_offices,
     speedy_v1_calculate,
     speedy_v1_create_shipment,
+    pigeon_package,
+    pigeon_request,
+    pigeon_sender,
     send_meta_purchase_event,
     recalc_cart_group_promos,
 )
@@ -491,11 +494,131 @@ def send_order_to_speedy(order):
         return None
 
 
+def _goods_total(order):
+    goods = round2(Decimal(str(order.sub_total or 0)) - Decimal(str(order.saved or 0)))
+    if goods < Decimal("0.00"):
+        goods = Decimal("0.00")
+    return goods
+
+
+def send_order_to_pigeon(order):
+    address = order.address
+    sender = pigeon_sender()
+    if not sender:
+        print("Pigeon shipment: no sender address on the account")
+        return None
+    cached = cache.get(f"pigeon_opts_{order.order_id}") or {}
+    method = getattr(address, "delivery_method", "") or ""
+    delivery_type = {"pigeon_office": "office", "pigeon_locker": "locker"}.get(method, "address")
+    is_cod = order.payment_method == "cash_on_delivery"
+    try:
+        free_shipping = Decimal(str(order.shipping or 0)) == Decimal("0.00")
+    except Exception:
+        free_shipping = False
+    who_pays = "sender" if free_shipping or not is_cod else "receiver"
+    service_codes = {"shipment_test_before_payment": True}
+    if is_cod:
+        service_codes["cod_amount"] = float(_goods_total(order))
+    items = []
+    for item in order.order_items.all():
+        product = getattr(item, "product", None)
+        description = (getattr(product, "name", "") or "Артикул")[:200]
+        try:
+            quantity = int(item.qty or 1)
+        except (TypeError, ValueError):
+            quantity = 1
+        items.append({"description": description, "quantity": max(1, quantity)})
+    if not items:
+        items = [{"description": f"iBands.bg поръчка #{order.order_id}", "quantity": 1}]
+    payload = {
+        "receiver_name": getattr(address, "name", "") or "",
+        "receiver_phone": getattr(address, "phone", "") or "",
+        "receiver_email": getattr(address, "email", "") or None,
+        "pickup_type": "address",
+        "sender_address_id": sender.get("id"),
+        "delivery_type": delivery_type,
+        "packages": [pigeon_package(order)],
+        "inventory_items": items,
+        "service_type": "standard",
+        "who_pays": who_pays,
+        "service_codes": service_codes,
+        "external_reference": str(order.order_id),
+    }
+    face = (getattr(address, "face", "") or "").strip()
+    if face:
+        payload["note"] = f"Лице за контакт: {face}"[:500]
+    if delivery_type in ("office", "locker"):
+        office_id = cached.get("office_id") or getattr(address, "office_code", None)
+        if not office_id or not str(office_id).isdigit():
+            print("Pigeon shipment: missing office id")
+            return None
+        payload["delivery_office_id"] = int(office_id)
+    else:
+        city_id = cached.get("city_id")
+        delivery_address = {}
+        if city_id and str(city_id).isdigit():
+            delivery_address["city_id"] = int(city_id)
+        if cached.get("street_id") and str(cached.get("street_id")).isdigit():
+            delivery_address["street_id"] = int(cached["street_id"])
+        if cached.get("street_number"):
+            delivery_address["street_number"] = str(cached["street_number"])[:20]
+        if getattr(address, "post_code", None):
+            delivery_address["postal_code"] = address.post_code
+        line = (getattr(address, "address", "") or "").strip()
+        if "street_id" not in delivery_address and len(line) >= 3:
+            delivery_address["additional_info"] = line[:500]
+        if "city_id" not in delivery_address:
+            print("Pigeon shipment: missing city id")
+            return None
+        payload["delivery_address"] = delivery_address
+
+    def _create(body):
+        response = pigeon_request("POST", "/shipments", body)
+        if isinstance(response, dict):
+            data = response.get("data")
+            if isinstance(data, dict):
+                data.pop("label_pdf", None)
+        return response
+
+    try:
+        response = _create(payload)
+        errors = response.get("errors") if isinstance(response, dict) else {}
+        if isinstance(response, dict) and not response.get("success") and isinstance(errors, dict):
+            if "shipment_test_before_payment" in errors or any("shipment_test_before_payment" in key for key in errors):
+                retry = json.loads(json.dumps(payload))
+                (retry.get("service_codes") or {}).pop("shipment_test_before_payment", None)
+                payload = retry
+                response = _create(payload)
+                errors = response.get("errors") if isinstance(response, dict) else {}
+            if isinstance(errors, dict) and any(key.startswith("pickup") or key.startswith("sender_address") for key in errors):
+                retry = json.loads(json.dumps(payload))
+                retry.pop("sender_address_id", None)
+                retry["pickup_address"] = sender.get("pickup_address") or {}
+                response = _create(retry)
+        data = (response or {}).get("data") or {}
+        reference = data.get("reference_number") if isinstance(data, dict) else None
+        if reference:
+            order.tracking_id = reference
+            order.shipping_service = "pigeon"
+            order.save(update_fields=["tracking_id", "shipping_service"])
+        else:
+            print("Pigeon shipment failed:", (response or {}).get("message"), (response or {}).get("errors"))
+        return response
+    except Exception as exc:
+        print("Pigeon shipment exception:", exc)
+        return None
+
+
 def _send_shipment(order):
     method = (getattr(order.address, "delivery_method", "") or "").split("_", 1)[0]
     if method == "speedy":
         try:
             send_order_to_speedy(order)
+        except Exception:
+            pass
+    elif method == "pigeon":
+        try:
+            send_order_to_pigeon(order)
         except Exception:
             pass
     else:
@@ -632,6 +755,61 @@ def save_speedy_address(request, order_id):
                 "office_id": data.get('office_code') or None,
             }
             cache.set(f"speedy_opts_{order.order_id}", speedy_opts, timeout=60*60)
+            apply_coupon_discount(order)
+            return JsonResponse({"success": True})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": f"Error: {e}"})
+    return JsonResponse({"success": False, "message": "Invalid request"})
+
+
+@csrf_exempt
+def save_pigeon_address(request, order_id):
+    if request.method == "POST":
+        try:
+            order = store_models.Order.objects.get(order_id=order_id)
+            if not _checkout_owned(request, order):
+                return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
+            data = json.loads(request.body)
+            shipping_price = None
+            if "shipping_price" in data:
+                try:
+                    shipping_price = float(data.get("shipping_price"))
+                except (TypeError, ValueError):
+                    shipping_price = None
+            user = request.user if request.user.is_authenticated else None
+            delivery_method = data.get("delivery_method") or "pigeon"
+            if delivery_method not in ("pigeon", "pigeon_office", "pigeon_locker"):
+                delivery_method = "pigeon_office" if data.get("office_name") else "pigeon"
+            address_kwargs = dict(
+                name=data.get("name", ""),
+                phone=data.get("phone", ""),
+                email=data.get("email", ""),
+                delivery_method=delivery_method,
+                city=data.get("city", ""),
+                address=data.get("address", ""),
+                office_code=data.get("office_code", ""),
+                office_name=data.get("office_name", ""),
+                post_code=data.get("post_code", ""),
+                face=data.get("face", ""),
+            )
+            if user:
+                existing_address = customer_models.Address.objects.filter(user=user, **address_kwargs).first()
+            else:
+                existing_address = None
+            if existing_address:
+                address = existing_address
+            else:
+                if user:
+                    address_kwargs["user"] = user
+                address = customer_models.Address.objects.create(**address_kwargs)
+            order.address = address
+            apply_quoted_shipping(order, user, shipping_price, delivery_method in ("pigeon_office", "pigeon_locker"))
+            cache.set(f"pigeon_opts_{order.order_id}", {
+                "city_id": data.get("city_id") or None,
+                "street_id": data.get("street_id") or None,
+                "street_number": data.get("street_number") or None,
+                "office_id": data.get("office_code") or None,
+            }, timeout=60 * 60 * 24 * 7)
             apply_coupon_discount(order)
             return JsonResponse({"success": True})
         except Exception as e:
@@ -792,6 +970,131 @@ def speedy_quote(request, order_id):
         })
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
+
+
+@csrf_exempt
+def pigeon_find_cities(request):
+    query = (request.GET.get("q") or "").strip()
+    if len(query) < 2:
+        return JsonResponse({"cities": []})
+    try:
+        body = pigeon_request("GET", "/cities", params={"name": query, "per_page": 20})
+        cities = []
+        for city in (body or {}).get("data") or []:
+            cities.append({
+                "id": city.get("id"),
+                "name": city.get("name") or "",
+                "type": city.get("type") or "",
+                "postal_code": city.get("postal_code") or "",
+            })
+        if not (body or {}).get("success") and not cities:
+            return JsonResponse({"cities": [], "error": (body or {}).get("message") or ""})
+        return JsonResponse({"cities": cities})
+    except Exception as exc:
+        return JsonResponse({"cities": [], "error": str(exc)})
+
+
+@csrf_exempt
+def pigeon_find_streets(request):
+    city_id = request.GET.get("city_id")
+    query = (request.GET.get("q") or "").strip()
+    if not city_id or len(query) < 2:
+        return JsonResponse({"streets": []})
+    try:
+        body = pigeon_request("GET", f"/cities/{int(city_id)}/streets", params={"name": query, "per_page": 100})
+        streets = list((body or {}).get("data") or [])
+        folded = query.casefold()
+
+        def rank(street):
+            name = (street.get("name") or "").casefold()
+            if name == folded:
+                return 0
+            if name.startswith(folded):
+                return 1
+            return 2
+
+        streets.sort(key=rank)
+        return JsonResponse({"streets": [{
+            "id": street.get("id"),
+            "name": street.get("name") or "",
+            "type": street.get("type") or "",
+            "postal_code": street.get("postal_code") or "",
+        } for street in streets[:10]]})
+    except Exception as exc:
+        return JsonResponse({"streets": [], "error": str(exc)})
+
+
+@csrf_exempt
+def pigeon_find_offices(request):
+    city_id = request.GET.get("city_id")
+    if not city_id:
+        return JsonResponse({"offices": []})
+    try:
+        # shortcut: one page of 100 offices, page through if a city grows past that
+        body = pigeon_request("GET", "/offices", params={"city_id": int(city_id), "per_page": 100})
+        offices = []
+        for office in (body or {}).get("data") or []:
+            offices.append({
+                "id": office.get("id"),
+                "name": office.get("name") or "",
+                "type": office.get("type") or "office",
+                "postal_code": office.get("postal_code") or "",
+                "address": office.get("address") or "",
+            })
+        return JsonResponse({"offices": offices})
+    except Exception as exc:
+        return JsonResponse({"offices": [], "error": str(exc)})
+
+
+@csrf_exempt
+def pigeon_quote(request, order_id):
+    try:
+        order = store_models.Order.objects.get(order_id=order_id)
+        sender = pigeon_sender()
+        if not sender:
+            return JsonResponse({"success": False, "error": "Няма адрес на подател в Pigeon Express"})
+        delivery_type = request.GET.get("delivery_type") or "address"
+        if delivery_type not in ("address", "office", "locker"):
+            delivery_type = "address"
+        is_cod = request.GET.get("payment") == "cod" or order.payment_method == "cash_on_delivery"
+        service_codes = {"shipment_test_before_payment": True}
+        if is_cod:
+            service_codes["cod_amount"] = float(_goods_total(order))
+        payload = {
+            "pickup_type": "address",
+            "pickup_address": sender.get("pickup_address") or {},
+            "delivery_type": delivery_type,
+            "packages": [pigeon_package(order)],
+            "service_type": "standard",
+            "who_pays": "receiver" if is_cod else "sender",
+            "service_codes": service_codes,
+        }
+        if delivery_type in ("office", "locker"):
+            office_id = request.GET.get("office_id")
+            if not office_id or not str(office_id).isdigit():
+                return JsonResponse({"success": False, "error": "Няма избран офис"})
+            payload["delivery_office_id"] = int(office_id)
+        else:
+            city_id = request.GET.get("city_id")
+            if not city_id or not str(city_id).isdigit():
+                return JsonResponse({"success": False, "error": "Няма избран град"})
+            delivery_address = {"city_id": int(city_id)}
+            if request.GET.get("street_id", "").isdigit():
+                delivery_address["street_id"] = int(request.GET["street_id"])
+            if request.GET.get("street_number"):
+                delivery_address["street_number"] = request.GET["street_number"][:20]
+            if request.GET.get("postal_code"):
+                delivery_address["postal_code"] = request.GET["postal_code"]
+            payload["delivery_address"] = delivery_address
+        body = pigeon_request("POST", "/shipments/calculate", payload)
+        data = (body or {}).get("data") or {}
+        price = data.get("total_price")
+        quote = None
+        if price is not None:
+            quote = {"price": float(price), "currency": data.get("currency") or "EUR"}
+        return JsonResponse({"success": bool((body or {}).get("success")), "quote": quote, "error": (body or {}).get("message")})
+    except Exception as exc:
+        return JsonResponse({"success": False, "error": str(exc)})
 
 
 def round2(val):

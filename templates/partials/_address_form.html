@@ -17,6 +17,9 @@
         <option value="econt" {% if address.delivery_method == "econt" or delivery_method == "econt" %}selected{% endif %}>Еконт адрес</option>
         <option value="speedy_office" {% if address.delivery_method == "speedy_office" or delivery_method == "speedy_office" %}selected{% endif %}>Спиди офис</option>
         <option value="speedy" {% if address.delivery_method == "speedy" or delivery_method == "speedy" %}selected{% endif %}>Спиди адрес</option>
+        <option value="pigeon_office" {% if address.delivery_method == "pigeon_office" or delivery_method == "pigeon_office" %}selected{% endif %}>Pigeon офис</option>
+        <option value="pigeon_locker" {% if address.delivery_method == "pigeon_locker" or delivery_method == "pigeon_locker" %}selected{% endif %}>Pigeon автомат</option>
+        <option value="pigeon" {% if address.delivery_method == "pigeon" or delivery_method == "pigeon" %}selected{% endif %}>Pigeon адрес</option>
     </select>
 </div>
 <div class="form-group mb-2">
@@ -37,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var officeField = document.getElementById('econt-office-fields');
         var officeInputEl = officeField.querySelector('[name="office_name"]');
 
-        if (method === 'econt_office' || method === 'speedy_office') {
+        if (method === 'econt_office' || method === 'speedy_office' || method === 'pigeon_office' || method === 'pigeon_locker') {
             officeField.style.display = '';
             addressField.style.display = 'none';
             if (officeInputEl) officeInputEl.required = true;

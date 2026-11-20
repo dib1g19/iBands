@@ -103,6 +103,8 @@
                                         <a target="_blank" href="https://www.econt.com/services/track-shipment/{{ order.tracking_id }}" class="btn btn-primary rounded btn-sm">Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i></a>
                                     {% elif order.shipping_service == 'speedy' %}
                                         <a target="_blank" href="https://www.speedy.bg/bg/track-shipment?shipmentNumber={{ order.tracking_id }}" class="btn btn-primary rounded btn-sm">Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i></a>
+                                    {% elif order.shipping_service == 'pigeon' %}
+                                        <a target="_blank" href="https://track.pigeonexpress.com/?tracking_number={{ order.tracking_id }}" class="btn btn-primary rounded btn-sm">Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i></a>
                                     {% endif %}
                                 {% endif %}
                             </div>

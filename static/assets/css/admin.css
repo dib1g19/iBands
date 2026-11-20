@@ -144,6 +144,31 @@ body.model-order.change-list #result_list td.field-shipping_service select {
     width: auto;
 }
 
+body.model-product.change-list #result_list td.field-sku input {
+    width: 32ch;
+}
+
+body.model-product.change-list #result_list td.field-name input {
+    width: 56ch;
+}
+
+body.model-product.change-list #result_list td.field-price input,
+body.model-product.change-list #result_list td.field-sale_price input,
+body.model-product.change-form #id_price,
+body.model-product.change-form #id_sale_price,
+body.model-product.change-form #id_shipping {
+    width: calc(6ch + 1.5rem + 2px);
+}
+
+body.model-product.change-form #id_sku {
+    width: 32ch;
+}
+
+body.model-product.change-form #id_name,
+body.model-product.change-form #id_slug {
+    width: 56ch;
+}
+
 body.model-product.change-list #result_list td.field-view_on_site_link {
     white-space: nowrap;
 }

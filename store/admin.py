@@ -75,8 +75,8 @@ class GalleryInline(admin.TabularInline):
 
 @admin.register(store_models.Product)
 class ProductAdmin(iBandsModelAdmin):
-    list_display = ["category", "sku", "name", "view_on_site_link", "image", "price", "sale_price", "on_sale", "featured", "promo_type", "promo_buy_qty", "promo_get_qty"]
-    list_editable = ["sku", "name", "image", "price", "sale_price", "on_sale", "featured", "promo_type", "promo_buy_qty", "promo_get_qty"]
+    list_display = ["category", "sku", "name", "view_on_site_link", "image", "price", "sale_price", "on_sale", "featured"]
+    list_editable = ["sku", "name", "image", "price", "sale_price", "on_sale", "featured"]
     list_filter = ["status", "featured", "on_sale", "promo_type", "category"]
     search_fields = ["name", "sku", "category__title"]
     list_select_related = ["category", "category__parent", "category__parent__parent"]

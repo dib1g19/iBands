@@ -1,0 +1,14 @@
+---
+description: Publish static files to production after a push that changes them
+alwaysApply: true
+---
+
+# Collect static on push
+
+When a commit you are pushing changes anything under `static/`, run this after the push:
+
+```
+ENVIRONMENT=prod python manage.py collectstatic --noinput
+```
+
+Skip it when the push does not touch `static/`.

@@ -1,13 +1,13 @@
 ---
-description: Add a What's new note on production when a commit is worth testing
+description: Add a What's new note on production when a pushed change is worth looking at
 alwaysApply: true
 ---
 
-# What's new on commit
+# What's new on push
 
 What's new is a `StaffUpdate` on the admin home. Employees use it to see what changed on the shop or in the admin, where it shows up, and how it behaves. Read the notes already stored and match them.
 
-When you commit a change you are also going to push, add a note if there is something they can look at. That includes the shop, checkout, the account, and the admin.
+When you commit and push a change, add a note if there is something they can look at. That includes the shop, checkout, the account, and the admin.
 
 Skip refactors, tests, and dependency bumps that leave nothing to see.
 

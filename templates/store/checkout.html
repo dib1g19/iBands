@@ -859,12 +859,12 @@
             "category": "{{ item.product.category.title|escapejs }}",
             "price": {{ item.price|floatformat:2 }},
             "quantity": {{ item.qty }},
-            "currency": "BGN"
+            "currency": "EUR"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ],
     "value": {{ order.total|floatformat:2 }},
-    "currency": "BGN"
+    "currency": "EUR"
     });
 </script>
 <script>
@@ -880,7 +880,7 @@
         {% endfor %}
         ],
         value: {{ order.total|floatformat:2 }},
-        currency: "BGN"
+        currency: "EUR"
     });
     }
 </script>

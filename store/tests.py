@@ -170,6 +170,27 @@ class SpeedyCODAmountTests(TestCase):
         top_level_cod = (shipment_request or {}).get("cod")
         if isinstance(top_level_cod, dict):
             self.assertEqual(top_level_cod.get("amount"), float(Decimal("100.00")))
+            self.assertEqual(top_level_cod.get("currency"), "EUR")
+
+
+class StripeCurrencyTests(TestCase):
+    @patch("store.views.stripe.checkout.Session.create")
+    def test_checkout_session_is_charged_in_eur(self, create):
+        create.return_value = type("Session", (), {"id": "cs_test"})()
+        order = store_models.Order.objects.create(
+            sub_total=Decimal("10.00"), shipping=Decimal("0.00"), total=Decimal("10.50"),
+        )
+        order.address = customer_models.Address.objects.create(
+            name="Test", phone="0888", email="t@example.com",
+        )
+        order.save(update_fields=["address"])
+
+        response = self.client.get(reverse("store:stripe_payment", args=[order.order_id]))
+
+        self.assertEqual(response.status_code, 200)
+        price = create.call_args.kwargs["line_items"][0]["price_data"]
+        self.assertEqual(price["currency"], "EUR")
+        self.assertEqual(price["unit_amount"], 1050)
 
 
 class EcontShipmentPriceTests(TestCase):
@@ -214,6 +235,7 @@ class EcontShipmentPriceTests(TestCase):
         self.assertEqual(prices, {"Band": 27.0, "Case": 9.0, "Gift": 0.0})
         self.assertEqual(payload["orderSum"], 41.0)
         self.assertEqual(payload["cod"], 41.0)
+        self.assertEqual(payload["currency"], "EUR")
         for item in items:
             item.refresh_from_db()
         self.assertEqual([item.sub_total for item in items], [Decimal("30.00"), Decimal("10.00"), Decimal("0.00")])

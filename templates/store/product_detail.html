@@ -263,7 +263,7 @@
           "name": "{{ product.name|escapejs }}",
           "category": "{{ product.category.title|escapejs }}",
           "price": {{ product.effective_price|floatformat:2 }},
-          "currency": "BGN"
+          "currency": "EUR"
         }]
       });
     </script>
@@ -274,7 +274,7 @@
           content_name: "{{ product.name|escapejs }}",
           content_category: "{{ product.category.title|escapejs }}",
           value: {{ product.effective_price|floatformat:2 }},
-          currency: "BGN"
+          currency: "EUR"
         });
       }
     </script>

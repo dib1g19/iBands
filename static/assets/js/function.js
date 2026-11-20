@@ -84,7 +84,7 @@ $(document).ready(function () {
                             "category": button_el.attr("data-category") || "",
                             "price": parseFloat(button_el.attr("data-price")),
                             "quantity": parseInt(qty),
-                            "currency": "BGN"
+                            "currency": "EUR"
                         }]
                     };
                     gtag('event', 'add_to_cart', gtagData);
@@ -95,7 +95,7 @@ $(document).ready(function () {
                         content_name: button_el.attr("data-name") || "",
                         content_category: button_el.attr("data-category") || "",
                         value: parseFloat(button_el.attr("data-price")),
-                        currency: "BGN",
+                        currency: "EUR",
                         contents: [{
                             id: id,
                             quantity: parseInt(qty)

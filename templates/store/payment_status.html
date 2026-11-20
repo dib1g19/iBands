@@ -68,7 +68,7 @@
             gtag('event', 'purchase', {
                 "transaction_id": "{{ order.order_id }}",
                 "value": {{ order.total|default_if_none:"0"|floatformat:2 }},
-                "currency": "BGN"
+                "currency": "EUR"
             });
         </script>
         <script>
@@ -76,7 +76,7 @@
                 fbq('track', 'Purchase', {
                     content_ids: ['{{ order.order_id }}'],
                     value: {{ order.total|default_if_none:"0"|floatformat:2 }},
-                    currency: "BGN"
+                    currency: "EUR"
                 }, { eventID: '{{ order.payment_id|default:order.order_id }}' });
             }
         </script>

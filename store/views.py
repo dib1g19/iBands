@@ -196,7 +196,7 @@ def send_order_to_econt(order):
         "status": "pending",
         "orderSum": float(order.total),
         "cod": float(order.total) if order.payment_method in ["cash_on_delivery"] else 0,
-        "currency": "BGN",
+        "currency": "EUR",
         "shipmentDescription": f"iBands.bg поръчка #{order.order_id}",
         "customerInfo": {
             "name": address.name,
@@ -417,7 +417,7 @@ def send_order_to_speedy(order):
     if order.payment_method == "cash_on_delivery":
         shipment_request["cod"] = {
             "amount": float(goods_total),
-            "currency": "BGN",
+            "currency": "EUR",
         }
 
     try:
@@ -774,11 +774,11 @@ def speedy_quote(request, order_id):
             numeric_price = None
             if isinstance(pricing, dict):
                 numeric_price = pricing.get("total") or pricing.get("amount") or pricing.get("totalLocal") or pricing.get("amountLocal")
-                currency = pricing.get("currency") or pricing.get("currencyLocal") or first.get("currency") or "BGN"
+                currency = pricing.get("currency") or pricing.get("currencyLocal") or first.get("currency") or "EUR"
             else:
                 # Some responses might have flat total/amount at the top level
                 numeric_price = first.get("total") or first.get("amount")
-                currency = first.get("currency") or "BGN"
+                currency = first.get("currency") or "EUR"
             quote = {
                 "serviceId": service_id,
                 "price": float(numeric_price) if isinstance(numeric_price, (int, float)) else None,
@@ -2202,7 +2202,7 @@ def checkout(request, order_id):
     econt_params = {
         "id_shop": settings.ECONT_SHOP_ID,
         "order_total": float(order.total) or 0,
-        "order_currency": "BGN", 
+        "order_currency": "EUR", 
         "order_weight": cart_total_weight,
         "customer_name": address.name if address and getattr(address, "name", None) else "",
         "customer_phone": address.phone if address and getattr(address, "phone", None) else "",
@@ -2512,7 +2512,7 @@ def stripe_payment(request, order_id):
         line_items=[
             {
                 "price_data": {
-                    "currency": "BGN",
+                    "currency": "EUR",
                     "product_data": {"name": order.address.name},
                     "unit_amount": int(order.total * 100),
                 },

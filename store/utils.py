@@ -326,7 +326,7 @@ def send_meta_purchase_event(order, request=None):
             total_value = None
 
         custom_data = {
-            "currency": "BGN",
+            "currency": "EUR",
             **({"value": total_value} if total_value is not None else {}),
             **({"content_ids": content_ids} if content_ids else {}),
             **({"contents": contents} if contents else {}),

@@ -165,54 +165,7 @@
                                     <div class="card-wrap-body px-3 py-3">
                                         <div id="speedy-error-block"></div>
                                         <div id="speedy-saved" class="d-flex flex-wrap"></div>
-                                        <div class="delivery-form">
-                                            <div class="delivery-mode">
-                                                <div>
-                                                    <input type="radio" name="speedy_delivery_mode" id="speedy_mode_office" value="office">
-                                                    <label for="speedy_mode_office">Офис или автомат</label>
-                                                </div>
-                                                <div>
-                                                    <input type="radio" name="speedy_delivery_mode" id="speedy_mode_address" value="address">
-                                                    <label for="speedy_mode_address">Личен адрес</label>
-                                                </div>
-                                            </div>
-                                            <div class="row g-3">
-                                                <div class="col-md-6">
-                                                    <label class="form-label" for="speedy_name">Име</label>
-                                                    <input type="text" class="form-control" id="speedy_name" placeholder="Име и фамилия или фирма">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label" for="speedy_phone">Телефон</label>
-                                                    <input type="text" class="form-control" id="speedy_phone" placeholder="Телефон">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label" for="speedy_email">Имейл</label>
-                                                    <input type="email" class="form-control" id="speedy_email" placeholder="Имейл">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label" for="speedy_face">Лице за контакт</label>
-                                                    <input type="text" class="form-control" id="speedy_face" placeholder="Ако получателят е фирма">
-                                                </div>
-                                                <div class="col-12 position-relative">
-                                                    <label class="form-label" for="speedy_city_search">Град</label>
-                                                    <input type="text" class="form-control" id="speedy_city_search" placeholder="Започнете да пишете" autocomplete="off">
-                                                    <div id="speedy_city_suggestions" class="list-group delivery-suggest position-absolute"></div>
-                                                    <input type="hidden" id="speedy_site_id">
-                                                    <input type="hidden" id="speedy_post_code">
-                                                </div>
-                                                <div class="col-12 speedy-address-field">
-                                                    <label class="form-label" for="speedy_address">Адрес</label>
-                                                    <input type="text" class="form-control" id="speedy_address" placeholder="Улица и номер">
-                                                </div>
-                                                <div class="col-12 position-relative speedy-office-field">
-                                                    <label class="form-label" for="speedy_office_search">Офис или автомат</label>
-                                                    <input type="text" class="form-control" id="speedy_office_search" placeholder="Започнете да пишете" autocomplete="off">
-                                                    <div id="speedy_office_suggestions" class="list-group delivery-suggest position-absolute"></div>
-                                                    <input type="hidden" id="speedy_office_code">
-                                                    <input type="hidden" id="speedy_office_name">
-                                                </div>
-                                            </div>
-                                        </div>
+                                        {% include "store/_delivery_form.html" with carrier="speedy" city_key="site_id" address_kind="line" %}
                                     </div>
                                 </div>
                             </div>
@@ -228,66 +181,7 @@
                                     <div class="card-wrap-body px-3 py-3">
                                         <div id="pigeon-error-block"></div>
                                         <div id="pigeon-saved" class="d-flex flex-wrap"></div>
-                                        <div class="delivery-form">
-                                            <div class="delivery-mode">
-                                                <div>
-                                                    <input type="radio" name="pigeon_delivery_mode" id="pigeon_mode_office" value="office">
-                                                    <label for="pigeon_mode_office">Офис или автомат</label>
-                                                </div>
-                                                <div>
-                                                    <input type="radio" name="pigeon_delivery_mode" id="pigeon_mode_address" value="address">
-                                                    <label for="pigeon_mode_address">Личен адрес</label>
-                                                </div>
-                                            </div>
-                                            <div class="row g-3">
-                                                <div class="col-md-6">
-                                                    <label class="form-label" for="pigeon_name">Име</label>
-                                                    <input type="text" class="form-control" id="pigeon_name" placeholder="Име и фамилия или фирма">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label" for="pigeon_phone">Телефон</label>
-                                                    <input type="text" class="form-control" id="pigeon_phone" placeholder="Телефон">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label" for="pigeon_email">Имейл</label>
-                                                    <input type="email" class="form-control" id="pigeon_email" placeholder="Имейл">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label" for="pigeon_face">Лице за контакт</label>
-                                                    <input type="text" class="form-control" id="pigeon_face" placeholder="Ако получателят е фирма">
-                                                </div>
-                                                <div class="col-12 position-relative">
-                                                    <label class="form-label" for="pigeon_city_search">Град</label>
-                                                    <input type="text" class="form-control" id="pigeon_city_search" placeholder="Започнете да пишете" autocomplete="off">
-                                                    <div id="pigeon_city_suggestions" class="list-group delivery-suggest position-absolute"></div>
-                                                    <input type="hidden" id="pigeon_city_id">
-                                                    <input type="hidden" id="pigeon_post_code">
-                                                </div>
-                                                <div class="col-12 pigeon-address-field">
-                                                    <div class="row g-3">
-                                                        <div class="col-8 position-relative">
-                                                            <label class="form-label" for="pigeon_street_search">Улица</label>
-                                                            <input type="text" class="form-control" id="pigeon_street_search" placeholder="Започнете да пишете" autocomplete="off">
-                                                            <div id="pigeon_street_suggestions" class="list-group delivery-suggest position-absolute"></div>
-                                                            <input type="hidden" id="pigeon_street_id">
-                                                        </div>
-                                                        <div class="col-4">
-                                                            <label class="form-label" for="pigeon_street_number">Номер</label>
-                                                            <input type="text" class="form-control" id="pigeon_street_number" placeholder="Номер">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-12 position-relative pigeon-office-field">
-                                                    <label class="form-label" for="pigeon_office_search">Офис или автомат</label>
-                                                    <input type="text" class="form-control" id="pigeon_office_search" placeholder="Започнете да пишете" autocomplete="off">
-                                                    <div id="pigeon_office_suggestions" class="list-group delivery-suggest position-absolute"></div>
-                                                    <input type="hidden" id="pigeon_office_code">
-                                                    <input type="hidden" id="pigeon_office_name">
-                                                    <input type="hidden" id="pigeon_office_type">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div id="pigeon-shipping-price-block"></div>
+                                        {% include "store/_delivery_form.html" with carrier="pigeon" city_key="city_id" address_kind="street" locker="1" %}
                                     </div>
                                 </div>
                             </div>
@@ -390,7 +284,7 @@
     window.sameDestination = function(left, right) {
         if (!left || !right || left.delivery_method !== right.delivery_method) return false;
         var method = left.delivery_method || '';
-        if (method === 'econt_office' || method === 'speedy_office' || method === 'pigeon_office' || method === 'pigeon_locker') {
+        if (method.endsWith('_office') || method.endsWith('_locker')) {
             return String(left.office_code || '') === String(right.office_code || '');
         }
         return (left.city || '').trim().toLowerCase() === (right.city || '').trim().toLowerCase()
@@ -653,104 +547,6 @@
     }
 </script>
 <script>
-    // Unified Speedy payment handler (mirrors Econt flow)
-    function handleSpeedyPayment(button, paymentType) {
-        var officeName = document.getElementById('speedy_office_search')?.value;
-        var siteId = document.getElementById('speedy_site_id')?.value;
-
-        var addressData = {
-            name: document.getElementById('speedy_name').value,
-            phone: document.getElementById('speedy_phone').value,
-            email: document.getElementById('speedy_email').value,
-            delivery_method: officeName ? 'speedy_office' : 'speedy',
-            city: document.getElementById('speedy_city_search').value,
-            address: document.getElementById('speedy_address').value,
-            office_code: document.getElementById('speedy_office_code')?.value,
-            office_name: officeName,
-            face: document.getElementById('speedy_face').value,
-            post_code: document.getElementById('speedy_post_code')?.value || '',
-            site_id: siteId,
-            shipping_price: (lastSpeedyShipping.shipping_price_cod ? lastSpeedyShipping.shipping_price_cod : null)
-        };
-
-        var speedyErrorBlock = document.getElementById('speedy-error-block');
-        if (speedyErrorBlock) speedyErrorBlock.innerHTML = '';
-
-        if (!addressData.phone || (!addressData.office_name && !addressData.address)) {
-            if (speedyErrorBlock) {
-                speedyErrorBlock.innerHTML = '<div class="alert alert-danger">Моля, попълнете адреса за доставка за Спиди!</div>';
-                speedyErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-            setContinueLoading(false);
-            return;
-        }
-
-        if (paymentType === 'card') {
-            button.innerHTML = 'Плащане с карта <i class="fas fa-spinner fa-spin ms-2"></i>';
-        } else {
-            button.innerHTML = 'Наложен платеж <i class="fas fa-spinner fa-spin"></i>';
-        }
-
-        fetch('/save-speedy-address/{{ order.order_id }}/', {
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
-            body: JSON.stringify(addressData)
-        })
-        .then(function (resp) { return resp.json(); })
-        .then(function (respData) {
-            if (respData.success) {
-                if (paymentType === 'card') {
-                    fetch('/stripe-payment/{{order.order_id}}/', {
-                        method: 'POST',
-                        body: JSON.stringify({ email: addressData.email })
-                    })
-                    .then(function (response) { return response.json() })
-                    .then(function (session) {
-                        return stripe.redirectToCheckout({ sessionId: session.sessionId })
-                    })
-                    .then(function (result) {
-                        if (result.error) {
-                            if (window.Toast) {
-                                window.Toast.fire({ icon: "error", title: result.error.message });
-                            } else {
-                                alert(result.error.message);
-                            }
-                        }
-                    })
-                    .catch(function (error) {
-                        console.log('Error: ', error)
-                    });
-                } else if (paymentType === 'cash_on_delivery') {
-                    fetch("{% url 'store:cod_payment' order.order_id %}", {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': csrftoken }
-                    })
-                    .then(function (response) {
-                        if (response.redirected) {
-                            window.location.href = response.url;
-                        }
-                    });
-                }
-            } else {
-                if (speedyErrorBlock) {
-                    speedyErrorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса (Спиди). Моля, опитайте отново.</div>';
-                    speedyErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
-                }
-                button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
-                setContinueLoading(false);
-            }
-        })
-        .catch(function (error) {
-            if (speedyErrorBlock) {
-                speedyErrorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса (Спиди). Моля, опитайте отново.</div>';
-                speedyErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-            button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
-            setContinueLoading(false);
-        });
-    }
-</script>
-<script>
     // Collapsible shipping block logic
     document.addEventListener('DOMContentLoaded', function() {
         var econtRadio = document.getElementById('shipping-econt');
@@ -784,7 +580,6 @@
     let lastPigeonShipping = { shipping_price: null, shipping_price_cod: null };
     // Track last saved address to avoid redundant autosaves
     let lastSavedAddressKey = null; // Econt autosave key
-    let lastSavedSpeedyKey = null;  // Speedy autosave key
 
     function formatDualCurrency(value) {
         const eur = parseFloat(value);
@@ -927,15 +722,15 @@
                 selectedPayment = 'card';
                 persistPaymentMethod('card');
                 updateSummaryForPayment();
-                if (selectedShipping === 'speedy') { updateQuote(); }
-                if (selectedShipping === 'pigeon' && window.updatePigeonQuote) { window.updatePigeonQuote(); }
+                var activeForm = window.deliveryForms && window.deliveryForms[selectedShipping];
+                if (activeForm) activeForm.quote();
             });
             paymentCodRadio.addEventListener('change', function(){
                 selectedPayment = 'cash_on_delivery';
                 persistPaymentMethod('cash_on_delivery');
                 updateSummaryForPayment();
-                if (selectedShipping === 'speedy') { updateQuote(); }
-                if (selectedShipping === 'pigeon' && window.updatePigeonQuote) { window.updatePigeonQuote(); }
+                var activeForm = window.deliveryForms && window.deliveryForms[selectedShipping];
+                if (activeForm) activeForm.quote();
             });
         }
         if (shippingEcontRadio && shippingSpeedyRadio) {
@@ -1051,18 +846,14 @@
                 return;
             }
             if (selectedPayment === 'cash_on_delivery') {
-                if (selectedShipping === 'speedy') {
-                    handleSpeedyPayment(document.getElementById('cod-payment'), 'cash_on_delivery');
-                } else if (selectedShipping === 'pigeon') {
-                    handlePigeonPayment(document.getElementById('cod-payment'), 'cash_on_delivery');
+                if (window.deliveryForms[selectedShipping]) {
+                    payDelivery(selectedShipping, document.getElementById('cod-payment'), 'cash_on_delivery');
                 } else {
                     document.getElementById('cod-payment').click();
                 }
             } else if (selectedPayment === 'card') {
-                if (selectedShipping === 'speedy') {
-                    handleSpeedyPayment(document.getElementById('stripe-payment'), 'card');
-                } else if (selectedShipping === 'pigeon') {
-                    handlePigeonPayment(document.getElementById('stripe-payment'), 'card');
+                if (window.deliveryForms[selectedShipping]) {
+                    payDelivery(selectedShipping, document.getElementById('stripe-payment'), 'card');
                 } else {
                     document.getElementById('stripe-payment').click();
                 }
@@ -1106,788 +897,102 @@
     });
     }
 </script>
+<script src="{% static 'assets/js/delivery_form.js' %}"></script>
 <script>
-    // Speedy dropdown population
-    (function(){
-        const citySearch = document.getElementById('speedy_city_search');
-        const citySuggestions = document.getElementById('speedy_city_suggestions');
-        const siteIdInput = document.getElementById('speedy_site_id');
-        const officeSearch = document.getElementById('speedy_office_search');
-        const officeSuggestions = document.getElementById('speedy_office_suggestions');
-        const officeCodeInput = document.getElementById('speedy_office_code');
-        const officeNameHidden = document.getElementById('speedy_office_name');
-        const quoteBox = document.getElementById('speedy-shipping-price-block');
-        let quoteTimer = null;
-        let speedySaveTimer = null;
-
-        function buildSpeedyKey() {
-            const officeName = document.getElementById('speedy_office_search')?.value || '';
-            return JSON.stringify({
-                name: document.getElementById('speedy_name')?.value || '',
-                phone: document.getElementById('speedy_phone')?.value || '',
-                email: document.getElementById('speedy_email')?.value || '',
-                delivery_method: officeName ? 'speedy_office' : 'speedy',
-                city: document.getElementById('speedy_city_search')?.value || '',
-                address: document.getElementById('speedy_address')?.value || '',
-                office_code: document.getElementById('speedy_office_code')?.value || '',
-                office_name: officeName,
-                face: document.getElementById('speedy_face')?.value || '',
-                post_code: document.getElementById('speedy_post_code')?.value || ''
-            });
-        }
-
-        function autoSaveSpeedyAddress() {
-            clearTimeout(speedySaveTimer);
-            speedySaveTimer = setTimeout(function(){
-                const currentKey = buildSpeedyKey();
-                if (currentKey === lastSavedSpeedyKey) return;
-                const officeName = document.getElementById('speedy_office_search')?.value || '';
-                const payload = {
-                    name: document.getElementById('speedy_name')?.value || '',
-                    phone: document.getElementById('speedy_phone')?.value || '',
-                    email: document.getElementById('speedy_email')?.value || '',
-                    delivery_method: officeName ? 'speedy_office' : 'speedy',
-                    city: document.getElementById('speedy_city_search')?.value || '',
-                    address: document.getElementById('speedy_address')?.value || '',
-                    office_code: document.getElementById('speedy_office_code')?.value || '',
-                    office_name: officeName,
-                    face: document.getElementById('speedy_face')?.value || '',
-                    post_code: document.getElementById('speedy_post_code')?.value || '',
-                    site_id: document.getElementById('speedy_site_id')?.value || null
-                    // Note: no shipping_price on autosave
-                };
-                try {
-                    fetch('/save-speedy-address/{{ order.order_id }}/', {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    })
-                    .then(function (resp) { return resp.json(); })
-                    .then(function (respData) {
-                        if (respData && respData.success) {
-                            lastSavedSpeedyKey = currentKey;
-                        }
-                    })
-                    .catch(function(){ /* ignore autosave errors */ });
-                } catch (e) { /* no-op */ }
-            }, 400);
-        }
-
-        function updateQuote(){
-            clearTimeout(quoteTimer);
-            quoteTimer = setTimeout(function(){
-                const params = new URLSearchParams();
-                const siteId = siteIdInput.value;
-                const officeId = officeCodeInput.value;
-                const city = citySearch.value;
-                const address = document.getElementById('speedy_address')?.value || '';
-                const postCode = document.getElementById('speedy_post_code')?.value || '';
-                const phone = document.getElementById('speedy_phone')?.value || '';
-                const name = document.getElementById('speedy_name')?.value || '';
-                const email = document.getElementById('speedy_email')?.value || '';
-
-                // Only quote when office is selected or address is provided
-                const hasOffice = !!officeId;
-                const hasAddress = !!address.trim();
-                if (!hasOffice && !hasAddress) {
-                    if (quoteBox) quoteBox.innerHTML = '';
-                    return;
-                }
-
-                if (siteId) params.append('site_id', siteId);
-                if (officeId) params.append('office_id', officeId);
-                if (city) params.append('city', city);
-                if (address) params.append('address', address);
-                if (postCode) params.append('post_code', postCode);
-                if (phone) params.append('phone', phone);
-                if (name) params.append('name', name);
-                if (email) params.append('email', email);
-                if (selectedPayment === 'cash_on_delivery') {
-                    params.append('payment', 'cod');
-                }
-                fetch('/speedy/quote/{{ order.order_id }}/?'+params.toString())
-                    .then(r=>r.json())
-                    .then(data=>{
-                        if (data && data.quote && data.quote.price){
-                            const basePrice = parseFloat(data.quote.price);
-                            // Update global shipping cache for summary block
-                            lastSpeedyShipping.shipping_price_cod = basePrice.toFixed(2);
-                            // Also reflect in summary immediately
-                            updateSummaryForPayment();
-                            // Optional: suppress separate inline box to avoid duplication
-                            if (quoteBox) quoteBox.innerHTML = '';
-                        } else {
-                            if (quoteBox) quoteBox.innerHTML = '';
-                        }
-                    }).catch(()=>{ if (quoteBox) quoteBox.innerHTML=''; });
-            }, 300);
-        }
-        function setOffices(siteId){
-            officeSuggestions.innerHTML = '';
-            officeSuggestions.style.display = 'none';
-            if(!siteId) return;
-            fetch('/speedy/find-offices/?site_id='+siteId)
-                .then(r=>r.json())
-                .then(data=>{
-                    const offices=(data && data.offices)||[];
-                    // Store list on element for filtering
-                    officeSuggestions._all = offices;
-                    renderOfficeSuggestions(offices);
-                    // Show all immediately so user can scroll without typing
-                    officeSuggestions.style.display='block';
-                    updateQuote();
-                    autoSaveSpeedyAddress();
-                }).catch((e)=>{ console.warn('[Speedy] Offices fetch failed', e); });
-        }
-        function searchSites(q){
-            if(!q || q.length < 2) return Promise.resolve([]);
-            return fetch('/speedy/find-sites/?q='+encodeURIComponent(q))
-                .then(r=>r.json())
-                .then(data=> { return (data && data.sites) || []; })
-                .catch((e)=>{ console.warn('[Speedy] Sites fetch failed', e); return []; });
-        }
-        function clearSuggestions(el){ el.innerHTML=''; el.style.display='none'; }
-        function renderCitySuggestions(sites){
-            clearSuggestions(citySuggestions);
-            if(!sites.length) return;
-            sites.slice(0, 10).forEach(s=>{
-                const a=document.createElement('a');
-                a.href='#';
-                a.className='list-group-item list-group-item-action';
-                a.textContent=((s.type||'')+' '+(s.name||'')).trim();
-                a.addEventListener('click', function(e){
-                    e.preventDefault();
-                    citySearch.value = ((s.type||'')+' '+(s.name||'')).trim();
-                    siteIdInput.value = s.id;
-                    const pcEl = document.getElementById('speedy_post_code');
-                    if (pcEl && s.postCode) pcEl.value = s.postCode;
-                    clearSuggestions(citySuggestions);
-                    setOffices(s.id);
-                    autoSaveSpeedyAddress();
-                });
-                citySuggestions.appendChild(a);
-            });
-            citySuggestions.style.display='block';
-        }
-        function renderOfficeSuggestions(offices){
-            clearSuggestions(officeSuggestions);
-            if(!offices || !offices.length) return;
-            offices.slice(0, 10).forEach(o=>{
-                const a=document.createElement('a');
-                a.href='#';
-                a.className='list-group-item list-group-item-action';
-                a.textContent=o.name || ('Офис '+o.id);
-                a.addEventListener('click', function(e){
-                    e.preventDefault();
-                    officeSearch.value = o.name || '';
-                    officeCodeInput.value = o.id || '';
-                    if (officeNameHidden) officeNameHidden.value = o.name || '';
-                    const pcEl = document.getElementById('speedy_post_code');
-                    if (pcEl && (o.postCode || o.postcode)) pcEl.value = (o.postCode || o.postcode);
-                    clearSuggestions(officeSuggestions);
-                    updateQuote();
-                    autoSaveSpeedyAddress();
-                });
-                officeSuggestions.appendChild(a);
-            });
-            officeSuggestions.style.display='block';
-        }
-        // Basic suggestions
-        if(citySearch && citySuggestions){
-            let timer=null;
-            citySearch.addEventListener('input', function(){
-                clearTimeout(timer);
-                // Clear office selection when city text changes
-                if (officeSearch) officeSearch.value = '';
-                if (officeCodeInput) officeCodeInput.value = '';
-                if (officeNameHidden) officeNameHidden.value = '';
-                clearSuggestions(officeSuggestions);
-                const q=this.value;
-                timer=setTimeout(async ()=>{
-                    const sites=await searchSites(q);
-                    renderCitySuggestions(sites);
-                },300);
-                autoSaveSpeedyAddress();
-            });
-            const speedyRadio = document.getElementById('shipping-speedy');
-            if (speedyRadio) {
-                speedyRadio.addEventListener('change', function(){
-                    if (!this.checked) return;
-                    updateQuote();
-                    if (window.ownsCheckout) autoSaveSpeedyAddress();
-                });
-            }
-        }
-        if(officeSearch && officeSuggestions){
-            officeSearch.addEventListener('input', function(){
-                const all = officeSuggestions._all || [];
-                const q = this.value.toLowerCase();
-                const filtered = q ? all.filter(o=> (o.name||'').toLowerCase().includes(q)) : all;
-                renderOfficeSuggestions(filtered);
-                updateQuote();
-                autoSaveSpeedyAddress();
-            });
-        }
-        // Also update quote on address/post code changes for address delivery
-        const addressInput = document.getElementById('speedy_address');
-        const postCodeInput = document.getElementById('speedy_post_code');
-        const phoneInput = document.getElementById('speedy_phone');
-        const nameInput = document.getElementById('speedy_name');
-        const emailInput = document.getElementById('speedy_email');
-        if (addressInput) {
-            addressInput.addEventListener('input', updateQuote);
-            addressInput.addEventListener('input', autoSaveSpeedyAddress);
-        }
-        if (postCodeInput) {
-            postCodeInput.addEventListener('input', updateQuote);
-            postCodeInput.addEventListener('input', autoSaveSpeedyAddress);
-        }
-        if (phoneInput) phoneInput.addEventListener('input', autoSaveSpeedyAddress);
-        if (nameInput) nameInput.addEventListener('input', autoSaveSpeedyAddress);
-        if (emailInput) emailInput.addEventListener('input', autoSaveSpeedyAddress);
-        // Hide suggestions on outside click
-        document.addEventListener('click', function(e){
-            if (citySuggestions && !citySuggestions.contains(e.target) && citySearch && !citySearch.contains(e.target)) {
-                clearSuggestions(citySuggestions);
-            }
-            if (officeSuggestions && !officeSuggestions.contains(e.target) && officeSearch && !officeSearch.contains(e.target)) {
-                clearSuggestions(officeSuggestions);
-            }
-        });
-        // Toggle Speedy delivery mode (address vs office)
-        const modeAddress = document.getElementById('speedy_mode_address');
-        const modeOffice = document.getElementById('speedy_mode_office');
-        const speedyAddressFields = document.querySelectorAll('.speedy-address-field');
-        const speedyOfficeFields = document.querySelectorAll('.speedy-office-field');
-        function setSpeedyMode(mode, persist){
-            const isOffice = (mode === 'office');
-            if (modeOffice) modeOffice.checked = isOffice;
-            if (modeAddress) modeAddress.checked = !isOffice;
-            speedyAddressFields.forEach(el => el.style.display = isOffice ? 'none' : 'block');
-            speedyOfficeFields.forEach(el => el.style.display = isOffice ? 'block' : 'none');
-            if (isOffice) {
-                if (addressInput) addressInput.value = '';
-            } else {
-                if (officeSearch) officeSearch.value = '';
-                if (officeCodeInput) officeCodeInput.value = '';
-                if (officeNameHidden) officeNameHidden.value = '';
-            }
-            updateQuote();
-            if (persist && window.ownsCheckout) autoSaveSpeedyAddress();
-        }
-        function speedyNorm(value) {
-            return (value || '').toString().trim().toLowerCase();
-        }
-        function speedySiteLabel(site) {
-            return ((site.type || '') + ' ' + (site.name || '')).trim();
-        }
-        async function applySpeedy(dest) {
-            const office = dest.delivery_method === 'speedy_office';
-            setSpeedyMode(office ? 'office' : 'address', false);
-            window.fillContactFields('speedy_', dest, true);
-            if (office) {
-                if (addressInput) addressInput.value = '';
-            } else {
-                if (officeSearch) officeSearch.value = '';
-                if (officeCodeInput) officeCodeInput.value = '';
-                if (officeNameHidden) officeNameHidden.value = '';
-                if (addressInput) addressInput.value = dest.address || '';
-            }
-            if (postCodeInput && dest.post_code) postCodeInput.value = dest.post_code;
-            if (citySearch) citySearch.value = dest.city || '';
-            let siteId = dest.site_id || '';
-            if (siteIdInput) siteIdInput.value = siteId;
-            if (!siteId && dest.city) {
-                const sites = await searchSites(dest.city);
-                const match = sites.find(function(site) {
-                    return speedyNorm(speedySiteLabel(site)) === speedyNorm(dest.city) || speedyNorm(site.name) === speedyNorm(dest.city);
-                }) || null;
-                if (match) {
-                    siteId = match.id;
-                    if (siteIdInput) siteIdInput.value = siteId;
-                    if (citySearch) citySearch.value = speedySiteLabel(match);
-                    if (postCodeInput && !dest.post_code && match.postCode) postCodeInput.value = match.postCode;
-                }
-            }
-            if (office) {
-                if (officeSearch) officeSearch.value = dest.office_name || '';
-                if (officeCodeInput) officeCodeInput.value = dest.office_code || '';
-                if (officeNameHidden) officeNameHidden.value = dest.office_name || '';
-                if (siteId) {
-                    try {
-                        const data = await fetch('/speedy/find-offices/?site_id=' + encodeURIComponent(siteId)).then(function(response){ return response.json(); });
-                        const offices = (data && data.offices) || [];
-                        officeSuggestions._all = offices;
-                        const match = offices.find(function(item){ return String(item.id) === String(dest.office_code); })
-                            || offices.find(function(item){ return speedyNorm(item.name) === speedyNorm(dest.office_name); });
-                        if (match) {
-                            if (officeSearch) officeSearch.value = match.name || '';
-                            if (officeCodeInput) officeCodeInput.value = match.id || '';
-                            if (officeNameHidden) officeNameHidden.value = match.name || '';
-                            const postCode = match.postCode || match.postcode;
-                            if (postCodeInput && postCode) postCodeInput.value = postCode;
-                        }
-                    } catch (e) { /* leave the stored text */ }
-                }
-            }
-            updateQuote();
-            if (window.ownsCheckout) autoSaveSpeedyAddress();
-        }
-        if (modeAddress && modeOffice){
-            setSpeedyMode('office', false);
-            modeAddress.addEventListener('change', function(){ if (this.checked) setSpeedyMode('address', true); });
-            modeOffice.addEventListener('change', function(){ if (this.checked) setSpeedyMode('office', true); });
-        }
-        const speedyRows = window.savedForCarrier('speedy');
-        const speedySaved = document.getElementById('speedy-saved');
-        window.renderSavedDestinations(speedySaved, speedyRows, applySpeedy);
-        const speedyInitial = window.initialDestination('speedy');
-        if (speedyInitial) {
-            applySpeedy(speedyInitial);
-            const speedyMatch = speedyRows.filter(function(dest){ return window.sameDestination(dest, speedyInitial); })[0];
-            if (speedyMatch) window.markSavedDestination(speedySaved, speedyMatch.id);
-        } else if (window.ownsCheckout) {
-            window.fillContactFields('speedy_', null, false);
-        }
-    })();
-</script>
-<script>
-    function pigeonDeliveryMethod() {
-        var mode = document.querySelector('input[name="pigeon_delivery_mode"]:checked');
-        if (mode && mode.value === 'office') {
-            return document.getElementById('pigeon_office_type')?.value === 'locker' ? 'pigeon_locker' : 'pigeon_office';
-        }
-        return 'pigeon';
-    }
-    function pigeonAddressLine() {
-        var street = document.getElementById('pigeon_street_search')?.value || '';
-        var number = document.getElementById('pigeon_street_number')?.value || '';
-        return (street + ' ' + number).trim();
-    }
-    function handlePigeonPayment(button, paymentType) {
-        var method = pigeonDeliveryMethod();
-        var addressData = {
-            name: document.getElementById('pigeon_name').value,
-            phone: document.getElementById('pigeon_phone').value,
-            email: document.getElementById('pigeon_email').value,
-            delivery_method: method,
-            city: document.getElementById('pigeon_city_search').value,
-            address: method === 'pigeon' ? pigeonAddressLine() : '',
-            office_code: document.getElementById('pigeon_office_code')?.value || '',
-            office_name: method === 'pigeon' ? '' : (document.getElementById('pigeon_office_name')?.value || ''),
-            face: document.getElementById('pigeon_face').value,
-            post_code: document.getElementById('pigeon_post_code')?.value || '',
-            city_id: document.getElementById('pigeon_city_id')?.value || '',
-            street_id: document.getElementById('pigeon_street_id')?.value || '',
-            street_number: document.getElementById('pigeon_street_number')?.value || '',
-            shipping_price: lastPigeonShipping.shipping_price_cod || null
-        };
-        var errorBlock = document.getElementById('pigeon-error-block');
-        if (errorBlock) errorBlock.innerHTML = '';
-        var hasDestination = method === 'pigeon'
-            ? !!(addressData.street_id && addressData.street_number)
-            : !!addressData.office_code;
-        if (!addressData.phone || !addressData.city_id || !hasDestination) {
-            if (errorBlock) {
-                errorBlock.innerHTML = '<div class="alert alert-danger">Моля, попълнете адреса за доставка за Pigeon Express!</div>';
-                errorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-            setContinueLoading(false);
-            return;
-        }
-        if (paymentType === 'card') {
-            button.innerHTML = 'Плащане с карта <i class="fas fa-spinner fa-spin ms-2"></i>';
-        } else {
-            button.innerHTML = 'Наложен платеж <i class="fas fa-spinner fa-spin"></i>';
-        }
-        fetch('/save-pigeon-address/{{ order.order_id }}/', {
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
-            body: JSON.stringify(addressData)
-        })
-        .then(function (resp) { return resp.json(); })
-        .then(function (respData) {
-            if (!respData.success) {
-                if (errorBlock) {
-                    errorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса (Pigeon Express). Моля, опитайте отново.</div>';
-                    errorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
-                }
-                button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
-                setContinueLoading(false);
-                return;
-            }
-            if (paymentType === 'card') {
-                fetch('/stripe-payment/{{order.order_id}}/', {
-                    method: 'POST',
-                    body: JSON.stringify({ email: addressData.email })
-                })
+    // A new courier is another call like these two. Econt stays in its iframe until it can use this form.
+    bindDeliveryForm({
+        carrier: 'speedy',
+        label: 'Спиди',
+        door: 'speedy',
+        office: 'speedy_office',
+        cityKey: 'site_id',
+        street: false,
+        price: lastSpeedyShipping,
+        saveUrl: '/save-speedy-address/{{ order.order_id }}/',
+        cardUrl: '/stripe-payment/{{ order.order_id }}/',
+        codUrl: '{% url "store:cod_payment" order.order_id %}',
+        cities: function (query) {
+            if (!query || query.trim().length < 2) return Promise.resolve([]);
+            return fetch('/speedy/find-sites/?q=' + encodeURIComponent(query.trim()))
                 .then(function (response) { return response.json(); })
-                .then(function (session) { return stripe.redirectToCheckout({ sessionId: session.sessionId }); })
-                .then(function (result) {
-                    if (result.error) {
-                        if (window.Toast) window.Toast.fire({ icon: "error", title: result.error.message });
-                        else alert(result.error.message);
-                    }
-                })
-                .catch(function (error) { console.log('Error: ', error); });
-            } else {
-                fetch("{% url 'store:cod_payment' order.order_id %}", {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': csrftoken }
-                }).then(function (response) {
-                    if (response.redirected) window.location.href = response.url;
-                });
-            }
-        })
-        .catch(function () {
-            if (errorBlock) {
-                errorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса (Pigeon Express). Моля, опитайте отново.</div>';
-                errorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-            button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
-            setContinueLoading(false);
-        });
-    }
-</script>
-<script>
-    (function(){
-        const citySearch = document.getElementById('pigeon_city_search');
-        const citySuggestions = document.getElementById('pigeon_city_suggestions');
-        const cityIdInput = document.getElementById('pigeon_city_id');
-        const streetSearch = document.getElementById('pigeon_street_search');
-        const streetSuggestions = document.getElementById('pigeon_street_suggestions');
-        const streetIdInput = document.getElementById('pigeon_street_id');
-        const streetNumber = document.getElementById('pigeon_street_number');
-        const officeSearch = document.getElementById('pigeon_office_search');
-        const officeSuggestions = document.getElementById('pigeon_office_suggestions');
-        const officeCodeInput = document.getElementById('pigeon_office_code');
-        const officeNameHidden = document.getElementById('pigeon_office_name');
-        const officeTypeInput = document.getElementById('pigeon_office_type');
-        let quoteTimer = null;
-        let saveTimer = null;
-        let lastSavedKey = null;
-
-        function clearSuggestions(el){ if (!el) return; el.innerHTML = ''; el.style.display = 'none'; }
-        function suggestion(text, onClick) {
-            const link = document.createElement('a');
-            link.href = '#';
-            link.className = 'list-group-item list-group-item-action';
-            link.textContent = text;
-            link.addEventListener('click', function(event){ event.preventDefault(); onClick(); });
-            return link;
+                .then(function (data) { return (data && data.sites) || []; });
+        },
+        offices: function (cityId) {
+            if (!cityId) return Promise.resolve([]);
+            return fetch('/speedy/find-offices/?site_id=' + encodeURIComponent(cityId))
+                .then(function (response) { return response.json(); })
+                .then(function (data) { return (data && data.offices) || []; });
+        },
+        quoteUrl: function (body) {
+            var office = body.delivery_method === 'speedy_office';
+            if (office ? !body.office_code : !body.address) return '';
+            var params = new URLSearchParams();
+            if (body.site_id) params.set('site_id', body.site_id);
+            if (body.office_code) params.set('office_id', body.office_code);
+            if (body.city) params.set('city', body.city);
+            if (body.address) params.set('address', body.address);
+            if (body.post_code) params.set('post_code', body.post_code);
+            if (body.phone) params.set('phone', body.phone);
+            if (body.name) params.set('name', body.name);
+            if (body.email) params.set('email', body.email);
+            if (selectedPayment === 'cash_on_delivery') params.set('payment', 'cod');
+            return '/speedy/quote/{{ order.order_id }}/?' + params.toString();
+        },
+        ready: function (body) {
+            if (!body.phone) return false;
+            return body.delivery_method === 'speedy_office' ? !!body.office_code : !!body.address;
         }
-        function payload(withPrice) {
-            const method = pigeonDeliveryMethod();
-            const body = {
-                name: document.getElementById('pigeon_name')?.value || '',
-                phone: document.getElementById('pigeon_phone')?.value || '',
-                email: document.getElementById('pigeon_email')?.value || '',
-                delivery_method: method,
-                city: citySearch?.value || '',
-                address: method === 'pigeon' ? pigeonAddressLine() : '',
-                office_code: officeCodeInput?.value || '',
-                office_name: method === 'pigeon' ? '' : (officeNameHidden?.value || ''),
-                face: document.getElementById('pigeon_face')?.value || '',
-                post_code: document.getElementById('pigeon_post_code')?.value || '',
-                city_id: cityIdInput?.value || '',
-                street_id: streetIdInput?.value || '',
-                street_number: streetNumber?.value || ''
-            };
-            if (withPrice) body.shipping_price = lastPigeonShipping.shipping_price_cod || null;
-            return body;
+    });
+    bindDeliveryForm({
+        carrier: 'pigeon',
+        label: 'Pigeon Express',
+        door: 'pigeon',
+        office: 'pigeon_office',
+        lockerMethod: 'pigeon_locker',
+        cityKey: 'city_id',
+        street: true,
+        price: lastPigeonShipping,
+        saveUrl: '/save-pigeon-address/{{ order.order_id }}/',
+        cardUrl: '/stripe-payment/{{ order.order_id }}/',
+        codUrl: '{% url "store:cod_payment" order.order_id %}',
+        officeText: function (office) {
+            return (office.type === 'locker' ? 'Автомат' : 'Офис') + ': ' + (office.name || '');
+        },
+        cities: function (query) {
+            if (!query || query.trim().length < 2) return Promise.resolve([]);
+            return fetch('/pigeon/cities/?q=' + encodeURIComponent(query.trim()))
+                .then(function (response) { return response.json(); })
+                .then(function (data) { return (data && data.cities) || []; });
+        },
+        offices: function (cityId) {
+            if (!cityId) return Promise.resolve([]);
+            return fetch('/pigeon/offices/?city_id=' + encodeURIComponent(cityId))
+                .then(function (response) { return response.json(); })
+                .then(function (data) { return (data && data.offices) || []; });
+        },
+        streets: function (cityId, query) {
+            return fetch('/pigeon/streets/?city_id=' + encodeURIComponent(cityId) + '&q=' + encodeURIComponent(query))
+                .then(function (response) { return response.json(); })
+                .then(function (data) { return (data && data.streets) || []; });
+        },
+        quoteUrl: function (body) {
+            var door = body.delivery_method === 'pigeon';
+            if (door ? !body.city_id : !body.office_code) return '';
+            var params = new URLSearchParams();
+            params.set('delivery_type', body.delivery_method === 'pigeon_locker' ? 'locker' : (door ? 'address' : 'office'));
+            if (body.city_id) params.set('city_id', body.city_id);
+            if (body.street_id) params.set('street_id', body.street_id);
+            if (body.street_number) params.set('street_number', body.street_number);
+            if (body.office_code) params.set('office_id', body.office_code);
+            if (body.post_code) params.set('postal_code', body.post_code);
+            if (selectedPayment === 'cash_on_delivery') params.set('payment', 'cod');
+            return '/pigeon/quote/{{ order.order_id }}/?' + params.toString();
+        },
+        ready: function (body) {
+            if (!body.phone || !body.city_id) return false;
+            if (body.delivery_method === 'pigeon') return !!(body.street_id && body.street_number);
+            return !!body.office_code;
         }
-        function autoSave() {
-            const radio = document.getElementById('shipping-pigeon');
-            if (!window.ownsCheckout || !radio || !radio.checked) return;
-            clearTimeout(saveTimer);
-            saveTimer = setTimeout(function(){
-                const body = payload(false);
-                const key = JSON.stringify(body);
-                if (key === lastSavedKey) return;
-                fetch('/save-pigeon-address/{{ order.order_id }}/', {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                }).then(function(resp){ return resp.json(); }).then(function(data){
-                    if (data && data.success) lastSavedKey = key;
-                }).catch(function(){});
-            }, 400);
-        }
-        function updatePigeonQuote() {
-            clearTimeout(quoteTimer);
-            quoteTimer = setTimeout(function(){
-                const method = pigeonDeliveryMethod();
-                const params = new URLSearchParams();
-                params.set('delivery_type', method === 'pigeon_locker' ? 'locker' : (method === 'pigeon_office' ? 'office' : 'address'));
-                if (cityIdInput?.value) params.set('city_id', cityIdInput.value);
-                if (streetIdInput?.value) params.set('street_id', streetIdInput.value);
-                if (streetNumber?.value) params.set('street_number', streetNumber.value);
-                if (officeCodeInput?.value) params.set('office_id', officeCodeInput.value);
-                const postCode = document.getElementById('pigeon_post_code')?.value || '';
-                if (postCode) params.set('postal_code', postCode);
-                if (selectedPayment === 'cash_on_delivery') params.set('payment', 'cod');
-                const ready = method === 'pigeon' ? !!(cityIdInput?.value) : !!(officeCodeInput?.value);
-                if (!ready) return;
-                fetch('/pigeon/quote/{{ order.order_id }}/?' + params.toString())
-                    .then(function(resp){ return resp.json(); })
-                    .then(function(data){
-                        if (data && data.quote && data.quote.price != null) {
-                            lastPigeonShipping.shipping_price_cod = parseFloat(data.quote.price).toFixed(2);
-                            updateSummaryForPayment();
-                        }
-                    }).catch(function(){});
-            }, 300);
-        }
-        window.updatePigeonQuote = updatePigeonQuote;
-
-        function loadOffices(cityId) {
-            clearSuggestions(officeSuggestions);
-            if (!cityId) return;
-            fetch('/pigeon/offices/?city_id=' + encodeURIComponent(cityId))
-                .then(function(resp){ return resp.json(); })
-                .then(function(data){
-                    officeSuggestions._all = (data && data.offices) || [];
-                    renderOffices(officeSuggestions._all);
-                }).catch(function(){});
-        }
-        function renderCities(cities) {
-            clearSuggestions(citySuggestions);
-            (cities || []).slice(0, 10).forEach(function(city){
-                const label = ((city.type || '') + ' ' + (city.name || '')).trim();
-                citySuggestions.appendChild(suggestion(label, function(){
-                    citySearch.value = label;
-                    cityIdInput.value = city.id || '';
-                    const postCode = document.getElementById('pigeon_post_code');
-                    if (postCode) postCode.value = city.postal_code || '';
-                    if (streetIdInput) streetIdInput.value = '';
-                    if (streetSearch) streetSearch.value = '';
-                    if (officeCodeInput) officeCodeInput.value = '';
-                    if (officeNameHidden) officeNameHidden.value = '';
-                    if (officeTypeInput) officeTypeInput.value = '';
-                    if (officeSearch) officeSearch.value = '';
-                    clearSuggestions(citySuggestions);
-                    loadOffices(city.id);
-                    updatePigeonQuote();
-                    autoSave();
-                }));
-            });
-            if (citySuggestions.childElementCount) citySuggestions.style.display = 'block';
-        }
-        function renderStreets(streets) {
-            clearSuggestions(streetSuggestions);
-            (streets || []).forEach(function(street){
-                const label = ((street.type || '') + ' ' + (street.name || '')).trim();
-                streetSuggestions.appendChild(suggestion(label, function(){
-                    streetSearch.value = label;
-                    streetIdInput.value = street.id || '';
-                    const postCode = document.getElementById('pigeon_post_code');
-                    if (postCode && street.postal_code) postCode.value = street.postal_code;
-                    clearSuggestions(streetSuggestions);
-                    updatePigeonQuote();
-                    autoSave();
-                }));
-            });
-            if (streetSuggestions.childElementCount) streetSuggestions.style.display = 'block';
-        }
-        function renderOffices(offices) {
-            clearSuggestions(officeSuggestions);
-            (offices || []).slice(0, 10).forEach(function(office){
-                const kind = office.type === 'locker' ? 'Автомат' : 'Офис';
-                officeSuggestions.appendChild(suggestion(kind + ': ' + (office.name || ''), function(){
-                    officeSearch.value = office.name || '';
-                    officeCodeInput.value = office.id || '';
-                    officeNameHidden.value = office.name || '';
-                    officeTypeInput.value = office.type || 'office';
-                    const postCode = document.getElementById('pigeon_post_code');
-                    if (postCode && office.postal_code) postCode.value = office.postal_code;
-                    clearSuggestions(officeSuggestions);
-                    updatePigeonQuote();
-                    autoSave();
-                }));
-            });
-            if (officeSuggestions && officeSuggestions.childElementCount) officeSuggestions.style.display = 'block';
-        }
-        if (citySearch) {
-            let timer = null;
-            citySearch.addEventListener('input', function(){
-                clearTimeout(timer);
-                cityIdInput.value = '';
-                const query = this.value.trim();
-                timer = setTimeout(function(){
-                    if (query.length < 2) { clearSuggestions(citySuggestions); return; }
-                    fetch('/pigeon/cities/?q=' + encodeURIComponent(query))
-                        .then(function(resp){ return resp.json(); })
-                        .then(function(data){ renderCities(data.cities || []); })
-                        .catch(function(){});
-                }, 300);
-                autoSave();
-            });
-        }
-        if (streetSearch) {
-            let timer = null;
-            streetSearch.addEventListener('input', function(){
-                clearTimeout(timer);
-                streetIdInput.value = '';
-                const query = this.value.trim();
-                timer = setTimeout(function(){
-                    if (!cityIdInput.value || query.length < 2) { clearSuggestions(streetSuggestions); return; }
-                    fetch('/pigeon/streets/?city_id=' + encodeURIComponent(cityIdInput.value) + '&q=' + encodeURIComponent(query))
-                        .then(function(resp){ return resp.json(); })
-                        .then(function(data){ renderStreets(data.streets || []); })
-                        .catch(function(){});
-                }, 300);
-                updatePigeonQuote();
-                autoSave();
-            });
-        }
-        if (officeSearch) {
-            officeSearch.addEventListener('input', function(){
-                const all = officeSuggestions._all || [];
-                const query = this.value.toLowerCase();
-                officeCodeInput.value = '';
-                officeNameHidden.value = '';
-                renderOffices(query ? all.filter(function(office){ return (office.name || '').toLowerCase().indexOf(query) !== -1; }) : all);
-                autoSave();
-            });
-        }
-        if (streetNumber) {
-            streetNumber.addEventListener('input', function(){ updatePigeonQuote(); autoSave(); });
-        }
-        ['pigeon_name', 'pigeon_face', 'pigeon_phone', 'pigeon_email'].forEach(function(id){
-            const input = document.getElementById(id);
-            if (input) input.addEventListener('input', autoSave);
-        });
-        document.addEventListener('click', function(event){
-            if (citySuggestions && !citySuggestions.contains(event.target) && event.target !== citySearch) clearSuggestions(citySuggestions);
-            if (streetSuggestions && !streetSuggestions.contains(event.target) && event.target !== streetSearch) clearSuggestions(streetSuggestions);
-            if (officeSuggestions && !officeSuggestions.contains(event.target) && event.target !== officeSearch) clearSuggestions(officeSuggestions);
-        });
-        const modeAddress = document.getElementById('pigeon_mode_address');
-        const modeOffice = document.getElementById('pigeon_mode_office');
-        function setMode(mode, persist) {
-            const office = mode === 'office';
-            if (modeOffice) modeOffice.checked = office;
-            if (modeAddress) modeAddress.checked = !office;
-            document.querySelectorAll('.pigeon-address-field').forEach(function(el){ el.style.display = office ? 'none' : 'block'; });
-            document.querySelectorAll('.pigeon-office-field').forEach(function(el){ el.style.display = office ? 'block' : 'none'; });
-            if (office) {
-                if (streetSearch) streetSearch.value = '';
-                if (streetIdInput) streetIdInput.value = '';
-                if (streetNumber) streetNumber.value = '';
-            } else {
-                if (officeSearch) officeSearch.value = '';
-                if (officeCodeInput) officeCodeInput.value = '';
-                if (officeNameHidden) officeNameHidden.value = '';
-                if (officeTypeInput) officeTypeInput.value = '';
-            }
-            updatePigeonQuote();
-            if (persist) autoSave();
-        }
-        function pigeonLabel(item) {
-            return ((item.type || '') + ' ' + (item.name || '')).trim();
-        }
-        async function applyPigeon(dest) {
-            const office = dest.delivery_method !== 'pigeon';
-            setMode(office ? 'office' : 'address', false);
-            window.fillContactFields('pigeon_', dest, true);
-            const postCode = document.getElementById('pigeon_post_code');
-            if (postCode && dest.post_code) postCode.value = dest.post_code;
-            if (citySearch) citySearch.value = dest.city || '';
-            let cityId = dest.city_id || '';
-            if (cityIdInput) cityIdInput.value = cityId;
-            if (!cityId && (dest.city || '').trim().length >= 2) {
-                try {
-                    const data = await fetch('/pigeon/cities/?q=' + encodeURIComponent(dest.city.trim())).then(function(response){ return response.json(); });
-                    const want = dest.city.trim().toLowerCase();
-                    const match = (data.cities || []).find(function(city) {
-                        return pigeonLabel(city).toLowerCase() === want || (city.name || '').trim().toLowerCase() === want;
-                    }) || null;
-                    if (match) {
-                        cityId = match.id || '';
-                        if (cityIdInput) cityIdInput.value = cityId;
-                        if (citySearch) citySearch.value = pigeonLabel(match);
-                        if (postCode && !dest.post_code && match.postal_code) postCode.value = match.postal_code;
-                    }
-                } catch (e) { /* leave the stored text */ }
-            }
-            if (office) {
-                if (streetSearch) streetSearch.value = '';
-                if (streetIdInput) streetIdInput.value = '';
-                if (streetNumber) streetNumber.value = '';
-                if (officeSearch) officeSearch.value = dest.office_name || '';
-                if (officeCodeInput) officeCodeInput.value = dest.office_code || '';
-                if (officeNameHidden) officeNameHidden.value = dest.office_name || '';
-                if (officeTypeInput) officeTypeInput.value = dest.delivery_method === 'pigeon_locker' ? 'locker' : 'office';
-                if (cityId) {
-                    try {
-                        const data = await fetch('/pigeon/offices/?city_id=' + encodeURIComponent(cityId)).then(function(response){ return response.json(); });
-                        const offices = data.offices || [];
-                        if (officeSuggestions) officeSuggestions._all = offices;
-                        const match = offices.find(function(item){ return String(item.id) === String(dest.office_code); });
-                        if (match) {
-                            if (officeSearch) officeSearch.value = match.name || '';
-                            if (officeCodeInput) officeCodeInput.value = match.id || '';
-                            if (officeNameHidden) officeNameHidden.value = match.name || '';
-                            if (officeTypeInput) officeTypeInput.value = match.type || officeTypeInput.value;
-                            if (postCode && match.postal_code) postCode.value = match.postal_code;
-                        }
-                    } catch (e) { /* leave the stored text */ }
-                }
-            } else {
-                if (officeSearch) officeSearch.value = '';
-                if (officeCodeInput) officeCodeInput.value = '';
-                if (officeNameHidden) officeNameHidden.value = '';
-                if (officeTypeInput) officeTypeInput.value = '';
-                const number = dest.street_number || '';
-                if (streetNumber) streetNumber.value = number;
-                let label = (dest.address || '').trim();
-                if (number && label.toLowerCase().endsWith(number.toLowerCase())) label = label.slice(0, -number.length).trim();
-                if (streetSearch) streetSearch.value = label;
-                if (streetIdInput) streetIdInput.value = dest.street_id || '';
-                if (!dest.street_id && cityId && label.length >= 2) {
-                    try {
-                        const data = await fetch('/pigeon/streets/?city_id=' + encodeURIComponent(cityId) + '&q=' + encodeURIComponent(label)).then(function(response){ return response.json(); });
-                        const want = label.toLowerCase();
-                        const match = (data.streets || []).find(function(street) {
-                            return pigeonLabel(street).toLowerCase() === want || (street.name || '').trim().toLowerCase() === want;
-                        });
-                        if (match) {
-                            if (streetSearch) streetSearch.value = pigeonLabel(match);
-                            if (streetIdInput) streetIdInput.value = match.id || '';
-                            if (postCode && match.postal_code) postCode.value = match.postal_code;
-                        }
-                    } catch (e) { /* leave the stored text */ }
-                }
-            }
-            updatePigeonQuote();
-            autoSave();
-        }
-        if (modeAddress && modeOffice) {
-            setMode('office', false);
-            modeAddress.addEventListener('change', function(){ if (this.checked) setMode('address', true); });
-            modeOffice.addEventListener('change', function(){ if (this.checked) setMode('office', true); });
-        }
-        const pigeonRadio = document.getElementById('shipping-pigeon');
-        if (pigeonRadio) {
-            pigeonRadio.addEventListener('change', function(){
-                if (!this.checked) return;
-                lastPigeonShipping.shipping_price_cod = null;
-                updateSummaryForPayment();
-                updatePigeonQuote();
-                autoSave();
-            });
-        }
-        const pigeonRows = window.savedForCarrier('pigeon');
-        const pigeonSaved = document.getElementById('pigeon-saved');
-        window.renderSavedDestinations(pigeonSaved, pigeonRows, applyPigeon);
-        const pigeonInitial = window.initialDestination('pigeon');
-        if (pigeonInitial) {
-            applyPigeon(pigeonInitial);
-            const pigeonMatch = pigeonRows.filter(function(dest){ return window.sameDestination(dest, pigeonInitial); })[0];
-            if (pigeonMatch) window.markSavedDestination(pigeonSaved, pigeonMatch.id);
-        } else if (window.ownsCheckout) {
-            window.fillContactFields('pigeon_', null, false);
-        }
-    })();
+    });
 </script>
 {% endblock %}

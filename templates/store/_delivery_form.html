@@ -1,0 +1,68 @@
+<div class="delivery-form">
+    <div class="delivery-mode">
+        <div>
+            <input type="radio" name="{{ carrier }}_delivery_mode" id="{{ carrier }}_mode_office" value="office">
+            <label for="{{ carrier }}_mode_office">Офис или автомат</label>
+        </div>
+        <div>
+            <input type="radio" name="{{ carrier }}_delivery_mode" id="{{ carrier }}_mode_address" value="address">
+            <label for="{{ carrier }}_mode_address">Личен адрес</label>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label" for="{{ carrier }}_name">Име</label>
+            <input type="text" class="form-control" id="{{ carrier }}_name" placeholder="Име и фамилия или фирма">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="{{ carrier }}_phone">Телефон</label>
+            <input type="text" class="form-control" id="{{ carrier }}_phone" placeholder="Телефон">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="{{ carrier }}_email">Имейл</label>
+            <input type="email" class="form-control" id="{{ carrier }}_email" placeholder="Имейл">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="{{ carrier }}_face">Лице за контакт</label>
+            <input type="text" class="form-control" id="{{ carrier }}_face" placeholder="Ако получателят е фирма">
+        </div>
+        <div class="col-12 position-relative">
+            <label class="form-label" for="{{ carrier }}_city_search">Град</label>
+            <input type="text" class="form-control" id="{{ carrier }}_city_search" placeholder="Започнете да пишете" autocomplete="off">
+            <div id="{{ carrier }}_city_suggestions" class="list-group delivery-suggest position-absolute"></div>
+            <input type="hidden" id="{{ carrier }}_{{ city_key }}">
+            <input type="hidden" id="{{ carrier }}_post_code">
+        </div>
+        {% if address_kind == "street" %}
+            <div class="col-12 {{ carrier }}-address-field">
+                <div class="row g-3">
+                    <div class="col-8 position-relative">
+                        <label class="form-label" for="{{ carrier }}_street_search">Улица</label>
+                        <input type="text" class="form-control" id="{{ carrier }}_street_search" placeholder="Започнете да пишете" autocomplete="off">
+                        <div id="{{ carrier }}_street_suggestions" class="list-group delivery-suggest position-absolute"></div>
+                        <input type="hidden" id="{{ carrier }}_street_id">
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label" for="{{ carrier }}_street_number">Номер</label>
+                        <input type="text" class="form-control" id="{{ carrier }}_street_number" placeholder="Номер">
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12 {{ carrier }}-address-field">
+                <label class="form-label" for="{{ carrier }}_address">Адрес</label>
+                <input type="text" class="form-control" id="{{ carrier }}_address" placeholder="Улица и номер">
+            </div>
+        {% endif %}
+        <div class="col-12 position-relative {{ carrier }}-office-field">
+            <label class="form-label" for="{{ carrier }}_office_search">Офис или автомат</label>
+            <input type="text" class="form-control" id="{{ carrier }}_office_search" placeholder="Започнете да пишете" autocomplete="off">
+            <div id="{{ carrier }}_office_suggestions" class="list-group delivery-suggest position-absolute"></div>
+            <input type="hidden" id="{{ carrier }}_office_code">
+            <input type="hidden" id="{{ carrier }}_office_name">
+            {% if locker %}
+                <input type="hidden" id="{{ carrier }}_office_type">
+            {% endif %}
+        </div>
+    </div>
+</div>

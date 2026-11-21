@@ -1776,8 +1776,44 @@ class SavedDestinationTests(TestCase):
         self.assertEqual(saved.phone, "0888111111")
         current = customer_models.Address.objects.get(saved=True)
         self.assertEqual(current.phone, "0888222222")
+        self.assertTrue(current.is_main)
+        self.assertFalse(saved.is_main)
         past.refresh_from_db()
         self.assertEqual(past.address_id, saved.pk)
+
+    def test_the_first_saved_address_is_main_and_the_next_place_is_not(self):
+        order = self._order()
+        self.assertTrue(self._save_speedy(order).json()["success"])
+        first = customer_models.Address.objects.get(saved=True)
+        self.assertTrue(first.is_main)
+
+        self.assertTrue(self._save_speedy(order, office_code="9999", office_name="Друг").json()["success"])
+        first.refresh_from_db()
+        second = customer_models.Address.objects.get(saved=True, office_code="9999")
+        self.assertTrue(first.is_main)
+        self.assertFalse(second.is_main)
+
+    def test_the_oldest_saved_address_is_chosen_when_none_is_main(self):
+        older = customer_models.Address.objects.create(
+            user=self.user, saved=True, phone="0888", delivery_method="speedy_office",
+            city="София", office_code="1", office_name="Първи",
+        )
+        customer_models.Address.objects.create(
+            user=self.user, saved=True, phone="0888", delivery_method="speedy_office",
+            city="София", office_code="2", office_name="Втори",
+        )
+        picked = customer_models.earliest_saved_without_main(
+            customer_models.Address.objects.filter(user=self.user)
+        )
+        self.assertEqual([row.pk for row in picked], [older.pk])
+        older.is_main = True
+        older.save(update_fields=["is_main"])
+        self.assertEqual(
+            customer_models.earliest_saved_without_main(
+                customer_models.Address.objects.filter(user=self.user)
+            ),
+            [],
+        )
 
     def test_a_guest_checkout_reuses_one_snapshot_and_skips_the_book(self):
         self.client.logout()

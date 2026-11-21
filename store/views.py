@@ -711,6 +711,9 @@ def _upsert_saved_address(user, fields):
         book.saved = False
         book.is_main = False
         book.save(update_fields=["saved", "is_main"])
+    if not was_main and not customer_models.Address.objects.filter(user=user, saved=True, is_main=True).exists():
+        customer_models.Address.objects.filter(user=user, is_main=True).update(is_main=False)
+        was_main = True
     return customer_models.Address.objects.create(user=user, saved=True, is_main=was_main, **fields)
 
 

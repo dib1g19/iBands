@@ -110,6 +110,20 @@ def saved_destination_winners(addresses):
     return winners
 
 
+def earliest_saved_without_main(addresses):
+    """Oldest saved address for each customer who has none marked main."""
+    grouped = {}
+    for address in addresses:
+        if address.user_id and address.saved:
+            grouped.setdefault(address.user_id, []).append(address)
+    picked = []
+    for rows in grouped.values():
+        if any(row.is_main for row in rows):
+            continue
+        picked.append(min(rows, key=lambda row: row.id))
+    return picked
+
+
 class Notifications(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     type = models.CharField(max_length=100, choices=TYPE, default=None)

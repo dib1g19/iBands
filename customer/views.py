@@ -231,7 +231,7 @@ def mark_noti_seen(request, id):
 
 @login_required
 def addresses(request):
-    addresses = customer_models.Address.objects.filter(user=request.user).order_by('id')
+    addresses = customer_models.Address.objects.filter(user=request.user, saved=True).order_by("-is_main", "-id")
 
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
@@ -247,105 +247,19 @@ def addresses(request):
 
 @login_required
 def address_detail(request, id):
-    address = customer_models.Address.objects.get(user=request.user, id=id)
-
-    if request.method == "POST":
-        name = request.POST.get("name")
-        face = request.POST.get("face")
-        phone = request.POST.get("phone")
-        email = request.POST.get("email")
-        delivery_method = request.POST.get("delivery_method")
-        city = request.POST.get("city")
-        address_location = request.POST.get("address")
-        office_name = request.POST.get("office_name")
-
-        address.name = name
-        address.face = face
-        address.phone = phone
-        address.email = email
-        address.delivery_method = delivery_method
-        address.city = city
-
-        if delivery_method in ["econt_office", "speedy_office", "pigeon_office", "pigeon_locker"]:
-            address.address = ""
-            address.office_name = office_name
-        else:
-            address.address = address_location
-            address.office_name = ""
-
-        address.save()
-
-        messages.success(request, "Адресът е обновен успешно!")
-        return redirect("customer:addresses")
-
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": "Адреси", "url": reverse("customer:addresses")},
-        {"label": "Актуализирай Адрес", "url": ""},
-    ]
-    context = {
-        "address": address,
-        "breadcrumbs": breadcrumbs,
-    }
-
-    return render(request, "customer/address_detail.html", context)
+    return redirect("customer:addresses")
 
 
 @login_required
 def address_create(request):
-    if request.method == "POST":
-        name = request.POST.get("name")
-        face = request.POST.get("face")
-        phone = request.POST.get("phone")
-        email = request.POST.get("email")
-        delivery_method = request.POST.get("delivery_method")
-        city = request.POST.get("city")
-
-        # Get both address fields, only save one depending on delivery method
-        address = request.POST.get("address")
-        office_name = request.POST.get("office_name")
-
-        if delivery_method in ["econt_office", "speedy_office", "pigeon_office", "pigeon_locker"]:
-            address_to_save = ""
-            office_name_to_save = office_name
-        else:
-            address_to_save = address
-            office_name_to_save = ""
-
-        customer_models.Address.objects.create(
-            user=request.user,
-            name=name,
-            face=face,
-            phone=phone,
-            email=email,
-            delivery_method=delivery_method,
-            city=city,
-            address=address_to_save,
-            office_name=office_name_to_save,
-        )
-
-        messages.success(request, "Адресът е създаден успешно!")
-        return redirect("customer:addresses")
-
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": "Адреси", "url": reverse("customer:addresses")},
-        {"label": "Създай Адрес", "url": ""},
-    ]
-    context = {
-        "breadcrumbs": breadcrumbs,
-    }
-
-    return render(request, "customer/address_create.html", context)
+    return redirect("customer:addresses")
 
 
 @login_required
 @require_POST
 def set_main_address(request, id):
-    # Unset all addresses for the user
     customer_models.Address.objects.filter(user=request.user, is_main=True).update(is_main=False)
-    # Set this address as main
-    address = customer_models.Address.objects.get(user=request.user, id=id)
+    address = customer_models.Address.objects.get(user=request.user, id=id, saved=True)
     address.is_main = True
     address.save()
     messages.success(request, "Основният адрес е обновен успешно!")
@@ -353,8 +267,13 @@ def set_main_address(request, id):
 
 
 def delete_address(request, id):
-    address = customer_models.Address.objects.get(user=request.user, id=id)
-    address.delete()
+    address = customer_models.Address.objects.get(user=request.user, id=id, saved=True)
+    if store_models.Order.objects.filter(address=address).exists():
+        address.saved = False
+        address.is_main = False
+        address.save(update_fields=["saved", "is_main"])
+    else:
+        address.delete()
     messages.success(request, "Адресът е изтрит.")
     return redirect("customer:addresses")
 

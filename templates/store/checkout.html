@@ -131,6 +131,7 @@
                                             </div>
                                         </div>
                                         <div id="econt-error-block"></div>
+                                        <div id="econt-saved" class="d-flex flex-wrap"></div>
                                         <iframe
                                             id="econt-delivery-iframe"
                                             src="{{ econt_url }}"
@@ -163,6 +164,7 @@
                                     </div>
                                     <div class="card-wrap-body px-3 py-3">
                                         <div id="speedy-error-block"></div>
+                                        <div id="speedy-saved" class="d-flex flex-wrap"></div>
                                         <div class="delivery-form">
                                             <div class="delivery-mode">
                                                 <div>
@@ -225,6 +227,7 @@
                                     </div>
                                     <div class="card-wrap-body px-3 py-3">
                                         <div id="pigeon-error-block"></div>
+                                        <div id="pigeon-saved" class="d-flex flex-wrap"></div>
                                         <div class="delivery-form">
                                             <div class="delivery-mode">
                                                 <div>
@@ -367,6 +370,120 @@
 {% endblock %}
 
 {% block extra_scripts %}
+{{ saved_destinations|json_script:"saved-destinations" }}
+{{ order_destination|json_script:"order-destination" }}
+{{ checkout_contact|json_script:"checkout-contact" }}
+<script>
+    function checkoutReadJson(id) {
+        var el = document.getElementById(id);
+        if (!el) return null;
+        try { return JSON.parse(el.textContent); } catch (e) { return null; }
+    }
+    window.savedDestinations = checkoutReadJson('saved-destinations') || [];
+    window.orderDestination = checkoutReadJson('order-destination');
+    window.checkoutContact = checkoutReadJson('checkout-contact') || {};
+    window.savedForCarrier = function(carrier) {
+        return window.savedDestinations.filter(function(dest) {
+            return (dest.delivery_method || '').split('_')[0] === carrier;
+        });
+    };
+    window.sameDestination = function(left, right) {
+        if (!left || !right || left.delivery_method !== right.delivery_method) return false;
+        var method = left.delivery_method || '';
+        if (method === 'econt_office' || method === 'speedy_office' || method === 'pigeon_office' || method === 'pigeon_locker') {
+            return String(left.office_code || '') === String(right.office_code || '');
+        }
+        return (left.city || '').trim().toLowerCase() === (right.city || '').trim().toLowerCase()
+            && (left.address || '').trim().toLowerCase() === (right.address || '').trim().toLowerCase();
+    };
+    window.markSavedDestination = function(container, id) {
+        if (!container) return;
+        container.querySelectorAll('button').forEach(function(button) {
+            var selected = String(button.dataset.id) === String(id);
+            button.classList.toggle('btn-primary', selected);
+            button.classList.toggle('btn-outline-secondary', !selected);
+        });
+    };
+    window.renderSavedDestinations = function(container, rows, onPick) {
+        if (!container) return;
+        container.innerHTML = '';
+        if (!rows.length) {
+            container.style.display = 'none';
+            return;
+        }
+        container.style.display = '';
+        rows.forEach(function(dest) {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'btn btn-sm btn-outline-secondary rounded me-2 mb-2';
+            button.dataset.id = dest.id;
+            var place = dest.office_name || dest.address || '';
+            button.textContent = [dest.city, place].filter(Boolean).join(', ');
+            if (dest.is_main) button.textContent += ' · основен';
+            button.addEventListener('click', function() {
+                onPick(dest);
+                window.markSavedDestination(container, dest.id);
+            });
+            container.appendChild(button);
+        });
+    };
+    window.fillContactFields = function(prefix, dest, overwrite) {
+        var contact = window.checkoutContact || {};
+        var source = dest || {};
+        var fields = {
+            name: source.name || contact.name || '',
+            phone: source.phone || contact.phone || '',
+            email: source.email || contact.email || '',
+            face: source.face || ''
+        };
+        Object.keys(fields).forEach(function(key) {
+            var el = document.getElementById(prefix + key);
+            if (!el) return;
+            if (overwrite || !el.value) el.value = fields[key];
+        });
+    };
+    window.initialDestination = function(carrier) {
+        var orderDest = window.orderDestination;
+        if (orderDest && (orderDest.delivery_method || '').split('_')[0] === carrier) return orderDest;
+        var rows = window.savedForCarrier(carrier);
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].is_main) return rows[i];
+        }
+        return null;
+    };
+</script>
+<script>
+    (function() {
+        var rows = window.savedForCarrier('econt');
+        var container = document.getElementById('econt-saved');
+        var iframe = document.getElementById('econt-delivery-iframe');
+        function applyEcont(dest) {
+            if (!iframe) return;
+            var contact = window.checkoutContact || {};
+            var url = new URL(iframe.src, window.location.origin);
+            url.searchParams.set('customer_name', dest.name || contact.name || '');
+            url.searchParams.set('customer_phone', dest.phone || contact.phone || '');
+            url.searchParams.set('customer_email', dest.email || contact.email || '');
+            url.searchParams.set('customer_city_name', dest.city || '');
+            url.searchParams.delete('customer_office_code');
+            url.searchParams.delete('customer_address');
+            if (dest.delivery_method === 'econt_office' && dest.office_code) {
+                url.searchParams.set('customer_office_code', dest.office_code);
+            } else if (dest.delivery_method === 'econt' && dest.address) {
+                url.searchParams.set('customer_address', dest.address);
+            }
+            iframe.src = url.toString();
+            ['name', 'phone', 'email', 'city', 'address', 'office_name', 'office_code', 'face', 'post_code'].forEach(function(field) {
+                var input = document.getElementById('econt_customer_' + field);
+                if (input) input.value = '';
+            });
+        }
+        window.renderSavedDestinations(container, rows, applyEcont);
+        var initial = window.initialDestination('econt');
+        var match = rows.filter(function(dest) { return window.sameDestination(dest, initial); })[0];
+        if (match) window.markSavedDestination(container, match.id);
+    })();
+</script>
 <script>
     // removed debug helper
 </script>
@@ -1192,28 +1309,12 @@
                 },300);
                 autoSaveSpeedyAddress();
             });
-            // When Speedy is chosen, reset fields; do not auto-select city/office
             const speedyRadio = document.getElementById('shipping-speedy');
             if (speedyRadio) {
                 speedyRadio.addEventListener('change', function(){
-                    if (this.checked) {
-                        if (citySearch) citySearch.value = '';
-                        if (siteIdInput) siteIdInput.value = '';
-                        if (officeSearch) officeSearch.value = '';
-                        if (officeCodeInput) officeCodeInput.value = '';
-                        if (officeNameHidden) officeNameHidden.value = '';
-                        clearSuggestions(citySuggestions);
-                        clearSuggestions(officeSuggestions);
-                        if (typeof lastSpeedyShipping !== 'undefined') {
-                            lastSpeedyShipping.shipping_price = null;
-                            lastSpeedyShipping.shipping_price_cod = null;
-                        }
-                        if (quoteBox) quoteBox.innerHTML = '';
-                        if (typeof updateSummaryForPayment === 'function') {
-                            updateSummaryForPayment();
-                        }
-                        autoSaveSpeedyAddress();
-                    }
+                    if (!this.checked) return;
+                    updateQuote();
+                    if (window.ownsCheckout) autoSaveSpeedyAddress();
                 });
             }
         }
@@ -1258,60 +1359,96 @@
         const modeOffice = document.getElementById('speedy_mode_office');
         const speedyAddressFields = document.querySelectorAll('.speedy-address-field');
         const speedyOfficeFields = document.querySelectorAll('.speedy-office-field');
-        function setSpeedyMode(mode){
+        function setSpeedyMode(mode, persist){
             const isOffice = (mode === 'office');
+            if (modeOffice) modeOffice.checked = isOffice;
+            if (modeAddress) modeAddress.checked = !isOffice;
             speedyAddressFields.forEach(el => el.style.display = isOffice ? 'none' : 'block');
             speedyOfficeFields.forEach(el => el.style.display = isOffice ? 'block' : 'none');
+            if (isOffice) {
+                if (addressInput) addressInput.value = '';
+            } else {
+                if (officeSearch) officeSearch.value = '';
+                if (officeCodeInput) officeCodeInput.value = '';
+                if (officeNameHidden) officeNameHidden.value = '';
+            }
+            updateQuote();
+            if (persist && window.ownsCheckout) autoSaveSpeedyAddress();
+        }
+        function speedyNorm(value) {
+            return (value || '').toString().trim().toLowerCase();
+        }
+        function speedySiteLabel(site) {
+            return ((site.type || '') + ' ' + (site.name || '')).trim();
+        }
+        async function applySpeedy(dest) {
+            const office = dest.delivery_method === 'speedy_office';
+            setSpeedyMode(office ? 'office' : 'address', false);
+            window.fillContactFields('speedy_', dest, true);
+            if (office) {
+                if (addressInput) addressInput.value = '';
+            } else {
+                if (officeSearch) officeSearch.value = '';
+                if (officeCodeInput) officeCodeInput.value = '';
+                if (officeNameHidden) officeNameHidden.value = '';
+                if (addressInput) addressInput.value = dest.address || '';
+            }
+            if (postCodeInput && dest.post_code) postCodeInput.value = dest.post_code;
+            if (citySearch) citySearch.value = dest.city || '';
+            let siteId = dest.site_id || '';
+            if (siteIdInput) siteIdInput.value = siteId;
+            if (!siteId && dest.city) {
+                const sites = await searchSites(dest.city);
+                const match = sites.find(function(site) {
+                    return speedyNorm(speedySiteLabel(site)) === speedyNorm(dest.city) || speedyNorm(site.name) === speedyNorm(dest.city);
+                }) || null;
+                if (match) {
+                    siteId = match.id;
+                    if (siteIdInput) siteIdInput.value = siteId;
+                    if (citySearch) citySearch.value = speedySiteLabel(match);
+                    if (postCodeInput && !dest.post_code && match.postCode) postCodeInput.value = match.postCode;
+                }
+            }
+            if (office) {
+                if (officeSearch) officeSearch.value = dest.office_name || '';
+                if (officeCodeInput) officeCodeInput.value = dest.office_code || '';
+                if (officeNameHidden) officeNameHidden.value = dest.office_name || '';
+                if (siteId) {
+                    try {
+                        const data = await fetch('/speedy/find-offices/?site_id=' + encodeURIComponent(siteId)).then(function(response){ return response.json(); });
+                        const offices = (data && data.offices) || [];
+                        officeSuggestions._all = offices;
+                        const match = offices.find(function(item){ return String(item.id) === String(dest.office_code); })
+                            || offices.find(function(item){ return speedyNorm(item.name) === speedyNorm(dest.office_name); });
+                        if (match) {
+                            if (officeSearch) officeSearch.value = match.name || '';
+                            if (officeCodeInput) officeCodeInput.value = match.id || '';
+                            if (officeNameHidden) officeNameHidden.value = match.name || '';
+                            const postCode = match.postCode || match.postcode;
+                            if (postCodeInput && postCode) postCodeInput.value = postCode;
+                        }
+                    } catch (e) { /* leave the stored text */ }
+                }
+            }
             updateQuote();
             if (window.ownsCheckout) autoSaveSpeedyAddress();
         }
         if (modeAddress && modeOffice){
-            // Default to office
-            modeOffice.checked = true;
-            setSpeedyMode('office');
-            modeAddress.addEventListener('change', function(){ if (this.checked) setSpeedyMode('address'); });
-            modeOffice.addEventListener('change', function(){ if (this.checked) setSpeedyMode('office'); });
+            setSpeedyMode('office', false);
+            modeAddress.addEventListener('change', function(){ if (this.checked) setSpeedyMode('address', true); });
+            modeOffice.addEventListener('change', function(){ if (this.checked) setSpeedyMode('office', true); });
         }
-        // Prefill first 4 Speedy fields (name, contact person, phone, email) from user's primary address; fallback to order/user
-        try {
-            const speedyName = document.getElementById('speedy_name');
-            const speedyFace = document.getElementById('speedy_face');
-            const speedyPhone = document.getElementById('speedy_phone');
-            const speedyEmail = document.getElementById('speedy_email');
-
-            const prefill = {
-                // Primary address (Основен адрес)
-                p_name: "{{ primary_address.name|default_if_none:''|escapejs }}",
-                p_face: "{{ primary_address.face|default_if_none:''|escapejs }}",
-                p_phone: "{{ primary_address.phone|default_if_none:''|escapejs }}",
-                p_email: "{{ primary_address.email|default_if_none:''|escapejs }}",
-                // Order address (if already saved during checkout)
-                o_name: "{{ order.address.name|default_if_none:''|escapejs }}",
-                o_face: "{{ order.address.face|default_if_none:''|escapejs }}",
-                o_phone: "{{ order.address.phone|default_if_none:''|escapejs }}",
-                o_email: "{{ order.address.email|default_if_none:''|escapejs }}",
-                user_name: "{{ request.user.full_name|default_if_none:''|escapejs }}",
-                user_phone: "{{ request.user.mobile|default_if_none:''|escapejs }}",
-                user_email: "{{ request.user.email|default_if_none:''|escapejs }}",
-            };
-
-            const desired = {
-                name: (prefill.p_name || prefill.o_name || prefill.user_name || '').trim(),
-                face: (prefill.p_face || prefill.o_face || '').trim(),
-                phone: (prefill.p_phone || prefill.o_phone || prefill.user_phone || '').trim(),
-                email: (prefill.p_email || prefill.o_email || prefill.user_email || '').trim(),
-            };
-
-            let changed = false;
-            if (window.ownsCheckout) {
-                if (speedyName && !speedyName.value && desired.name) { speedyName.value = desired.name; changed = true; }
-                if (speedyFace && !speedyFace.value && desired.face) { speedyFace.value = desired.face; changed = true; }
-                if (speedyPhone && !speedyPhone.value && desired.phone) { speedyPhone.value = desired.phone; changed = true; }
-                if (speedyEmail && !speedyEmail.value && desired.email) { speedyEmail.value = desired.email; changed = true; }
-            }
-            // Save the prefilled data so backend knows them; city/address left blank to trigger quote later
-            if (changed) { autoSaveSpeedyAddress(); }
-        } catch (e) { /* no-op */ }
+        const speedyRows = window.savedForCarrier('speedy');
+        const speedySaved = document.getElementById('speedy-saved');
+        window.renderSavedDestinations(speedySaved, speedyRows, applySpeedy);
+        const speedyInitial = window.initialDestination('speedy');
+        if (speedyInitial) {
+            applySpeedy(speedyInitial);
+            const speedyMatch = speedyRows.filter(function(dest){ return window.sameDestination(dest, speedyInitial); })[0];
+            if (speedyMatch) window.markSavedDestination(speedySaved, speedyMatch.id);
+        } else if (window.ownsCheckout) {
+            window.fillContactFields('speedy_', null, false);
+        }
     })();
 </script>
 <script>
@@ -1627,18 +1764,108 @@
         });
         const modeAddress = document.getElementById('pigeon_mode_address');
         const modeOffice = document.getElementById('pigeon_mode_office');
-        function setMode(mode) {
+        function setMode(mode, persist) {
             const office = mode === 'office';
+            if (modeOffice) modeOffice.checked = office;
+            if (modeAddress) modeAddress.checked = !office;
             document.querySelectorAll('.pigeon-address-field').forEach(function(el){ el.style.display = office ? 'none' : 'block'; });
             document.querySelectorAll('.pigeon-office-field').forEach(function(el){ el.style.display = office ? 'block' : 'none'; });
+            if (office) {
+                if (streetSearch) streetSearch.value = '';
+                if (streetIdInput) streetIdInput.value = '';
+                if (streetNumber) streetNumber.value = '';
+            } else {
+                if (officeSearch) officeSearch.value = '';
+                if (officeCodeInput) officeCodeInput.value = '';
+                if (officeNameHidden) officeNameHidden.value = '';
+                if (officeTypeInput) officeTypeInput.value = '';
+            }
+            updatePigeonQuote();
+            if (persist) autoSave();
+        }
+        function pigeonLabel(item) {
+            return ((item.type || '') + ' ' + (item.name || '')).trim();
+        }
+        async function applyPigeon(dest) {
+            const office = dest.delivery_method !== 'pigeon';
+            setMode(office ? 'office' : 'address', false);
+            window.fillContactFields('pigeon_', dest, true);
+            const postCode = document.getElementById('pigeon_post_code');
+            if (postCode && dest.post_code) postCode.value = dest.post_code;
+            if (citySearch) citySearch.value = dest.city || '';
+            let cityId = dest.city_id || '';
+            if (cityIdInput) cityIdInput.value = cityId;
+            if (!cityId && (dest.city || '').trim().length >= 2) {
+                try {
+                    const data = await fetch('/pigeon/cities/?q=' + encodeURIComponent(dest.city.trim())).then(function(response){ return response.json(); });
+                    const want = dest.city.trim().toLowerCase();
+                    const match = (data.cities || []).find(function(city) {
+                        return pigeonLabel(city).toLowerCase() === want || (city.name || '').trim().toLowerCase() === want;
+                    }) || null;
+                    if (match) {
+                        cityId = match.id || '';
+                        if (cityIdInput) cityIdInput.value = cityId;
+                        if (citySearch) citySearch.value = pigeonLabel(match);
+                        if (postCode && !dest.post_code && match.postal_code) postCode.value = match.postal_code;
+                    }
+                } catch (e) { /* leave the stored text */ }
+            }
+            if (office) {
+                if (streetSearch) streetSearch.value = '';
+                if (streetIdInput) streetIdInput.value = '';
+                if (streetNumber) streetNumber.value = '';
+                if (officeSearch) officeSearch.value = dest.office_name || '';
+                if (officeCodeInput) officeCodeInput.value = dest.office_code || '';
+                if (officeNameHidden) officeNameHidden.value = dest.office_name || '';
+                if (officeTypeInput) officeTypeInput.value = dest.delivery_method === 'pigeon_locker' ? 'locker' : 'office';
+                if (cityId) {
+                    try {
+                        const data = await fetch('/pigeon/offices/?city_id=' + encodeURIComponent(cityId)).then(function(response){ return response.json(); });
+                        const offices = data.offices || [];
+                        if (officeSuggestions) officeSuggestions._all = offices;
+                        const match = offices.find(function(item){ return String(item.id) === String(dest.office_code); });
+                        if (match) {
+                            if (officeSearch) officeSearch.value = match.name || '';
+                            if (officeCodeInput) officeCodeInput.value = match.id || '';
+                            if (officeNameHidden) officeNameHidden.value = match.name || '';
+                            if (officeTypeInput) officeTypeInput.value = match.type || officeTypeInput.value;
+                            if (postCode && match.postal_code) postCode.value = match.postal_code;
+                        }
+                    } catch (e) { /* leave the stored text */ }
+                }
+            } else {
+                if (officeSearch) officeSearch.value = '';
+                if (officeCodeInput) officeCodeInput.value = '';
+                if (officeNameHidden) officeNameHidden.value = '';
+                if (officeTypeInput) officeTypeInput.value = '';
+                const number = dest.street_number || '';
+                if (streetNumber) streetNumber.value = number;
+                let label = (dest.address || '').trim();
+                if (number && label.toLowerCase().endsWith(number.toLowerCase())) label = label.slice(0, -number.length).trim();
+                if (streetSearch) streetSearch.value = label;
+                if (streetIdInput) streetIdInput.value = dest.street_id || '';
+                if (!dest.street_id && cityId && label.length >= 2) {
+                    try {
+                        const data = await fetch('/pigeon/streets/?city_id=' + encodeURIComponent(cityId) + '&q=' + encodeURIComponent(label)).then(function(response){ return response.json(); });
+                        const want = label.toLowerCase();
+                        const match = (data.streets || []).find(function(street) {
+                            return pigeonLabel(street).toLowerCase() === want || (street.name || '').trim().toLowerCase() === want;
+                        });
+                        if (match) {
+                            if (streetSearch) streetSearch.value = pigeonLabel(match);
+                            if (streetIdInput) streetIdInput.value = match.id || '';
+                            if (postCode && match.postal_code) postCode.value = match.postal_code;
+                        }
+                    } catch (e) { /* leave the stored text */ }
+                }
+            }
             updatePigeonQuote();
             autoSave();
         }
         if (modeAddress && modeOffice) {
-            modeOffice.checked = true;
-            setMode('office');
-            modeAddress.addEventListener('change', function(){ if (this.checked) setMode('address'); });
-            modeOffice.addEventListener('change', function(){ if (this.checked) setMode('office'); });
+            setMode('office', false);
+            modeAddress.addEventListener('change', function(){ if (this.checked) setMode('address', true); });
+            modeOffice.addEventListener('change', function(){ if (this.checked) setMode('office', true); });
         }
         const pigeonRadio = document.getElementById('shipping-pigeon');
         if (pigeonRadio) {
@@ -1646,22 +1873,21 @@
                 if (!this.checked) return;
                 lastPigeonShipping.shipping_price_cod = null;
                 updateSummaryForPayment();
+                updatePigeonQuote();
+                autoSave();
             });
         }
-        try {
-            const desired = {
-                name: ("{{ primary_address.name|default_if_none:''|escapejs }}" || "{{ order.address.name|default_if_none:''|escapejs }}" || "{{ request.user.full_name|default_if_none:''|escapejs }}").trim(),
-                face: ("{{ primary_address.face|default_if_none:''|escapejs }}" || "{{ order.address.face|default_if_none:''|escapejs }}").trim(),
-                phone: ("{{ primary_address.phone|default_if_none:''|escapejs }}" || "{{ order.address.phone|default_if_none:''|escapejs }}" || "{{ request.user.mobile|default_if_none:''|escapejs }}").trim(),
-                email: ("{{ primary_address.email|default_if_none:''|escapejs }}" || "{{ order.address.email|default_if_none:''|escapejs }}" || "{{ request.user.email|default_if_none:''|escapejs }}").trim()
-            };
-            if (window.ownsCheckout) {
-                if (desired.name && !document.getElementById('pigeon_name').value) document.getElementById('pigeon_name').value = desired.name;
-                if (desired.face && !document.getElementById('pigeon_face').value) document.getElementById('pigeon_face').value = desired.face;
-                if (desired.phone && !document.getElementById('pigeon_phone').value) document.getElementById('pigeon_phone').value = desired.phone;
-                if (desired.email && !document.getElementById('pigeon_email').value) document.getElementById('pigeon_email').value = desired.email;
-            }
-        } catch (e) { /* no-op */ }
+        const pigeonRows = window.savedForCarrier('pigeon');
+        const pigeonSaved = document.getElementById('pigeon-saved');
+        window.renderSavedDestinations(pigeonSaved, pigeonRows, applyPigeon);
+        const pigeonInitial = window.initialDestination('pigeon');
+        if (pigeonInitial) {
+            applyPigeon(pigeonInitial);
+            const pigeonMatch = pigeonRows.filter(function(dest){ return window.sameDestination(dest, pigeonInitial); })[0];
+            if (pigeonMatch) window.markSavedDestination(pigeonSaved, pigeonMatch.id);
+        } else if (window.ownsCheckout) {
+            window.fillContactFields('pigeon_', null, false);
+        }
     })();
 </script>
 {% endblock %}

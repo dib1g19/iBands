@@ -53,11 +53,61 @@ class Address(models.Model):
     post_code = models.CharField(max_length=10, blank=True, null=True)
     face = models.CharField(max_length=255, blank=True, null=True)
     is_main = models.BooleanField(default=False, verbose_name="Основен адрес")
+    saved = models.BooleanField(default=False)
+    site_id = models.CharField(max_length=32, blank=True, null=True)
+    city_id = models.CharField(max_length=32, blank=True, null=True)
+    street_id = models.CharField(max_length=32, blank=True, null=True)
+    street_number = models.CharField(max_length=32, blank=True, null=True)
+
     class Meta:
         verbose_name_plural = "Customer Addresses"
 
     def __str__(self):
         return self.name
+
+
+OFFICE_DELIVERY_METHODS = ("econt_office", "speedy_office", "pigeon_office", "pigeon_locker")
+
+
+def delivery_place_key(delivery_method, office_code, city, street):
+    method = (delivery_method or "").strip()
+    if method in OFFICE_DELIVERY_METHODS:
+        code = (office_code or "").strip()
+        if not code:
+            return None
+        return (method, code)
+    city_key = (city or "").strip().casefold()
+    street_key = (street or "").strip().casefold()
+    if not method or not city_key or not street_key:
+        return None
+    return (method, city_key, street_key)
+
+
+def delivery_is_complete(phone, delivery_method, office_code, city, street):
+    return bool((phone or "").strip()) and delivery_place_key(
+        delivery_method, office_code, city, street
+    ) is not None
+
+
+def saved_destination_winners(addresses):
+    """One complete row per customer and place. Main wins, otherwise the newest."""
+    groups = {}
+    for address in addresses:
+        if not address.user_id:
+            continue
+        if not delivery_is_complete(
+            address.phone, address.delivery_method, address.office_code, address.city, address.address
+        ):
+            continue
+        key = (address.user_id, delivery_place_key(
+            address.delivery_method, address.office_code, address.city, address.address
+        ))
+        groups.setdefault(key, []).append(address)
+    winners = []
+    for rows in groups.values():
+        mains = [row for row in rows if row.is_main]
+        winners.append(max(mains or rows, key=lambda row: row.id))
+    return winners
 
 
 class Notifications(models.Model):

@@ -1699,3 +1699,182 @@ class ProductDuplicateTests(TestCase):
         self.assertEqual(product.sku, "B" * 50)
         self.assertEqual(product.stock, 4)
 
+
+class SavedDestinationTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = get_user_model().objects.create_user(
+            email="buyer@example.com", username="buyer", password="secret",
+            full_name="Иван Петров", mobile="0888123456",
+        )
+        self.client.force_login(self.user)
+
+    def _order(self, customer=None):
+        return store_models.Order.objects.create(
+            customer=self.user if customer is None else customer,
+            sub_total=Decimal("10.00"),
+            shipping=Decimal("5.00"),
+            total=Decimal("15.00"),
+        )
+
+    def _save_speedy(self, order, **extra):
+        payload = {
+            "name": "Test User",
+            "phone": "0888123456",
+            "email": "buyer@example.com",
+            "city": "София",
+            "address": "",
+            "office_code": "5678",
+            "office_name": "Офис Спиди",
+            "site_id": "12345",
+            "shipping_price": 5.90,
+        }
+        payload.update(extra)
+        return self.client.post(
+            reverse("store:save_speedy_address", args=[order.order_id]),
+            data=payload,
+            content_type="application/json",
+        )
+
+    def test_a_place_is_saved_once_and_contact_changes_update_it(self):
+        order = self._order()
+        incomplete = self._save_speedy(order, office_code="", office_name="", city="", address="", site_id="")
+        self.assertFalse(incomplete.json()["success"])
+        self.assertEqual(customer_models.Address.objects.count(), 0)
+
+        self.assertTrue(self._save_speedy(order).json()["success"])
+        order.refresh_from_db()
+        saved = customer_models.Address.objects.get(saved=True)
+        snapshot_id = order.address_id
+        self.assertFalse(order.address.saved)
+        self.assertNotEqual(snapshot_id, saved.pk)
+        self.assertEqual(saved.site_id, "12345")
+        self.assertEqual(saved.post_code, "")
+
+        self.assertTrue(self._save_speedy(order, phone="0888000000").json()["success"])
+        order.refresh_from_db()
+        saved.refresh_from_db()
+        self.assertEqual(order.address_id, snapshot_id)
+        self.assertEqual(order.address.phone, "0888000000")
+        self.assertEqual(saved.phone, "0888000000")
+        self.assertEqual(customer_models.Address.objects.filter(saved=True).count(), 1)
+
+        other = self._order()
+        self.assertTrue(self._save_speedy(other, phone="0888111111").json()["success"])
+        saved.refresh_from_db()
+        self.assertEqual(saved.phone, "0888111111")
+        self.assertEqual(customer_models.Address.objects.filter(saved=True).count(), 1)
+        self.assertNotEqual(other.address_id, saved.pk)
+
+        past = self._order()
+        past.order_status = "received"
+        past.address = saved
+        past.save()
+        self.assertTrue(self._save_speedy(order, phone="0888222222").json()["success"])
+        saved.refresh_from_db()
+        self.assertFalse(saved.saved)
+        self.assertEqual(saved.phone, "0888111111")
+        current = customer_models.Address.objects.get(saved=True)
+        self.assertEqual(current.phone, "0888222222")
+        past.refresh_from_db()
+        self.assertEqual(past.address_id, saved.pk)
+
+    def test_a_guest_checkout_reuses_one_snapshot_and_skips_the_book(self):
+        self.client.logout()
+        order = store_models.Order.objects.create(sub_total=Decimal("10.00"), total=Decimal("10.00"))
+        session = self.client.session
+        session["checkout_order_ids"] = [str(order.order_id)]
+        session.save()
+        self.assertTrue(self._save_speedy(order).json()["success"])
+        self.assertTrue(self._save_speedy(order, phone="0888000000").json()["success"])
+        order.refresh_from_db()
+        self.assertEqual(customer_models.Address.objects.count(), 1)
+        self.assertFalse(order.address.saved)
+        self.assertIsNone(order.address.user_id)
+        self.assertEqual(order.address.phone, "0888000000")
+
+    def test_one_complete_place_is_the_saved_winner(self):
+        older = customer_models.Address.objects.create(
+            user=self.user, phone="0888", delivery_method="speedy_office",
+            city="София", office_code="1", office_name="Стар",
+        )
+        main = customer_models.Address.objects.create(
+            user=self.user, phone="0888", delivery_method="speedy_office",
+            city="София", office_code="1", office_name="Основен", is_main=True,
+        )
+        customer_models.Address.objects.create(
+            user=self.user, phone="0888", delivery_method="speedy_office",
+            city="София", office_name="Без код",
+        )
+        door = customer_models.Address.objects.create(
+            user=self.user, phone="0888", delivery_method="speedy",
+            city="София", address="ул. Витоша 1",
+        )
+        same_door = customer_models.Address.objects.create(
+            user=self.user, phone="0888", delivery_method="speedy",
+            city="софия", address="ул. витоша 1",
+        )
+        winners = customer_models.saved_destination_winners(
+            customer_models.Address.objects.filter(user=self.user)
+        )
+        self.assertEqual({item.pk for item in winners}, {main.pk, same_door.pk})
+        self.assertNotIn(older.pk, {item.pk for item in winners})
+        self.assertNotEqual(door.pk, same_door.pk)
+
+    def test_checkout_offers_saved_destinations_and_account_hides_the_rest(self):
+        customer_models.Address.objects.create(
+            user=self.user, saved=True, is_main=True, name="Иван", phone="0888123456",
+            email="buyer@example.com", delivery_method="speedy_office", city="Пловдив",
+            office_code="42", office_name="Офис Пловдив", site_id="99",
+        )
+        customer_models.Address.objects.create(
+            user=self.user, saved=False, name="Снимка", phone="0888000099",
+            delivery_method="speedy", city="Варна", address="ул. Скрита 2",
+        )
+        order = self._order()
+        page = self.client.get(reverse("store:checkout", args=[order.order_id]))
+        self.assertContains(page, "speedy-saved")
+        self.assertContains(page, "pigeon-saved")
+        self.assertContains(page, "econt-saved")
+        self.assertContains(page, '"office_code": "42"')
+        self.assertContains(page, '"site_id": "99"')
+        self.assertNotContains(page, "0888000099")
+
+        account = self.client.get(reverse("customer:addresses"))
+        self.assertContains(account, "Офис Пловдив")
+        self.assertNotContains(account, "Снимка")
+        self.assertNotContains(account, "Създай адрес")
+        self.assertNotContains(account, "address-detail")
+        self.assertRedirects(
+            self.client.get(reverse("customer:address_create")),
+            reverse("customer:addresses"),
+        )
+
+        kept = customer_models.Address.objects.get(office_code="42")
+        order.address = kept
+        order.save(update_fields=["address"])
+        self.client.get(reverse("customer:delete_address", args=[kept.id]))
+        kept.refresh_from_db()
+        self.assertFalse(kept.saved)
+        order.refresh_from_db()
+        self.assertEqual(order.address_id, kept.pk)
+
+    @patch("store.views.pigeon_request")
+    @patch("store.views.pigeon_sender", return_value={"id": 1, "pickup_address": {}})
+    @patch("store.views.cache.get", return_value={})
+    def test_pigeon_shipment_reads_ids_from_the_address_when_cache_is_empty(self, _cache, _sender, pigeon_request):
+        pigeon_request.return_value = {"success": True, "data": {"reference_number": "PG1"}}
+        order = self._order()
+        order.address = customer_models.Address.objects.create(
+            user=self.user, name="Иван", phone="0888123456", email="buyer@example.com",
+            delivery_method="pigeon", city="София", address="ул. Витоша 5",
+            city_id="759", street_id="12", street_number="5",
+        )
+        order.save(update_fields=["address"])
+        from store.views import send_order_to_pigeon
+        send_order_to_pigeon(order)
+        body = pigeon_request.call_args[0][2]
+        self.assertEqual(body["delivery_address"]["city_id"], 759)
+        self.assertEqual(body["delivery_address"]["street_id"], 12)
+        self.assertEqual(body["delivery_address"]["street_number"], "5")
+

@@ -264,7 +264,7 @@ def send_order_to_speedy(order):
     # Build recipient details using cached Speedy options (site_id/office_id)
     from django.core.cache import cache
     cached_opts = cache.get(f"speedy_opts_{order.order_id}") or {}
-    site_id_cached = cached_opts.get("site_id")
+    site_id_cached = cached_opts.get("site_id") or getattr(address, "site_id", None)
     office_id_cached = cached_opts.get("office_id")
 
     contact_person = getattr(address, "face", "") or ""
@@ -554,14 +554,16 @@ def send_order_to_pigeon(order):
             return None
         payload["delivery_office_id"] = int(office_id)
     else:
-        city_id = cached.get("city_id")
+        city_id = cached.get("city_id") or getattr(address, "city_id", None)
+        street_id = cached.get("street_id") or getattr(address, "street_id", None)
+        street_number = cached.get("street_number") or getattr(address, "street_number", None)
         delivery_address = {}
         if city_id and str(city_id).isdigit():
             delivery_address["city_id"] = int(city_id)
-        if cached.get("street_id") and str(cached.get("street_id")).isdigit():
-            delivery_address["street_id"] = int(cached["street_id"])
-        if cached.get("street_number"):
-            delivery_address["street_number"] = str(cached["street_number"])[:20]
+        if street_id and str(street_id).isdigit():
+            delivery_address["street_id"] = int(street_id)
+        if street_number:
+            delivery_address["street_number"] = str(street_number)[:20]
         if getattr(address, "post_code", None):
             delivery_address["postal_code"] = address.post_code
         line = (getattr(address, "address", "") or "").strip()
@@ -631,6 +633,127 @@ def _send_shipment(order):
             pass
 
 
+def _clip(value, limit):
+    return (value or "").strip()[:limit]
+
+
+def _quoted_price(data):
+    if "shipping_price" not in data:
+        return None
+    try:
+        return float(data.get("shipping_price"))
+    except (TypeError, ValueError):
+        return None
+
+
+def _chosen_method(data, door, offices):
+    method = _clip(data.get("delivery_method"), 16)
+    if method == door or method in offices:
+        return method
+    if _clip(data.get("office_name"), 255) or _clip(data.get("office_code"), 32):
+        return offices[0]
+    return door
+
+
+def _destination_fields(data, delivery_method):
+    office = delivery_method in customer_models.OFFICE_DELIVERY_METHODS
+    return {
+        "name": _clip(data.get("name"), 200),
+        "phone": _clip(data.get("phone"), 50),
+        "email": _clip(data.get("email"), 100),
+        "delivery_method": delivery_method,
+        "city": _clip(data.get("city"), 100),
+        "address": "" if office else _clip(data.get("address"), 100),
+        "office_code": _clip(data.get("office_code"), 32) if office else "",
+        "office_name": _clip(data.get("office_name"), 255) if office else "",
+        "post_code": _clip(data.get("post_code"), 10),
+        "face": _clip(data.get("face"), 255),
+        "site_id": _clip(data.get("site_id"), 32),
+        "city_id": _clip(data.get("city_id"), 32),
+        "street_id": "" if office else _clip(data.get("street_id"), 32),
+        "street_number": "" if office else _clip(data.get("street_number"), 32),
+    }
+
+
+def _snapshot_address(order, user, fields):
+    current = order.address
+    private = (
+        current is not None
+        and not current.saved
+        and not store_models.Order.objects.filter(address=current).exclude(pk=order.pk).exists()
+    )
+    if private:
+        for key, value in fields.items():
+            setattr(current, key, value)
+        current.user = user
+        current.saved = False
+        current.save()
+        return current
+    return customer_models.Address.objects.create(user=user, saved=False, **fields)
+
+
+def _upsert_saved_address(user, fields):
+    method = fields["delivery_method"]
+    saved = customer_models.Address.objects.filter(user=user, saved=True, delivery_method=method)
+    if method in customer_models.OFFICE_DELIVERY_METHODS:
+        saved = saved.filter(office_code=fields["office_code"])
+    else:
+        saved = saved.filter(city__iexact=fields["city"], address__iexact=fields["address"])
+    book = saved.order_by("-is_main", "-id").first()
+    if book is not None and not store_models.Order.objects.filter(address=book).exists():
+        for key, value in fields.items():
+            setattr(book, key, value)
+        book.saved = True
+        book.save()
+        return book
+    was_main = bool(book and book.is_main)
+    if book is not None:
+        book.saved = False
+        book.is_main = False
+        book.save(update_fields=["saved", "is_main"])
+    return customer_models.Address.objects.create(user=user, saved=True, is_main=was_main, **fields)
+
+
+def _persist_destination(request, order, data, delivery_method):
+    user = request.user if request.user.is_authenticated else None
+    fields = _destination_fields(data, delivery_method)
+    if not customer_models.delivery_is_complete(
+        fields["phone"], fields["delivery_method"], fields["office_code"], fields["city"], fields["address"]
+    ):
+        return None
+    order.address = _snapshot_address(order, user, fields)
+    if user:
+        _upsert_saved_address(user, fields)
+    apply_quoted_shipping(
+        order, user, _quoted_price(data), delivery_method in customer_models.OFFICE_DELIVERY_METHODS
+    )
+    apply_coupon_discount(order)
+    return order.address
+
+
+def _destination_payload(address):
+    if address is None:
+        return None
+    return {
+        "id": address.id,
+        "name": address.name or "",
+        "phone": address.phone or "",
+        "email": address.email or "",
+        "face": address.face or "",
+        "delivery_method": address.delivery_method or "",
+        "city": address.city or "",
+        "address": address.address or "",
+        "office_code": address.office_code or "",
+        "office_name": address.office_name or "",
+        "post_code": address.post_code or "",
+        "site_id": address.site_id or "",
+        "city_id": address.city_id or "",
+        "street_id": address.street_id or "",
+        "street_number": address.street_number or "",
+        "is_main": bool(address.is_main),
+    }
+
+
 @csrf_exempt
 def save_econt_address(request, order_id):
     if request.method == "POST":
@@ -639,59 +762,8 @@ def save_econt_address(request, order_id):
             if not _checkout_owned(request, order):
                 return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
             data = json.loads(request.body)
-
-            # Parse shipping price only if provided; otherwise leave as None
-            shipping_price = None
-            if 'shipping_price' in data:
-                try:
-                    shipping_price = float(data.get('shipping_price'))
-                except (TypeError, ValueError):
-                    shipping_price = None
-
-            user = request.user if request.user.is_authenticated else None
-            office_name = data.get('office_name', '')
-            delivery_method = 'econt_office' if office_name else 'econt'
-            address_kwargs = dict(
-                name=data.get('name', ''),
-                phone=data.get('phone', ''),
-                email=data.get('email', ''),
-                delivery_method=delivery_method,
-                city=data.get('city', ''),
-                address=data.get('address', ''),
-                office_code=data.get('office_code', ''),
-                office_name=office_name,
-                post_code=data.get('post_code', ''),
-                face=data.get('face', ''),
-            )
-            # Check if this exact address already exists for this user
-            if user:
-                existing_address = customer_models.Address.objects.filter(
-                    user=user,
-                    name=data.get('name', ''),
-                    phone=data.get('phone', ''),
-                    email=data.get('email', ''),
-                    delivery_method=delivery_method,
-                    city=data.get('city', ''),
-                    address=data.get('address', ''),
-                    office_code=data.get('office_code', ''),
-                    office_name=office_name,
-                    post_code=data.get('post_code', ''),
-                    face=data.get('face', ''),
-                ).first()
-            else:
-                existing_address = None
-            
-            if existing_address:
-                # Use existing address for this user
-                address = existing_address
-            else:
-                # Create new address and associate with user if available
-                if user:
-                    address_kwargs['user'] = user
-                address = customer_models.Address.objects.create(**address_kwargs)
-            order.address = address
-            apply_quoted_shipping(order, user, shipping_price, delivery_method == "econt_office")
-            apply_coupon_discount(order)
+            if _persist_destination(request, order, data, _chosen_method(data, "econt", ("econt_office",))) is None:
+                return JsonResponse({"success": False, "message": "Непълен адрес."})
             return JsonResponse({"success": True})
         except Exception as e:
             return JsonResponse({"success": False, "message": f"Error: {e}"})
@@ -706,56 +778,15 @@ def save_speedy_address(request, order_id):
             if not _checkout_owned(request, order):
                 return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
             data = json.loads(request.body)
-
-            shipping_price = None
-            if 'shipping_price' in data:
-                try:
-                    shipping_price = float(data.get('shipping_price'))
-                except (TypeError, ValueError):
-                    shipping_price = None
-
-            user = request.user if request.user.is_authenticated else None
-            office_name = data.get('office_name', '')
-            delivery_method = 'speedy_office' if office_name else 'speedy'
-            address_kwargs = dict(
-                name=data.get('name', ''),
-                phone=data.get('phone', ''),
-                email=data.get('email', ''),
-                delivery_method=delivery_method,
-                city=data.get('city', ''),
-                address=data.get('address', ''),
-                office_code=data.get('office_code', ''),
-                office_name=office_name,
-                face=data.get('face', ''),
-            )
-
-            # Note: we do not persist Speedy site_id in Address model (no field). We'll resolve via API when shipping.
-
-            if user:
-                existing_address = customer_models.Address.objects.filter(user=user, **address_kwargs).first()
-            else:
-                existing_address = None
-
-            if existing_address:
-                address = existing_address
-            else:
-                if user:
-                    address_kwargs['user'] = user
-                address = customer_models.Address.objects.create(**address_kwargs)
-
-            order.address = address
-            apply_quoted_shipping(order, user, shipping_price, delivery_method == "speedy_office")
-            # Cache extra Speedy options for shipment creation
-            from django.core.cache import cache
-            speedy_opts = {
-                "speedy_contents": data.get('speedy_contents') or None,
-                "parcel_weight": data.get('parcel_weight') or None,
-                "parcel_count": data.get('parcel_count') or None,
-                "site_id": data.get('site_id') or None,
-                "office_id": data.get('office_code') or None,
-            }
-            cache.set(f"speedy_opts_{order.order_id}", speedy_opts, timeout=60*60)
-            apply_coupon_discount(order)
+            if _persist_destination(request, order, data, _chosen_method(data, "speedy", ("speedy_office",))) is None:
+                return JsonResponse({"success": False, "message": "Непълен адрес."})
+            cache.set(f"speedy_opts_{order.order_id}", {
+                "speedy_contents": data.get("speedy_contents") or None,
+                "parcel_weight": data.get("parcel_weight") or None,
+                "parcel_count": data.get("parcel_count") or None,
+                "site_id": data.get("site_id") or None,
+                "office_id": data.get("office_code") or None,
+            }, timeout=60 * 60)
             return JsonResponse({"success": True})
         except Exception as e:
             return JsonResponse({"success": False, "message": f"Error: {e}"})
@@ -770,47 +801,15 @@ def save_pigeon_address(request, order_id):
             if not _checkout_owned(request, order):
                 return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
             data = json.loads(request.body)
-            shipping_price = None
-            if "shipping_price" in data:
-                try:
-                    shipping_price = float(data.get("shipping_price"))
-                except (TypeError, ValueError):
-                    shipping_price = None
-            user = request.user if request.user.is_authenticated else None
-            delivery_method = data.get("delivery_method") or "pigeon"
-            if delivery_method not in ("pigeon", "pigeon_office", "pigeon_locker"):
-                delivery_method = "pigeon_office" if data.get("office_name") else "pigeon"
-            address_kwargs = dict(
-                name=data.get("name", ""),
-                phone=data.get("phone", ""),
-                email=data.get("email", ""),
-                delivery_method=delivery_method,
-                city=data.get("city", ""),
-                address=data.get("address", ""),
-                office_code=data.get("office_code", ""),
-                office_name=data.get("office_name", ""),
-                post_code=data.get("post_code", ""),
-                face=data.get("face", ""),
-            )
-            if user:
-                existing_address = customer_models.Address.objects.filter(user=user, **address_kwargs).first()
-            else:
-                existing_address = None
-            if existing_address:
-                address = existing_address
-            else:
-                if user:
-                    address_kwargs["user"] = user
-                address = customer_models.Address.objects.create(**address_kwargs)
-            order.address = address
-            apply_quoted_shipping(order, user, shipping_price, delivery_method in ("pigeon_office", "pigeon_locker"))
+            method = _chosen_method(data, "pigeon", ("pigeon_office", "pigeon_locker"))
+            if _persist_destination(request, order, data, method) is None:
+                return JsonResponse({"success": False, "message": "Непълен адрес."})
             cache.set(f"pigeon_opts_{order.order_id}", {
                 "city_id": data.get("city_id") or None,
                 "street_id": data.get("street_id") or None,
                 "street_number": data.get("street_number") or None,
                 "office_id": data.get("office_code") or None,
             }, timeout=60 * 60 * 24 * 7)
-            apply_coupon_discount(order)
             return JsonResponse({"success": True})
         except Exception as e:
             return JsonResponse({"success": False, "message": f"Error: {e}"})
@@ -2494,29 +2493,46 @@ def checkout(request, order_id):
         cart_total_weight += 0.1 * item.qty
 
     owns_checkout = _checkout_owned(request, order)
-    address = None
-    if owns_checkout and request.user.is_authenticated:
-        # Prefer main address for autofill; fallback to most recent if no main exists
-        main_address = customer_models.Address.objects.filter(user=request.user, is_main=True).first()
-        if main_address:
-            address = main_address
-        else:
-            address = customer_models.Address.objects.filter(user=request.user).order_by('-id').first()
+    saved_destinations = []
+    contact = {"name": "", "phone": "", "email": ""}
+    order_destination = None
+    if owns_checkout:
+        if order.address_id:
+            order_destination = _destination_payload(order.address)
+        if request.user.is_authenticated:
+            contact = {
+                "name": request.user.full_name or "",
+                "phone": request.user.mobile or "",
+                "email": request.user.email or "",
+            }
+            saved_destinations = [
+                _destination_payload(item)
+                for item in customer_models.Address.objects.filter(
+                    user=request.user, saved=True
+                ).order_by("-is_main", "-id")
+            ]
+    econt_address = None
+    if order_destination and (order_destination["delivery_method"] or "").startswith("econt"):
+        econt_address = order_destination
+    else:
+        econt_address = next(
+            (item for item in saved_destinations if item["is_main"] and item["delivery_method"].startswith("econt")),
+            None,
+        )
     econt_params = {
         "id_shop": settings.ECONT_SHOP_ID,
         "order_total": float(order.total) or 0,
-        "order_currency": "EUR", 
+        "order_currency": "EUR",
         "order_weight": cart_total_weight,
-        "customer_name": address.name if address and getattr(address, "name", None) else "",
-        "customer_phone": address.phone if address and getattr(address, "phone", None) else "",
-        "customer_email": address.email if address and address.email else "",
-        "customer_city_name": address.city if address and address.city else "",
+        "customer_name": (econt_address or {}).get("name") or contact["name"],
+        "customer_phone": (econt_address or {}).get("phone") or contact["phone"],
+        "customer_email": (econt_address or {}).get("email") or contact["email"],
+        "customer_city_name": (econt_address or {}).get("city") or "",
     }
-    if address:
-        if address.delivery_method == "econt_office" and address.office_code:
-            econt_params["customer_office_code"] = address.office_code
-        elif address.delivery_method == "econt" and address.address:
-            econt_params["customer_address"] = address.address
+    if econt_address and econt_address["delivery_method"] == "econt_office" and econt_address["office_code"]:
+        econt_params["customer_office_code"] = econt_address["office_code"]
+    elif econt_address and econt_address["delivery_method"] == "econt" and econt_address["address"]:
+        econt_params["customer_address"] = econt_address["address"]
     econt_url = f"{settings.ECONT_SHIPPMENT_CALC_URL}?{urlencode(econt_params)}"
 
     context = {
@@ -2524,8 +2540,9 @@ def checkout(request, order_id):
         "stripe_public_key": settings.STRIPE_PUBLIC_KEY,
         "breadcrumbs": breadcrumbs,
         "econt_url": econt_url,
-        # Expose user's primary (main) address for checkout autofill
-        "primary_address": address,
+        "saved_destinations": saved_destinations,
+        "order_destination": order_destination,
+        "checkout_contact": contact,
         "owns_checkout": owns_checkout,
         "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
         "shipping_prize_minimums": json.dumps(free_shipping_minimums(request.user)),

@@ -19,18 +19,12 @@
     <style>
     .collapsible-section {
         overflow: hidden;
-        transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
         max-height: 0;
-        will-change: max-height;
     }
     .collapsible-section.open {
-        max-height: 2000px;
+        max-height: none;
+        overflow: visible;
     }
-    /* Ensure collapsed sections don't display content */
-    #speedy-shipping-block,
-    #pigeon-shipping-block { transition: none; }
-    #speedy-shipping-block.open,
-    #pigeon-shipping-block.open { overflow: visible; }
     @media (min-width: 992px) {
         .sticky-order-summary {
             position: sticky;
@@ -116,7 +110,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col">
+                            <div class="col-12">
                             <div id="econt-shipping-block" class="collapsible-section">
                                 <div class="card-wrap rounded mb-4">
                                     <div class="card-wrap-header px-3 py-2 border-bottom d-flex align-items-center justify-content-between">
@@ -125,31 +119,9 @@
                                         </div>
                                     </div>
                                     <div class="card-wrap-body px-3 py-3">
-                                        <div class="mb-2">
-                                            <div class="alert alert-info">
-                                                Моля, попълнете вашите данни за доставка чрез формата на Еконт по-долу. След като попълните и потвърдите, ще използваме тази информация за изпращане на вашата поръчка.
-                                            </div>
-                                        </div>
                                         <div id="econt-error-block"></div>
                                         <div id="econt-saved" class="d-flex flex-wrap"></div>
-                                        <iframe
-                                            id="econt-delivery-iframe"
-                                            src="{{ econt_url }}"
-                                            width="100%"
-                                            height="750"
-                                            frameborder="0"
-                                            allowfullscreen
-                                        ></iframe>
-                                        <input type="hidden" id="econt_customer_name" name="econt_customer_name">
-                                        <input type="hidden" id="econt_customer_phone" name="econt_customer_phone">
-                                        <input type="hidden" id="econt_customer_email" name="econt_customer_email">
-                                        <input type="hidden" id="econt_customer_city" name="econt_customer_city">
-                                        <input type="hidden" id="econt_customer_address" name="econt_customer_address">
-                                        <input type="hidden" id="econt_customer_office_name" name="econt_customer_office_name">
-                                        <input type="hidden" id="econt_customer_office_code" name="econt_customer_office_code">
-                                        <input type="hidden" id="econt_customer_face" name="econt_customer_face">
-                                        <input type="hidden" id="econt_customer_post_code" name="econt_customer_post_code">
-                                        <div id="shipping-price-block" class="mt-2"></div>
+                                        {% include "store/_delivery_form.html" with carrier="econt" city_key="city_id" address_kind="street" %}
                                     </div>
                                 </div>
                             </div>
@@ -346,41 +318,6 @@
         return null;
     };
 </script>
-<script>
-    (function() {
-        var rows = window.savedForCarrier('econt');
-        var container = document.getElementById('econt-saved');
-        var iframe = document.getElementById('econt-delivery-iframe');
-        function applyEcont(dest) {
-            if (!iframe) return;
-            var contact = window.checkoutContact || {};
-            var url = new URL(iframe.src, window.location.origin);
-            url.searchParams.set('customer_name', dest.name || contact.name || '');
-            url.searchParams.set('customer_phone', dest.phone || contact.phone || '');
-            url.searchParams.set('customer_email', dest.email || contact.email || '');
-            url.searchParams.set('customer_city_name', dest.city || '');
-            url.searchParams.delete('customer_office_code');
-            url.searchParams.delete('customer_address');
-            if (dest.delivery_method === 'econt_office' && dest.office_code) {
-                url.searchParams.set('customer_office_code', dest.office_code);
-            } else if (dest.delivery_method === 'econt' && dest.address) {
-                url.searchParams.set('customer_address', dest.address);
-            }
-            iframe.src = url.toString();
-            ['name', 'phone', 'email', 'city', 'address', 'office_name', 'office_code', 'face', 'post_code'].forEach(function(field) {
-                var input = document.getElementById('econt_customer_' + field);
-                if (input) input.value = '';
-            });
-        }
-        window.renderSavedDestinations(container, rows, applyEcont);
-        var initial = window.initialDestination('econt');
-        var match = rows.filter(function(dest) { return window.sameDestination(dest, initial); })[0];
-        if (match) window.markSavedDestination(container, match.id);
-    })();
-</script>
-<script>
-    // removed debug helper
-</script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="{% static 'assets/js/free_shipping.js' %}"></script>
 <script src="{% static 'assets/js/checkout_layout.js' %}"></script>
@@ -402,111 +339,6 @@
         }
     }
 
-    // Unified Econt payment handler
-    function handleEcontPayment(button, paymentType) {
-        var officeName = document.getElementById('econt_customer_office_name')?.value;
-
-        var addressData = {
-            name: document.getElementById('econt_customer_name').value,
-            phone: document.getElementById('econt_customer_phone').value,
-            email: document.getElementById('econt_customer_email').value,
-            delivery_method: officeName ? 'econt_office' : 'econt',
-            city: document.getElementById('econt_customer_city').value,
-            address: document.getElementById('econt_customer_address').value,
-            office_code: document.getElementById('econt_customer_office_code')?.value,
-            office_name: officeName,
-            face: document.getElementById('econt_customer_face').value,
-            post_code: document.getElementById('econt_customer_post_code').value,
-            shipping_price: (lastEcontShipping.shipping_price_cod ? lastEcontShipping.shipping_price_cod : null)
-        };
-
-        var econtErrorBlock = document.getElementById('econt-error-block');
-        if (econtErrorBlock) econtErrorBlock.innerHTML = '';
-
-        if (!addressData.phone || (!addressData.office_name && !addressData.address)) {
-            if (econtErrorBlock) {
-                econtErrorBlock.innerHTML = '<div class="alert alert-danger">Моля, попълнете и потвърдете адреса за доставка чрез формата на Еконт!</div>';
-                econtErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-            setContinueLoading(false);
-            return;
-        }
-
-        if (paymentType === 'card') {
-            button.innerHTML = 'Плащане с карта <i class="fas fa-spinner fa-spin ms-2"></i>';
-        } else {
-            button.innerHTML = 'Наложен платеж <i class="fas fa-spinner fa-spin"></i>';
-        }
-
-        fetch('/save-econt-address/{{ order.order_id }}/', {
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
-            body: JSON.stringify(addressData)
-        })
-        .then(function (resp) { return resp.json(); })
-        .then(function (respData) {
-            if (respData.success) {
-                if (paymentType === 'card') {
-                    // Stripe payment
-                    fetch('/stripe-payment/{{order.order_id}}/', {
-                        method: 'POST',
-                        body: JSON.stringify({ email: addressData.email })
-                    })
-                    .then(function (response) { return response.json() })
-                    .then(function (session) {
-                        return stripe.redirectToCheckout({ sessionId: session.sessionId })
-                    })
-                    .then(function (result) {
-                        if (result.error) {
-                            if (window.Toast) {
-                                window.Toast.fire({ icon: "error", title: result.error.message });
-                            } else {
-                                alert(result.error.message);
-                            }
-                        }
-                    })
-                    .catch(function (error) {
-                        console.log('Error: ', error)
-                    });
-                } else if (paymentType === 'cash_on_delivery') {
-                    // COD payment
-                    fetch("{% url 'store:cod_payment' order.order_id %}", {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': csrftoken }
-                    })
-                    .then(function (response) {
-                        if (response.redirected) {
-                            window.location.href = response.url;
-                        }
-                    });
-                }
-            } else {
-                if (econtErrorBlock) {
-                    econtErrorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса. Моля, опитайте отново.</div>';
-                    econtErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
-                }
-                button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
-                setContinueLoading(false);
-            }
-        })
-        .catch(function (error) {
-            if (econtErrorBlock) {
-                econtErrorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса. Моля, опитайте отново.</div>';
-                econtErrorBlock.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-            button.innerHTML = (paymentType === 'card') ? 'Плащане с карта' : 'Наложен платеж';
-            setContinueLoading(false);
-        });
-    }
-
-    // Attach unified event handlers
-    try {
-        checkoutButton.addEventListener('click', function () {
-            handleEcontPayment(checkoutButton, 'card');
-        });
-    } catch (error) {
-        console.log(error)
-    }
 </script>
 <script>
     // Helper to get CSRF token from cookies
@@ -536,14 +368,6 @@
                 body: JSON.stringify({ payment_method: method })
             }).then(function() { /* ignore result; UI updates independently */ }).catch(function(){});
         } catch (e) { /* no-op */ }
-    }
-    var codButton = document.getElementById('cod-payment');
-    try {
-        codButton.addEventListener('click', function () {
-            handleEcontPayment(codButton, 'cash_on_delivery');
-        });
-    } catch (error) {
-        console.log(error)
     }
 </script>
 <script>
@@ -578,8 +402,6 @@
     let lastEcontShipping = { shipping_price: null, shipping_price_cod: null };
     let lastSpeedyShipping = { shipping_price: null, shipping_price_cod: null };
     let lastPigeonShipping = { shipping_price: null, shipping_price_cod: null };
-    // Track last saved address to avoid redundant autosaves
-    let lastSavedAddressKey = null; // Econt autosave key
 
     function formatDualCurrency(value) {
         const eur = parseFloat(value);
@@ -596,7 +418,7 @@
         let shippingText = "-";
         let shippingVal = 0;
 
-        let officeNameE = document.getElementById('econt_customer_office_name')?.value || '';
+        let officeNameE = document.getElementById('econt_office_name')?.value || '';
         let officeNameS = document.getElementById('speedy_office_name')?.value || '';
         let officeNameP = document.getElementById('pigeon_office_name')?.value || '';
         let officeSelected = (selectedShipping === 'econt') ? !!officeNameE : (selectedShipping === 'speedy' ? !!officeNameS : (selectedShipping === 'pigeon' ? !!officeNameP : false));
@@ -742,81 +564,6 @@
         updateSummaryForPayment();
     });
 
-    // Econt iframe postMessage
-    window.addEventListener('message', function(event) {
-        var data = event.data;
-        let shippingChanged = false;
-        if (data && (data.shipping_price !== undefined || data.shipping_price_cod !== undefined)) {
-            lastEcontShipping = {
-                shipping_price: data.shipping_price,
-                shipping_price_cod: data.shipping_price_cod
-            };
-            shippingChanged = true;
-        }
-        if (data && data.id) {
-            document.getElementById('econt_customer_name').value = data.name || '';
-            document.getElementById('econt_customer_phone').value = data.phone || '';
-            document.getElementById('econt_customer_email').value = data.email || '';
-            document.getElementById('econt_customer_city').value = data.city_name || '';
-            document.getElementById('econt_customer_address').value = data.address || '';
-            document.getElementById('econt_customer_office_name').value = data.office_name || '';
-            document.getElementById('econt_customer_office_code').value = data.office_code || '';
-            document.getElementById('econt_customer_face').value = data.face || '';
-            document.getElementById('econt_customer_post_code').value = data.post_code || '';
-
-            // Build a unique key for current address payload
-            const currentAddressKey = JSON.stringify({
-                name: data.name || '',
-                phone: data.phone || '',
-                email: data.email || '',
-                city: data.city_name || '',
-                address: data.address || '',
-                office_name: data.office_name || '',
-                office_code: data.office_code || '',
-                face: data.face || '',
-                post_code: data.post_code || ''
-            });
-
-            // Auto-save address to backend only if it changed, and only on this customer's checkout
-            if (window.ownsCheckout && currentAddressKey !== lastSavedAddressKey) {
-                const officeName = data.office_name || '';
-                const payload = {
-                    name: data.name || '',
-                    phone: data.phone || '',
-                    email: data.email || '',
-                    delivery_method: officeName ? 'econt_office' : 'econt',
-                    city: data.city_name || '',
-                    address: data.address || '',
-                    office_code: data.office_code || '',
-                    office_name: officeName,
-                    face: data.face || '',
-                    post_code: data.post_code || ''
-                    // Note: no shipping_price here on autosave
-                };
-                try {
-                    fetch('/save-econt-address/{{ order.order_id }}/', {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    })
-                    .then(function (resp) { return resp.json(); })
-                    .then(function (respData) {
-                        if (respData && respData.success) {
-                            lastSavedAddressKey = currentAddressKey;
-                        } else {
-                            // Silent fail; leave save to happen again on finalize
-                            console.log('Econt autosave address failed');
-                        }
-                    })
-                    .catch(function () { /* ignore autosave errors */ });
-                } catch (e) { /* no-op */ }
-            }
-        }
-        if (shippingChanged) {
-            updateSummaryForPayment();
-        }
-    });
-
     // "Continue" button triggers hidden payment button
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('continue-payment').addEventListener('click', function() {
@@ -899,7 +646,61 @@
 </script>
 <script src="{% static 'assets/js/delivery_form.js' %}"></script>
 <script>
-    // A new courier is another call like these two. Econt stays in its iframe until it can use this form.
+    bindDeliveryForm({
+        carrier: 'econt',
+        label: 'Еконт',
+        door: 'econt',
+        office: 'econt_office',
+        cityKey: 'city_id',
+        street: true,
+        price: lastEcontShipping,
+        saveUrl: '/save-econt-address/{{ order.order_id }}/',
+        cardUrl: '/stripe-payment/{{ order.order_id }}/',
+        codUrl: '{% url "store:cod_payment" order.order_id %}',
+        cityText: function (city) {
+            return city.name + (city.postal_code ? ' ' + city.postal_code : '');
+        },
+        cityValue: function (city) { return city.name || ''; },
+        officeText: function (office) {
+            return (office.type === 'locker' ? 'Автомат' : 'Офис') + ': ' + (office.name || '');
+        },
+        cities: function (query) {
+            if (!query || query.trim().length < 2) return Promise.resolve([]);
+            return fetch('/econt/cities/?q=' + encodeURIComponent(query.trim()))
+                .then(function (response) { return response.json(); })
+                .then(function (data) { return (data && data.cities) || []; });
+        },
+        offices: function (cityId) {
+            if (!cityId) return Promise.resolve([]);
+            return fetch('/econt/offices/?city_id=' + encodeURIComponent(cityId))
+                .then(function (response) { return response.json(); })
+                .then(function (data) { return (data && data.offices) || []; });
+        },
+        streets: function (cityId, query) {
+            return fetch('/econt/streets/?city_id=' + encodeURIComponent(cityId) + '&q=' + encodeURIComponent(query))
+                .then(function (response) { return response.json(); })
+                .then(function (data) { return (data && data.streets) || []; });
+        },
+        quoteUrl: function (body) {
+            var door = body.delivery_method === 'econt';
+            if (door ? !body.city_id : !body.office_code) return '';
+            var params = new URLSearchParams();
+            if (body.city) params.set('city', body.city);
+            if (body.post_code) params.set('post_code', body.post_code);
+            if (body.address) params.set('address', body.address);
+            if (body.office_code) params.set('office_id', body.office_code);
+            if (body.phone) params.set('phone', body.phone);
+            if (body.name) params.set('name', body.name);
+            if (body.email) params.set('email', body.email);
+            if (selectedPayment === 'cash_on_delivery') params.set('payment', 'cod');
+            return '/econt/quote/{{ order.order_id }}/?' + params.toString();
+        },
+        ready: function (body) {
+            if (!body.phone || !body.city_id) return false;
+            if (body.delivery_method === 'econt') return !!(body.street_id && body.street_number);
+            return !!body.office_code;
+        }
+    });
     bindDeliveryForm({
         carrier: 'speedy',
         label: 'Спиди',

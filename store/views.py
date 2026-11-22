@@ -19,6 +19,7 @@ import stripe
 from store.utils import (
     paginate_queryset,
     floor_to_cent,
+    econt_request,
     speedy_v1_find_sites,
     speedy_v1_find_offices,
     speedy_v1_calculate,
@@ -46,7 +47,6 @@ from store.prizes import (
 )
 from django.db.models import Q
 from store.error_log import record_server_error
-from urllib.parse import urlencode
 import json
 import requests
 from django.views.decorators.http import require_POST
@@ -200,6 +200,8 @@ def send_order_to_econt(order):
         "orderSum": float(order.total),
         "cod": float(order.total) if order.payment_method in ["cash_on_delivery"] else 0,
         "currency": "EUR",
+        "payAfterAccept": True,
+        "payAfterTest": False,
         "shipmentDescription": f"iBands.bg поръчка #{order.order_id}",
         "customerInfo": {
             "name": address.name,
@@ -846,6 +848,129 @@ def release_single_use_coupon(coupon, order):
 
 
 @csrf_exempt
+def _econt_match(items, query):
+    folded = (query or "").strip().casefold()
+    if len(folded) < 2:
+        return []
+    matched = [
+        item for item in items
+        if folded in (item.get("name") or "").casefold() or folded in (item.get("postal_code") or "").casefold()
+    ]
+    matched.sort(key=lambda item: 0 if (item.get("name") or "").casefold().startswith(folded) else 1)
+    return matched[:10]
+
+
+def _econt_cached(key, url, payload, slim):
+    cached = cache.get(key)
+    if cached is None:
+        cached = slim(econt_request(url, payload))
+        cache.set(key, cached, 60 * 60 * 24)
+    return cached
+
+
+def econt_find_cities(request):
+    try:
+        cities = _econt_cached(
+            "econt_cities",
+            "https://ee.econt.com/services/Nomenclatures/NomenclaturesService.getCities.json",
+            {"countryCode": "BGR"},
+            lambda data: [{
+                "id": city.get("id"),
+                "name": city.get("name") or "",
+                "postal_code": city.get("postCode") or "",
+            } for city in data.get("cities") or []],
+        )
+        return JsonResponse({"cities": _econt_match(cities, request.GET.get("q"))})
+    except Exception as exc:
+        return JsonResponse({"cities": [], "error": str(exc)})
+
+
+def econt_find_offices(request):
+    city_id = request.GET.get("city_id")
+    if not city_id:
+        return JsonResponse({"offices": []})
+    try:
+        offices = _econt_cached(
+            f"econt_offices_{city_id}",
+            "https://ee.econt.com/services/Nomenclatures/NomenclaturesService.getOffices.json",
+            {"countryCode": "BGR", "cityID": int(city_id)},
+            lambda data: [{
+                "id": office.get("code") or "",
+                "name": office.get("name") or "",
+                "type": "locker" if office.get("isAPS") else "office",
+                "postal_code": ((office.get("address") or {}).get("city") or {}).get("postCode") or "",
+            } for office in data.get("offices") or []],
+        )
+        return JsonResponse({"offices": offices})
+    except Exception as exc:
+        return JsonResponse({"offices": [], "error": str(exc)})
+
+
+def econt_find_streets(request):
+    city_id = request.GET.get("city_id")
+    if not city_id:
+        return JsonResponse({"streets": []})
+    try:
+        streets = _econt_cached(
+            f"econt_streets_{city_id}",
+            "https://ee.econt.com/services/Nomenclatures/NomenclaturesService.getStreets.json",
+            {"cityID": int(city_id)},
+            lambda data: [{
+                "id": street.get("id"),
+                "name": street.get("name") or "",
+            } for street in data.get("streets") or []],
+        )
+        return JsonResponse({"streets": _econt_match(streets, request.GET.get("q"))})
+    except Exception as exc:
+        return JsonResponse({"streets": [], "error": str(exc)})
+
+
+@csrf_exempt
+def econt_quote(request, order_id):
+    try:
+        order = store_models.Order.objects.get(order_id=order_id)
+        goods = float(_goods_total(order))
+        weight = 0.0
+        for item in order.order_items.all():
+            try:
+                weight += float(getattr(item.product, "weight", 0) or 0.1) * float(item.qty or 0)
+            except Exception:
+                continue
+        office = request.GET.get("office_id") or ""
+        data = econt_request("https://delivery.econt.com/services/OrdersService.getPrice.json", {
+            "orderNumber": "",
+            "status": "pending",
+            "orderSum": goods,
+            "cod": request.GET.get("payment") == "cod" or order.payment_method == "cash_on_delivery",
+            "payAfterAccept": True,
+            "payAfterTest": False,
+            "currency": "EUR",
+            "customerInfo": {
+                "name": request.GET.get("name") or "Получател",
+                "phone": request.GET.get("phone") or "0000000000",
+                "email": request.GET.get("email") or "",
+                "countryCode": "BG",
+                "cityName": request.GET.get("city") or "",
+                "postCode": request.GET.get("post_code") or "",
+                "officeCode": office,
+                "address": "" if office else (request.GET.get("address") or ""),
+            },
+            "items": [{
+                "name": "Поръчка",
+                "count": 1,
+                "totalPrice": goods,
+                "totalWeight": weight or 0.1,
+            }],
+        })
+        price = data.get("receiverDueAmount")
+        if price is None:
+            price = data.get("totalPrice")
+        quote = {"price": float(price), "currency": data.get("currency") or "EUR"} if price is not None else None
+        return JsonResponse({"success": True, "quote": quote})
+    except Exception as exc:
+        return JsonResponse({"success": False, "error": str(exc)})
+
+
 def speedy_find_sites(request):
     q = request.GET.get("q") or request.POST.get("q")
     if not q:
@@ -2491,10 +2616,6 @@ def checkout(request, order_id):
         {"label": "Поръчка", "url": ""},
     ]
 
-    cart_total_weight = 0
-    for item in order.order_items.all():
-        cart_total_weight += 0.1 * item.qty
-
     owns_checkout = _checkout_owned(request, order)
     saved_destinations = []
     contact = {"name": "", "phone": "", "email": ""}
@@ -2514,35 +2635,10 @@ def checkout(request, order_id):
                     user=request.user, saved=True
                 ).order_by("-is_main", "-id")
             ]
-    econt_address = None
-    if order_destination and (order_destination["delivery_method"] or "").startswith("econt"):
-        econt_address = order_destination
-    else:
-        econt_address = next(
-            (item for item in saved_destinations if item["is_main"] and item["delivery_method"].startswith("econt")),
-            None,
-        )
-    econt_params = {
-        "id_shop": settings.ECONT_SHOP_ID,
-        "order_total": float(order.total) or 0,
-        "order_currency": "EUR",
-        "order_weight": cart_total_weight,
-        "customer_name": (econt_address or {}).get("name") or contact["name"],
-        "customer_phone": (econt_address or {}).get("phone") or contact["phone"],
-        "customer_email": (econt_address or {}).get("email") or contact["email"],
-        "customer_city_name": (econt_address or {}).get("city") or "",
-    }
-    if econt_address and econt_address["delivery_method"] == "econt_office" and econt_address["office_code"]:
-        econt_params["customer_office_code"] = econt_address["office_code"]
-    elif econt_address and econt_address["delivery_method"] == "econt" and econt_address["address"]:
-        econt_params["customer_address"] = econt_address["address"]
-    econt_url = f"{settings.ECONT_SHIPPMENT_CALC_URL}?{urlencode(econt_params)}"
-
     context = {
         "order": order,
         "stripe_public_key": settings.STRIPE_PUBLIC_KEY,
         "breadcrumbs": breadcrumbs,
-        "econt_url": econt_url,
         "saved_destinations": saved_destinations,
         "order_destination": order_destination,
         "checkout_contact": contact,

@@ -146,6 +146,23 @@ def recalc_cart_group_promos(cart_qs):
         return
 
 
+def econt_request(url, payload):
+    response = requests.post(
+        url,
+        json=payload or {},
+        timeout=20,
+        headers={"Authorization": settings.ECONT_PRIVATE_KEY, "Content-Type": "application/json"},
+    )
+    try:
+        data = response.json()
+    except ValueError:
+        response.raise_for_status()
+        raise
+    if response.status_code >= 400 or (isinstance(data, dict) and data.get("type")):
+        raise requests.HTTPError((data.get("message") if isinstance(data, dict) else "") or response.reason)
+    return data
+
+
 # --- Speedy v1 JSON-credential endpoints ---
 def speedy_v1_find_sites(name: str, country_id: int = 100):
     url = getattr(settings, "SPEEDY_API_BASE", "https://api.speedy.bg") + "/v1/location/site"

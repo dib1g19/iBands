@@ -1793,6 +1793,24 @@ class SavedDestinationTests(TestCase):
         self.assertTrue(first.is_main)
         self.assertFalse(second.is_main)
 
+    @patch("store.views.cache.get", return_value=[{"id": 41, "name": "София", "postal_code": "1000"}])
+    def test_econt_city_search_filters_the_cached_list(self, _cache):
+        response = self.client.get(reverse("store:econt_find_cities"), {"q": "соф"})
+        self.assertEqual(response.json()["cities"][0]["id"], 41)
+
+    @patch("store.views.econt_request")
+    def test_econt_quote_prices_the_selected_office(self, econt_request):
+        econt_request.return_value = {"receiverDueAmount": 3.35, "currency": "EUR"}
+        order = self._order()
+        response = self.client.get(reverse("store:econt_quote", args=[order.order_id]), {
+            "office_id": "1127", "city": "София", "post_code": "1000", "payment": "cod",
+        })
+        self.assertEqual(response.json()["quote"]["price"], 3.35)
+        body = econt_request.call_args[0][1]
+        self.assertEqual(body["customerInfo"]["officeCode"], "1127")
+        self.assertTrue(body["cod"])
+        self.assertFalse(body["payAfterTest"])
+
     def test_the_oldest_saved_address_is_chosen_when_none_is_main(self):
         older = customer_models.Address.objects.create(
             user=self.user, saved=True, phone="0888", delivery_method="speedy_office",
@@ -1875,6 +1893,8 @@ class SavedDestinationTests(TestCase):
         self.assertContains(page, "delivery_form.js")
         self.assertContains(page, "speedy_city_search")
         self.assertContains(page, "pigeon_street_search")
+        self.assertContains(page, "econt_street_search")
+        self.assertNotContains(page, "econt-delivery-iframe")
         self.assertContains(page, '"office_code": "42"')
         self.assertContains(page, '"site_id": "99"')
         self.assertNotContains(page, "0888000099")

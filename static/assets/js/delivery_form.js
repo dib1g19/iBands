@@ -164,8 +164,11 @@
             });
             if (container.childElementCount) container.style.display = 'block';
         }
+        function cityLabel(item) {
+            return config.cityText ? config.cityText(item) : labelOf(item);
+        }
         function pickCity(item) {
-            citySearch.value = labelOf(item);
+            citySearch.value = config.cityValue ? config.cityValue(item) : labelOf(item);
             cityIdInput.value = item.id || '';
             if (postCodeInput && postalOf(item)) postCodeInput.value = postalOf(item);
             clearOffice();
@@ -346,7 +349,7 @@
                 var query = citySearch.value.trim();
                 cityTimer = setTimeout(function () {
                     config.cities(query).then(function (cities) {
-                        renderChoices(citySuggestions, cities, labelOf, pickCity);
+                        renderChoices(citySuggestions, cities, cityLabel, pickCity);
                     }).catch(function () {});
                 }, 300);
                 save();

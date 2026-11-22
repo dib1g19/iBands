@@ -2101,6 +2101,31 @@ input[type="number"] {
     margin-left: 12px;
 }
 
+.shipping-panel {
+    height: 0;
+    overflow: hidden;
+}
+
+.collapsible-section.open.settled > .shipping-panel {
+    height: auto;
+    overflow: visible;
+}
+
+.shipping-panel > .card-wrap {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.28s ease, transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.collapsible-section.open > .shipping-panel > .card-wrap {
+    opacity: 1;
+    transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shipping-panel > .card-wrap { transition: none; }
+}
+
 .delivery-form .form-label {
     font-size: .8125rem;
     font-weight: 600;

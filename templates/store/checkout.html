@@ -17,14 +17,6 @@
 
 {% block content %}
     <style>
-    .collapsible-section {
-        overflow: hidden;
-        max-height: 0;
-    }
-    .collapsible-section.open {
-        max-height: none;
-        overflow: visible;
-    }
     @media (min-width: 992px) {
         .sticky-order-summary {
             position: sticky;
@@ -112,6 +104,7 @@
                         <div class="row">
                             <div class="col-12">
                             <div id="econt-shipping-block" class="collapsible-section">
+                                <div class="shipping-panel">
                                 <div class="card-wrap rounded mb-4">
                                     <div class="card-wrap-header px-3 py-2 border-bottom d-flex align-items-center justify-content-between">
                                         <div class="card-header-flex">
@@ -123,11 +116,13 @@
                                         <div id="econt-saved" class="d-flex flex-wrap"></div>
                                         {% include "store/_delivery_form.html" with carrier="econt" city_key="city_id" address_kind="street" %}
                                     </div>
+                                    </div>
                                 </div>
                             </div>
                             </div>
                             <div class="col-12">
                             <div id="speedy-shipping-block" class="collapsible-section">
+                                <div class="shipping-panel">
                                 <div class="card-wrap rounded mb-4">
                                     <div class="card-wrap-header px-3 py-2 border-bottom">
                                         <div class="card-header-flex">
@@ -140,10 +135,12 @@
                                         {% include "store/_delivery_form.html" with carrier="speedy" city_key="site_id" address_kind="line" %}
                                     </div>
                                 </div>
+                                </div>
                             </div>
                             </div>
                             <div class="col-12">
                             <div id="pigeon-shipping-block" class="collapsible-section">
+                                <div class="shipping-panel">
                                 <div class="card-wrap rounded mb-4">
                                     <div class="card-wrap-header px-3 py-2 border-bottom">
                                         <div class="card-header-flex">
@@ -155,6 +152,7 @@
                                         <div id="pigeon-saved" class="d-flex flex-wrap"></div>
                                         {% include "store/_delivery_form.html" with carrier="pigeon" city_key="city_id" address_kind="street" locker="1" %}
                                     </div>
+                                </div>
                                 </div>
                             </div>
                             </div>
@@ -369,31 +367,6 @@
             }).then(function() { /* ignore result; UI updates independently */ }).catch(function(){});
         } catch (e) { /* no-op */ }
     }
-</script>
-<script>
-    // Collapsible shipping block logic
-    document.addEventListener('DOMContentLoaded', function() {
-        var econtRadio = document.getElementById('shipping-econt');
-        var speedyRadio = document.getElementById('shipping-speedy');
-        var pigeonRadio = document.getElementById('shipping-pigeon');
-        var econtBlock = document.getElementById('econt-shipping-block');
-        var speedyBlock = document.getElementById('speedy-shipping-block');
-        var pigeonBlock = document.getElementById('pigeon-shipping-block');
-        function updateShippingBlock() {
-            const showE = !!(econtRadio && econtRadio.checked);
-            const showS = !!(speedyRadio && speedyRadio.checked);
-            const showP = !!(pigeonRadio && pigeonRadio.checked);
-            if (econtBlock) econtBlock.classList.toggle('open', showE);
-            if (speedyBlock) speedyBlock.classList.toggle('open', showS);
-            if (pigeonBlock) pigeonBlock.classList.toggle('open', showP);
-        }
-        if (econtRadio && speedyRadio && econtBlock) {
-            econtRadio.addEventListener('change', updateShippingBlock);
-            speedyRadio.addEventListener('change', updateShippingBlock);
-            if (pigeonRadio) pigeonRadio.addEventListener('change', updateShippingBlock);
-            updateShippingBlock();
-        }
-    });
 </script>
 <script>
     // --- SHIPPING & PAYMENT METHOD LOGIC ---

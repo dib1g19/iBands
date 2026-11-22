@@ -2,7 +2,7 @@
     <div class="delivery-mode">
         <div>
             <input type="radio" name="{{ carrier }}_delivery_mode" id="{{ carrier }}_mode_office" value="office">
-            <label for="{{ carrier }}_mode_office">Офис или автомат</label>
+            <label for="{{ carrier }}_mode_office">Офис/автомат</label>
         </div>
         <div>
             <input type="radio" name="{{ carrier }}_delivery_mode" id="{{ carrier }}_mode_address" value="address">
@@ -55,7 +55,7 @@
             </div>
         {% endif %}
         <div class="col-12 position-relative {{ carrier }}-office-field">
-            <label class="form-label" for="{{ carrier }}_office_search">Офис или автомат</label>
+            <label class="form-label" for="{{ carrier }}_office_search">Офис/автомат</label>
             <input type="text" class="form-control" id="{{ carrier }}_office_search" placeholder="Започнете да пишете" autocomplete="off">
             <div id="{{ carrier }}_office_suggestions" class="list-group delivery-suggest position-absolute"></div>
             <input type="hidden" id="{{ carrier }}_office_code">

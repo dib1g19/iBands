@@ -2056,8 +2056,8 @@ input[type="number"] {
     gap: 0.75rem;
 }
 
-/* Stack shipping cards on small screens */
-@media (max-width: 575.98px) {
+/* Three logos plus the label do not fit in a row below this width. */
+@media (max-width: 1199.98px) {
     .shipping-options { flex-direction: column; }
 }
 
@@ -2155,6 +2155,13 @@ input[type="number"] {
     font-weight: 600;
     cursor: pointer;
     background: #fff;
+}
+
+@media (max-width: 339.98px) {
+    .delivery-mode label {
+        white-space: nowrap;
+        font-size: 0.875rem;
+    }
 }
 
 .delivery-mode input:checked + label {
@@ -2566,6 +2573,9 @@ input[type="number"] {
 
 @media (max-width: 409.98px) {
     .ann-hide-under-410 { display: none !important; }
+}
+@media (max-width: 360.98px) {
+    .ann-item { font-size: 0.8125rem; }
 }
 @media (min-width: 992px) and (max-width: 1609.98px) {
     .hide-under-1610 { display: none !important; }

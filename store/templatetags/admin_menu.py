@@ -2,10 +2,13 @@ import json
 from datetime import timedelta
 
 from django import template
+from django.contrib import admin
 from django.contrib.admin.models import LogEntry
+from django.db.models import Max
 from django.urls import reverse
 from django.utils import timezone
 
+from ibands_site.admin_undo import expire_old_snapshots, undo_payload
 from store.models import StaffUpdate
 
 register = template.Library()
@@ -259,7 +262,20 @@ def _actor(user):
     return full_name or user.get_username()
 
 
-def _present_action(entry):
+def _latest_ids(entries):
+    cts = {entry.content_type_id for entry in entries}
+    oids = {entry.object_id for entry in entries}
+    if not cts or not oids:
+        return set()
+    return {
+        row["latest"]
+        for row in LogEntry.objects.filter(content_type_id__in=cts, object_id__in=oids)
+        .values("content_type_id", "object_id")
+        .annotate(latest=Max("pk"))
+    }
+
+
+def _present_action(entry, request, latest_ids):
     title, extra = _object_title(entry)
     lines = _change_lines(entry)
     visible = lines[:2]
@@ -270,6 +286,12 @@ def _present_action(entry):
         verb = "deleted"
     else:
         verb = "changed"
+    undo_url = ""
+    if entry.pk in latest_ids and undo_payload(entry):
+        model = entry.content_type.model_class() if entry.content_type_id else None
+        model_admin = admin.site._registry.get(model) if model else None
+        if model_admin and model_admin.has_change_permission(request):
+            undo_url = reverse("admin-undo", args=[entry.pk])
     return {
         "title": title,
         "url": "" if entry.is_deletion() else (entry.get_admin_url() or ""),
@@ -278,6 +300,7 @@ def _present_action(entry):
         "details": details,
         "actor": _actor(entry.user),
         "when": _when(entry.action_time),
+        "undo_url": undo_url,
     }
 
 
@@ -336,6 +359,7 @@ def recent_admin_actions(context, limit=20):
         limit = 20
     limit = min(max(limit, 1), 50)
     request = context["request"]
+    expire_old_snapshots()
     page = _page_number(request, ACTIONS_PAGE_PARAM)
     start = (page - 1) * limit
     rows = list(
@@ -344,8 +368,10 @@ def recent_admin_actions(context, limit=20):
         ]
     )
     has_older = len(rows) > limit
+    shown = rows[:limit]
+    latest_ids = _latest_ids([entry for entry in shown if undo_payload(entry)])
     return {
-        "actions": [_present_action(entry) for entry in rows[:limit]],
+        "actions": [_present_action(entry, request, latest_ids) for entry in shown],
         "newer_url": _page_url(request, ACTIONS_PAGE_PARAM, page - 1) if page > 1 else "",
         "older_url": _page_url(request, ACTIONS_PAGE_PARAM, page + 1) if has_older else "",
     }

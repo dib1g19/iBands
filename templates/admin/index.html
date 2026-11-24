@@ -40,6 +40,12 @@
                                         <li>{{ line }}</li>
                                     {% endfor %}
                                 </ul>
+                                {% if action.undo_url %}
+                                    <form class="admin-activity-undo" method="post" action="{{ action.undo_url }}" onsubmit="return confirm('Restore the previous field values? Photos and related rows stay as they are.');">
+                                        {% csrf_token %}
+                                        <button type="submit">{% trans "Undo" %}</button>
+                                    </form>
+                                {% endif %}
                                 {% if action.details %}
                                     <details class="admin-activity-more">
                                         <summary>More</summary>

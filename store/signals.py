@@ -6,7 +6,7 @@ from .context_processors import invalidate_category_tree_cache
 
 @receiver(pre_save, sender=Order)
 def order_status_signal(sender, instance, **kwargs):
-    if not instance.pk:
+    if not instance.pk or getattr(instance, "_skip_order_email", False):
         return
     try:
         previous = Order.objects.get(pk=instance.pk)

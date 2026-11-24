@@ -270,6 +270,19 @@ body.model-product.change-list #result_list td.field-view_on_site_link {
     color: var(--bs-secondary-color);
 }
 
+.admin-activity-undo {
+    margin: 0.35rem 0 0 4.85rem;
+}
+
+.admin-activity-undo button {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--bs-primary);
+    font-weight: 600;
+    cursor: pointer;
+}
+
 .admin-activity-more {
     margin-top: 0.25rem;
     padding-left: 4.85rem;
@@ -304,7 +317,9 @@ body.model-product.change-list #result_list td.field-view_on_site_link {
     }
 
     .admin-activity-lines,
-    .admin-activity-more {
+    .admin-activity-more,
+    .admin-activity-undo {
         padding-left: 0;
+        margin-left: 0;
     }
 }

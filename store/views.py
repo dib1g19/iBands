@@ -2671,14 +2671,14 @@ def cod_payment(request, order_id):
         redeem_prizes(order)
         send_order_notification_email(
             order=order,
-            email_heading=f"Потвърдена поръчка #{order.order_id}",
-            email_title="iBands: Приета поръчка",
+            email_heading=f"Поръчка #{order.order_id} е получена",
+            email_title="iBands: Поръчката е получена",
             to_email=order.address.email,
         )
         send_order_notification_email(
             order=order,
-            email_heading=f"Потвърдена поръчка #{order.order_id}",
-            email_title="iBands: Приета поръчка",
+            email_heading=f"Поръчка #{order.order_id} е получена",
+            email_title="iBands: Поръчката е получена",
             to_email=settings.ORDER_NOTIFICATION_EMAIL,
         )
 
@@ -3008,14 +3008,14 @@ def stripe_payment_verify(request, order_id):
             redeem_prizes(order)
             send_order_notification_email(
                 order=order,
-                email_heading=f"Потвърдена поръчка #{order.order_id}",
-                email_title="iBands: Приета поръчка",
+                email_heading=f"Поръчка #{order.order_id} е получена",
+                email_title="iBands: Поръчката е получена",
                 to_email=order.address.email,
             )
             send_order_notification_email(
                 order=order,
-                email_heading=f"Потвърдена поръчка #{order.order_id}",
-                email_title="iBands: Приета поръчка",
+                email_heading=f"Поръчка #{order.order_id} е получена",
+                email_title="iBands: Поръчката е получена",
                 to_email=settings.ORDER_NOTIFICATION_EMAIL,
             )
             if request.user.is_authenticated:

@@ -29,10 +29,9 @@ PAYMENT_METHOD = (
 
 ORDER_STATUS = (
     ("initiated", "Незавършена"),
-    ("received", "Приета"),
+    ("received", "Получена"),
     ("shipped", "Изпратена"),
     ("delivered", "Доставена"),
-    ("completed", "Завършена"),
     ("canceled", "Отказана"),
 )
 

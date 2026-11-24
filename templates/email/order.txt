@@ -1,5 +1,5 @@
 {% load pricing %}
-Поръчка #{{ order.order_id }} е {{ email_heading }}
+{{ email_heading }}
 
 Здравейте {{ order.address.name }},
 

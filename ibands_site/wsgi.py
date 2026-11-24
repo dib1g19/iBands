@@ -22,3 +22,7 @@ else:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ibands_site.settings.dev")
 
 application = get_wsgi_application()
+
+from store.schedule import start_shipment_scheduler
+
+start_shipment_scheduler()

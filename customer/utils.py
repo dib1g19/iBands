@@ -1,5 +1,6 @@
 from customer import models as customer_models
 from store import models as store_models
+from store.prizes import sync_order_milestones
 
 
 def get_order_for_customer(user, order_id, queryset=None):
@@ -20,6 +21,8 @@ def get_order_for_customer(user, order_id, queryset=None):
     if address_email and user_email and address_email == user_email:
         order.customer = user
         order.save(update_fields=["customer"])
+        if order.order_status in store_models.PLACED_ORDER_STATUSES:
+            sync_order_milestones(user, order)
         return order
     return None
 

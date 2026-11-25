@@ -41,9 +41,12 @@ from store.prizes import (
     apply_mystery_box_prizes,
     apply_quoted_shipping,
     free_shipping_minimums,
+    issue_milestone_award,
     mystery_gift_shortfall,
     mystery_milestone_shortfall,
+    order_ladder,
     redeem_prizes,
+    sync_order_milestones,
 )
 from django.db.models import Q
 from store.error_log import record_server_error
@@ -1334,7 +1337,7 @@ def index(request):
 
     # Milestone progress (for homepage widget)
     try:
-        milestones_qs = store_models.SpinMilestone.objects.filter(active=True).order_by("threshold_spins", "id")
+        milestones_qs = store_models.SpinMilestone.objects.filter(counts="spins", active=True).order_by("threshold_spins", "id")
         spin_milestones = [
             {
                 "threshold_spins": int(m.threshold_spins),
@@ -1350,7 +1353,9 @@ def index(request):
     if getattr(request, "user", None) and request.user.is_authenticated:
         spin_total_spins = store_models.SpinEntry.objects.filter(user=request.user).count()
         try:
-            achieved_qs = store_models.SpinMilestoneAward.objects.filter(user=request.user).select_related("milestone")
+            achieved_qs = store_models.SpinMilestoneAward.objects.filter(
+                user=request.user, milestone__counts="spins"
+            ).select_related("milestone")
             achieved_thresholds = [int(a.milestone.threshold_spins) for a in achieved_qs]
             achieved_details = [
                 {
@@ -2669,11 +2674,13 @@ def cod_payment(request, order_id):
         order.save()
         store_models.Coupon.mark_order_redeemed(order)
         redeem_prizes(order)
+        unlocked = sync_order_milestones(order.customer, order)
         send_order_notification_email(
             order=order,
             email_heading=f"Поръчка #{order.order_id} е получена",
             email_title="iBands: Поръчката е получена",
             to_email=order.address.email,
+            unlocked=unlocked,
         )
         send_order_notification_email(
             order=order,
@@ -2729,7 +2736,7 @@ def spin_page(request):
 
     # Milestone progress (spin page)
     try:
-        milestones_qs = SpinMilestone.objects.filter(active=True).order_by("threshold_spins", "id")
+        milestones_qs = SpinMilestone.objects.filter(counts="spins", active=True).order_by("threshold_spins", "id")
         spin_milestones = [
             {
                 "threshold_spins": int(m.threshold_spins),
@@ -2743,7 +2750,7 @@ def spin_page(request):
     except Exception:
         spin_milestones = []
     spin_total_spins = SpinEntry.objects.filter(user=request.user).count()
-    _awards_qs = SpinMilestoneAward.objects.filter(user=request.user).select_related("milestone")
+    _awards_qs = SpinMilestoneAward.objects.filter(user=request.user, milestone__counts="spins").select_related("milestone")
     achieved_thresholds = [int(a.milestone.threshold_spins) for a in _awards_qs]
     achieved_details = [
         {
@@ -2860,25 +2867,14 @@ def spin_perform(request):
     # Compute user's lifetime spin count and check milestones
     total_spins = SpinEntry.objects.filter(user=request.user).count()
     milestone_payload = None
-    from store.models import SpinMilestone, SpinMilestoneAward  # local import to avoid cycles
+    from store.models import SpinMilestone  # local import to avoid cycles
     try:
-        milestones = list(SpinMilestone.objects.filter(active=True, threshold_spins__lte=total_spins).order_by('threshold_spins'))
+        milestones = list(SpinMilestone.objects.filter(counts="spins", active=True, threshold_spins__lte=total_spins).order_by('threshold_spins'))
         for ms in milestones:
-            already_awarded = SpinMilestoneAward.objects.filter(user=request.user, milestone=ms).exists()
-            if already_awarded:
+            award, created = issue_milestone_award(request.user, ms)
+            if not created:
                 continue
-            # Award this milestone
-            ms_coupon_code = None
-            if ms.prize_type == 'discount_percent' and ms.discount_percent:
-                ms_code = f"MS-{request.user.id}-{ms.threshold_spins}-{random.randint(100000,999999)}"
-                ms_coupon = Coupon.issue_personal(
-                    code=ms_code,
-                    discount=int(ms.discount_percent),
-                    user=request.user,
-                    min_subtotal=ms.min_order_total,
-                )
-                ms_coupon_code = ms_coupon.code
-            SpinMilestoneAward.objects.create(user=request.user, milestone=ms, coupon_code=ms_coupon_code)
+            ms_coupon_code = award.coupon_code
             milestone_payload = {
                 "threshold_spins": ms.threshold_spins,
                 "label": ms.label,
@@ -3001,11 +2997,13 @@ def stripe_payment_verify(request, order_id):
             order.save()
             store_models.Coupon.mark_order_redeemed(order)
             redeem_prizes(order)
+            unlocked = sync_order_milestones(order.customer, order)
             send_order_notification_email(
                 order=order,
                 email_heading=f"Поръчка #{order.order_id} е получена",
                 email_title="iBands: Поръчката е получена",
                 to_email=order.address.email,
+                unlocked=unlocked,
             )
             send_order_notification_email(
                 order=order,
@@ -3032,6 +3030,9 @@ def payment_status(request, order_id):
     payment_status = request.GET.get("payment_status")
 
     context = {"order": order, "payment_status": payment_status}
+    if payment_status == "paid":
+        context["unlocked"] = order.earned_milestone_awards.select_related("milestone")
+        context["ladder"] = order_ladder(order.customer)
     return render(request, "store/payment_status.html", context)
 
 

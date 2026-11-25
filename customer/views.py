@@ -6,6 +6,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.urls import reverse
+from store.prizes import order_ladder, sync_order_milestones, unused_milestone_awards
 from store.utils import paginate_queryset
 from store import models as store_models
 from customer import models as customer_models
@@ -30,11 +31,7 @@ def dashboard(request):
             )
         )
     )
-    placed = (
-        store_models.Order.objects.filter(customer=request.user)
-        .exclude(order_status__in=["initiated", "canceled"])
-        .aggregate(count=models.Count("id"), total=models.Sum("total"))
-    )
+    sync_order_milestones(request.user)
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
         {"label": "Табло", "url": ""},
@@ -42,8 +39,8 @@ def dashboard(request):
 
     context = {
         "orders": orders,
-        "order_count": placed["count"],
-        "total_spent": placed["total"],
+        "ladder": order_ladder(request.user),
+        "rewards": unused_milestone_awards(request.user),
         "breadcrumbs": breadcrumbs,
     }
 

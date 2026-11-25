@@ -677,16 +677,16 @@ class SpinPrizeAdmin(iBandsModelAdmin):
 
 @admin.register(store_models.SpinMilestone)
 class SpinMilestoneAdmin(iBandsModelAdmin):
-    list_display = ["threshold_spins", "label", "prize_type", "discount_percent", "min_order_total", "active"]
+    list_display = ["counts", "threshold_spins", "label", "prize_type", "discount_percent", "min_order_total", "active"]
     list_editable = ["label", "prize_type", "discount_percent", "min_order_total", "active"]
-    list_filter = ["active", "prize_type"]
+    list_filter = ["counts", "active", "prize_type"]
     search_fields = ["label"]
 
 
 @admin.register(store_models.SpinMilestoneAward)
 class SpinMilestoneAwardAdmin(iBandsModelAdmin):
-    list_display = ["user", "milestone", "coupon_code", "redeemed_order", "awarded_at"]
-    list_filter = ["awarded_at", "milestone__threshold_spins"]
+    list_display = ["user", "milestone", "coupon_code", "earned_order", "redeemed_order", "awarded_at"]
+    list_filter = ["milestone__counts", "awarded_at", "milestone__threshold_spins"]
     search_fields = ["user__email", "coupon_code", "milestone__label"]
 
 

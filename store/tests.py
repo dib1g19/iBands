@@ -803,18 +803,20 @@ class UnfinishedOrderLinkTests(TestCase):
         self.assertContains(detail, checkout_url)
         self.assertContains(detail, "Продължи поръчката")
 
-    def test_dashboard_totals_skip_unfinished_and_canceled_orders(self):
+    def test_dashboard_counts_skip_unfinished_and_canceled_orders(self):
         user = get_user_model().objects.create_user(
             email="totals@example.com", username="totals", password="secret",
         )
-        for status, total in [("initiated", "100.00"), ("canceled", "50.00"), ("received", "20.00"), ("delivered", "12.50")]:
-            store_models.Order.objects.create(customer=user, order_status=status, total=Decimal(total))
+        for status in ["initiated", "canceled", "received", "delivered"]:
+            store_models.Order.objects.create(customer=user, order_status=status, total=Decimal("10.00"))
         self.client.force_login(user)
 
         dashboard = self.client.get(reverse("customer:dashboard"))
 
-        self.assertEqual(dashboard.context["order_count"], 2)
-        self.assertEqual(dashboard.context["total_spent"], Decimal("32.50"))
+        self.assertEqual(dashboard.context["ladder"]["count"], 2)
+        self.assertContains(dashboard, "Още 1 поръчка")
+        self.assertContains(dashboard, "10% отстъпка")
+        self.assertContains(dashboard, "2 / 3")
 
     def test_a_failed_payment_offers_retry_instead_of_continue(self):
         user = get_user_model().objects.create_user(
@@ -1455,6 +1457,7 @@ class SpinPrizeFulfillmentTests(TestCase):
         self.assertEqual(order.total, Decimal("36.20"))
 
     def test_paying_redeems_free_shipping_for_the_next_order(self):
+        store_models.SpinMilestone.objects.filter(counts="orders").update(active=False)
         user = self._user()
         self.client.force_login(user)
         entry = store_models.SpinEntry.objects.create(

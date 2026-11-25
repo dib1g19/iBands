@@ -1,15 +1,20 @@
 """Apply a customer's unredeemed spin and milestone prizes to an order."""
 
+import random
 from decimal import Decimal
 
 from django.db.models import Q
 from django.utils import timezone
 
 from store.models import (
+    PLACED_ORDER_STATUSES,
+    Coupon,
+    CouponRedemption,
     Order,
     OrderItem,
     Product,
     SpinEntry,
+    SpinMilestone,
     SpinMilestoneAward,
 )
 
@@ -181,6 +186,82 @@ def mystery_milestone_shortfall(user, merchandise):
         if shortfall is None or required < shortfall:
             shortfall = required
     return shortfall
+
+
+def placed_order_count(user):
+    return Order.objects.filter(customer=user, order_status__in=PLACED_ORDER_STATUSES).count()
+
+
+def issue_milestone_award(user, milestone, earned_order=None):
+    """Grant a milestone once per customer. A discount milestone comes with a personal coupon."""
+    award, created = SpinMilestoneAward.objects.get_or_create(
+        user=user, milestone=milestone, defaults={"earned_order": earned_order},
+    )
+    if created and milestone.prize_type == "discount_percent" and milestone.discount_percent:
+        prefix = "LO" if milestone.counts == "orders" else "MS"
+        coupon = Coupon.issue_personal(
+            code=f"{prefix}-{user.id}-{milestone.threshold_spins}-{random.randint(100000, 999999)}",
+            discount=int(milestone.discount_percent),
+            user=user,
+            min_subtotal=milestone.min_order_total,
+        )
+        award.coupon_code = coupon.code
+        award.save(update_fields=["coupon_code"])
+    return award, created
+
+
+def milestone_award_used(award):
+    if award.redeemed_order_id:
+        return True
+    if award.coupon_code:
+        return CouponRedemption.objects.filter(coupon__code=award.coupon_code).exists()
+    return False
+
+
+def sync_order_milestones(user, order=None):
+    """Grant the order milestones the customer has reached and take back unused ones they no longer reach.
+
+    Returns the awards granted now.
+    """
+    if not _signed_in(user):
+        return []
+    count = placed_order_count(user)
+    granted = []
+    reached = SpinMilestone.objects.filter(counts="orders", active=True, threshold_spins__lte=count)
+    for milestone in reached:
+        award, created = issue_milestone_award(user, milestone, earned_order=order)
+        if created:
+            granted.append(award)
+    lost = SpinMilestoneAward.objects.filter(
+        user=user, milestone__counts="orders", milestone__threshold_spins__gt=count,
+    ).select_related("milestone")
+    for award in lost:
+        if milestone_award_used(award):
+            continue
+        if award.coupon_code:
+            Coupon.objects.filter(code=award.coupon_code, owner=user).delete()
+        award.delete()
+    return granted
+
+
+def unused_milestone_awards(user):
+    """Milestone rewards the customer still has to use, oldest first."""
+    return [award for award in unredeemed_milestone_awards(user) if not milestone_award_used(award)]
+
+
+def order_ladder(user):
+    """Where the customer stands on the placed-order reward ladder."""
+    count = placed_order_count(user) if _signed_in(user) else 0
+    milestones = list(SpinMilestone.objects.filter(counts="orders", active=True).order_by("threshold_spins", "id"))
+    upcoming = next((m for m in milestones if m.threshold_spins > count), None)
+    progress = int(count * 100 / upcoming.threshold_spins) if upcoming else 100
+    return {
+        "count": count,
+        "next": upcoming,
+        "remaining": upcoming.threshold_spins - count if upcoming else 0,
+        "progress": progress,
+        "has_milestones": bool(milestones),
+    }
 
 
 def redeem_prizes(order):

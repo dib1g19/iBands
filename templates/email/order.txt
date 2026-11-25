@@ -5,8 +5,12 @@
 
 Благодарим Ви за поръчка #{{ order.order_id }}! По-долу ще намерите детайли за продукта и доставката.
 
-Вижте детайлите на Вашата поръчка: https://ibands.online/customer/order_detail/{{ order.order_id }}
-
+Вижте детайлите на Вашата поръчка: https://ibands.online/customer/order-detail/{{ order.order_id }}
+{% if unlocked %}
+Тази поръчка отключи награда за следващата:
+{% for award in unlocked %}- {{ award.milestone.label }}{% if award.coupon_code %} (код: {{ award.coupon_code }}){% endif %}
+{% endfor %}Наградите Ви са в профила: https://ibands.online/customer/dashboard/
+{% endif %}
 Дата на поръчката: {{ order.date|date:"d.m.Y H:i" }}
 
 Продукти:

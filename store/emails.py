@@ -30,12 +30,13 @@ def _validated_email(email_value):
     return candidate
 
 
-def send_order_notification_email(order, email_heading, email_title, to_email):
+def send_order_notification_email(order, email_heading, email_title, to_email, unlocked=None):
     context = {
         "order": order,
         "order_items": order.order_items.all,
         "email_heading": email_heading,
         "email_title": email_title,
+        "unlocked": unlocked or [],
     }
     subject = f"{email_heading}"
     text_body = render_to_string("email/order.txt", context)

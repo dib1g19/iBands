@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block meta_description %}
-    Вашият личен профил: прегледайте поръчки, разходи, известия и настройки в iBands. Управлявайте всичко свързано с вашия акаунт на едно място.
+    Вашият личен профил: прегледайте поръчки, награди и настройки в iBands. Управлявайте всичко свързано с вашия акаунт на едно място.
 {% endblock %}
 
 {% block content %}
@@ -27,29 +27,52 @@
                         <h4 class="mb-0 mb-4 fw-bold">Табло</h4>
 
                         <div class="col-sm-6 mb-3 mb-sm-0">
-                            <div class="d-flex justify-content-center align-items-center p-4 shadow-sm rounded">
+                            <div class="d-flex justify-content-center align-items-center p-4 shadow-sm rounded h-100">
                                 <span class="display-6 text-danger"><i class="fas fa-shopping-cart text-danger"></i></span>
                                 <div class="ms-4">
                                     <div class="d-flex">
-                                        <h5 class="mb-0 fw-bold">{{ order_count }}</h5>
+                                        <h5 class="mb-0 fw-bold">{{ ladder.count }}</h5>
                                     </div>
                                     <p class="mb-0 h6 fw-semibold">Поръчки</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-sm-6 mb-3 mb-sm-0">
-                            <div class="d-flex justify-content-center align-items-center p-4 shadow-sm rounded">
-                                <span class="display-6 text-danger"><i class="fas fa-wallet text-warning"></i></span>
-                                <div class="ms-4">
-                                    <div class="d-flex">
-                                        <h5 class="mb-0 fw-bold">{{ total_spent|default:'0'|dual_price }}</h5>
+                        {% if ladder.has_milestones %}
+                            <div class="col-sm-6 mb-3 mb-sm-0">
+                                <div class="d-flex justify-content-center align-items-center p-4 shadow-sm rounded h-100">
+                                    <span class="display-6"><i class="fas fa-gift text-success"></i></span>
+                                    <div class="ms-4 flex-grow-1">
+                                        {% if ladder.next %}
+                                            <h5 class="mb-0 fw-bold">Още {{ ladder.remaining }} {% if ladder.remaining == 1 %}поръчка{% else %}поръчки{% endif %}</h5>
+                                            <p class="mb-2 h6 fw-semibold">и отключвате: {{ ladder.next.label }}</p>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="progress flex-grow-1" style="height: 8px;" role="progressbar" aria-valuenow="{{ ladder.progress }}" aria-valuemin="0" aria-valuemax="100">
+                                                    <div class="progress-bar bg-success" style="width: {{ ladder.progress }}%;"></div>
+                                                </div>
+                                                <span class="small fw-semibold text-nowrap">{{ ladder.count }} / {{ ladder.next.threshold_spins }}</span>
+                                            </div>
+                                        {% else %}
+                                            <h5 class="mb-0 fw-bold">Всички награди</h5>
+                                            <p class="mb-0 h6 fw-semibold">са отключени</p>
+                                        {% endif %}
                                     </div>
-                                    <p class="mb-0 h6 fw-semibold">Общо изразходвано</p>
                                 </div>
                             </div>
-                        </div>
+                        {% endif %}
                     </div>
+
+                    {% if rewards %}
+                        <div class="border rounded p-3 mb-4">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-gift text-success me-2"></i>Вашите награди</h6>
+                            <ul class="list-unstyled mb-2">
+                                {% for award in rewards %}
+                                    <li>{{ award.milestone.label }}{% if award.coupon_code %} – код <strong>{{ award.coupon_code }}</strong>{% endif %}</li>
+                                {% endfor %}
+                            </ul>
+                            <p class="small text-muted mb-0">Доставката и кутиите се добавят сами при следващата поръчка, а кода въведете при плащане.</p>
+                        </div>
+                    {% endif %}
 
                     {% for order in orders %}
                         <div class="ord_list_wrap border mb-4">

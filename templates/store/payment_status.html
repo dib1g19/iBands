@@ -42,6 +42,24 @@
                         </p>
                         <!-- Button -->
                         <a href="{% url 'customer:order_detail' order.order_id %}" class="btn rounded btn-primary">Виж поръчката</a>
+
+                        {% if unlocked %}
+                            <div class="mt-4">
+                                <p class="fw-semibold mb-1"><i class="fas fa-gift text-success me-2"></i>Тази поръчка отключи награда за следващата:</p>
+                                {% for award in unlocked %}
+                                    <p class="mb-0">{{ award.milestone.label }}</p>
+                                {% endfor %}
+                            </div>
+                        {% elif order.customer_id and ladder.next %}
+                            <p class="mt-4 mb-0"><i class="fas fa-gift text-success me-2"></i>Още {{ ladder.remaining }} {% if ladder.remaining == 1 %}поръчка{% else %}поръчки{% endif %} и отключвате: {{ ladder.next.label }}</p>
+                        {% elif not order.customer_id and ladder.next %}
+                            {% url 'customer:order_detail' order.order_id as order_url %}
+                            <div class="mt-4">
+                                <p class="mb-2"><i class="fas fa-gift text-success me-2"></i>Създайте профил с имейла от поръчката и тя ще се брои за награди. Първата: {{ ladder.next.label }}.</p>
+                                <a href="{% url 'userauths:sign-up' %}?next={{ order_url|urlencode }}" class="btn btn-sm rounded btn-outline-primary">Създай профил</a>
+                                <a href="{% url 'userauths:sign-in' %}?next={{ order_url|urlencode }}" class="btn btn-sm rounded btn-link">Имам профил</a>
+                            </div>
+                        {% endif %}
                     {% endif %}
                 </div>
                 <div class="col-12 col-md-10 col-lg-8 col-xl-6 text-center">

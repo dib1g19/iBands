@@ -34,6 +34,7 @@ ORDER_STATUS = (
     ("delivered", "Доставена"),
     ("canceled", "Отказана"),
 )
+PLACED_ORDER_STATUSES = ("received", "shipped", "delivered")
 
 SHIPPING_SERVICE = (
     ("econt", "Еконт"),
@@ -997,9 +998,20 @@ class SpinPrize(models.Model):
         return f"{self.label} ({self.prize_type})"
 
 
+MILESTONE_COUNTS = (
+    ("spins", "Spins"),
+    ("orders", "Placed orders"),
+)
+
+
 class SpinMilestone(models.Model):
-    """Configurable milestones for number of spins, e.g., 100 spins → grant prize."""
-    threshold_spins = models.PositiveIntegerField(db_index=True, help_text="Award triggers when user reaches this total spin count")
+    """A reward for reaching a number of daily spins or placed orders."""
+    counts = models.CharField(max_length=10, choices=MILESTONE_COUNTS, default="spins", db_index=True)
+    threshold_spins = models.PositiveIntegerField(
+        "threshold",
+        db_index=True,
+        help_text="Award triggers when the customer reaches this many spins or placed orders.",
+    )
     prize_type = models.CharField(max_length=32, choices=PRIZE_TYPE_CHOICES, default="none")
     discount_percent = models.PositiveIntegerField(null=True, blank=True)
     min_order_total = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
@@ -1007,11 +1019,12 @@ class SpinMilestone(models.Model):
     active = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ["threshold_spins", "id"]
-        unique_together = ("threshold_spins", "prize_type", "discount_percent", "min_order_total")
+        ordering = ["counts", "threshold_spins", "id"]
+        unique_together = ("counts", "threshold_spins", "prize_type", "discount_percent", "min_order_total")
+        verbose_name = "milestone"
 
     def __str__(self):
-        return f"#{self.threshold_spins} spins → {self.label}"
+        return f"#{self.threshold_spins} {self.counts} → {self.label}"
 
 
 class SpinMilestoneAward(models.Model):
@@ -1027,13 +1040,21 @@ class SpinMilestoneAward(models.Model):
         blank=True,
         related_name="redeemed_milestone_prizes",
     )
+    earned_order = models.ForeignKey(
+        "Order",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="earned_milestone_awards",
+    )
 
     class Meta:
         unique_together = ("user", "milestone")
         ordering = ["-awarded_at"]
+        verbose_name = "milestone award"
 
     def __str__(self):
-        return f"{self.user.email} → milestone {self.milestone.threshold_spins}"
+        return f"{self.user.email} → {self.milestone}"
 
 
 # -----------------------------

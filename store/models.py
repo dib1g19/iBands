@@ -97,6 +97,7 @@ class Category(models.Model):
     meta_title = models.CharField(max_length=150, blank=True, null=True)
     meta_description = models.CharField(max_length=300, blank=True, null=True)
     is_popular = models.BooleanField(default=False, verbose_name="Популярна категория")
+    status = models.CharField(choices=STATUS, max_length=50, default="published")
 
     class Meta:
         verbose_name_plural = "Categories"
@@ -134,8 +135,36 @@ class Category(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        if self.status != "disabled" and self.parent_id and Category.branch_disabled(self.parent_id):
+            self.status = "disabled"
         convert_uploaded_images(self, "marketing_image", "hover_image")
         super().save(*args, **kwargs)
+        if self.status == "disabled":
+            self._disable_branch()
+
+    @staticmethod
+    def branch_disabled(category_id):
+        seen = set()
+        current = category_id
+        while current and current not in seen:
+            seen.add(current)
+            row = Category.objects.filter(pk=current).values_list("status", "parent_id").first()
+            if not row:
+                return False
+            status, current = row
+            if status == "disabled":
+                return True
+        return False
+
+    def _disable_branch(self):
+        ids = []
+        frontier = [self.pk]
+        while frontier:
+            frontier = list(Category.objects.filter(parent_id__in=frontier).values_list("pk", flat=True))
+            ids.extend(frontier)
+        if ids:
+            Category.objects.filter(pk__in=ids).exclude(status="disabled").update(status="disabled")
+        Product.objects.filter(category_id__in=[self.pk, *ids]).exclude(status="disabled").update(status="disabled")
 
     @property
     def root(self):
@@ -325,6 +354,8 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+        if self.status != "disabled" and self.category_id and Category.branch_disabled(self.category_id):
+            self.status = "disabled"
         convert_uploaded_images(self, "image")
         super().save(*args, **kwargs)
 

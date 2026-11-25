@@ -52,7 +52,7 @@ def get_category_tree():
         return _category_tree_local["tree"]
     category_tree = cache.get("category_tree")
     if not category_tree:
-        categories = list(Category.objects.all().select_related("parent"))
+        categories = list(Category.objects.filter(status="published").select_related("parent"))
         category_tree = build_category_tree(categories)
         cache.set("category_tree", category_tree, timeout=None)
     _category_tree_local["tree"] = category_tree

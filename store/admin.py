@@ -300,7 +300,7 @@ class ProductAdmin(iBandsModelAdmin):
 class CategoryAdmin(iBandsModelAdmin):
     list_display = ["title", "view_on_site_link", "sku", "marketing_image", "hover_image", "is_popular", "parent"]
     list_editable = ["sku", "marketing_image", "hover_image", "is_popular"]
-    list_filter = ["parent", "is_popular"]
+    list_filter = ["status", "parent", "is_popular"]
     search_fields = ["title", "sku"]
     list_select_related = ["parent", "parent__parent"]
     readonly_fields = ["view_on_site_link"]
@@ -317,6 +317,7 @@ class CategoryAdmin(iBandsModelAdmin):
         "meta_title",
         "meta_description",
         "is_popular",
+        "status",
     )
 
     prepopulated_fields = {"slug": ("title",)}

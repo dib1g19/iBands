@@ -1264,10 +1264,10 @@ def index(request):
         .prefetch_related('gallery_images')[:12]
     )
 
-    categories = store_models.Category.objects.filter(parent__isnull=True)
+    categories = store_models.Category.objects.filter(parent__isnull=True, status="published")
     popular_categories = (
         store_models.Category.objects
-            .filter(is_popular=True)
+            .filter(is_popular=True, status="published")
             .select_related('parent', 'parent__parent')
     )
 
@@ -1662,6 +1662,16 @@ def band_of_the_week_history(request):
     })
 
 
+def published_shop_categories():
+    leaves = store_models.Category.objects.filter(status="published")
+    children = store_models.Category.objects.filter(status="published").prefetch_related(
+        models.Prefetch("subcategories", queryset=leaves)
+    )
+    return store_models.Category.objects.filter(parent__isnull=True, status="published").prefetch_related(
+        models.Prefetch("subcategories", queryset=children)
+    )
+
+
 def shop(request):
     products_list = (
         store_models.Product.objects.filter(status="published")
@@ -1669,10 +1679,7 @@ def shop(request):
     )
     products = paginate_queryset(request, products_list, 20)
 
-    categories = (
-        store_models.Category.objects.filter(parent__isnull=True)
-        .prefetch_related("subcategories__subcategories")
-    )
+    categories = published_shop_categories()
     # Color groups for color filter (sorted light → dark by perceived brightness)
     color_groups = list(store_models.ColorGroup.objects.all())
     color_groups.sort(key=lambda cg: _perceived_brightness(getattr(cg, "hex_code", "")), reverse=True)
@@ -1725,10 +1732,7 @@ def sale(request):
     )
     products = paginate_queryset(request, products_list, 20)
 
-    categories = (
-        store_models.Category.objects.filter(parent__isnull=True)
-        .prefetch_related("subcategories__subcategories")
-    )
+    categories = published_shop_categories()
     color_groups = list(store_models.ColorGroup.objects.all())
     color_groups.sort(key=lambda cg: _perceived_brightness(getattr(cg, "hex_code", "")), reverse=True)
 
@@ -1795,21 +1799,29 @@ def sale(request):
     return render(request, "store/sale.html", context)
 
 
-def category(request, category_path):
-    slugs = category_path.strip("/").split("/")
+def category_from_path(request, category_path):
+    # Staff can open a disabled category from the admin "View" link.
     category = None
     parent = None
-    for slug in slugs:
-        category = get_object_or_404(Category, slug=slug, parent=parent)
+    for slug in category_path.strip("/").split("/"):
+        lookup = {"slug": slug, "parent": parent}
+        if not request.user.is_staff:
+            lookup["status"] = "published"
+        category = get_object_or_404(Category, **lookup)
         parent = category
+    return category
+
+
+def category(request, category_path):
+    category = category_from_path(request, category_path)
 
     category = Category.objects.select_related('parent', 'parent__parent').get(pk=category.pk)
 
     # Direct children
-    child_categories_qs = Category.objects.filter(parent=category).select_related('parent', 'parent__parent')
+    child_categories_qs = Category.objects.filter(parent=category, status="published").select_related('parent', 'parent__parent')
     child_categories = list(child_categories_qs)
     # Virtual linked children
-    linked_qs = Category.objects.filter(linked_parents__parent=category).select_related('parent', 'parent__parent')
+    linked_qs = Category.objects.filter(linked_parents__parent=category, status="published").select_related('parent', 'parent__parent')
     # Merge unique
     child_ids = {c.id for c in child_categories}
     for lc in linked_qs:
@@ -1877,12 +1889,7 @@ def collect_descendant_ids(node):
 
 
 def category_all_sub(request, category_path):
-    slugs = category_path.strip("/").split("/")
-    category = None
-    parent = None
-    for slug in slugs:
-        category = get_object_or_404(Category, slug=slug, parent=parent)
-        parent = category
+    category = category_from_path(request, category_path)
 
     # Get descendant ids from the cached category tree (zero queries once warm)
     from .context_processors import get_category_tree

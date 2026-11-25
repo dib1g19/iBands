@@ -19,7 +19,7 @@ class CategorySitemap(Sitemap):
     priority = 0.9
 
     def items(self):
-        return Category.objects.all()
+        return Category.objects.filter(status="published")
 
     def location(self, obj):
         return obj.get_absolute_url()

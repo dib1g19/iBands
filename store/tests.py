@@ -1622,6 +1622,93 @@ class CategoryAllSubTests(TestCase):
         self.assertContains(response, "Blue Band")
 
 
+class CategoryStatusTests(TestCase):
+    def test_disabled_category_is_hidden_from_the_shop(self):
+        from store.context_processors import get_category_tree, invalidate_category_tree_cache
+        from store.sitemaps import CategorySitemap
+
+        parent = store_models.Category.objects.create(title="Bands", sku="DIS-P", slug="bands")
+        child = store_models.Category.objects.create(
+            title="Retired", sku="DIS-C", slug="retired", parent=parent, status="disabled",
+        )
+        store_models.Category.objects.create(title="Gone", sku="DIS-G", slug="gone", status="disabled")
+        product = store_models.Product.objects.create(
+            name="Blue Band", sku="DIS-PROD", description="Band", category=child, slug="blue-band",
+        )
+        invalidate_category_tree_cache()
+
+        tree = get_category_tree()
+        self.assertEqual([category.slug for category in tree], ["bands"])
+        self.assertEqual(tree[0].children, [])
+
+        client = Client()
+        self.assertEqual(client.get(reverse("store:category", kwargs={"category_path": "bands/retired"})).status_code, 404)
+        self.assertEqual(client.get(product.get_absolute_url()).status_code, 404)
+        parent_page = client.get(reverse("store:category", kwargs={"category_path": "bands"}))
+        self.assertNotContains(parent_page, "Retired")
+        shop = client.get(reverse("store:shop"))
+        self.assertNotContains(shop, "Blue Band")
+        roots = list(shop.context["categories"])
+        self.assertEqual([category.slug for category in roots], ["bands"])
+        self.assertEqual(list(roots[0].subcategories.all()), [])
+
+        listed = [category.slug for category in CategorySitemap().items()]
+        self.assertIn("bands", listed)
+        self.assertNotIn("retired", listed)
+        self.assertNotIn("gone", listed)
+
+        staff = get_user_model().objects.create_superuser(
+            email="cat-status@example.com", username="cat-status", password="secret",
+        )
+        staff_client = Client()
+        staff_client.force_login(staff)
+        self.assertEqual(
+            staff_client.get(reverse("store:category", kwargs={"category_path": "bands/retired"})).status_code,
+            200,
+        )
+        self.assertEqual(staff_client.get(product.get_absolute_url()).status_code, 200)
+
+    def test_disabling_a_category_disables_its_subcategories_and_products(self):
+        parent = store_models.Category.objects.create(title="Bands", sku="CAS-P", slug="cas-bands")
+        child = store_models.Category.objects.create(title="Silicone", sku="CAS-C", slug="cas-silicone", parent=parent)
+        grandchild = store_models.Category.objects.create(title="Sport", sku="CAS-G", slug="cas-sport", parent=child)
+        own = store_models.Product.objects.create(
+            name="Own", sku="CAS-OWN", description="Band", category=parent, slug="cas-own",
+        )
+        nested = store_models.Product.objects.create(
+            name="Nested", sku="CAS-NEST", description="Band", category=grandchild, slug="cas-nested",
+        )
+        other = store_models.Category.objects.create(title="Cases", sku="CAS-O", slug="cas-cases")
+        outsider = store_models.Product.objects.create(
+            name="Out", sku="CAS-OUT", description="Case", category=other, slug="cas-out",
+        )
+
+        parent.status = "disabled"
+        parent.save()
+
+        for obj in (child, grandchild, own, nested):
+            obj.refresh_from_db()
+        other.refresh_from_db()
+        outsider.refresh_from_db()
+        self.assertEqual(child.status, "disabled")
+        self.assertEqual(grandchild.status, "disabled")
+        self.assertEqual(own.status, "disabled")
+        self.assertEqual(nested.status, "disabled")
+        self.assertEqual(other.status, "published")
+        self.assertEqual(outsider.status, "published")
+
+        own.status = "published"
+        own.save()
+        self.assertEqual(own.status, "disabled")
+
+        parent.status = "published"
+        parent.save()
+        child.refresh_from_db()
+        own.refresh_from_db()
+        self.assertEqual(child.status, "disabled")
+        self.assertEqual(own.status, "disabled")
+
+
 class StaffUpdateTests(TestCase):
     def _staff(self):
         return get_user_model().objects.create_superuser(

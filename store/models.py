@@ -731,7 +731,7 @@ class OrderItem(models.Model):
         return f"{self.order.order_id}"
 
     @property
-    def is_wheel_prize(self):
+    def is_prize(self):
         note = self.note or ""
         return note.startswith("prize:spin:") or note.startswith("prize:milestone:")
 

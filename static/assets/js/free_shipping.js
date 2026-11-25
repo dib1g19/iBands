@@ -94,9 +94,9 @@
     }
     if (textElem) {
       if (prize && (prize.minimum == null || subtotal >= prize.minimum)) {
-        textElem.textContent = 'Имаш безплатна доставка до офис или автомат от колелото.'
+        textElem.textContent = 'Имаш награда: безплатна доставка до офис или автомат.'
       } else if (prize) {
-        textElem.textContent = 'Имаш безплатна доставка до офис или автомат от колелото. Още ' + formatDualCurrency(remaining) + ' до нея.'
+        textElem.textContent = 'Имаш награда: безплатна доставка до офис или автомат. Още ' + formatDualCurrency(remaining) + ' до нея.'
       } else if (subtotal >= th) {
         textElem.textContent = 'Поздравления! Безплатна доставка до офис или автомат е активна.'
       } else {

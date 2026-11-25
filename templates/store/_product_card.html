@@ -15,8 +15,8 @@
                 </p>
             {% endif %}
             {% if item.note %}
-                {% if item.is_wheel_prize %}
-                    <p class="mb-0 text-success">Награда от колелото</p>
+                {% if item.is_prize %}
+                    <p class="mb-0 text-success">Безплатна награда</p>
                 {% else %}
                     <p class="mb-0"><span class="fw-bold">Бележка:</span> {{ item.note }}</p>
                 {% endif %}

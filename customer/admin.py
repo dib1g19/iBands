@@ -17,9 +17,3 @@ class WishlistAdmin(iBandsModelAdmin):
     @admin.display(description="Product")
     def product_path(self, obj):
         return product_path_label(obj.product, link=True)
-
-
-@admin.register(customer_models.Notifications)
-class NotificationAdmin(iBandsModelAdmin):
-    list_display = ["user", "type", "seen", "date"]
-    list_select_related = ["user"]

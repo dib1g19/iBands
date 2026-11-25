@@ -33,8 +33,6 @@ def dashboard(request):
     total_spent = store_models.Order.objects.filter(customer=request.user).aggregate(
         total=models.Sum("total")
     )["total"]
-    notis = customer_models.Notifications.objects.filter(user=request.user, seen=False)
-
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
         {"label": "Табло", "url": ""},
@@ -43,7 +41,6 @@ def dashboard(request):
     context = {
         "orders": orders,
         "total_spent": total_spent,
-        "notis": notis,
         "breadcrumbs": breadcrumbs,
     }
 
@@ -197,36 +194,6 @@ def remove_from_wishlist(request, id):
     except customer_models.Wishlist.DoesNotExist:
         messages.warning(request, "Артикулът не беше намерен в любими.")
     return redirect("customer:wishlist")
-
-
-@login_required
-def notis(request):
-    notis_list = customer_models.Notifications.objects.filter(
-        user=request.user, seen=False
-    )
-    notis = paginate_queryset(request, notis_list, 10)
-
-    breadcrumbs = [
-        {"label": "Начална Страница", "url": reverse("store:index")},
-        {"label": "Известия", "url": ""},
-    ]
-    context = {
-        "notis": notis,
-        "notis_list": notis_list,
-        "breadcrumbs": breadcrumbs,
-    }
-
-    return render(request, "customer/notis.html", context)
-
-
-@login_required
-def mark_noti_seen(request, id):
-    noti = customer_models.Notifications.objects.get(user=request.user, id=id)
-    noti.seen = True
-    noti.save()
-
-    messages.success(request, "Нотификацията е отбелязана като прочетена.")
-    return redirect("customer:notis")
 
 
 @login_required

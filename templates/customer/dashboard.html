@@ -26,7 +26,7 @@
                     <div class="row mb-4">
                         <h4 class="mb-0 mb-4 fw-bold">Табло</h4>
 
-                        <div class="col-sm-6 col-lg-4 mb-3 mb-lg-0">
+                        <div class="col-sm-6 mb-3 mb-sm-0">
                             <div class="d-flex justify-content-center align-items-center p-4 shadow-sm rounded">
                                 <span class="display-6 text-danger"><i class="fas fa-shopping-cart text-danger"></i></span>
                                 <div class="ms-4">
@@ -38,7 +38,7 @@
                             </div>
                         </div>
 
-                        <div class="col-sm-6 col-lg-4 mb-3 mb-lg-0">
+                        <div class="col-sm-6 mb-3 mb-sm-0">
                             <div class="d-flex justify-content-center align-items-center p-4 shadow-sm rounded">
                                 <span class="display-6 text-danger"><i class="fas fa-wallet text-warning"></i></span>
                                 <div class="ms-4">
@@ -46,18 +46,6 @@
                                         <h5 class="mb-0 fw-bold">{{ total_spent|default:'0'|dual_price }}</h5>
                                     </div>
                                     <p class="mb-0 h6 fw-semibold">Общо изразходвано</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-sm-6 col-lg-4 mb-3 mb-lg-0">
-                            <div class="d-flex justify-content-center align-items-center p-4 shadow-sm rounded">
-                                <span class="display-6 text-danger"><i class="fas fa-bell text-primary"></i></span>
-                                <div class="ms-4">
-                                    <div class="d-flex">
-                                        <h5 class="mb-0 fw-bold">{{ notis.count }}</h5>
-                                    </div>
-                                    <p class="mb-0 h6 fw-semibold">Известия</p>
                                 </div>
                             </div>
                         </div>

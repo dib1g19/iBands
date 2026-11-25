@@ -2681,11 +2681,6 @@ def cod_payment(request, order_id):
             email_title="iBands: Поръчката е получена",
             to_email=settings.ORDER_NOTIFICATION_EMAIL,
         )
-
-        if request.user.is_authenticated:
-            customer_models.Notifications.objects.create(
-                type="New Order", user=request.user
-            )
         clear_cart_items(request)
         return redirect(
             reverse("store:payment_status", args=[order.order_id])
@@ -3018,10 +3013,6 @@ def stripe_payment_verify(request, order_id):
                 email_title="iBands: Поръчката е получена",
                 to_email=settings.ORDER_NOTIFICATION_EMAIL,
             )
-            if request.user.is_authenticated:
-                customer_models.Notifications.objects.create(
-                    type="New Order", user=request.user
-                )
             clear_cart_items(request)
         return redirect(
             reverse("store:payment_status", args=[order.order_id]) + "?payment_status=paid"

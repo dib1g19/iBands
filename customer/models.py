@@ -4,13 +4,6 @@ from store.models import Product
 from userauths.models import User
 
 
-TYPE = (
-    ("New Order", "New Order"),
-    ("Item Shipped", "Item Shipped"),
-    ("Item Delivered", "Item Delivered"),
-)
-
-
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     product = models.ForeignKey(
@@ -122,16 +115,3 @@ def earliest_saved_without_main(addresses):
             continue
         picked.append(min(rows, key=lambda row: row.id))
     return picked
-
-
-class Notifications(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    type = models.CharField(max_length=100, choices=TYPE, default=None)
-    seen = models.BooleanField(default=False)
-    date = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name_plural = "Notification"
-
-    def __str__(self):
-        return self.type

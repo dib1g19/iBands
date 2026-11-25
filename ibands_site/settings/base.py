@@ -236,7 +236,6 @@ JAZZMIN_SETTINGS = {
         "userauths.ContactMessage": "fas fa-envelope-open-text",
         "userauths.NewsletterSubscription": "fas fa-newspaper",
         "customer.Address": "fas fa-location-arrow",
-        "customer.Notifications": "fas fa-bell",
         "customer.Wishlist": "fas fa-heart",
     },
     "custom_links": {

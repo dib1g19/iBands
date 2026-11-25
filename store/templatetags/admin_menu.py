@@ -89,7 +89,6 @@ MENU_SECTIONS = [
         "icon": "fas fa-address-book",
         "items": [
             "customer.address",
-            "customer.notifications",
             "customer.wishlist",
         ],
     },

@@ -45,7 +45,7 @@
                                     <div class="ms-4 flex-grow-1">
                                         {% if ladder.next %}
                                             <h5 class="mb-0 fw-bold">Още {{ ladder.remaining }} {% if ladder.remaining == 1 %}поръчка{% else %}поръчки{% endif %}</h5>
-                                            <p class="mb-2 h6 fw-semibold">и отключвате: {{ ladder.next.label }}</p>
+                                            <p class="mb-2 h6 fw-semibold">и отключвате: {{ ladder.next.title }}</p>
                                             <div class="d-flex align-items-center gap-2">
                                                 <div class="progress flex-grow-1" style="height: 8px;" role="progressbar" aria-valuenow="{{ ladder.progress }}" aria-valuemin="0" aria-valuemax="100">
                                                     <div class="progress-bar bg-success" style="width: {{ ladder.progress }}%;"></div>
@@ -75,7 +75,7 @@
                                         {% if reward.code %}
                                             <div class="small mt-1">Код: <code>{{ reward.code }}</code></div>
                                         {% endif %}
-                                        <div class="small text-muted mt-1">{{ reward.how }} {{ reward.valid }}.</div>
+                                        <div class="small text-muted mt-1">{{ reward.how }}{% if reward.valid %} {{ reward.valid }}.{% endif %}</div>
                                     </li>
                                 {% endfor %}
                             </ul>

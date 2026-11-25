@@ -58,8 +58,8 @@ def _free_shipping_candidates(user):
     if spin and (spin.free_shipping or spin.prize_type == "free_shipping"):
         yield spin, spin.min_order_total
     for award in unredeemed_milestone_awards(user):
-        if award.milestone.prize_type == "free_shipping":
-            yield award, award.milestone.min_order_total
+        if award.prize_type == "free_shipping":
+            yield award, award.min_order_total
 
 
 def free_shipping_prize(user, merchandise):
@@ -77,8 +77,8 @@ def mystery_prizes(user):
     if spin and spin.prize_type == "mystery_box_min_total":
         prizes.append((f"{SPIN_NOTE}{spin.pk}", spin.min_order_total))
     for award in unredeemed_milestone_awards(user):
-        if award.milestone.prize_type == "mystery_box_min_total":
-            prizes.append((f"{MILESTONE_NOTE}{award.pk}", award.milestone.min_order_total))
+        if award.prize_type == "mystery_box_min_total":
+            prizes.append((f"{MILESTONE_NOTE}{award.pk}", award.min_order_total))
     return prizes
 
 
@@ -178,9 +178,9 @@ def mystery_milestone_shortfall(user, merchandise):
     """Smallest unmet milestone mystery-box minimum, or None when one already qualifies."""
     shortfall = None
     for award in unredeemed_milestone_awards(user):
-        if award.milestone.prize_type != "mystery_box_min_total":
+        if award.prize_type != "mystery_box_min_total":
             continue
-        required = _unmet_minimum(award.milestone.min_order_total, merchandise)
+        required = _unmet_minimum(award.min_order_total, merchandise)
         if required is None:
             return None
         if shortfall is None or required < shortfall:
@@ -254,7 +254,7 @@ def _how_to_use(prize_type, minimum, code):
         text = "Прилага се сама при доставка до офис."
         return f"{text} Поръчката трябва да е поне {floor}." if floor else text
     if prize_type == "mystery_box_min_total":
-        return f"Добавя се сама в поръчка от {floor}." if floor else "Добавя се сама в следващата поръчка."
+        return f"Добавя се сама в поръчка от поне {floor}." if floor else "Добавя се сама в следващата поръчка."
     if prize_type == "discount_percent" and code:
         text = "Въведете кода в полето „Код за отстъпка“ при поръчка."
         return f"{text} Поръчката трябва да е поне {floor}." if floor else text
@@ -286,12 +286,13 @@ def customer_rewards(user):
         else:
             source = f"Награда за {_plural(milestone.threshold_spins, 'завъртане', 'завъртания')}"
         coupon = Coupon.objects.filter(code=award.coupon_code).first() if award.coupon_code else None
+        minimum = coupon.min_subtotal if coupon else award.min_order_total
         valid_until = coupon.valid_until if coupon else None
         rewards.append({
-            "label": milestone.label,
+            "label": award.label,
             "source": source,
-            "how": _how_to_use(milestone.prize_type, milestone.min_order_total, award.coupon_code),
-            "valid": f"Важи до {timezone.localtime(valid_until):%d.%m.%Y}" if valid_until else "Без срок",
+            "how": _how_to_use(award.prize_type, minimum, award.coupon_code),
+            "valid": f"Важи до {timezone.localtime(valid_until):%d.%m.%Y}" if valid_until else "",
             "code": award.coupon_code,
         })
     return rewards

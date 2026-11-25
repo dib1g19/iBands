@@ -685,9 +685,9 @@ class SpinMilestoneAdmin(iBandsModelAdmin):
 
 @admin.register(store_models.SpinMilestoneAward)
 class SpinMilestoneAwardAdmin(iBandsModelAdmin):
-    list_display = ["user", "milestone", "coupon_code", "earned_order", "redeemed_order", "awarded_at"]
+    list_display = ["user", "milestone", "label", "min_order_total", "coupon_code", "earned_order", "redeemed_order", "awarded_at"]
     list_filter = ["milestone__counts", "awarded_at", "milestone__threshold_spins"]
-    search_fields = ["user__email", "coupon_code", "milestone__label"]
+    search_fields = ["user__email", "coupon_code", "label"]
 
 
 @admin.register(store_models.Review)

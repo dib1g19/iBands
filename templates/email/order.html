@@ -433,7 +433,7 @@
                                                                             <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#000000;font-size:14px;padding-top:10px">
                                                                                 <strong>Тази поръчка отключи награда за следващата:</strong><br />
                                                                                 {% for award in unlocked %}
-                                                                                    {{ award.milestone.label }}{% if award.coupon_code %} (код: {{ award.coupon_code }}){% endif %}<br />
+                                                                                    {{ award.title }}{% if award.coupon_code %} (код: {{ award.coupon_code }}){% endif %}<br />
                                                                                 {% endfor %}
                                                                                 <a href="https://ibands.online/customer/dashboard/">Вижте наградите си в профила</a>
                                                                             </p>

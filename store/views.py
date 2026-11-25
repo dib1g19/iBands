@@ -1360,10 +1360,10 @@ def index(request):
             achieved_details = [
                 {
                     "threshold_spins": int(a.milestone.threshold_spins),
-                    "label": a.milestone.label,
-                    "prize_type": a.milestone.prize_type,
-                    "discount_percent": int(a.milestone.discount_percent or 0),
-                    "min_order_total": float(a.milestone.min_order_total) if a.milestone.min_order_total is not None else None,
+                    "label": a.label,
+                    "prize_type": a.prize_type,
+                    "discount_percent": int(a.discount_percent or 0),
+                    "min_order_total": float(a.min_order_total) if a.min_order_total is not None else None,
                     "coupon_code": a.coupon_code,
                 }
                 for a in achieved_qs
@@ -2474,6 +2474,7 @@ def create_order(request):
             mystery_device_models=getattr(i, "mystery_device_models", None),
         )
 
+    sync_order_milestones(request.user)
     apply_mystery_box_prizes(order, request.user)
     _remember_checkout(request, order)
     return redirect("store:checkout", order.order_id)
@@ -2755,10 +2756,10 @@ def spin_page(request):
     achieved_details = [
         {
             "threshold_spins": int(a.milestone.threshold_spins),
-            "label": a.milestone.label,
-            "prize_type": a.milestone.prize_type,
-            "discount_percent": int(a.milestone.discount_percent or 0),
-            "min_order_total": float(a.milestone.min_order_total) if a.milestone.min_order_total is not None else None,
+            "label": a.label,
+            "prize_type": a.prize_type,
+            "discount_percent": int(a.discount_percent or 0),
+            "min_order_total": float(a.min_order_total) if a.min_order_total is not None else None,
             "coupon_code": a.coupon_code,
         }
         for a in _awards_qs

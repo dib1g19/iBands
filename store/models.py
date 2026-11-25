@@ -1026,11 +1026,26 @@ class SpinMilestone(models.Model):
     def __str__(self):
         return f"#{self.threshold_spins} {self.counts} → {self.label}"
 
+    @property
+    def title(self):
+        return reward_title(self.label, self.min_order_total)
+
+
+def reward_title(label, minimum):
+    """The reward's name with its minimum order, so the condition is never hidden."""
+    if minimum is None:
+        return label
+    return f"{label} при поръчка от поне {Order.as_money(minimum)} €"
+
 
 class SpinMilestoneAward(models.Model):
-    """Records that a user has received a milestone award to avoid duplicates."""
+    """A milestone reward a customer earned, with its terms copied at that moment."""
     user = models.ForeignKey(user_models.User, on_delete=models.CASCADE, related_name="spin_milestone_awards")
     milestone = models.ForeignKey(SpinMilestone, on_delete=models.CASCADE, related_name="awards")
+    label = models.CharField(max_length=120, blank=True, default="")
+    prize_type = models.CharField(max_length=32, choices=PRIZE_TYPE_CHOICES, default="none")
+    discount_percent = models.PositiveIntegerField(null=True, blank=True)
+    min_order_total = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     awarded_at = models.DateTimeField(auto_now_add=True)
     coupon_code = models.CharField(max_length=100, null=True, blank=True, db_index=True)
     redeemed_order = models.ForeignKey(
@@ -1055,6 +1070,18 @@ class SpinMilestoneAward(models.Model):
 
     def __str__(self):
         return f"{self.user.email} → {self.milestone}"
+
+    @property
+    def title(self):
+        return reward_title(self.label, self.min_order_total)
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not self.label:
+            self.label = self.milestone.label
+            self.prize_type = self.milestone.prize_type
+            self.discount_percent = self.milestone.discount_percent
+            self.min_order_total = self.milestone.min_order_total
+        super().save(*args, **kwargs)
 
 
 # -----------------------------

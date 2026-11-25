@@ -8,7 +8,7 @@
 Вижте детайлите на Вашата поръчка: https://ibands.online/customer/order-detail/{{ order.order_id }}
 {% if unlocked %}
 Тази поръчка отключи награда за следващата:
-{% for award in unlocked %}- {{ award.milestone.label }}{% if award.coupon_code %} (код: {{ award.coupon_code }}){% endif %}
+{% for award in unlocked %}- {{ award.title }}{% if award.coupon_code %} (код: {{ award.coupon_code }}){% endif %}
 {% endfor %}Наградите Ви са в профила: https://ibands.online/customer/dashboard/
 {% endif %}
 Дата на поръчката: {{ order.date|date:"d.m.Y H:i" }}

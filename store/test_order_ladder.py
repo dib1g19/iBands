@@ -16,9 +16,9 @@ class OrderLadderTests(TestCase):
             email="ladder@example.com", username="ladder", password="secret",
         )
 
-    def _order(self, status="initiated", customer=None, email="ladder@example.com"):
+    def _order(self, status="initiated", customer=None, email="ladder@example.com", sub_total=Decimal("20.00")):
         order = store_models.Order.objects.create(
-            customer=customer, order_status=status, sub_total=Decimal("20.00"), total=Decimal("20.00"),
+            customer=customer, order_status=status, sub_total=sub_total, total=sub_total,
         )
         order.address = customer_models.Address.objects.create(
             name="Test", phone="0888", email=email, delivery_method="econt_office", city="София",
@@ -33,6 +33,19 @@ class OrderLadderTests(TestCase):
             response = self.client.post(reverse("store:cod_payment", args=[order.order_id]))
         return response, send
 
+    def _ship_to_office(self, order):
+        self.client.post(
+            reverse("store:save_econt_address", args=[order.order_id]),
+            data={
+                "name": "Test", "phone": "0888123456", "email": "ladder@example.com", "city": "София",
+                "address": "", "office_code": "1234", "office_name": "Офис Еконт", "post_code": "1000",
+                "face": "", "shipping_price": 6.20,
+            },
+            content_type="application/json",
+        )
+        order.refresh_from_db()
+        return order
+
     def _awards(self):
         return store_models.SpinMilestoneAward.objects.filter(user=self.user, milestone__counts="orders")
 
@@ -44,11 +57,12 @@ class OrderLadderTests(TestCase):
         page = self.client.get(response["Location"])
 
         award = self._awards().get()
-        self.assertEqual(award.milestone.prize_type, "free_shipping")
+        self.assertEqual(award.prize_type, "free_shipping")
+        self.assertEqual(award.min_order_total, Decimal("10.00"))
         self.assertEqual(award.earned_order, order)
         self.assertEqual(send.call_args_list[0].kwargs["unlocked"], [award])
         self.assertContains(page, "Тази поръчка отключи")
-        self.assertContains(page, "Безплатна доставка до офис")
+        self.assertContains(page, "Безплатна доставка до офис при поръчка от поне 10.00 €")
 
     def test_the_third_order_issues_a_personal_ten_percent_coupon(self):
         for _ in range(3):
@@ -91,21 +105,49 @@ class OrderLadderTests(TestCase):
     def test_the_next_office_order_ships_free_after_the_first(self):
         self.client.force_login(self.user)
         self._pay_cash(self._order(customer=self.user))
-        later = self._order(customer=self.user)
 
-        self.client.post(
-            reverse("store:save_econt_address", args=[later.order_id]),
-            data={
-                "name": "Test", "phone": "0888123456", "email": "ladder@example.com", "city": "София",
-                "address": "", "office_code": "1234", "office_name": "Офис Еконт", "post_code": "1000",
-                "face": "", "shipping_price": 6.20,
-            },
-            content_type="application/json",
-        )
+        later = self._ship_to_office(self._order(customer=self.user))
 
-        later.refresh_from_db()
         self.assertEqual(later.shipping, Decimal("0.00"))
         self.assertTrue(later.prize_free_shipping)
+
+    def test_free_shipping_needs_an_order_of_at_least_ten_euro(self):
+        self.client.force_login(self.user)
+        self._pay_cash(self._order(customer=self.user))
+
+        small = self._ship_to_office(self._order(customer=self.user, sub_total=Decimal("9.99")))
+
+        self.assertEqual(small.shipping, Decimal("6.20"))
+        self.assertFalse(small.prize_free_shipping)
+
+    def test_an_earned_reward_keeps_its_terms_when_the_milestone_changes(self):
+        self.client.force_login(self.user)
+        self._pay_cash(self._order(customer=self.user))
+        store_models.SpinMilestone.objects.filter(counts="orders", threshold_spins=1).update(
+            label="Безплатна доставка", min_order_total=Decimal("50.00"),
+        )
+
+        later = self._ship_to_office(self._order(customer=self.user))
+        shipping = next(r for r in customer_rewards(self.user) if r["source"] == "Награда за 1 поръчка")
+
+        self.assertTrue(later.prize_free_shipping)
+        self.assertEqual(shipping["label"], "Безплатна доставка до офис")
+        self.assertIn("поне 10.00 €", shipping["how"])
+
+    def test_starting_a_checkout_grants_rewards_from_past_orders(self):
+        self._order(status="received", customer=self.user)
+        product = store_models.Product.objects.create(name="Band", sku="SKU-LADDER", description="Band", price=Decimal("10.00"))
+        store_models.Cart.objects.create(
+            cart_id="ladder-cart", product=product, qty=1, price=Decimal("10.00"), sub_total=Decimal("10.00"),
+        )
+        self.client.force_login(self.user)
+        session = self.client.session
+        session["cart_id"] = "ladder-cart"
+        session.save()
+
+        self.client.post(reverse("store:create_order"))
+
+        self.assertTrue(self._awards().filter(milestone__prize_type="free_shipping").exists())
 
     def test_a_claimed_guest_order_counts(self):
         guest = self._order(status="received")
@@ -122,7 +164,7 @@ class OrderLadderTests(TestCase):
         page = self.client.get(response["Location"])
 
         self.assertContains(page, "Създай профил")
-        self.assertContains(page, "Първата: Безплатна доставка до офис")
+        self.assertContains(page, "Първата: Безплатна доставка до офис при поръчка от поне 10.00 €.")
 
     def test_spins_do_not_reach_order_milestones(self):
         self.client.force_login(self.user)
@@ -150,9 +192,19 @@ class OrderLadderTests(TestCase):
         self.assertIn("Код за отстъпка", today["how"])
         shipping = rewards["Награда за 1 поръчка"]
         self.assertEqual(shipping["label"], "Безплатна доставка до офис")
-        self.assertEqual(shipping["valid"], "Без срок")
+        self.assertEqual(shipping["valid"], "")
         box = rewards["Награда за 10 завъртания"]
-        self.assertEqual(box["how"], "Добавя се сама в поръчка от 25.00 €.")
+        self.assertEqual(box["how"], "Добавя се сама в поръчка от поне 25.00 €.")
+
+    def test_a_coupon_reward_shows_the_minimum_the_coupon_enforces(self):
+        for _ in range(3):
+            self._order(status="received", customer=self.user)
+        sync_order_milestones(self.user)
+        store_models.SpinMilestone.objects.filter(counts="orders", threshold_spins=3).update(min_order_total=Decimal("30.00"))
+
+        coupon = next(r for r in customer_rewards(self.user) if r["code"])
+
+        self.assertEqual(coupon["how"], "Въведете кода в полето „Код за отстъпка“ при поръчка.")
 
     def test_the_ladder_points_at_the_next_reward(self):
         for _ in range(2):
@@ -165,3 +217,12 @@ class OrderLadderTests(TestCase):
         self.assertEqual(ladder["next"].threshold_spins, 3)
         self.assertEqual(ladder["remaining"], 1)
         self.assertEqual(ladder["progress"], 66)
+
+    def test_the_dashboard_names_the_minimum_of_the_next_reward(self):
+        for _ in range(4):
+            self._order(status="received", customer=self.user)
+        self.client.force_login(self.user)
+
+        page = self.client.get(reverse("customer:dashboard"))
+
+        self.assertContains(page, "и отключвате: Mini мистериозна кутия при поръчка от поне 25.00 €")

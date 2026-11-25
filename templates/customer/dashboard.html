@@ -31,7 +31,7 @@
                                 <span class="display-6 text-danger"><i class="fas fa-shopping-cart text-danger"></i></span>
                                 <div class="ms-4">
                                     <div class="d-flex">
-                                        <h5 class="mb-0 fw-bold">{{ orders.count }}</h5>
+                                        <h5 class="mb-0 fw-bold">{{ order_count }}</h5>
                                     </div>
                                     <p class="mb-0 h6 fw-semibold">Поръчки</p>
                                 </div>
@@ -63,11 +63,11 @@
                                 <div class="d-grid gap-2 d-sm-flex">
                                     <a href="{% url 'customer:order_detail' order.order_id %}" class="btn btn-sm btn-primary rounded">Виж поръчката <i class="fas fa-arrow-right ms-2"></i></a>
                                     {% if order.order_status == "initiated" %}
-                                        <a href="{% url 'store:checkout' order.order_id %}" class="btn btn-sm btn-primary rounded">Продължи поръчката</a>
-                                    {% endif %}
-
-                                    {% if order.payment_status == 'Failed' %}
-                                        <a href="{% url 'store:checkout' order.order_id %}" class="btn btn-sm btn-danger rounded">Повтори плащането <i class="fas fa-rotate ms-2"></i></a>
+                                        {% if order.payment_status == "failed" %}
+                                            <a href="{% url 'store:checkout' order.order_id %}" class="btn btn-sm btn-danger rounded">Повтори плащането <i class="fas fa-rotate ms-2"></i></a>
+                                        {% else %}
+                                            <a href="{% url 'store:checkout' order.order_id %}" class="btn btn-sm btn-primary rounded">Продължи поръчката</a>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             </div>

@@ -803,6 +803,33 @@ class UnfinishedOrderLinkTests(TestCase):
         self.assertContains(detail, checkout_url)
         self.assertContains(detail, "Продължи поръчката")
 
+    def test_dashboard_totals_skip_unfinished_and_canceled_orders(self):
+        user = get_user_model().objects.create_user(
+            email="totals@example.com", username="totals", password="secret",
+        )
+        for status, total in [("initiated", "100.00"), ("canceled", "50.00"), ("received", "20.00"), ("delivered", "12.50")]:
+            store_models.Order.objects.create(customer=user, order_status=status, total=Decimal(total))
+        self.client.force_login(user)
+
+        dashboard = self.client.get(reverse("customer:dashboard"))
+
+        self.assertEqual(dashboard.context["order_count"], 2)
+        self.assertEqual(dashboard.context["total_spent"], Decimal("32.50"))
+
+    def test_a_failed_payment_offers_retry_instead_of_continue(self):
+        user = get_user_model().objects.create_user(
+            email="retry@example.com", username="retry", password="secret",
+        )
+        store_models.Order.objects.create(
+            customer=user, order_status="initiated", payment_status="failed", total=Decimal("10.00"),
+        )
+        self.client.force_login(user)
+
+        dashboard = self.client.get(reverse("customer:dashboard"))
+
+        self.assertContains(dashboard, "Повтори плащането")
+        self.assertNotContains(dashboard, "Продължи поръчката")
+
     def test_staff_can_view_another_customers_order_without_changing_it(self):
         User = get_user_model()
         owner = User.objects.create_user(email="owner-view@example.com", username="owner-view", password="secret")

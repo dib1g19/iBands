@@ -30,9 +30,11 @@ def dashboard(request):
             )
         )
     )
-    total_spent = store_models.Order.objects.filter(customer=request.user).aggregate(
-        total=models.Sum("total")
-    )["total"]
+    placed = (
+        store_models.Order.objects.filter(customer=request.user)
+        .exclude(order_status__in=["initiated", "canceled"])
+        .aggregate(count=models.Count("id"), total=models.Sum("total"))
+    )
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
         {"label": "Табло", "url": ""},
@@ -40,7 +42,8 @@ def dashboard(request):
 
     context = {
         "orders": orders,
-        "total_spent": total_spent,
+        "order_count": placed["count"],
+        "total_spent": placed["total"],
         "breadcrumbs": breadcrumbs,
     }
 

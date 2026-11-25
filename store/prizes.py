@@ -244,9 +244,57 @@ def sync_order_milestones(user, order=None):
     return granted
 
 
-def unused_milestone_awards(user):
-    """Milestone rewards the customer still has to use, oldest first."""
-    return [award for award in unredeemed_milestone_awards(user) if not milestone_award_used(award)]
+def _plural(count, one, many):
+    return f"{count} {one if count == 1 else many}"
+
+
+def _how_to_use(prize_type, minimum, code):
+    floor = f"{Order.as_money(minimum)} €" if minimum is not None else None
+    if prize_type == "free_shipping":
+        text = "Прилага се сама при доставка до офис."
+        return f"{text} Поръчката трябва да е поне {floor}." if floor else text
+    if prize_type == "mystery_box_min_total":
+        return f"Добавя се сама в поръчка от {floor}." if floor else "Добавя се сама в следващата поръчка."
+    if prize_type == "discount_percent" and code:
+        text = "Въведете кода в полето „Код за отстъпка“ при поръчка."
+        return f"{text} Поръчката трябва да е поне {floor}." if floor else text
+    return ""
+
+
+def _coupon_used(code):
+    return bool(code) and CouponRedemption.objects.filter(coupon__code=code).exists()
+
+
+def customer_rewards(user):
+    """Every reward the customer can still use, with where it came from, how it applies, and until when."""
+    rewards = []
+    spin = unredeemed_spin(user)
+    if spin and spin.prize_type != "none" and not _coupon_used(spin.coupon_code):
+        rewards.append({
+            "label": spin.result_label,
+            "source": "Колелото на късмета днес",
+            "how": _how_to_use(spin.prize_type, spin.min_order_total, spin.coupon_code),
+            "valid": "Важи до края на деня",
+            "code": spin.coupon_code,
+        })
+    for award in unredeemed_milestone_awards(user):
+        if milestone_award_used(award):
+            continue
+        milestone = award.milestone
+        if milestone.counts == "orders":
+            source = f"Награда за {_plural(milestone.threshold_spins, 'поръчка', 'поръчки')}"
+        else:
+            source = f"Награда за {_plural(milestone.threshold_spins, 'завъртане', 'завъртания')}"
+        coupon = Coupon.objects.filter(code=award.coupon_code).first() if award.coupon_code else None
+        valid_until = coupon.valid_until if coupon else None
+        rewards.append({
+            "label": milestone.label,
+            "source": source,
+            "how": _how_to_use(milestone.prize_type, milestone.min_order_total, award.coupon_code),
+            "valid": f"Важи до {timezone.localtime(valid_until):%d.%m.%Y}" if valid_until else "Без срок",
+            "code": award.coupon_code,
+        })
+    return rewards
 
 
 def order_ladder(user):

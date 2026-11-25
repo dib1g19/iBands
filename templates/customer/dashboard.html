@@ -65,12 +65,20 @@
                     {% if rewards %}
                         <div class="border rounded p-3 mb-4">
                             <h6 class="fw-bold mb-2"><i class="fas fa-gift text-success me-2"></i>Вашите награди</h6>
-                            <ul class="list-unstyled mb-2">
-                                {% for award in rewards %}
-                                    <li>{{ award.milestone.label }}{% if award.coupon_code %} – код <strong>{{ award.coupon_code }}</strong>{% endif %}</li>
+                            <ul class="list-unstyled mb-0">
+                                {% for reward in rewards %}
+                                    <li class="py-2{% if not forloop.last %} border-bottom{% endif %}">
+                                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                                            <span class="fw-semibold">{{ reward.label }}</span>
+                                            <span class="small text-muted">{{ reward.source }}</span>
+                                        </div>
+                                        {% if reward.code %}
+                                            <div class="small mt-1">Код: <code>{{ reward.code }}</code></div>
+                                        {% endif %}
+                                        <div class="small text-muted mt-1">{{ reward.how }} {{ reward.valid }}.</div>
+                                    </li>
                                 {% endfor %}
                             </ul>
-                            <p class="small text-muted mb-0">Доставката и кутиите се добавят сами при следващата поръчка, а кода въведете при плащане.</p>
                         </div>
                     {% endif %}
 

@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.urls import reverse
-from store.prizes import order_ladder, sync_order_milestones, unused_milestone_awards
+from store.prizes import customer_rewards, order_ladder, sync_order_milestones
 from store.utils import paginate_queryset
 from store import models as store_models
 from customer import models as customer_models
@@ -40,7 +40,7 @@ def dashboard(request):
     context = {
         "orders": orders,
         "ladder": order_ladder(request.user),
-        "rewards": unused_milestone_awards(request.user),
+        "rewards": customer_rewards(request.user),
         "breadcrumbs": breadcrumbs,
     }
 

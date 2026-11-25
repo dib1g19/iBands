@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from customer import models as customer_models
 from store import models as store_models
-from store.prizes import order_ladder, sync_order_milestones
+from store.prizes import customer_rewards, order_ladder, sync_order_milestones
 
 
 class OrderLadderTests(TestCase):
@@ -130,6 +130,29 @@ class OrderLadderTests(TestCase):
         self.client.post(reverse("store:spin_perform"))
 
         self.assertFalse(self._awards().exists())
+
+    def test_rewards_say_where_they_came_from_how_they_apply_and_until_when(self):
+        self._order(status="received", customer=self.user)
+        sync_order_milestones(self.user)
+        spin_box = store_models.SpinMilestone.objects.create(
+            threshold_spins=10, prize_type="mystery_box_min_total", min_order_total=Decimal("25.00"), label="Mini кутия",
+        )
+        store_models.SpinMilestoneAward.objects.create(user=self.user, milestone=spin_box)
+        store_models.SpinEntry.objects.create(
+            user=self.user, result_label="Отстъпка 5%", prize_type="discount_percent", coupon_code="SPIN-1-1",
+        )
+
+        rewards = {reward["source"]: reward for reward in customer_rewards(self.user)}
+
+        today = rewards["Колелото на късмета днес"]
+        self.assertEqual(today["valid"], "Важи до края на деня")
+        self.assertEqual(today["code"], "SPIN-1-1")
+        self.assertIn("Код за отстъпка", today["how"])
+        shipping = rewards["Награда за 1 поръчка"]
+        self.assertEqual(shipping["label"], "Безплатна доставка до офис")
+        self.assertEqual(shipping["valid"], "Без срок")
+        box = rewards["Награда за 10 завъртания"]
+        self.assertEqual(box["how"], "Добавя се сама в поръчка от 25.00 €.")
 
     def test_the_ladder_points_at_the_next_reward(self):
         for _ in range(2):

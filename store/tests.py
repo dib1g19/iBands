@@ -199,13 +199,8 @@ class SpeedyCODAmountTests(TestCase):
 
 
 class PigeonShipmentTests(TestCase):
-    @patch("store.views.pigeon_sender")
     @patch("store.views.pigeon_request")
-    def test_cod_uses_goods_total_and_saves_the_reference(self, pigeon_request, pigeon_sender):
-        pigeon_sender.return_value = {
-            "id": 5131,
-            "pickup_address": {"city_id": 2613, "street_id": 415496, "street_number": "56", "postal_code": "4000"},
-        }
+    def test_cod_uses_goods_total_and_saves_the_reference(self, pigeon_request):
         pigeon_request.return_value = {"success": True, "data": {"reference_number": "PG123", "label_pdf": "abc"}}
         product = store_models.Product.objects.create(name="Band X", price=Decimal("100.00"), sku="SKU-PG")
         order = store_models.Order.objects.create(
@@ -235,7 +230,9 @@ class PigeonShipmentTests(TestCase):
         self.assertEqual(payload["service_codes"]["cod_amount"], float(Decimal("100.00")))
         self.assertEqual(payload["who_pays"], "receiver")
         self.assertEqual(payload["delivery_office_id"], 627)
-        self.assertEqual(payload["sender_address_id"], 5131)
+        self.assertEqual(payload["pickup_type"], "office")
+        self.assertEqual(payload["pickup_office_id"], 10)
+        self.assertNotIn("sender_address_id", payload)
         self.assertNotIn("label_pdf", pigeon_request.return_value["data"])
         order.refresh_from_db()
         self.assertEqual(order.tracking_id, "PG123")
@@ -2036,9 +2033,8 @@ class SavedDestinationTests(TestCase):
         self.assertEqual(order.address_id, kept.pk)
 
     @patch("store.views.pigeon_request")
-    @patch("store.views.pigeon_sender", return_value={"id": 1, "pickup_address": {}})
     @patch("store.views.cache.get", return_value={})
-    def test_pigeon_shipment_reads_ids_from_the_address_when_cache_is_empty(self, _cache, _sender, pigeon_request):
+    def test_pigeon_shipment_reads_ids_from_the_address_when_cache_is_empty(self, _cache, pigeon_request):
         pigeon_request.return_value = {"success": True, "data": {"reference_number": "PG1"}}
         order = self._order()
         order.address = customer_models.Address.objects.create(

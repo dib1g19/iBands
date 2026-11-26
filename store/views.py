@@ -25,8 +25,8 @@ from store.utils import (
     speedy_v1_calculate,
     speedy_v1_create_shipment,
     pigeon_package,
+    pigeon_pickup,
     pigeon_request,
-    pigeon_sender,
     send_meta_purchase_event,
     recalc_cart_group_promos,
 )
@@ -508,8 +508,8 @@ def _goods_total(order):
 
 def send_order_to_pigeon(order):
     address = order.address
-    sender = pigeon_sender()
-    if not sender:
+    pickup = pigeon_pickup()
+    if not pickup:
         print("Pigeon shipment: no sender address on the account")
         return None
     cached = cache.get(f"pigeon_opts_{order.order_id}") or {}
@@ -539,8 +539,8 @@ def send_order_to_pigeon(order):
         "receiver_name": getattr(address, "name", "") or "",
         "receiver_phone": getattr(address, "phone", "") or "",
         "receiver_email": getattr(address, "email", "") or None,
-        "pickup_type": "address",
-        "sender_address_id": sender.get("id"),
+        "pickup_type": pickup["pickup_type"],
+        **({"pickup_office_id": pickup["pickup_office_id"]} if pickup["pickup_type"] == "office" else {"sender_address_id": pickup.get("sender_address_id")}),
         "delivery_type": delivery_type,
         "packages": [pigeon_package(order)],
         "inventory_items": items,
@@ -597,10 +597,10 @@ def send_order_to_pigeon(order):
                 payload = retry
                 response = _create(payload)
                 errors = response.get("errors") if isinstance(response, dict) else {}
-            if isinstance(errors, dict) and any(key.startswith("pickup") or key.startswith("sender_address") for key in errors):
+            if pickup["pickup_type"] == "address" and isinstance(errors, dict) and any(key.startswith("pickup") or key.startswith("sender_address") for key in errors):
                 retry = json.loads(json.dumps(payload))
                 retry.pop("sender_address_id", None)
-                retry["pickup_address"] = sender.get("pickup_address") or {}
+                retry["pickup_address"] = pickup.get("pickup_address") or {}
                 response = _create(retry)
         data = (response or {}).get("data") or {}
         reference = data.get("reference_number") if isinstance(data, dict) else None
@@ -1180,8 +1180,8 @@ def pigeon_find_offices(request):
 def pigeon_quote(request, order_id):
     try:
         order = store_models.Order.objects.get(order_id=order_id)
-        sender = pigeon_sender()
-        if not sender:
+        pickup = pigeon_pickup()
+        if not pickup:
             return JsonResponse({"success": False, "error": "Няма адрес на подател в Pigeon Express"})
         delivery_type = request.GET.get("delivery_type") or "address"
         if delivery_type not in ("address", "office", "locker"):
@@ -1191,8 +1191,8 @@ def pigeon_quote(request, order_id):
         if is_cod:
             service_codes["cod_amount"] = float(_goods_total(order))
         payload = {
-            "pickup_type": "address",
-            "pickup_address": sender.get("pickup_address") or {},
+            "pickup_type": pickup["pickup_type"],
+            **({"pickup_office_id": pickup["pickup_office_id"]} if pickup["pickup_type"] == "office" else {"pickup_address": pickup.get("pickup_address") or {}}),
             "delivery_type": delivery_type,
             "packages": [pigeon_package(order)],
             "service_type": "standard",

@@ -300,6 +300,20 @@ def pigeon_request(method, path, payload=None, params=None):
         return {}
 
 
+def pigeon_pickup():
+    office_id = str(getattr(settings, "PIGEON_PICKUP_OFFICE_ID", "") or "")
+    if office_id.isdigit():
+        return {"pickup_type": "office", "pickup_office_id": int(office_id)}
+    sender = pigeon_sender()
+    if not sender:
+        return None
+    return {
+        "pickup_type": "address",
+        "sender_address_id": sender.get("id"),
+        "pickup_address": sender.get("pickup_address") or {},
+    }
+
+
 def pigeon_sender():
     """Default saved pickup address. Calculate needs the address; create can use its id."""
     from django.core.cache import cache

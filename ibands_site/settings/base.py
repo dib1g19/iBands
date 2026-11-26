@@ -179,6 +179,8 @@ PIGEON_API_KEY = env("PIGEON_API_KEY", default="")
 PIGEON_API_SECRET = env("PIGEON_API_SECRET", default="")
 PIGEON_API_BASE = env("PIGEON_API_BASE", default="https://api.pigeonexpress.com/v1")
 PIGEON_SENDER_ADDRESS_ID = env("PIGEON_SENDER_ADDRESS_ID", default="")
+# Office 022, Военна болница, Пловдив. Empty uses the saved account address.
+PIGEON_PICKUP_OFFICE_ID = env("PIGEON_PICKUP_OFFICE_ID", default="10")
 
 
 def admin_user_avatar(user):

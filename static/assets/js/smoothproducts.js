@@ -22,9 +22,10 @@
 
             // Add some markup & set some CSS
 
-            $('.sp-loading').hide();
             $('.sp-wrap').each(function() {
-                $(this).addClass('sp-touch');
+                var wrap = $(this);
+                var loading = wrap.prev('.sp-loading');
+                wrap.addClass('sp-touch');
                 var thumbQty = $('a', this).length;
 
                 // If more than one image
@@ -46,13 +47,20 @@
                         $(this).remove();
                     });
                     $('.sp-large', this).append('<a href="' + firstLarge + '" class="sp-current-big"><img src="' + firstThumb + '" alt="" /></a>');
-                    $('.sp-wrap').css('display', 'inline-block');
                     // If only one image
                 } else {
                     $(this).append('<div class="sp-large"></div>');
                     $('a', this).appendTo($('.sp-large', this)).addClass('.sp-current-big');
-                    $('.sp-wrap').css('display', 'inline-block');
                 }
+                // The page already shows this photo. Hiding it before the copy has pixels leaves a blank.
+                // complete can be true before the file has pixels.
+                var shot = wrap.find('.sp-large img');
+                function reveal() {
+                    loading.hide();
+                    wrap.css('display', 'inline-block');
+                }
+                shot.one('load error', reveal);
+                if (!shot[0] || (shot[0].complete && shot[0].naturalWidth)) reveal();
             });
 
 

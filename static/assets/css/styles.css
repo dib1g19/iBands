@@ -799,9 +799,9 @@ h6 {
     transition: left 0.8s cubic-bezier(.76,0,.24,1);
 }
 
-/* When the nav is open, move nav-toggle right by sidebar width (e.g. 320px) */
+/* Close button sits at the right edge of the full-width phone menu. */
 .nav-toggle.active {
-    left: 272px;
+    left: calc(100vw - 60px);
 }
 
 /* Hamburger lines (unchanged, but keep for X animation) */
@@ -843,11 +843,12 @@ h6 {
 
 /* Off-canvas sidebar styles for nav (hamburger opens this) */
 .nav-menu-wrapper {
-    width: 320px;
+    width: 100%;
     height: 100%;
     position: fixed;
+    top: 0;
     padding-top: 40px;
-    left: -320px;
+    left: -100%;
     background: #fff;
     z-index: 1000;
     overflow-y: auto;

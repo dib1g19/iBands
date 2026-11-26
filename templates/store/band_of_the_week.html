@@ -11,6 +11,8 @@
     Специална оферта за седмицата: избрана каишка на 50% намаление.
 {% endblock %}
 
+{% block view_transitions %}{% endblock %}
+
 {% block content %}
 {% include 'partials/_breadcrumbs.html' %}
 
@@ -36,7 +38,7 @@
                     <div class="sp-loading">
                         <img src="{{ product.image.url }}" alt="{{ product.category.title }} - {{ product.name }}" /><br />Зареждане на изображения...
                     </div>
-                    <div class="sp-wrap" data-vt="product-{{ product.id }}">
+                    <div class="sp-wrap">
                         <a href="{{ product.image.url }}"><img class="product-main-image" src="{{ product.image.url }}" alt="{{ product.category.title }} - {{ product.name }}" /></a>
                         {% for image in product.gallery_images.all %}
                             <a href="{{ image.image.url }}"><img src="{{ image.image.url }}" alt="{{ product.category.title }} - {{ product.name }} - Реална - {{ forloop.counter }}" /></a>

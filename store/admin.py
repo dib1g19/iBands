@@ -691,13 +691,6 @@ class SpinMilestoneAwardAdmin(iBandsModelAdmin):
     search_fields = ["user__email", "coupon_code", "label"]
 
 
-@admin.register(store_models.Review)
-class ReviewAdmin(iBandsModelAdmin):
-    list_display = ["user", "product", "rating", "active", "date"]
-    search_fields = ["user__username", "product__name"]
-    list_filter = ["active", "rating"]
-
-
 @admin.register(store_models.ColorGroup)
 class ColorGroupAdmin(ColorSwatchMixin, iBandsModelAdmin):
     list_display = ["name_en", "name_bg", "hex_code", "color_swatch"]

@@ -1692,14 +1692,6 @@ def shop(request):
         {"id": "100", "value": 100},
     ]
 
-    ratings = [
-        {"id": "1", "value": "★☆☆☆☆"},
-        {"id": "2", "value": "★★☆☆☆"},
-        {"id": "3", "value": "★★★☆☆"},
-        {"id": "4", "value": "★★★★☆"},
-        {"id": "5", "value": "★★★★★"},
-    ]
-
     prices = [
         {"id": "lowest", "value": "Най-висока към най-ниска"},
         {"id": "highest", "value": "Най-ниска към най-висока"},
@@ -1716,7 +1708,6 @@ def shop(request):
         "categories": categories,
         "color_groups": color_groups,
         "item_display": item_display,
-        "ratings": ratings,
         "prices": prices,
         "user_wishlist_products": get_user_wishlist_products(request),
         "breadcrumbs": breadcrumbs,
@@ -1742,14 +1733,6 @@ def sale(request):
         {"id": "40", "value": 40},
         {"id": "60", "value": 60},
         {"id": "100", "value": 100},
-    ]
-
-    ratings = [
-        {"id": "1", "value": "★☆☆☆☆"},
-        {"id": "2", "value": "★★☆☆☆"},
-        {"id": "3", "value": "★★★☆☆"},
-        {"id": "4", "value": "★★★★☆"},
-        {"id": "5", "value": "★★★★★"},
     ]
 
     prices = [
@@ -1786,7 +1769,6 @@ def sale(request):
         "categories": categories,
         "color_groups": color_groups,
         "item_display": item_display,
-        "ratings": ratings,
         "prices": prices,
         "user_wishlist_products": get_user_wishlist_products(request),
         "breadcrumbs": breadcrumbs,
@@ -3088,7 +3070,6 @@ def filter_products(request):
 
     # Get filters from the AJAX request
     categories = request.GET.getlist("categories[]")
-    rating = request.GET.getlist("rating[]")
     sizes = request.GET.getlist("sizes[]")
     colors = request.GET.getlist("colors[]")
     price_order = request.GET.get("prices")
@@ -3115,10 +3096,6 @@ def filter_products(request):
             models.Q(category__id__in=all_category_ids) |
             models.Q(additional_categories__id__in=all_category_ids)
         ).distinct()
-
-    # Apply rating filtering
-    if rating:
-        products = products.filter(reviews__rating__in=rating).distinct()
 
     # Apply size filtering (by ProductItem sizes)
     if sizes:

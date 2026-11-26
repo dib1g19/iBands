@@ -47,15 +47,6 @@ VARIANT_TYPE_CHOICES = (
     ("length", "Length"),
 )
 
-RATING = (
-    (1, "★☆☆☆☆"),
-    (2, "★★☆☆☆"),
-    (3, "★★★☆☆"),
-    (4, "★★★★☆"),
-    (5, "★★★★★"),
-)
-
-
 PROMO_TYPE_CHOICES = (
     ("none", "No promotion"),
     ("buy_x_get_y", "Buy X Get Y Free"),
@@ -311,14 +302,6 @@ class Product(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.sku})" if self.sku else self.name
-
-    def average_rating(self):
-        return Review.objects.filter(product=self).aggregate(
-            avg_rating=models.Avg("rating")
-        )["avg_rating"]
-
-    def reviews(self):
-        return Review.objects.filter(product=self)
 
     def gallery(self):
         return Gallery.objects.filter(product=self)
@@ -790,27 +773,6 @@ class OrderItem(models.Model):
             return max(0, int(self.qty or 0) - int(self.promo_paid_units))
         except Exception:
             return 0
-
-
-class Review(models.Model):
-    user = models.ForeignKey(
-        user_models.User, on_delete=models.SET_NULL, blank=True, null=True
-    )
-    product = models.ForeignKey(
-        Product,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="reviews",
-    )
-    review = models.TextField(null=True, blank=True)
-    reply = models.TextField(null=True, blank=True)
-    rating = models.IntegerField(choices=RATING, default=None)
-    active = models.BooleanField(default=False)
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} review on {self.product.name}"
 
 
 class ColorGroup(models.Model):

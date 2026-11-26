@@ -58,7 +58,6 @@ MENU_SECTIONS = [
             "store.coupon",
             "store.couponredemption",
             "store.bandoftheweek",
-            "store.review",
             "store.spinprize",
             "store.spinmilestone",
             "store.spinmilestoneaward",

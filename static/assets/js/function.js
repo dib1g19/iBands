@@ -310,7 +310,6 @@ $(document).ready(function () {
     $(document).on("click", ".reset_shop_filter_btn", function () {
         let filters = {
             categories: [],
-            rating: [],
             colors: [],
             sizes: [],
             prices: "",
@@ -319,9 +318,6 @@ $(document).ready(function () {
         };
 
         $(".category-filter:checked").each(function () {
-            $(this).prop("checked", false);
-        });
-        $(".rating-filter:checked").each(function () {
             $(this).prop("checked", false);
         });
         $(".size-filter:checked").each(function () {

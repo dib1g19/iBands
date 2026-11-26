@@ -117,4 +117,36 @@ $(function () {
             $parentLi.siblings().find('.submenu-indicator-chevron, .submenu-indicator').closest('button, a').removeClass('submenu-indicator-up');
         }
     });
+
+    // Name only the open product photo, and the one card the user actually clicks.
+    // The name sits on the visible image, not the gallery wrapper, so the file's
+    // pixel size cannot paint over the screen and then snap back.
+    function namePhoto(el, name) {
+        if (!el) return;
+        el.style.viewTransitionName = name;
+        el.style.viewTransitionClass = "product-photo";
+    }
+    var openWrap = document.querySelector(".sp-wrap[data-vt]");
+    if (openWrap) namePhoto(openWrap.querySelector(".sp-large img"), openWrap.getAttribute("data-vt"));
+    document.addEventListener("click", function (e) {
+        var link = e.target.closest("a[data-vt]");
+        if (!link) return;
+        document.querySelectorAll("[data-vt], .sp-large img").forEach(function (el) {
+            el.style.viewTransitionName = "";
+        });
+        var card = link.closest(".product-card");
+        if (card) card.style.transform = "none";
+        var shot = link.querySelector(".main-img") || link;
+        shot.style.transform = "none";
+        namePhoto(shot, link.getAttribute("data-vt"));
+    }, true);
+
+    var header = document.querySelector(".header");
+    if (header) {
+        var onScroll = function () {
+            header.classList.toggle("header-scrolled", window.scrollY > 8);
+        };
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+    }
 });

@@ -199,7 +199,7 @@ JAZZMIN_SETTINGS = {
     "site_title": "iBands",
     "site_header": "iBands",
     "site_brand": "iBands",
-    "site_icon": "assets/favicons/favicon.ico",
+    "site_icon": "assets/favicons/admin-icon.png",
     "site_logo": "assets/img/logo-black.avif",
     "welcome_sign": "Welcome To iBands",
     "copyright": "iBands",

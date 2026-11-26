@@ -1,19 +1,15 @@
 {% load static %}
 {% load pricing %}
 <!DOCTYPE html>
-<!-- Favicons -->
-<link rel="icon" type="image/svg+xml" href="{% static 'assets/favicons/favicon.svg' %}" />
-<link rel="icon" type="image/svg+xml" href="{% static 'assets/favicons/favicon-dark.svg' %}" media="(prefers-color-scheme: dark)" />
-<link rel="shortcut icon" href="{% static 'assets/favicons/favicon.ico' %}" />
-<link rel="icon" type="image/png" href="{% static 'assets/favicons/favicon-96x96.png' %}" sizes="96x96" />
-<link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/favicons/apple-touch-icon.png' %}" />
-<meta name="apple-mobile-web-app-title" content="iBands" />
-<link rel="manifest" href="{% static 'assets/favicons/site.webmanifest' %}" />
-
 <html lang="bg">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="{% static 'assets/favicons/favicon.ico' %}" sizes="any">
+        <link rel="icon" href="{% static 'assets/favicons/favicon.svg' %}?v=2" type="image/svg+xml">
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/favicons/apple-touch-icon.png' %}" />
+        <meta name="apple-mobile-web-app-title" content="iBands" />
+        <link rel="manifest" href="{% static 'assets/favicons/site.webmanifest' %}" />
 
         <!-- 🔍 SEO -->
         {% block robots %}{% endblock %}

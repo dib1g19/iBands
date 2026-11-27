@@ -1,6 +1,8 @@
 from .base import *
 
 DEBUG = True
+# Phone on the LAN uses a changing address; prod settings keep the real host list.
+ALLOWED_HOSTS = ["*"]
 
 # ✅ Static files are served locally
 STATIC_URL = "static/"

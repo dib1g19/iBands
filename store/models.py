@@ -676,6 +676,7 @@ class Order(models.Model):
     class Meta:
         verbose_name_plural = "Order"
         ordering = ["-date"]
+        indexes = [models.Index(fields=["payment_id"], name="store_order_payment_idx")]
 
     def __str__(self):
         return self.order_id
@@ -727,6 +728,15 @@ class Order(models.Model):
 
     def order_items(self):
         return OrderItem.objects.filter(order=self)
+
+
+class StripeCheckoutAttempt(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="stripe_checkout_attempts")
+    session_id = models.CharField(max_length=255, unique=True)
+    amount_minor = models.PositiveBigIntegerField()
+    currency = models.CharField(max_length=3)
+    payment_intent_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class OrderItem(models.Model):

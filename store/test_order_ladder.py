@@ -22,6 +22,7 @@ class OrderLadderTests(TestCase):
         )
         order.address = customer_models.Address.objects.create(
             name="Test", phone="0888", email=email, delivery_method="econt_office", city="София",
+            office_code="1234",
         )
         order.save(update_fields=["address"])
         return order
@@ -159,6 +160,9 @@ class OrderLadderTests(TestCase):
 
     def test_a_guest_is_invited_to_sign_up_for_rewards(self):
         guest = self._order()
+        session = self.client.session
+        session["checkout_order_ids"] = [str(guest.order_id)]
+        session.save()
 
         response, _send = self._pay_cash(guest)
         page = self.client.get(response["Location"])

@@ -1,10 +1,10 @@
 from django.core.cache import cache
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
-from django.db import models, transaction
+from django.db import IntegrityError, models, transaction
 from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
@@ -15,6 +15,7 @@ from .models import Category, Product, BandOfTheWeek, CategoryLink, SpinEntry, C
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 import random
+import logging
 import stripe
 from store.utils import (
     paginate_queryset,
@@ -52,10 +53,13 @@ from django.db.models import Q
 from store.error_log import record_server_error
 import json
 import requests
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 from django.http import HttpResponse
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+
+logger = logging.getLogger(__name__)
+STRIPE_CURRENCY = "eur"
 
 def _hex_to_rgb(hex_code):
     """Convert #RRGGBB or #RGB to integer RGB tuple."""
@@ -735,7 +739,7 @@ def _persist_destination(request, order, data, delivery_method):
     apply_quoted_shipping(
         order, user, _quoted_price(data), delivery_method in customer_models.OFFICE_DELIVERY_METHODS
     )
-    apply_coupon_discount(order)
+    apply_coupon_discount(order, destination_changed=True)
     return order.address
 
 
@@ -762,69 +766,69 @@ def _destination_payload(address):
     }
 
 
-@csrf_exempt
+@require_POST
+@transaction.atomic
 def save_econt_address(request, order_id):
-    if request.method == "POST":
-        try:
-            order = store_models.Order.objects.get(order_id=order_id)
-            if not _checkout_owned(request, order):
-                return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
-            data = json.loads(request.body)
-            if _persist_destination(request, order, data, _chosen_method(data, "econt", ("econt_office",))) is None:
-                return JsonResponse({"success": False, "message": "Непълен адрес."})
-            return JsonResponse({"success": True})
-        except Exception as e:
-            return JsonResponse({"success": False, "message": f"Error: {e}"})
-    return JsonResponse({"success": False, "message": "Invalid request"})
+    try:
+        order = get_object_or_404(store_models.Order.objects.select_for_update(), order_id=order_id)
+        if not _checkout_owned(request, order):
+            return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
+        data = json.loads(request.body)
+        if _persist_destination(request, order, data, _chosen_method(data, "econt", ("econt_office",))) is None:
+            return JsonResponse({"success": False, "message": "Непълен адрес."})
+        return JsonResponse({"success": True})
+    except (ValueError, TypeError, AttributeError):
+        transaction.set_rollback(True)
+        return JsonResponse({"success": False, "message": "Невалидни данни за доставка."}, status=400)
 
 
-@csrf_exempt
+@require_POST
+@transaction.atomic
 def save_speedy_address(request, order_id):
-    if request.method == "POST":
-        try:
-            order = store_models.Order.objects.get(order_id=order_id)
-            if not _checkout_owned(request, order):
-                return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
-            data = json.loads(request.body)
-            if _persist_destination(request, order, data, _chosen_method(data, "speedy", ("speedy_office",))) is None:
-                return JsonResponse({"success": False, "message": "Непълен адрес."})
-            cache.set(f"speedy_opts_{order.order_id}", {
-                "speedy_contents": data.get("speedy_contents") or None,
-                "parcel_weight": data.get("parcel_weight") or None,
-                "parcel_count": data.get("parcel_count") or None,
-                "site_id": data.get("site_id") or None,
-                "office_id": data.get("office_code") or None,
-            }, timeout=60 * 60)
-            return JsonResponse({"success": True})
-        except Exception as e:
-            return JsonResponse({"success": False, "message": f"Error: {e}"})
-    return JsonResponse({"success": False, "message": "Invalid request"})
+    try:
+        order = get_object_or_404(store_models.Order.objects.select_for_update(), order_id=order_id)
+        if not _checkout_owned(request, order):
+            return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
+        data = json.loads(request.body)
+        if _persist_destination(request, order, data, _chosen_method(data, "speedy", ("speedy_office",))) is None:
+            return JsonResponse({"success": False, "message": "Непълен адрес."})
+        cache.set(f"speedy_opts_{order.order_id}", {
+            "speedy_contents": data.get("speedy_contents") or None,
+            "parcel_weight": data.get("parcel_weight") or None,
+            "parcel_count": data.get("parcel_count") or None,
+            "site_id": data.get("site_id") or None,
+            "office_id": data.get("office_code") or None,
+        }, timeout=60 * 60)
+        return JsonResponse({"success": True})
+    except (ValueError, TypeError, AttributeError):
+        transaction.set_rollback(True)
+        return JsonResponse({"success": False, "message": "Невалидни данни за доставка."}, status=400)
 
 
-@csrf_exempt
+@require_POST
+@transaction.atomic
 def save_pigeon_address(request, order_id):
-    if request.method == "POST":
-        try:
-            order = store_models.Order.objects.get(order_id=order_id)
-            if not _checkout_owned(request, order):
-                return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
-            data = json.loads(request.body)
-            method = _chosen_method(data, "pigeon", ("pigeon_office", "pigeon_locker"))
-            if _persist_destination(request, order, data, method) is None:
-                return JsonResponse({"success": False, "message": "Непълен адрес."})
-            cache.set(f"pigeon_opts_{order.order_id}", {
-                "city_id": data.get("city_id") or None,
-                "street_id": data.get("street_id") or None,
-                "street_number": data.get("street_number") or None,
-                "office_id": data.get("office_code") or None,
-            }, timeout=60 * 60 * 24 * 7)
-            return JsonResponse({"success": True})
-        except Exception as e:
-            return JsonResponse({"success": False, "message": f"Error: {e}"})
-    return JsonResponse({"success": False, "message": "Invalid request"})
+    try:
+        order = get_object_or_404(store_models.Order.objects.select_for_update(), order_id=order_id)
+        if not _checkout_owned(request, order):
+            return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
+        data = json.loads(request.body)
+        method = _chosen_method(data, "pigeon", ("pigeon_office", "pigeon_locker"))
+        if _persist_destination(request, order, data, method) is None:
+            return JsonResponse({"success": False, "message": "Непълен адрес."})
+        cache.set(f"pigeon_opts_{order.order_id}", {
+            "city_id": data.get("city_id") or None,
+            "street_id": data.get("street_id") or None,
+            "street_number": data.get("street_number") or None,
+            "office_id": data.get("office_code") or None,
+        }, timeout=60 * 60 * 24 * 7)
+        return JsonResponse({"success": True})
+    except (ValueError, TypeError, AttributeError):
+        transaction.set_rollback(True)
+        return JsonResponse({"success": False, "message": "Невалидни данни за доставка."}, status=400)
 
 
-def apply_coupon_discount(order):
+def apply_coupon_discount(order, *, destination_changed=False):
     """Recalculate saved and total from the merchandise subtotal.
 
     Line prices stay as snapshotted at checkout. ``saved`` is the only reduction.
@@ -833,21 +837,26 @@ def apply_coupon_discount(order):
     _sub_total, saved, total = order.totals_for_merchandise(order.sub_total, saved)
     order.saved = saved
     order.total = total
-    order.save()
+    fields = ["saved", "total"]
+    if destination_changed:
+        fields.extend(["address", "shipping", "prize_free_shipping"])
+    order.save(update_fields=fields)
 
 
-def release_single_use_coupon(coupon, order):
-    """A one-use code stays on the checkout that applied it last."""
-    if coupon.usage_limit != 1:
-        return
-    others = store_models.Order.objects.filter(
-        coupons=coupon,
-        order_status="initiated",
-        coupon_redemption__isnull=True,
-    ).exclude(pk=order.pk)
-    for other in others:
-        other.coupons.remove(coupon)
-        apply_coupon_discount(other)
+def _lock_coupon_checkouts(coupon, order_pk):
+    checkouts = Q(pk=order_pk)
+    if coupon.usage_limit == 1:
+        other_ids = store_models.Order.objects.filter(
+            coupons=coupon,
+            order_status="initiated",
+            coupon_redemption__isnull=True,
+        ).values("pk")
+        checkouts |= Q(pk__in=other_ids)
+    # A transfer can touch two checkouts. Acquire their locks in the same order.
+    return {
+        order.pk: order
+        for order in store_models.Order.objects.filter(checkouts).order_by("pk").select_for_update()
+    }
 
 
 @csrf_exempt
@@ -928,10 +937,10 @@ def econt_find_streets(request):
         return JsonResponse({"streets": [], "error": str(exc)})
 
 
-@csrf_exempt
+@require_GET
 def econt_quote(request, order_id):
+    order = _get_checkout(request, order_id)
     try:
-        order = store_models.Order.objects.get(order_id=order_id)
         goods = float(_goods_total(order))
         weight = 0.0
         for item in order.order_items.all():
@@ -970,8 +979,8 @@ def econt_quote(request, order_id):
             price = data.get("totalPrice")
         quote = {"price": float(price), "currency": data.get("currency") or "EUR"} if price is not None else None
         return JsonResponse({"success": True, "quote": quote})
-    except Exception as exc:
-        return JsonResponse({"success": False, "error": str(exc)})
+    except Exception:
+        return _quote_unavailable()
 
 
 def speedy_find_sites(request):
@@ -997,10 +1006,10 @@ def speedy_find_offices(request):
         return JsonResponse({"offices": [], "error": str(e)})
 
 
-@csrf_exempt
+@require_GET
 def speedy_quote(request, order_id):
+    order = _get_checkout(request, order_id)
     try:
-        order = store_models.Order.objects.get(order_id=order_id)
         site_id = request.GET.get("site_id")
         office_id = request.GET.get("office_id")
         address_line = request.GET.get("address") or (order.address.address if order.address else "")
@@ -1095,11 +1104,9 @@ def speedy_quote(request, order_id):
         return JsonResponse({
             "success": True,
             "quote": quote,
-            "calc_request": calc_request,
-            "calc_response": calc_response,
         })
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)})
+    except Exception:
+        return _quote_unavailable()
 
 
 @csrf_exempt
@@ -1176,13 +1183,13 @@ def pigeon_find_offices(request):
         return JsonResponse({"offices": [], "error": str(exc)})
 
 
-@csrf_exempt
+@require_GET
 def pigeon_quote(request, order_id):
+    order = _get_checkout(request, order_id)
     try:
-        order = store_models.Order.objects.get(order_id=order_id)
         pickup = pigeon_pickup()
         if not pickup:
-            return JsonResponse({"success": False, "error": "Няма адрес на подател в Pigeon Express"})
+            return _quote_unavailable()
         delivery_type = request.GET.get("delivery_type") or "address"
         if delivery_type not in ("address", "office", "locker"):
             delivery_type = "address"
@@ -1217,14 +1224,20 @@ def pigeon_quote(request, order_id):
                 delivery_address["postal_code"] = request.GET["postal_code"]
             payload["delivery_address"] = delivery_address
         body = pigeon_request("POST", "/shipments/calculate", payload)
+        if not (body or {}).get("success"):
+            return _quote_unavailable()
         data = (body or {}).get("data") or {}
         price = data.get("total_price")
         quote = None
         if price is not None:
             quote = {"price": float(price), "currency": data.get("currency") or "EUR"}
-        return JsonResponse({"success": bool((body or {}).get("success")), "quote": quote, "error": (body or {}).get("message")})
-    except Exception as exc:
-        return JsonResponse({"success": False, "error": str(exc)})
+        return JsonResponse({"success": True, "quote": quote})
+    except Exception:
+        return _quote_unavailable()
+
+
+def _quote_unavailable():
+    return JsonResponse({"success": False, "error": "Цената за доставка не е достъпна."}, status=502)
 
 
 def round2(val):
@@ -2478,14 +2491,38 @@ def _remember_checkout(request, order):
         request.session.modified = True
 
 
-def _checkout_owned(request, order):
-    """The visitor started this unpaid checkout."""
-    if order.order_status != "initiated":
-        return False
+def _order_owned(request, order):
     if order.customer_id:
         return request.user.is_authenticated and request.user.id == order.customer_id
     owned = [str(item) for item in (request.session.get("checkout_order_ids") or [])]
     return str(order.order_id) in owned
+
+
+def _checkout_owned(request, order):
+    return (
+        order.order_status == "initiated"
+        and order.payment_status in ("processing", "failed")
+        and _order_owned(request, order)
+    )
+
+
+def _get_owned_order(request, order_id, queryset=None):
+    if queryset is None:
+        queryset = store_models.Order.objects.all()
+    try:
+        order = get_object_or_404(queryset, order_id=order_id)
+    except store_models.Order.MultipleObjectsReturned:
+        raise Http404 from None
+    if not _order_owned(request, order):
+        raise Http404
+    return order
+
+
+def _get_checkout(request, order_id):
+    order = _get_owned_order(request, order_id)
+    if order.order_status != "initiated" or order.payment_status not in ("processing", "failed"):
+        raise Http404
+    return order
 
 
 def _coupon_change_denied(request, order):
@@ -2541,10 +2578,21 @@ def coupon_apply(request, order_id):
             )
             if coupon is None:
                 return reject("Купонът не съществува.")
+            locked_orders = _lock_coupon_checkouts(coupon, order.pk)
+            locked_order = locked_orders.pop(order.pk, None)
+            if locked_order is None:
+                raise Http404
+            order = locked_order
+            denied = _coupon_change_denied(request, order)
+            if denied:
+                return reject(denied)
             reason = coupon.rejection_reason(order, request.user)
             if reason:
                 return reject(reason)
-            release_single_use_coupon(coupon, order)
+            for other in locked_orders.values():
+                if other.order_status == "initiated":
+                    other.coupons.remove(coupon)
+                    apply_coupon_discount(other)
             order.coupons.clear()
             order.coupons.add(coupon)
             apply_coupon_discount(order)
@@ -2558,9 +2606,10 @@ def coupon_apply(request, order_id):
     return redirect("store:checkout", order_id)
 
 
+@transaction.atomic
 def coupon_remove(request, order_id):
     try:
-        order = store_models.Order.objects.get(order_id=order_id)
+        order = store_models.Order.objects.select_for_update().get(order_id=order_id)
     except store_models.Order.DoesNotExist:
         msg = "Поръчката не беше намерена."
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
@@ -2587,6 +2636,7 @@ def coupon_remove(request, order_id):
     return redirect("store:checkout", order.order_id)
 
 
+@require_GET
 def checkout(request, order_id):
     qs = store_models.Order.objects.prefetch_related(
         models.Prefetch(
@@ -2599,10 +2649,9 @@ def checkout(request, order_id):
             ),
         )
     )
-    order = qs.filter(order_id=order_id).first()
-    if not order:
-        messages.warning(request, "Сесията на поръчката изтече или не съществува. Моля, прегледайте количката и започнете отново.")
-        return redirect("store:cart")
+    order = _get_owned_order(request, order_id, qs)
+    if order.order_status != "initiated":
+        return redirect("store:payment_status", order_id)
 
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
@@ -2611,25 +2660,21 @@ def checkout(request, order_id):
         {"label": "Поръчка", "url": ""},
     ]
 
-    owns_checkout = _checkout_owned(request, order)
     saved_destinations = []
     contact = {"name": "", "phone": "", "email": ""}
-    order_destination = None
-    if owns_checkout:
-        if order.address_id:
-            order_destination = _destination_payload(order.address)
-        if request.user.is_authenticated:
-            contact = {
-                "name": request.user.full_name or "",
-                "phone": request.user.mobile or "",
-                "email": request.user.email or "",
-            }
-            saved_destinations = [
-                _destination_payload(item)
-                for item in customer_models.Address.objects.filter(
-                    user=request.user, saved=True
-                ).order_by("-is_main", "-id")
-            ]
+    order_destination = _destination_payload(order.address) if order.address_id else None
+    if request.user.is_authenticated:
+        contact = {
+            "name": request.user.full_name or "",
+            "phone": request.user.mobile or "",
+            "email": request.user.email or "",
+        }
+        saved_destinations = [
+            _destination_payload(item)
+            for item in customer_models.Address.objects.filter(
+                user=request.user, saved=True
+            ).order_by("-is_main", "-id")
+        ]
     context = {
         "order": order,
         "stripe_public_key": settings.STRIPE_PUBLIC_KEY,
@@ -2637,7 +2682,7 @@ def checkout(request, order_id):
         "saved_destinations": saved_destinations,
         "order_destination": order_destination,
         "checkout_contact": contact,
-        "owns_checkout": owns_checkout,
+        "owns_checkout": True,
         "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
         "shipping_prize_minimums": json.dumps(free_shipping_minimums(request.user)),
         "mystery_gift_added": order.order_items.filter(note__startswith="prize:spin:").exists(),
@@ -2649,42 +2694,49 @@ def checkout(request, order_id):
     return render(request, "store/checkout.html", context)
 
 
+def _order_ready_for_payment(order):
+    address = order.address
+    return address is not None and bool(address.email) and customer_models.delivery_is_complete(
+        address.phone, address.delivery_method, address.office_code, address.city, address.address
+    )
+
+
+def _finish_checkout(request, order):
+    _send_shipment(order)
+    send_meta_purchase_event(order, request)
+    store_models.Coupon.mark_order_redeemed(order)
+    redeem_prizes(order)
+    unlocked = sync_order_milestones(order.customer, order)
+    send_order_notification_email(
+        order=order,
+        email_heading=f"Поръчка #{order.order_id} е получена",
+        email_title="iBands: Поръчката е получена",
+        to_email=order.address.email,
+        unlocked=unlocked,
+    )
+    send_order_notification_email(
+        order=order,
+        email_heading=f"Поръчка #{order.order_id} е получена",
+        email_title="iBands: Поръчката е получена",
+        to_email=settings.ORDER_NOTIFICATION_EMAIL,
+    )
+    clear_cart_items(request)
+
+
+@require_POST
 def cod_payment(request, order_id):
-    if request.method == "POST":
-        order = store_models.Order.objects.get(order_id=order_id)
+    with transaction.atomic():
+        order = _get_owned_order(request, order_id, store_models.Order.objects.select_for_update())
+        if order.order_status != "initiated" or order.payment_status in ("paid", "cash_on_delivery"):
+            return redirect("store:payment_status", order_id)
+        if not _order_ready_for_payment(order):
+            return JsonResponse({"message": "Попълнете данните за доставка."}, status=400)
         order.payment_method = "cash_on_delivery"
         order.payment_status = "cash_on_delivery"
-        # Mark order as received when customer confirms COD
         order.order_status = "received"
-        _send_shipment(order)
-        try:
-            send_meta_purchase_event(order, request)
-        except Exception:
-            pass
-        order.save()
-        store_models.Coupon.mark_order_redeemed(order)
-        redeem_prizes(order)
-        unlocked = sync_order_milestones(order.customer, order)
-        send_order_notification_email(
-            order=order,
-            email_heading=f"Поръчка #{order.order_id} е получена",
-            email_title="iBands: Поръчката е получена",
-            to_email=order.address.email,
-            unlocked=unlocked,
-        )
-        send_order_notification_email(
-            order=order,
-            email_heading=f"Поръчка #{order.order_id} е получена",
-            email_title="iBands: Поръчката е получена",
-            to_email=settings.ORDER_NOTIFICATION_EMAIL,
-        )
-        clear_cart_items(request)
-        return redirect(
-            reverse("store:payment_status", args=[order.order_id])
-            + "?payment_status=paid"
-        )
-    else:
-        return redirect("store:checkout", order_id)
+        order.save(update_fields=["payment_method", "payment_status", "order_status"])
+    _finish_checkout(request, order)
+    return redirect("store:payment_status", order_id)
 
 
 @login_required
@@ -2901,132 +2953,135 @@ def spin_perform(request):
         "milestone": milestone_payload,
     })
 
-@csrf_exempt
+@require_POST
 def stripe_payment(request, order_id):
-    order = store_models.Order.objects.get(order_id=order_id)
-    stripe.api_key = settings.STRIPE_SECRET_KEY
+    order = _get_checkout(request, order_id)
+    if not _order_ready_for_payment(order):
+        return JsonResponse({"message": "Поръчката не е готова за плащане."}, status=400)
+    amount_minor = int(order.total * 100)
+    if amount_minor <= 0:
+        return JsonResponse({"message": "Сумата за плащане трябва да е положителна."}, status=400)
 
-    checkout_session = stripe.checkout.Session.create(
-        customer_email=order.address.email,
-        payment_method_types=["card"],
-        line_items=[
-            {
-                "price_data": {
-                    "currency": "EUR",
-                    "product_data": {"name": order.address.name},
-                    "unit_amount": int(order.total * 100),
-                },
-                "quantity": 1,
-            }
-        ],
-        mode="payment",
-        success_url=request.build_absolute_uri(
-            reverse("store:stripe_payment_verify", args=[order.order_id])
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            api_key=settings.STRIPE_SECRET_KEY,
+            client_reference_id=str(order.pk),
+            customer_email=order.address.email,
+            payment_method_types=["card"],
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": STRIPE_CURRENCY,
+                        "product_data": {"name": order.address.name or f"iBands #{order.order_id}"},
+                        "unit_amount": amount_minor,
+                    },
+                    "quantity": 1,
+                }
+            ],
+            mode="payment",
+            success_url=request.build_absolute_uri(
+                reverse("store:stripe_payment_verify", args=[order.order_id])
+            ) + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=request.build_absolute_uri(reverse("store:checkout", args=[order.order_id])),
         )
-        + "?session_id={CHECKOUT_SESSION_ID}"
-        + "&payment_method=Stripe",
-        cancel_url=request.build_absolute_uri(
-            reverse("store:stripe_payment_verify", args=[order.order_id])
-        )
-        + "?canceled=1",
+    except stripe.error.StripeError:
+        logger.warning("Could not create Stripe checkout for order %s", order.pk)
+        return JsonResponse({"message": "Плащането с карта временно не е достъпно."}, status=502)
+
+    store_models.StripeCheckoutAttempt.objects.create(
+        order=order,
+        session_id=checkout_session.id,
+        amount_minor=amount_minor,
+        currency=STRIPE_CURRENCY,
     )
-
-    print("checkkout session", checkout_session)
     return JsonResponse({"sessionId": checkout_session.id})
 
 
+def _stripe_payment_needs_review(request, order):
+    logger.warning("Could not confirm Stripe payment for order %s", order.pk)
+    messages.warning(
+        request,
+        "Плащането още не е потвърдено. Ако сумата е изтеглена, "
+        "свържете се с нас, преди да опитате отново.",
+    )
+    return redirect("store:payment_status", order.order_id)
+
+
+@require_GET
 def stripe_payment_verify(request, order_id):
-    order = store_models.Order.objects.get(order_id=order_id)
-    stripe.api_key = settings.STRIPE_SECRET_KEY
-
-    # Handle explicit cancel or missing session id gracefully
+    order = _get_owned_order(request, order_id)
+    if order.payment_status in ("paid", "cash_on_delivery"):
+        return redirect("store:payment_status", order_id)
     if request.GET.get("canceled") == "1":
-        # Mark as failed if not already paid
-        if order.payment_status != "paid":
-            order.payment_status = "failed"
-            if not order.payment_method:
-                order.payment_method = "card"
-            order.save(update_fields=["payment_status", "payment_method"])
-        return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
+        return redirect("store:checkout", order_id)
 
-    session_id = request.GET.get("session_id")
-    if not session_id:
-        if order.payment_status != "paid":
-            order.payment_status = "failed"
-            if not order.payment_method:
-                order.payment_method = "card"
-            order.save(update_fields=["payment_status", "payment_method"])
-        return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
+    attempt = order.stripe_checkout_attempts.filter(session_id=request.GET.get("session_id")).first()
+    if attempt is None:
+        return _stripe_payment_needs_review(request, order)
 
     try:
-        session = stripe.checkout.Session.retrieve(session_id)
-    except Exception:
-        if order.payment_status != "paid":
-            order.payment_status = "failed"
-            if not order.payment_method:
-                order.payment_method = "card"
-            order.save(update_fields=["payment_status", "payment_method"])
-        return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
+        session = stripe.checkout.Session.retrieve(attempt.session_id, api_key=settings.STRIPE_SECRET_KEY)
+    except stripe.error.StripeError:
+        return _stripe_payment_needs_review(request, order)
 
-    if getattr(session, "payment_status", None) == "paid":
-        if order.payment_status != "paid":
-            # Prefer payment_intent/id as a stable event id for deduplication
-            try:
-                order.payment_id = getattr(session, "payment_intent", None) or getattr(session, "id", None)
-            except Exception:
-                pass
+    payment_intent_id = session.get("payment_intent")
+    if (
+        session.get("id") != attempt.session_id
+        or session.get("client_reference_id") != str(order.pk)
+        or session.get("mode") != "payment"
+        or session.get("payment_status") != "paid"
+        or session.get("amount_total") != attempt.amount_minor
+        or session.get("currency") != attempt.currency
+        or not isinstance(payment_intent_id, str)
+        or not payment_intent_id
+    ):
+        return _stripe_payment_needs_review(request, order)
+
+    try:
+        with transaction.atomic():
+            order = _get_owned_order(request, order_id, store_models.Order.objects.select_for_update())
+            if order.payment_status == "paid" and order.payment_id == payment_intent_id:
+                return redirect("store:payment_status", order_id)
+            if (
+                order.pk != attempt.order_id
+                or order.order_status != "initiated"
+                or order.payment_status not in ("processing", "failed")
+                or int(order.total * 100) != attempt.amount_minor
+                or not _order_ready_for_payment(order)
+                or store_models.Order.objects.filter(payment_id=payment_intent_id).exclude(pk=order.pk).exists()
+            ):
+                return _stripe_payment_needs_review(request, order)
+
+            attempt.payment_intent_id = payment_intent_id
+            attempt.save(update_fields=["payment_intent_id"])
+            order.payment_id = payment_intent_id
             order.payment_status = "paid"
             order.payment_method = "card"
-            # Mark order as received upon successful payment
             order.order_status = "received"
-            _send_shipment(order)
-            try:
-                send_meta_purchase_event(order, request)
-            except Exception:
-                pass
-            order.save()
-            store_models.Coupon.mark_order_redeemed(order)
-            redeem_prizes(order)
-            unlocked = sync_order_milestones(order.customer, order)
-            send_order_notification_email(
-                order=order,
-                email_heading=f"Поръчка #{order.order_id} е получена",
-                email_title="iBands: Поръчката е получена",
-                to_email=order.address.email,
-                unlocked=unlocked,
-            )
-            send_order_notification_email(
-                order=order,
-                email_heading=f"Поръчка #{order.order_id} е получена",
-                email_title="iBands: Поръчката е получена",
-                to_email=settings.ORDER_NOTIFICATION_EMAIL,
-            )
-            clear_cart_items(request)
-        return redirect(
-            reverse("store:payment_status", args=[order.order_id]) + "?payment_status=paid"
-        )
+            order.save(update_fields=["payment_id", "payment_status", "payment_method", "order_status"])
+    except IntegrityError:
+        return _stripe_payment_needs_review(request, order)
 
-    # Not paid: mark as failed
-    if order.payment_status != "paid":
-        order.payment_status = "failed"
-        if not order.payment_method:
-            order.payment_method = "card"
-        order.save(update_fields=["payment_status", "payment_method"])
-    return redirect(reverse("store:payment_status", args=[order.order_id]) + "?payment_status=failed")
+    _finish_checkout(request, order)
+    return redirect("store:payment_status", order_id)
 
 
+@require_GET
 def payment_status(request, order_id):
-    order = store_models.Order.objects.get(order_id=order_id)
-    payment_status = request.GET.get("payment_status")
+    order = _get_owned_order(request, order_id)
+    status = order.payment_status
+    if status == "cash_on_delivery":
+        status = "paid"
 
-    context = {"order": order, "payment_status": payment_status}
-    if payment_status == "paid":
+    context = {"order": order, "payment_status": status}
+    if status == "paid":
         context["unlocked"] = order.earned_milestone_awards.select_related("milestone")
         context["ladder"] = order_ladder(order.customer)
     return render(request, "store/payment_status.html", context)
 
 
 @require_POST
+@transaction.atomic
 def set_payment_method(request, order_id):
     """
     Persist the customer's selected payment method (e.g., 'card' or 'cash_on_delivery')
@@ -3036,10 +3091,7 @@ def set_payment_method(request, order_id):
     - payment_status remains 'processing' until Stripe success or COD is confirmed.
     - This view only updates order.payment_method.
     """
-    try:
-        order = store_models.Order.objects.get(order_id=order_id)
-    except store_models.Order.DoesNotExist:
-        return JsonResponse({"success": False, "message": "Поръчката не беше намерена."}, status=404)
+    order = _get_owned_order(request, order_id, store_models.Order.objects.select_for_update())
 
     # Accept JSON or form-encoded
     payment_method = None
@@ -3056,9 +3108,8 @@ def set_payment_method(request, order_id):
     if payment_method not in allowed:
         return JsonResponse({"success": False, "message": "Невалиден метод на плащане."}, status=400)
 
-    # If already paid, do not change persisted method
-    if order.payment_status == "paid":
-        return JsonResponse({"success": True, "message": "Поръчката вече е платена.", "payment_method": order.payment_method})
+    if order.order_status != "initiated" or order.payment_status in ("paid", "cash_on_delivery"):
+        return JsonResponse({"success": False, "message": "Поръчката вече е завършена."}, status=409)
 
     order.payment_method = payment_method
     order.save(update_fields=["payment_method"])

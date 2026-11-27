@@ -1,4 +1,5 @@
 import io
+from types import SimpleNamespace
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, connection, transaction
@@ -239,24 +240,112 @@ class PigeonShipmentTests(TestCase):
         self.assertEqual(order.shipping_service, "pigeon")
 
 
-class StripeCurrencyTests(TestCase):
-    @patch("store.views.stripe.checkout.Session.create")
-    def test_checkout_session_is_charged_in_eur(self, create):
-        create.return_value = type("Session", (), {"id": "cs_test"})()
-        order = store_models.Order.objects.create(
+class StripeCheckoutTests(TestCase):
+    def setUp(self):
+        self.order = store_models.Order.objects.create(
             sub_total=Decimal("10.00"), shipping=Decimal("0.00"), total=Decimal("10.50"),
+            address=customer_models.Address.objects.create(
+                name="Test", phone="0888", email="t@example.com",
+                delivery_method="econt_office", office_code="1234",
+            ),
         )
-        order.address = customer_models.Address.objects.create(
-            name="Test", phone="0888", email="t@example.com",
-        )
-        order.save(update_fields=["address"])
+        session = self.client.session
+        session["checkout_order_ids"] = [str(self.order.order_id)]
+        session.save()
 
-        response = self.client.get(reverse("store:stripe_payment", args=[order.order_id]))
+    def _url(self, name):
+        return reverse(f"store:{name}", args=[self.order.order_id])
 
+    @patch("store.views.stripe.checkout.Session.create")
+    def test_owned_checkout_saves_stripe_session_and_euro_amount(self, create):
+        create.return_value = SimpleNamespace(id="cs_test")
+        response = self.client.post(self._url("stripe_payment"))
         self.assertEqual(response.status_code, 200)
         price = create.call_args.kwargs["line_items"][0]["price_data"]
-        self.assertEqual(price["currency"], "EUR")
+        self.assertEqual(price["currency"], "eur")
         self.assertEqual(price["unit_amount"], 1050)
+        self.assertEqual(create.call_args.kwargs["client_reference_id"], str(self.order.pk))
+        attempt = self.order.stripe_checkout_attempts.get()
+        self.assertEqual((attempt.session_id, attempt.amount_minor, attempt.currency), ("cs_test", 1050, "eur"))
+
+    @patch("store.views.stripe.checkout.Session.create")
+    def test_card_checkout_requires_owned_csrf_protected_post(self, create):
+        create.return_value = SimpleNamespace(id="cs_csrf")
+        url = self._url("stripe_payment")
+        self.assertEqual(self.client.get(url).status_code, 405)
+        self.assertEqual(Client().post(url).status_code, 404)
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.cookies.update(self.client.cookies)
+        self.assertEqual(csrf_client.post(url).status_code, 403)
+        create.assert_not_called()
+        self.assertEqual(csrf_client.get(self._url("checkout")).status_code, 200)
+        token = csrf_client.cookies["csrftoken"].value
+        self.assertEqual(csrf_client.post(url, HTTP_X_CSRFTOKEN=token).status_code, 200)
+        create.assert_called_once()
+
+    def _paid_attempt(self):
+        attempt = self.order.stripe_checkout_attempts.create(
+            session_id="cs_confirm", amount_minor=1050, currency="eur",
+        )
+        session = {
+            "id": attempt.session_id,
+            "client_reference_id": str(self.order.pk),
+            "mode": "payment",
+            "payment_status": "paid",
+            "payment_intent": "pi_confirm",
+            "amount_total": 1050,
+            "currency": "eur",
+        }
+        return attempt, session
+
+    @patch("store.views._finish_checkout")
+    @patch("store.views.stripe.checkout.Session.retrieve")
+    def test_matching_payment_is_recorded_once(self, retrieve, finish):
+        attempt, retrieve.return_value = self._paid_attempt()
+        for _ in range(2):
+            response = self.client.get(self._url("stripe_payment_verify"), {"session_id": attempt.session_id})
+            self.assertRedirects(response, self._url("payment_status"), fetch_redirect_response=False)
+
+        self.order.refresh_from_db()
+        attempt.refresh_from_db()
+        self.assertEqual(self.order.payment_status, "paid")
+        self.assertEqual(self.order.order_status, "received")
+        self.assertEqual(self.order.payment_id, "pi_confirm")
+        self.assertEqual(attempt.payment_intent_id, "pi_confirm")
+        finish.assert_called_once()
+        retrieve.assert_called_once()
+
+    @patch("store.views._finish_checkout")
+    @patch("store.views.stripe.checkout.Session.retrieve")
+    def test_confirmation_requires_a_local_attempt_and_matching_amount_and_currency(self, retrieve, finish):
+        url = self._url("stripe_payment_verify")
+        self.client.get(url, {"session_id": "cs_legacy"})
+        retrieve.assert_not_called()
+
+        attempt, paid_session = self._paid_attempt()
+        for field, value in (("amount_total", 1000), ("currency", "usd"), ("client_reference_id", "other-order")):
+            with self.subTest(field=field):
+                retrieve.return_value = {**paid_session, field: value}
+                self.client.get(url, {"session_id": attempt.session_id})
+                self.order.refresh_from_db()
+                self.assertEqual(self.order.payment_status, "processing")
+        finish.assert_not_called()
+
+    @patch("store.views._finish_checkout")
+    def test_cod_can_only_be_confirmed_once_by_the_checkout_owner(self, finish):
+        self.assertEqual(Client().post(self._url("cod_payment")).status_code, 404)
+        for _ in range(2):
+            response = self.client.post(self._url("cod_payment"))
+            self.assertRedirects(response, self._url("payment_status"), fetch_redirect_response=False)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.payment_status, "cash_on_delivery")
+        finish.assert_called_once()
+
+    def test_receipt_uses_saved_status_and_requires_checkout_ownership(self):
+        url = self._url("payment_status")
+        self.assertEqual(Client().get(url).status_code, 404)
+        response = self.client.get(url, {"payment_status": "paid"})
+        self.assertEqual(response.context["payment_status"], "processing")
 
 
 class EcontShipmentPriceTests(TestCase):
@@ -599,8 +688,9 @@ class CouponRulesTests(TestCase):
             name="Test",
             phone="0888",
             email="t@example.com",
-            delivery_method="econt",
+            delivery_method="econt_office",
             city="София",
+            office_code="1234",
         )
         order.save(update_fields=["address"])
         store_models.Coupon.objects.create(code="COD", discount=10)
@@ -766,8 +856,7 @@ class CouponRulesTests(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(page.status_code, 200)
-        self.assertNotContains(page, "0888000002")
+        self.assertNotContains(page, "0888000002", status_code=404)
         self.assertEqual(saved.status_code, 403)
         order.refresh_from_db()
         self.assertEqual(order.address_id, original.pk)
@@ -1924,6 +2013,23 @@ class SavedDestinationTests(TestCase):
         self.assertEqual(body["customerInfo"]["officeCode"], "1127")
         self.assertTrue(body["cod"])
         self.assertFalse(body["payAfterTest"])
+
+    @patch("store.views.speedy_v1_calculate")
+    def test_speedy_quote_is_private_and_returns_only_normalized_pricing(self, calculate):
+        order = self._order()
+        url = reverse("store:speedy_quote", args=[order.order_id])
+        self.assertEqual(Client().get(url).status_code, 404)
+        calculate.assert_not_called()
+
+        calculate.return_value = {
+            "calculations": [{"serviceId": 505, "price": {"total": 5.90, "currency": "EUR"}}],
+            "internal": "provider response",
+        }
+        response = self.client.get(url, {"office_id": "1234"})
+        self.assertEqual(response.json(), {
+            "success": True,
+            "quote": {"serviceId": 505, "price": 5.90, "currency": "EUR"},
+        })
 
     def test_the_oldest_saved_address_is_chosen_when_none_is_main(self):
         older = customer_models.Address.objects.create(

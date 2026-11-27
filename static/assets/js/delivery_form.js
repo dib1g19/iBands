@@ -311,28 +311,34 @@
                     return;
                 }
                 if (paymentType === 'card') {
-                    fetch(config.cardUrl, {
+                    return fetch(config.cardUrl, {
                         method: 'POST',
-                        body: JSON.stringify({ email: body.email })
-                    }).then(function (response) { return response.json(); })
-                        .then(function (session) { return stripe.redirectToCheckout({ sessionId: session.sessionId }); })
+                        headers: { 'X-CSRFToken': csrftoken }
+                    }).then(function (response) {
+                        if (!response.ok) throw new Error('Card checkout could not start');
+                        return response.json();
+                    }).then(function (session) {
+                        return stripe.redirectToCheckout({ sessionId: session.sessionId });
+                    })
                         .then(function (result) {
                             if (result.error) {
                                 if (window.Toast) window.Toast.fire({ icon: 'error', title: result.error.message });
                                 else alert(result.error.message);
+                                button.innerHTML = 'Плащане с карта';
+                                setContinueLoading(false);
                             }
-                        }).catch(function (error) { console.log('Error: ', error); });
-                    return;
+                        });
                 }
-                fetch(config.codUrl, {
+                return fetch(config.codUrl, {
                     method: 'POST',
                     headers: { 'X-CSRFToken': csrftoken }
                 }).then(function (response) {
+                    if (!response.ok) throw new Error('Cash on delivery checkout could not finish');
                     if (response.redirected) window.location.href = response.url;
                 });
             }).catch(function () {
                 if (errorBlock) {
-                    errorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса (' + config.label + '). Моля, опитайте отново.</div>';
+                    errorBlock.innerHTML = '<div class="alert alert-danger">Поръчката не можа да бъде завършена. Моля, проверете данните и опитайте отново.</div>';
                     errorBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
                 button.innerHTML = paymentType === 'card' ? 'Плащане с карта' : 'Наложен платеж';

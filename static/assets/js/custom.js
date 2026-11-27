@@ -117,4 +117,13 @@ $(function () {
             $parentLi.siblings().find('.submenu-indicator-chevron, .submenu-indicator').closest('button, a').removeClass('submenu-indicator-up');
         }
     });
+
+    var header = document.querySelector(".header");
+    if (header) {
+        var onScroll = function () {
+            header.classList.toggle("header-scrolled", window.scrollY > 8);
+        };
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+    }
 });

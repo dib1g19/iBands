@@ -7,6 +7,12 @@
 /* ==========================================================
    Global Settings
 ========================================================== */
+:root {
+    --motion-ease: cubic-bezier(.22, 1, .36, 1);
+    --motion-fast: 180ms;
+    --motion-slow: 420ms;
+}
+
 body {
     font-family: "Roboto", sans-serif;
 }
@@ -156,6 +162,15 @@ h6 {
 .btn {
     padding: 12px 25px;
     border-radius: 0.1rem;
+    transition: transform var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-pill {
+    border-radius: 999px;
 }
 
 .btn.btn-xs {
@@ -742,12 +757,17 @@ h6 {
 }
 
 .header {
-    box-shadow: 0 5px 30px rgba(0, 22, 84, 0.1);
+    box-shadow: none;
     background: #fff;
     position: fixed;
     z-index: 999;
     width: 100%;
     top: 0;
+    transition: box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+.header.header-scrolled {
+    box-shadow: 0 8px 28px rgba(0, 22, 84, 0.12);
 }
 
 .nav-header {
@@ -779,9 +799,9 @@ h6 {
     transition: left 0.8s cubic-bezier(.76,0,.24,1);
 }
 
-/* When the nav is open, move nav-toggle right by sidebar width (e.g. 320px) */
+/* Close button sits at the right edge of the full-width phone menu. */
 .nav-toggle.active {
-    left: 272px;
+    left: calc(100vw - 60px);
 }
 
 /* Hamburger lines (unchanged, but keep for X animation) */
@@ -823,11 +843,12 @@ h6 {
 
 /* Off-canvas sidebar styles for nav (hamburger opens this) */
 .nav-menu-wrapper {
-    width: 320px;
+    width: 100%;
     height: 100%;
     position: fixed;
+    top: 0;
     padding-top: 40px;
-    left: -320px;
+    left: -100%;
     background: #fff;
     z-index: 1000;
     overflow-y: auto;
@@ -877,6 +898,12 @@ h6 {
     padding: 22px 12px;
     display: inline-block;
     font-size: 17px;
+    transition: color var(--motion-fast) var(--motion-ease);
+}
+
+.nav-menu > li > a:active,
+.nav-menu-social > li > a:active {
+    transform: translateY(1px);
 }
 
 /* Style for navigation menu icons (i.e., <i> inside links): fixes size & scales up icons a bit */
@@ -1103,6 +1130,10 @@ h6 {
 @media (min-width: 992px) {
     .header {
         background-color: #000;
+    }
+
+    .header.header-scrolled {
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
     }
 
     .nav-logo {
@@ -1380,12 +1411,15 @@ textarea.form-control { min-height: 8rem; }
 
 .sp-loading {
     text-align: center;
-    max-width: 270px;
-    padding: 15px;
-    border: 5px solid #eee;
-    border-radius: 3px;
+    max-width: 100%;
+    overflow: hidden;
     font-size: 12px;
     color: #888;
+}
+.sp-loading img {
+    width: 100%;
+    height: auto;
+    display: block;
 }
 
 /* Element wrapper */
@@ -2886,4 +2920,48 @@ input[type="number"] {
     background: #198754;
     border-color: #198754;
     color: #fff;
+}
+
+/* Product grid: softer cards, lift, image zoom */
+.product-card {
+    margin: 0.75rem;
+    border-radius: 1.15rem;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    transition: transform var(--motion-fast) var(--motion-ease), box-shadow var(--motion-slow) var(--motion-ease);
+}
+
+.product-card .product-img-hover-wrapper .main-img,
+.product-card .product-img-hover-wrapper .hover-img {
+    transition: transform var(--motion-slow) var(--motion-ease), opacity 0.25s ease;
+}
+
+@media (hover: hover) {
+    .product-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+    }
+    .product-card:hover .product-img-hover-wrapper .main-img,
+    .product-card:hover .product-img-hover-wrapper .hover-img {
+        transform: scale(1.05);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .product-card,
+    .product-card .product-img-hover-wrapper .main-img,
+    .product-card .product-img-hover-wrapper .hover-img,
+    .btn,
+    .header,
+    .nav-menu > li > a,
+    .nav-menu-social > li > a {
+        transition: none;
+    }
+    .product-card:hover,
+    .product-card:hover .product-img-hover-wrapper .main-img,
+    .product-card:hover .product-img-hover-wrapper .hover-img,
+    .btn:active,
+    .nav-menu > li > a:active,
+    .nav-menu-social > li > a:active {
+        transform: none;
+    }
 }

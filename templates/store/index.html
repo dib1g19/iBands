@@ -32,7 +32,7 @@
                                 <img class="d-block w-100 hero" src="{% static 'assets/img/valentine-3x1.avif' %}" alt="Valentine" onerror="this.onerror=null;this.src='{% static 'assets/img/cover-3x1.avif' %}';" />
                             </picture>
                             <div class="hero-cta position-absolute text-center w-100">
-                                <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
+                                <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary btn-pill px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
                             </div>
                             {% else %}
                             <picture class="d-block w-100">
@@ -40,7 +40,7 @@
                                 <img class="d-block w-100 hero" src="{% static 'assets/img/cover-3x1.avif' %}" alt="Hero Cover" />
                             </picture>
                             <div class="hero-cta position-absolute text-center w-100">
-                                <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
+                                <a href="{% url 'store:shop' %}" class="btn fs-lg btn-primary btn-pill px-3 py-2 px-sm-5 py-sm-3">Пазарувай сега</a>
                             </div>
                             {% endif %}
                         </div>
@@ -52,7 +52,7 @@
                                 <img class="d-block w-100 hero" src="{% static 'assets/img/mystery-box-3x1.avif' %}" alt="Mystery Box" onerror="this.onerror=null;this.src='{% static 'assets/img/wheel-cover.avif' %}';" />
                             </picture>
                             <div class="hero-cta position-absolute text-center w-100">
-                                <a href="{% url 'store:category' 'mystery-box' %}" class="btn fs-lg btn-primary rounded px-3 py-2 px-sm-5 py-sm-3">Купи Mystery Box</a>
+                                <a href="{% url 'store:category' 'mystery-box' %}" class="btn fs-lg btn-primary btn-pill px-3 py-2 px-sm-5 py-sm-3">Купи Mystery Box</a>
                             </div>
                         </div>
                     </div>
@@ -127,7 +127,7 @@
                     <div class="valentine-divider mb-2"></div>
                     {% endif %}
                     <div class="position-relative text-center">
-                        <a href="{% url 'store:sale' %}" class="btn btn-dark rounded">Виж всички намаления <i class="fas fa-arrow-right ms-2"></i></a>
+                        <a href="{% url 'store:sale' %}" class="btn btn-dark btn-pill">Виж всички намаления <i class="fas fa-arrow-right ms-2"></i></a>
                     </div>
                 </div>
             </div>
@@ -242,7 +242,7 @@
             <div class="row justify-content-center">
                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     <div class="position-relative text-center">
-                        <a href="{% url 'store:shop' %}" class="btn btn-dark rounded btn-mл mt-5">Разгледай всички <i class="fas fa-arrow-right ms-2"></i></a>
+                        <a href="{% url 'store:shop' %}" class="btn btn-dark btn-pill mt-5">Разгледай всички <i class="fas fa-arrow-right ms-2"></i></a>
                     </div>
                 </div>
             </div>

@@ -11,6 +11,8 @@ from django.template.loader import render_to_string
 from datetime import date as dt_date, datetime as dt_datetime, timedelta as dt_timedelta
 import calendar as pycal
 from decimal import Decimal, ROUND_HALF_UP
+from urllib.parse import urlencode
+from uuid import uuid4
 from .models import Category, Product, BandOfTheWeek, CategoryLink, SpinEntry, Coupon, SpinPrize, SpinMilestone, SpinMilestoneAward
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -51,6 +53,7 @@ from store.prizes import (
 )
 from django.db.models import Q
 from store.error_log import record_server_error
+from store.stripe_webhooks import ATTEMPT_METADATA_KEY
 import json
 import requests
 from django.views.decorators.http import require_GET, require_POST
@@ -2953,6 +2956,35 @@ def spin_perform(request):
         "milestone": milestone_payload,
     })
 
+def _stripe_review_url(order):
+    return reverse("store:payment_status", args=[order.order_id]) + "?review=1"
+
+
+def _retry_stripe_checkout(order, attempt, amount_minor):
+    session = stripe.checkout.Session.retrieve(attempt.session_id, api_key=settings.STRIPE_SECRET_KEY)
+    if session.get("id") != attempt.session_id or session.get("client_reference_id") != str(order.pk):
+        return JsonResponse({"returnUrl": _stripe_review_url(order)})
+
+    if session.get("payment_status") == "paid":
+        verify_url = reverse("store:stripe_payment_verify", args=[order.order_id])
+        return JsonResponse({"returnUrl": verify_url + "?" + urlencode({"session_id": attempt.session_id})})
+    if session.get("payment_status") != "unpaid":
+        return JsonResponse({"returnUrl": _stripe_review_url(order)})
+
+    if session.get("status") == "open":
+        if (
+            session.get("amount_total") == attempt.amount_minor == amount_minor
+            and session.get("currency") == attempt.currency == STRIPE_CURRENCY
+        ):
+            return JsonResponse({"sessionId": attempt.session_id})
+        # A changed total needs a fresh session, with the old session closed first.
+        session = stripe.checkout.Session.expire(attempt.session_id, api_key=settings.STRIPE_SECRET_KEY)
+
+    if session.get("status") == "expired" and session.get("payment_status") == "unpaid":
+        return None
+    return JsonResponse({"returnUrl": _stripe_review_url(order)})
+
+
 @require_POST
 def stripe_payment(request, order_id):
     order = _get_checkout(request, order_id)
@@ -2962,12 +2994,24 @@ def stripe_payment(request, order_id):
     if amount_minor <= 0:
         return JsonResponse({"message": "Сумата за плащане трябва да е положителна."}, status=400)
 
+    latest_attempt = order.stripe_checkout_attempts.order_by("-pk").first()
+    if latest_attempt:
+        try:
+            retry_response = _retry_stripe_checkout(order, latest_attempt, amount_minor)
+        except stripe.error.StripeError:
+            logger.warning("Could not check Stripe retry for order %s", order.pk)
+            return JsonResponse({"returnUrl": _stripe_review_url(order)})
+        if retry_response is not None:
+            return retry_response
+
+    reference = uuid4()
     try:
         checkout_session = stripe.checkout.Session.create(
             api_key=settings.STRIPE_SECRET_KEY,
             client_reference_id=str(order.pk),
             customer_email=order.address.email,
             payment_method_types=["card"],
+            payment_intent_data={"metadata": {ATTEMPT_METADATA_KEY: str(reference)}},
             line_items=[
                 {
                     "price_data": {
@@ -2982,29 +3026,41 @@ def stripe_payment(request, order_id):
             success_url=request.build_absolute_uri(
                 reverse("store:stripe_payment_verify", args=[order.order_id])
             ) + "?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=request.build_absolute_uri(reverse("store:checkout", args=[order.order_id])),
+            cancel_url=request.build_absolute_uri(
+                reverse("store:stripe_payment_verify", args=[order.order_id])
+            ) + "?canceled=1",
         )
     except stripe.error.StripeError:
         logger.warning("Could not create Stripe checkout for order %s", order.pk)
         return JsonResponse({"message": "Плащането с карта временно не е достъпно."}, status=502)
 
-    store_models.StripeCheckoutAttempt.objects.create(
-        order=order,
-        session_id=checkout_session.id,
-        amount_minor=amount_minor,
-        currency=STRIPE_CURRENCY,
-    )
+    with transaction.atomic():
+        order = _get_owned_order(request, order_id, store_models.Order.objects.select_for_update())
+        if order.payment_status in ("paid", "cash_on_delivery"):
+            return JsonResponse({"returnUrl": reverse("store:payment_status", args=[order_id])})
+        current_attempt_pk = order.stripe_checkout_attempts.order_by("-pk").values_list("pk", flat=True).first()
+        if (
+            not _checkout_owned(request, order)
+            or int(order.total * 100) != amount_minor
+            or current_attempt_pk != (latest_attempt.pk if latest_attempt else None)
+        ):
+            return JsonResponse({"message": "Поръчката се промени. Обновете страницата и опитайте отново."}, status=409)
+
+        order.stripe_checkout_attempts.create(
+            session_id=checkout_session.id,
+            reference=reference,
+            amount_minor=amount_minor,
+            currency=STRIPE_CURRENCY,
+        )
+        order.payment_method = "card"
+        order.payment_status = "processing"
+        order.save(update_fields=["payment_method", "payment_status"])
     return JsonResponse({"sessionId": checkout_session.id})
 
 
-def _stripe_payment_needs_review(request, order):
+def _stripe_payment_needs_review(order):
     logger.warning("Could not confirm Stripe payment for order %s", order.pk)
-    messages.warning(
-        request,
-        "Плащането още не е потвърдено. Ако сумата е изтеглена, "
-        "свържете се с нас, преди да опитате отново.",
-    )
-    return redirect("store:payment_status", order.order_id)
+    return redirect(_stripe_review_url(order))
 
 
 @require_GET
@@ -3013,16 +3069,18 @@ def stripe_payment_verify(request, order_id):
     if order.payment_status in ("paid", "cash_on_delivery"):
         return redirect("store:payment_status", order_id)
     if request.GET.get("canceled") == "1":
+        if order.payment_status == "failed":
+            return redirect("store:payment_status", order_id)
         return redirect("store:checkout", order_id)
 
     attempt = order.stripe_checkout_attempts.filter(session_id=request.GET.get("session_id")).first()
     if attempt is None:
-        return _stripe_payment_needs_review(request, order)
+        return _stripe_payment_needs_review(order)
 
     try:
         session = stripe.checkout.Session.retrieve(attempt.session_id, api_key=settings.STRIPE_SECRET_KEY)
     except stripe.error.StripeError:
-        return _stripe_payment_needs_review(request, order)
+        return _stripe_payment_needs_review(order)
 
     payment_intent_id = session.get("payment_intent")
     if (
@@ -3035,7 +3093,7 @@ def stripe_payment_verify(request, order_id):
         or not isinstance(payment_intent_id, str)
         or not payment_intent_id
     ):
-        return _stripe_payment_needs_review(request, order)
+        return _stripe_payment_needs_review(order)
 
     try:
         with transaction.atomic():
@@ -3050,17 +3108,20 @@ def stripe_payment_verify(request, order_id):
                 or not _order_ready_for_payment(order)
                 or store_models.Order.objects.filter(payment_id=payment_intent_id).exclude(pk=order.pk).exists()
             ):
-                return _stripe_payment_needs_review(request, order)
+                return _stripe_payment_needs_review(order)
 
-            attempt.payment_intent_id = payment_intent_id
-            attempt.save(update_fields=["payment_intent_id"])
+            linked_attempt = order.stripe_checkout_attempts.filter(pk=attempt.pk).filter(
+                Q(payment_intent_id__isnull=True) | Q(payment_intent_id=payment_intent_id)
+            )
+            if not linked_attempt.update(payment_intent_id=payment_intent_id):
+                return _stripe_payment_needs_review(order)
             order.payment_id = payment_intent_id
             order.payment_status = "paid"
             order.payment_method = "card"
             order.order_status = "received"
             order.save(update_fields=["payment_id", "payment_status", "payment_method", "order_status"])
     except IntegrityError:
-        return _stripe_payment_needs_review(request, order)
+        return _stripe_payment_needs_review(order)
 
     _finish_checkout(request, order)
     return redirect("store:payment_status", order_id)
@@ -3072,6 +3133,8 @@ def payment_status(request, order_id):
     status = order.payment_status
     if status == "cash_on_delivery":
         status = "paid"
+    elif status == "failed" and (request.GET.get("review") == "1" or order.order_status != "initiated"):
+        status = "processing"
 
     context = {"order": order, "payment_status": status}
     if status == "paid":

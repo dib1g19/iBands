@@ -1,9 +1,13 @@
 import io
+import hmac
+import json
 from types import SimpleNamespace
+from uuid import uuid4
 
+from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, connection, transaction
-from django.test import TestCase, Client, SimpleTestCase
+from django.test import TestCase, Client, SimpleTestCase, override_settings
 from PIL import Image
 
 from ibands_site.images import convert_uploaded_images
@@ -240,6 +244,7 @@ class PigeonShipmentTests(TestCase):
         self.assertEqual(order.shipping_service, "pigeon")
 
 
+@override_settings(STRIPE_WEBHOOK_SECRET="whsec_checkout_test")
 class StripeCheckoutTests(TestCase):
     def setUp(self):
         self.order = store_models.Order.objects.create(
@@ -267,6 +272,10 @@ class StripeCheckoutTests(TestCase):
         self.assertEqual(create.call_args.kwargs["client_reference_id"], str(self.order.pk))
         attempt = self.order.stripe_checkout_attempts.get()
         self.assertEqual((attempt.session_id, attempt.amount_minor, attempt.currency), ("cs_test", 1050, "eur"))
+        self.assertEqual(
+            create.call_args.kwargs["payment_intent_data"]["metadata"]["ibands_checkout_attempt"],
+            str(attempt.reference),
+        )
 
     @patch("store.views.stripe.checkout.Session.create")
     def test_card_checkout_requires_owned_csrf_protected_post(self, create):
@@ -346,6 +355,140 @@ class StripeCheckoutTests(TestCase):
         self.assertEqual(Client().get(url).status_code, 404)
         response = self.client.get(url, {"payment_status": "paid"})
         self.assertEqual(response.context["payment_status"], "processing")
+
+    def _card_attempt(self, session_id="cs_attempt"):
+        self.order.payment_method = "card"
+        self.order.save(update_fields=["payment_method"])
+        return self.order.stripe_checkout_attempts.create(
+            session_id=session_id, reference=uuid4(), amount_minor=1050, currency="eur",
+        )
+
+    def _deliver_failure(self, attempt, *, decline_code="insufficient_funds", created=None, signed=True):
+        now = int(timezone.now().timestamp())
+        payload = json.dumps({
+            "id": "evt_checkout_failure_test",
+            "object": "event",
+            "type": "payment_intent.payment_failed",
+            "created": now if created is None else created,
+            "data": {"object": {
+                "object": "payment_intent",
+                "id": f"pi_{attempt.session_id}",
+                "amount": attempt.amount_minor,
+                "currency": attempt.currency,
+                "metadata": {"ibands_checkout_attempt": str(attempt.reference)},
+                "last_payment_error": {"decline_code": decline_code},
+            }},
+        }).encode()
+        headers = {}
+        if signed:
+            signature = hmac.digest(b"whsec_checkout_test", f"{now}.".encode() + payload, "sha256").hex()
+            headers["HTTP_STRIPE_SIGNATURE"] = f"t={now},v1={signature}"
+        return Client(enforce_csrf_checks=True).post(
+            reverse("store:stripe_webhook"), data=payload, content_type="application/json", **headers,
+        )
+
+    def test_signed_decline_enables_retry_and_appears_in_order_admin(self):
+        buyer = get_user_model().objects.create_user(username="buyer", email="buyer@example.com")
+        self.order.customer = buyer
+        self.order.save(update_fields=["customer"])
+        self.client.force_login(buyer)
+        attempt = self._card_attempt()
+
+        self.assertEqual(self._deliver_failure(attempt).status_code, 200)
+        self.order.refresh_from_db()
+        attempt.refresh_from_db()
+        self.assertEqual(self.order.payment_status, "failed")
+        self.assertEqual(self.order.order_status, "initiated")
+        self.assertEqual(attempt.payment_intent_id, "pi_cs_attempt")
+        self.assertEqual(attempt.failure_code, "insufficient_funds")
+
+        canceled = self.client.get(self._url("stripe_payment_verify"), {"canceled": "1"}, follow=True)
+        self.assertContains(canceled, "Плащането не бе успешно!")
+        self.assertContains(canceled, self._url("checkout"))
+        self.assertContains(self.client.get(reverse("customer:dashboard")), "Повтори плащането")
+        self.assertContains(self.client.get(self._url("checkout")), "Плащането с карта не бе успешно.")
+
+        staff = get_user_model().objects.create_user(username="staff", email="staff@example.com", is_staff=True)
+        staff.user_permissions.add(Permission.objects.get(content_type__app_label="store", codename="view_order"))
+        self.client.force_login(staff)
+        admin_page = self.client.get(reverse("admin:store_order_change", args=[self.order.pk]))
+        self.assertContains(admin_page, "Stripe checkout attempts")
+        self.assertContains(admin_page, "insufficient_funds")
+        self.assertContains(admin_page, "pi_cs_attempt")
+
+    def test_cancel_and_unsigned_notification_leave_checkout_processing(self):
+        attempt = self._card_attempt()
+        response = self.client.get(self._url("stripe_payment_verify"), {"canceled": "1"})
+        self.assertRedirects(response, self._url("checkout"), fetch_redirect_response=False)
+        self.assertEqual(self._deliver_failure(attempt, signed=False).status_code, 400)
+        self.order.refresh_from_db()
+        attempt.refresh_from_db()
+        self.assertEqual(self.order.payment_status, "processing")
+        self.assertIsNone(attempt.last_failed_at)
+
+    def test_old_failures_keep_their_history_without_overwriting_a_new_attempt_or_payment(self):
+        old_attempt = self._card_attempt("cs_old")
+        latest_attempt = self._card_attempt("cs_latest")
+        self.assertEqual(self._deliver_failure(old_attempt).status_code, 200)
+        self.order.refresh_from_db()
+        old_attempt.refresh_from_db()
+        self.assertEqual(self.order.payment_status, "processing")
+        self.assertIsNotNone(old_attempt.last_failed_at)
+
+        self.order.payment_status = "paid"
+        self.order.order_status = "received"
+        self.order.payment_id = "pi_cs_latest"
+        self.order.save(update_fields=["payment_status", "order_status", "payment_id"])
+        self.assertEqual(self._deliver_failure(latest_attempt).status_code, 200)
+        self.assertEqual(self._deliver_failure(latest_attempt, created=1, decline_code="older").status_code, 200)
+        self.order.refresh_from_db()
+        latest_attempt.refresh_from_db()
+        self.assertEqual(self.order.payment_status, "paid")
+        self.assertEqual(latest_attempt.failure_code, "insufficient_funds")
+
+    @patch("store.views.stripe.checkout.Session.create")
+    @patch("store.views.stripe.checkout.Session.retrieve")
+    def test_retry_reuses_an_open_session_or_recovers_its_receipt_when_already_paid(self, retrieve, create):
+        attempt = self._card_attempt()
+        self.assertEqual(self._deliver_failure(attempt).status_code, 200)
+        retrieve.return_value = {
+            "id": attempt.session_id, "client_reference_id": str(self.order.pk), "status": "open",
+            "payment_status": "unpaid", "amount_total": attempt.amount_minor, "currency": attempt.currency,
+        }
+        self.assertEqual(self.client.post(self._url("stripe_payment")).json(), {"sessionId": attempt.session_id})
+
+        retrieve.return_value.update(status="complete", payment_status="paid")
+        response = self.client.post(self._url("stripe_payment"))
+        self.assertEqual(response.json()["returnUrl"], f'{self._url("stripe_payment_verify")}?session_id=cs_attempt')
+        create.assert_not_called()
+
+    @patch("store.views.stripe.checkout.Session.create")
+    @patch("store.views.stripe.checkout.Session.expire")
+    @patch("store.views.stripe.checkout.Session.retrieve")
+    def test_retry_closes_a_stale_amount_before_creating_a_new_session(self, retrieve, expire, create):
+        attempt = self._card_attempt()
+        self.assertEqual(self._deliver_failure(attempt).status_code, 200)
+        self.order.total = Decimal("12.50")
+        self.order.save(update_fields=["total"])
+        retrieve.return_value = {
+            "id": attempt.session_id, "client_reference_id": str(self.order.pk), "status": "open",
+            "payment_status": "unpaid", "amount_total": attempt.amount_minor, "currency": attempt.currency,
+        }
+        expire.return_value = {"status": "expired", "payment_status": "unpaid"}
+        create.return_value = SimpleNamespace(id="cs_new")
+
+        self.assertEqual(self.client.post(self._url("stripe_payment")).json(), {"sessionId": "cs_new"})
+        expire.assert_called_once()
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.payment_status, "processing")
+        self.assertEqual(self.order.stripe_checkout_attempts.get(session_id="cs_new").amount_minor, 1250)
+
+    def test_unmatched_return_shows_review_even_after_a_decline(self):
+        attempt = self._card_attempt()
+        self.assertEqual(self._deliver_failure(attempt).status_code, 200)
+        page = self.client.get(self._url("stripe_payment_verify"), {"session_id": "cs_legacy"}, follow=True)
+        self.assertContains(page, "Ако сумата е изтеглена")
+        self.assertNotContains(page, "Опитайте отново")
 
 
 class EcontShipmentPriceTests(TestCase):

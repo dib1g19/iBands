@@ -48,6 +48,9 @@
                         <div id="payment-alert-anchor"></div>
                         <div class="shadow rounded p-3">
                             <h4 class="fw-bold mb-3">Начин на плащане</h4>
+                            {% if order.payment_status == "failed" %}
+                                <div class="alert alert-danger" role="status">Плащането с карта не бе успешно. Можете да опитате отново.</div>
+                            {% endif %}
                             <div id="payment-error-block"></div>
                             <div class="shipping-options">
                                 <label class="shipping-card" for="payment-card">
@@ -617,7 +620,7 @@
     });
     }
 </script>
-<script src="{% static 'assets/js/delivery_form.js' %}?v=2"></script>
+<script src="{% static 'assets/js/delivery_form.js' %}?v=3"></script>
 <script>
     bindDeliveryForm({
         carrier: 'econt',

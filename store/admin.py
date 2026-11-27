@@ -7,6 +7,7 @@ from django.db.models import Prefetch
 from django import forms
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from ibands_site.admin import iBandsModelAdmin
@@ -456,7 +457,7 @@ class OrderAdmin(iBandsModelAdmin):
     list_select_related = ["address"]
 
     inlines = [OrderItemInline]
-    readonly_fields = ["view_on_site_link", "address_display"]
+    readonly_fields = ["view_on_site_link", "address_display", "stripe_attempts"]
     fields = [
         "view_on_site_link",
         "customer",
@@ -473,8 +474,44 @@ class OrderAdmin(iBandsModelAdmin):
         "coupons",
         "order_id",
         "payment_id",
+        "stripe_attempts",
         "date",
     ]
+
+    @admin.display(description="Stripe checkout attempts")
+    def stripe_attempts(self, order):
+        if not order or not order.pk:
+            return "—"
+        rows = []
+        for attempt in order.stripe_checkout_attempts.order_by("-pk"):
+            if order.payment_status == "paid" and attempt.payment_intent_id and attempt.payment_intent_id == order.payment_id:
+                status = "Paid"
+            elif attempt.last_failed_at:
+                status = "Failed"
+            else:
+                status = "Started"
+            rows.append((
+                timezone.localtime(attempt.created_at).strftime("%Y-%m-%d %H:%M"),
+                status,
+                f"{Decimal(attempt.amount_minor) / 100:.2f} {attempt.currency.upper()}",
+                attempt.session_id,
+                attempt.payment_intent_id or "—",
+                timezone.localtime(attempt.last_failed_at).strftime("%Y-%m-%d %H:%M") if attempt.last_failed_at else "—",
+                attempt.failure_code or "—",
+            ))
+        if not rows:
+            return "—"
+        return format_html(
+            '<div class="table-responsive"><table class="table table-sm"><thead><tr>'
+            '<th>Started</th><th>Status</th><th>Amount</th><th>Stripe session</th>'
+            '<th>Payment intent</th><th>Last failure</th><th>Failure code</th>'
+            '</tr></thead><tbody>{}</tbody></table></div>',
+            format_html_join(
+                "",
+                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
+                rows,
+            ),
+        )
 
     def view_on_site(self, obj):
         if not obj or not obj.order_id:

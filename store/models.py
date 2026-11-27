@@ -733,9 +733,12 @@ class Order(models.Model):
 class StripeCheckoutAttempt(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="stripe_checkout_attempts")
     session_id = models.CharField(max_length=255, unique=True)
+    reference = models.UUIDField(unique=True, null=True, editable=False)
     amount_minor = models.PositiveBigIntegerField()
     currency = models.CharField(max_length=3)
     payment_intent_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    last_failed_at = models.DateTimeField(null=True, blank=True)
+    failure_code = models.CharField(max_length=80, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 

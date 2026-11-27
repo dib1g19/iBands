@@ -318,10 +318,14 @@
                         if (!response.ok) throw new Error('Card checkout could not start');
                         return response.json();
                     }).then(function (session) {
+                        if (session.returnUrl) {
+                            window.location.assign(session.returnUrl);
+                            return;
+                        }
                         return stripe.redirectToCheckout({ sessionId: session.sessionId });
                     })
                         .then(function (result) {
-                            if (result.error) {
+                            if (result && result.error) {
                                 if (window.Toast) window.Toast.fire({ icon: 'error', title: result.error.message });
                                 else alert(result.error.message);
                                 button.innerHTML = 'Плащане с карта';

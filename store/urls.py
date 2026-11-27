@@ -1,5 +1,5 @@
 from django.urls import path
-from store import views
+from store import stripe_webhooks, views
 
 app_name = "store"
 
@@ -40,6 +40,7 @@ urlpatterns = [
     path("delete-cart-item/", views.delete_cart_item, name="delete_cart_item"),
     path("stripe-payment/<order_id>/", views.stripe_payment, name="stripe_payment"),
     path("stripe-payment-verify/<order_id>/", views.stripe_payment_verify, name="stripe_payment_verify"),
+    path("stripe/webhook/", stripe_webhooks.payment_failure_webhook, name="stripe_webhook"),
     path("set-payment-method/<order_id>/", views.set_payment_method, name="set_payment_method"),
     path("order-tracker-page/", views.order_tracker_page, name="order_tracker_page"),
     path("about/", views.about, name="about"),

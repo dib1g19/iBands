@@ -5,11 +5,15 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="{% static 'assets/favicons/favicon.ico' %}" sizes="any">
-        <link rel="icon" href="{% static 'assets/favicons/favicon.svg' %}?v=2" type="image/svg+xml">
-        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/favicons/apple-touch-icon.png' %}" />
+        {% if debug %}
+            <link rel="icon" href="{% static 'assets/favicons/favicon-local.svg' %}" type="image/svg+xml">
+        {% else %}
+            <link rel="icon" href="{% static 'assets/favicons/favicon.ico' %}" sizes="any">
+            <link rel="icon" href="{% static 'assets/favicons/favicon.svg' %}?v=2" type="image/svg+xml">
+            <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/favicons/apple-touch-icon.png' %}" />
+            <link rel="manifest" href="{% static 'assets/favicons/site.webmanifest' %}" />
+        {% endif %}
         <meta name="apple-mobile-web-app-title" content="iBands" />
-        <link rel="manifest" href="{% static 'assets/favicons/site.webmanifest' %}" />
 
         <!-- 🔍 SEO -->
         {% block robots %}{% endblock %}

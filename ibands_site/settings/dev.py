@@ -31,3 +31,5 @@ INTERNAL_IPS = [
 ]
 INSTALLED_APPS += ["debug_toolbar"]
 MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
+
+JAZZMIN_SETTINGS["site_icon"] = "assets/favicons/admin-icon-local.png"

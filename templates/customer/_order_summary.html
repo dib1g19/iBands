@@ -1,0 +1,44 @@
+{% load pricing %}
+
+<div class="row g-3">
+    <dl class="col-12 col-md-6 mb-0">
+        <dt class="small fw-normal text-muted">Дата</dt>
+        <dd class="mb-2">{{ order.date }}</dd>
+        <dt class="small fw-normal text-muted">Статус на поръчката</dt>
+        <dd class="mb-2 fw-semibold">{{ order.get_order_status_display }}</dd>
+        <dt class="small fw-normal text-muted">Метод на плащане</dt>
+        <dd class="mb-2 fw-semibold">{{ order.get_payment_method_display|default:"Няма записан метод" }}</dd>
+        <dt class="small fw-normal text-muted">Платежен статус</dt>
+        <dd class="mb-0">
+            <span class="d-inline-block rounded-pill fw-semibold px-2 py-1 {% if order.payment_status == 'failed' %}alert-danger{% else %}bg-light-primary text-primary{% endif %}">{{ order.get_payment_status_display }}</span>
+        </dd>
+    </dl>
+    <div class="col-12 col-md-6">
+        <dl class="bg-light rounded p-3 mb-0">
+            <div class="d-flex justify-content-between gap-2 mb-2">
+                <dt class="fw-normal">Междинна сума</dt>
+                <dd class="mb-0 text-nowrap">{{ order.sub_total|dual_price }}</dd>
+            </div>
+            <div class="d-flex justify-content-between gap-2 mb-2">
+                <dt class="fw-normal">Доставка</dt>
+                <dd class="mb-0 text-nowrap">{{ order.shipping|dual_price }}</dd>
+            </div>
+            {% if order.saved %}
+                <div class="d-flex justify-content-between gap-2 mb-2 text-success">
+                    <dt class="fw-normal">Отстъпка</dt>
+                    <dd class="mb-0 text-nowrap">-{{ order.saved|dual_price }}</dd>
+                </div>
+                {% if order.promo_code %}
+                    <div class="mb-2">
+                        <dt class="small fw-normal text-muted d-inline me-1">Промокод</dt>
+                        <dd class="code-badge mb-0 text-break">{{ order.promo_code }}</dd>
+                    </div>
+                {% endif %}
+            {% endif %}
+            <div class="d-flex justify-content-between align-items-center gap-2 border-top pt-2 mt-2">
+                <dt>Общо</dt>
+                <dd class="fs-5 fw-bold mb-0 text-nowrap">{{ order.total|dual_price }}</dd>
+            </div>
+        </dl>
+    </div>
+</div>

@@ -8,7 +8,7 @@ from store.models import Category, Coupon, Order, OrderItem, Product
 from store.templatetags.pricing import dual_price
 
 
-class OrderDetailTests(TestCase):
+class OrderPageTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.buyer = get_user_model().objects.create_user(
@@ -86,7 +86,7 @@ class OrderDetailTests(TestCase):
         ):
             self.assertContains(
                 detail,
-                f'<div class="col-4"><p class="mb-1 text-muted">{label}</p><p class="mb-0 fw-semibold">{value}</p></div>',
+                f'<div class="col-4"><p class="small mb-1 text-muted">{label}</p><p class="mb-0 fw-semibold">{value}</p></div>',
                 html=True,
                 count=1,
             )
@@ -95,3 +95,35 @@ class OrderDetailTests(TestCase):
         self.assertNotContains(detail, dual_price(product.price))
         for label in ("Статус на поръчката", "Метод на плащане", "Платежен статус"):
             self.assertContains(detail, f">{label}</dt>", count=1)
+
+    def test_dashboard_displays_saved_items_and_one_summary_per_order(self):
+        self.order.payment_status = "failed"
+        self.order.payment_method = "card"
+        self.order.saved = Decimal("4.00")
+        self.order.save(update_fields=["payment_status", "payment_method", "saved"])
+        self.order.coupons.add(Coupon.objects.create(code="DASHBOARD-APPLIED"))
+        pending_order = Order.objects.create(customer=self.buyer)
+        pending_order.coupons.add(Coupon.objects.create(code="DASHBOARD-ZERO"))
+        product = Product.objects.create(
+            name="Archived band", sku="DASHBOARD-BAND", image="",
+            price=Decimal("43.70"), sale_price=Decimal("35.00"),
+        )
+        OrderItem.objects.create(
+            order=self.order, product=product, qty=3,
+            price=Decimal("12.00"), sub_total=Decimal("24.00"),
+        )
+        OrderItem.objects.create(order=self.order, product=product, qty=1)
+
+        dashboard = self.client.get(reverse("customer:dashboard"))
+
+        self.assertContains(dashboard, "Количество", count=2)
+        self.assertContains(dashboard, ">3</p>")
+        self.assertContains(dashboard, dual_price(Decimal("24.00")))
+        self.assertNotContains(dashboard, dual_price(product.price))
+        self.assertContains(dashboard, ">Платежен статус</dt>", count=2)
+        self.assertContains(dashboard, 'alert-danger">Неуспешно плащане</span>')
+        self.assertContains(dashboard, ">Карта</dd>")
+        self.assertContains(dashboard, ">Няма записан метод</dd>")
+        self.assertContains(dashboard, "DASHBOARD-APPLIED")
+        self.assertNotContains(dashboard, "DASHBOARD-ZERO")
+        self.assertNotContains(dashboard, "Платено с")

@@ -13,24 +13,32 @@ from customer import models as customer_models
 from customer.utils import get_order_for_customer
 
 
+def _account_orders():
+    coupon_codes = (
+        store_models.Coupon.objects.filter(order=models.OuterRef("pk"))
+        .order_by("id")
+        .values("code")
+    )
+    return store_models.Order.objects.annotate(
+        promo_code=models.Case(
+            models.When(saved__gt=0, then=models.Subquery(coupon_codes[:1])),
+        ),
+    ).prefetch_related(
+        models.Prefetch(
+            "order_items",
+            queryset=store_models.OrderItem.objects.select_related(
+                "product",
+                "product__category",
+                "product__category__parent",
+                "product__category__parent__parent",
+            ),
+        ),
+    )
+
+
 @login_required
 def dashboard(request):
-    # Prefetch order items and select_related product, category, and category parents
-    orders = (
-        store_models.Order.objects
-        .filter(customer=request.user)
-        .prefetch_related(
-            models.Prefetch(
-                "order_items",
-                queryset=store_models.OrderItem.objects.select_related(
-                    "product",
-                    "product__category",
-                    "product__category__parent",
-                    "product__category__parent__parent"
-                ),
-            )
-        )
-    )
+    orders = _account_orders().filter(customer=request.user)
     sync_order_milestones(request.user)
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
@@ -49,17 +57,7 @@ def dashboard(request):
 
 @login_required
 def order_detail(request, order_id):
-    order_qs = store_models.Order.objects.prefetch_related(
-        models.Prefetch(
-            "order_items",
-            queryset=store_models.OrderItem.objects.select_related(
-                "product",
-                "product__category",
-                "product__category__parent",
-                "product__category__parent__parent"
-            ),
-        )
-    )
+    order_qs = _account_orders()
     if request.user.is_staff:
         order = order_qs.filter(order_id=order_id).select_related("address").first()
     else:
@@ -68,10 +66,6 @@ def order_detail(request, order_id):
         messages.error(request, "Поръчката не беше намерена в този профил.")
         return redirect("customer:dashboard")
 
-    promo_code = None
-    if order.saved and order.saved > 0:
-        promo_code = order.coupons.order_by("id").values_list("code", flat=True).first()
-
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
         {"label": "Поръчки", "url": reverse("customer:dashboard")},
@@ -79,7 +73,6 @@ def order_detail(request, order_id):
     ]
     context = {
         "order": order,
-        "promo_code": promo_code,
         "breadcrumbs": breadcrumbs,
     }
 

@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load pricing %}
 
 {% block robots %}
     <meta name="robots" content="noindex, nofollow" />
@@ -33,64 +32,7 @@
 
                     <div class="order-data">
                         <div class="ord_list_wrap border rounded overflow-hidden mb-4">
-                            <div class="ord_list_body text-left">
-                                {% for item in order.order_items.all %}
-                                    <div class="row align-items-center gy-3 mx-0 my-0 pb-4 border-bottom">
-                                        <div class="col-12 col-xl-6">
-                                            <div class="cart_single d-flex align-items-center gap-3">
-                                                {% if item.product.image %}
-                                                    <div class="cart_selected_single_thumb">
-                                                        {% if item.product.category and item.product.slug %}
-                                                            <a href="{{ item.product.get_absolute_url }}"><img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" /></a>
-                                                        {% else %}
-                                                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" />
-                                                        {% endif %}
-                                                    </div>
-                                                {% endif %}
-                                                <div class="cart_single_caption pl-3">
-                                                    <h5 class="mb-1">{{ item.product.name }}</h5>
-                                                    {% if item.product.category %}
-                                                        <p class="mb-0 mt-0">
-                                                            <span class="fw-bold">Тип:</span> {{ item.product.category.title }}
-                                                        </p>
-                                                    {% endif %}
-                                                    {% if item.size %}
-                                                        <p class="mb-0">
-                                                            <span class="fw-bold">Дължина:</span> {{ item.size }}
-                                                        </p>
-                                                    {% endif %}
-                                                    {% if item.model %}
-                                                        <p class="mb-0">
-                                                            <span class="fw-bold">Модел:</span> {{ item.model }}
-                                                        </p>
-                                                    {% endif %}
-                                                    {% if item.mystery_device_models %}
-                                                        <p class="mb-0">
-                                                            <span class="fw-bold">Устройства:</span> {{ item.mystery_device_models|join:", " }}
-                                                        </p>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-xl-6">
-                                            <div class="row gx-2 align-items-end text-center">
-                                                <div class="col-4">
-                                                    <p class="mb-1 text-muted">Количество</p>
-                                                    <p class="mb-0 fw-semibold">{{ item.qty }}</p>
-                                                </div>
-                                                <div class="col-4">
-                                                    <p class="mb-1 text-muted">Единична цена</p>
-                                                    <p class="mb-0 fw-semibold">{{ item.price|dual_price }}</p>
-                                                </div>
-                                                <div class="col-4">
-                                                    <p class="mb-1 text-muted">Общо за артикула</p>
-                                                    <p class="mb-0 fw-semibold">{{ item.sub_total|dual_price }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
+                            {% include 'customer/_order_items.html' with order=order only %}
                         </div>
 
                         <div class="card shadow-sm mb-4">
@@ -98,48 +40,7 @@
                                 <h5 class="mb-0"><i class="fas fa-receipt text-primary me-2" aria-hidden="true"></i>Резюме на поръчката</h5>
                             </div>
                             <div class="card-body">
-                                <div class="row g-3">
-                                    <dl class="col-12 col-md-6 mb-0">
-                                        <dt class="small fw-normal text-muted">Дата</dt>
-                                        <dd class="mb-2">{{ order.date }}</dd>
-                                        <dt class="small fw-normal text-muted">Статус на поръчката</dt>
-                                        <dd class="mb-2 fw-semibold">{{ order.get_order_status_display }}</dd>
-                                        <dt class="small fw-normal text-muted">Метод на плащане</dt>
-                                        <dd class="mb-2 fw-semibold">{{ order.get_payment_method_display|default:"Няма записан метод" }}</dd>
-                                        <dt class="small fw-normal text-muted">Платежен статус</dt>
-                                        <dd class="mb-0">
-                                            <span class="d-inline-block rounded-pill fw-semibold px-2 py-1 {% if order.payment_status == 'failed' %}alert-danger{% else %}bg-light-primary text-primary{% endif %}">{{ order.get_payment_status_display }}</span>
-                                        </dd>
-                                    </dl>
-                                    <div class="col-12 col-md-6">
-                                        <dl class="bg-light rounded p-3 mb-0">
-                                            <div class="d-flex justify-content-between gap-2 mb-2">
-                                                <dt class="fw-normal">Междинна сума</dt>
-                                                <dd class="mb-0 text-nowrap">{{ order.sub_total|dual_price }}</dd>
-                                            </div>
-                                            <div class="d-flex justify-content-between gap-2 mb-2">
-                                                <dt class="fw-normal">Доставка</dt>
-                                                <dd class="mb-0 text-nowrap">{{ order.shipping|dual_price }}</dd>
-                                            </div>
-                                            {% if order.saved %}
-                                                <div class="d-flex justify-content-between gap-2 mb-2 text-success">
-                                                    <dt class="fw-normal">Отстъпка</dt>
-                                                    <dd class="mb-0 text-nowrap">-{{ order.saved|dual_price }}</dd>
-                                                </div>
-                                                {% if promo_code %}
-                                                    <div class="mb-2">
-                                                        <dt class="small fw-normal text-muted d-inline me-1">Промокод</dt>
-                                                        <dd class="code-badge mb-0 text-break">{{ promo_code }}</dd>
-                                                    </div>
-                                                {% endif %}
-                                            {% endif %}
-                                            <div class="d-flex justify-content-between align-items-center gap-2 border-top pt-2 mt-2">
-                                                <dt>Общо</dt>
-                                                <dd class="fs-5 fw-bold mb-0 text-nowrap">{{ order.total|dual_price }}</dd>
-                                            </div>
-                                        </dl>
-                                    </div>
-                                </div>
+                                {% include 'customer/_order_summary.html' with order=order only %}
                             </div>
                         </div>
 

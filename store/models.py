@@ -40,7 +40,7 @@ PLACED_ORDER_STATUSES = ("received", "shipped", "ready", "completed")
 SHIPPING_SERVICE = (
     ("econt", "Еконт"),
     ("speedy", "Спиди"),
-    ("pigeon", "Pigeon Express"),
+    ("pigeon", "Пигеон"),
 )
 
 VARIANT_TYPE_CHOICES = (

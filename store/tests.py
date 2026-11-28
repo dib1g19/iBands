@@ -1283,6 +1283,18 @@ class OrderAdminProductLabelTests(TestCase):
         self.assertContains(found, order.order_id)
         self.assertNotContains(found, "SKU-THREE")
 
+    def test_order_list_shows_the_payment_method_in_the_status_color(self):
+        order, _product = self._order_with_item("Каишка", "SKU-PAY")
+        order.payment_method = "card"
+        order.save(update_fields=["payment_method"])
+
+        page = self.client.get(reverse("admin:store_order_changelist"))
+
+        self.assertContains(page, "field-payment_method")
+        self.assertContains(page, "Payment method")
+        self.assertContains(page, "Карта")
+        self.assertNotContains(page, "order-status-pill")
+
     def test_order_page_shows_the_full_product_from_the_loaded_row(self):
         long_name = "Силиконова каишка за Apple Watch Ultra 2 с много дълго име"
         order, first = self._order_with_item(long_name, "SKU-ULTRA-49")

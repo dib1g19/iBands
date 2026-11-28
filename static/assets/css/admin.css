@@ -306,6 +306,44 @@ body.model-product.change-list #result_list td.field-view_on_site_link {
     font-weight: 600;
 }
 
+/* Order list: the status dropdown carries its own color so the rows scan. */
+#result_list td.field-order_status select {
+    font-weight: 600;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.15rem 0.45rem;
+}
+
+#result_list td.field-order_status select:has(option[value="initiated"]:checked) {
+    background: #e9ecef;
+    color: #495057;
+}
+
+#result_list td.field-order_status select:has(option[value="received"]:checked) {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+#result_list td.field-order_status select:has(option[value="shipped"]:checked) {
+    background: #dbe4ff;
+    color: #364fc7;
+}
+
+#result_list td.field-order_status select:has(option[value="ready"]:checked) {
+    background: #fff3bf;
+    color: #8a6d1d;
+}
+
+#result_list td.field-order_status select:has(option[value="completed"]:checked) {
+    background: #d3f9d8;
+    color: #146c36;
+}
+
+#result_list td.field-order_status select:has(option[value="canceled"]:checked) {
+    background: #ffe3e3;
+    color: #a12622;
+}
+
 @media (max-width: 720px) {
     .admin-activity-top {
         flex-direction: column;

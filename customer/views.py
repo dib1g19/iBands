@@ -68,6 +68,10 @@ def order_detail(request, order_id):
         messages.error(request, "Поръчката не беше намерена в този профил.")
         return redirect("customer:dashboard")
 
+    promo_code = None
+    if order.saved and order.saved > 0:
+        promo_code = order.coupons.order_by("id").values_list("code", flat=True).first()
+
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
         {"label": "Поръчки", "url": reverse("customer:dashboard")},
@@ -75,6 +79,7 @@ def order_detail(request, order_id):
     ]
     context = {
         "order": order,
+        "promo_code": promo_code,
         "breadcrumbs": breadcrumbs,
     }
 

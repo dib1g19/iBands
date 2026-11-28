@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load humanize %}
 {% load pricing %}
 
 {% block robots %}
@@ -33,20 +32,28 @@
                     </div>
 
                     <div class="order-data">
-                        <div class="ord_list_wrap border mb-4">
+                        <div class="ord_list_wrap border rounded overflow-hidden mb-4">
                             <div class="ord_list_body text-left">
                                 {% for item in order.order_items.all %}
-                                    <div class="row align-items-center justify-content-center m-0 py-4 border-bottom">
-                                        <div class="col-xl-6 col-lg-5 col-md-5 col-12">
+                                    <div class="row align-items-center gy-3 mx-0 my-0 pb-4 border-bottom">
+                                        <div class="col-12 col-xl-6">
                                             <div class="cart_single d-flex align-items-center gap-3">
-                                                <div class="cart_selected_single_thumb">
-                                                    <a href="{{ item.product.get_absolute_url }}"><img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" /></a>
-                                                </div>
+                                                {% if item.product.image %}
+                                                    <div class="cart_selected_single_thumb">
+                                                        {% if item.product.category and item.product.slug %}
+                                                            <a href="{{ item.product.get_absolute_url }}"><img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" /></a>
+                                                        {% else %}
+                                                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" />
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
                                                 <div class="cart_single_caption pl-3">
-                                                    <h5 class="mb-1"><span class="fw-bold"></span>{{ item.product.name }}</h5>
-                                                    <p class="mb-0 mt-0">
-                                                        <span class="fw-bold">Тип:</span>{{ item.product.category.title }}
-                                                    </p>
+                                                    <h5 class="mb-1">{{ item.product.name }}</h5>
+                                                    {% if item.product.category %}
+                                                        <p class="mb-0 mt-0">
+                                                            <span class="fw-bold">Тип:</span> {{ item.product.category.title }}
+                                                        </p>
+                                                    {% endif %}
                                                     {% if item.size %}
                                                         <p class="mb-0">
                                                             <span class="fw-bold">Дължина:</span> {{ item.size }}
@@ -57,37 +64,82 @@
                                                             <span class="fw-bold">Модел:</span> {{ item.model }}
                                                         </p>
                                                     {% endif %}
+                                                    {% if item.mystery_device_models %}
+                                                        <p class="mb-0">
+                                                            <span class="fw-bold">Устройства:</span> {{ item.mystery_device_models|join:", " }}
+                                                        </p>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-xl-2 col-lg-3 col-md-3 col-6 text-center">
-                                            <p class="mb-1 p-0 text-muted">Цена</p>
-                                            <div class="delv_status d-flex justify-content-center">
-                                                {% if item.product.sale_price and item.product.sale_price < item.product.price %}
-                                                    <div class="d-flex flex-column lh-1">
-                                                        {% regular_plus_delta item.product item.size item.model as reg_plus %}
-                                                        <span class="text-muted text-decoration-line-through">{{ reg_plus|dual_price }}</span>
-                                                        <h4 class="fs-sm fw-semibold mb-0">{{ item.price|dual_price }}</h4>
-                                                    </div>
-                                                {% else %}
-                                                    <h4 class="fs-sm fw-semibold mb-0 lh-1">{{ item.price|dual_price }}</h4>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-2 col-lg-3 col-md-3 col-6 text-center">
-                                            <p class="mb-1 p-0 text-muted">Статус</p>
-                                            <div class="delv_status d-flex justify-content-center">
-                                                <span class="fw-medium text-warning bg-light-warning">{{ order.get_order_status_display }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-2 col-lg-3 col-md-3 col-6 text-center">
-                                            <p class="mb-1 p-0 text-muted">Платежен статус</p>
-                                            <div class="d-flex justify-content-center">
-                                                <span class="fw-medium">{{ order.get_payment_status_display }}</span>
+                                        <div class="col-12 col-xl-6">
+                                            <div class="row gx-2 align-items-end text-center">
+                                                <div class="col-4">
+                                                    <p class="mb-1 text-muted">Количество</p>
+                                                    <p class="mb-0 fw-semibold">{{ item.qty }}</p>
+                                                </div>
+                                                <div class="col-4">
+                                                    <p class="mb-1 text-muted">Единична цена</p>
+                                                    <p class="mb-0 fw-semibold">{{ item.price|dual_price }}</p>
+                                                </div>
+                                                <div class="col-4">
+                                                    <p class="mb-1 text-muted">Общо за артикула</p>
+                                                    <p class="mb-0 fw-semibold">{{ item.sub_total|dual_price }}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-receipt text-primary me-2" aria-hidden="true"></i>Резюме на поръчката</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <dl class="col-12 col-md-6 mb-0">
+                                        <dt class="small fw-normal text-muted">Дата</dt>
+                                        <dd class="mb-2">{{ order.date }}</dd>
+                                        <dt class="small fw-normal text-muted">Статус на поръчката</dt>
+                                        <dd class="mb-2 fw-semibold">{{ order.get_order_status_display }}</dd>
+                                        <dt class="small fw-normal text-muted">Метод на плащане</dt>
+                                        <dd class="mb-2 fw-semibold">{{ order.get_payment_method_display|default:"Няма записан метод" }}</dd>
+                                        <dt class="small fw-normal text-muted">Платежен статус</dt>
+                                        <dd class="mb-0">
+                                            <span class="d-inline-block rounded-pill fw-semibold px-2 py-1 {% if order.payment_status == 'failed' %}alert-danger{% else %}bg-light-primary text-primary{% endif %}">{{ order.get_payment_status_display }}</span>
+                                        </dd>
+                                    </dl>
+                                    <div class="col-12 col-md-6">
+                                        <dl class="bg-light rounded p-3 mb-0">
+                                            <div class="d-flex justify-content-between gap-2 mb-2">
+                                                <dt class="fw-normal">Междинна сума</dt>
+                                                <dd class="mb-0 text-nowrap">{{ order.sub_total|dual_price }}</dd>
+                                            </div>
+                                            <div class="d-flex justify-content-between gap-2 mb-2">
+                                                <dt class="fw-normal">Доставка</dt>
+                                                <dd class="mb-0 text-nowrap">{{ order.shipping|dual_price }}</dd>
+                                            </div>
+                                            {% if order.saved %}
+                                                <div class="d-flex justify-content-between gap-2 mb-2 text-success">
+                                                    <dt class="fw-normal">Отстъпка</dt>
+                                                    <dd class="mb-0 text-nowrap">-{{ order.saved|dual_price }}</dd>
+                                                </div>
+                                                {% if promo_code %}
+                                                    <div class="mb-2">
+                                                        <dt class="small fw-normal text-muted d-inline me-1">Промокод</dt>
+                                                        <dd class="code-badge mb-0 text-break">{{ promo_code }}</dd>
+                                                    </div>
+                                                {% endif %}
+                                            {% endif %}
+                                            <div class="d-flex justify-content-between align-items-center gap-2 border-top pt-2 mt-2">
+                                                <dt>Общо</dt>
+                                                <dd class="fs-5 fw-bold mb-0 text-nowrap">{{ order.total|dual_price }}</dd>
+                                            </div>
+                                        </dl>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -107,21 +159,6 @@
                                         <a target="_blank" href="https://track.pigeonexpress.com/?tracking_number={{ order.tracking_id }}" class="btn btn-primary rounded btn-sm">Подробно проследяване <i class="fas fa-shipping-fast ms-1"></i></a>
                                     {% endif %}
                                 {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="card mb-4">
-                            <div class="card-header bg-light">
-                                <h5 class="mb-0">Резюме на поръчката</h5>
-                            </div>
-                            <div class="card-body">
-                                <h6 class="fs-sm mb-2"><strong>Дата:</strong> {{ order.date }}</h6>
-                                <h6 class="fs-sm mb-2"><strong>Междинна сума:</strong> {{ order.sub_total|dual_price }}</h6>
-                                <h6 class="fs-sm mb-2"><strong>Доставка:</strong> {{ order.shipping|dual_price }}</h6>
-                                {% if order.saved %}
-                                    <h6 class="fs-sm mb-2"><strong>Отстъпка:</strong> -{{ order.saved|dual_price }}</h6>
-                                {% endif %}
-                                <h6 class="fs-sm mb-0"><strong>Общо:</strong> {{ order.total|dual_price }}</h6>
                             </div>
                         </div>
 

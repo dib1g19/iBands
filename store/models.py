@@ -16,14 +16,14 @@ STATUS = (
 )
 
 PAYMENT_STATUS = (
-    ("processing", "Обработка"),
+    ("processing", "Очаква потвърждение"),
     ("paid", "Платено"),
     ("failed", "Неуспешно плащане"),
-    ("cash_on_delivery", "Наложен платеж"),
+    ("cash_on_delivery", "Потвърден наложен платеж"),
 )
 
 PAYMENT_METHOD = (
-    ("card", "карта"),
+    ("card", "Карта"),
     ("cash_on_delivery", "Наложен платеж"),
 )
 

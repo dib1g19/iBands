@@ -1038,7 +1038,7 @@ class UnfinishedOrderLinkTests(TestCase):
         user = get_user_model().objects.create_user(
             email="totals@example.com", username="totals", password="secret",
         )
-        for status in ["initiated", "canceled", "received", "delivered"]:
+        for status in ["initiated", "canceled", "received", "completed"]:
             store_models.Order.objects.create(customer=user, order_status=status, total=Decimal("10.00"))
         self.client.force_login(user)
 

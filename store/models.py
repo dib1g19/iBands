@@ -31,10 +31,11 @@ ORDER_STATUS = (
     ("initiated", "Незавършена"),
     ("received", "Получена"),
     ("shipped", "Изпратена"),
-    ("delivered", "Доставена"),
+    ("ready", "Готова за взимане"),
+    ("completed", "Завършена"),
     ("canceled", "Отказана"),
 )
-PLACED_ORDER_STATUSES = ("received", "shipped", "delivered")
+PLACED_ORDER_STATUSES = ("received", "shipped", "ready", "completed")
 
 SHIPPING_SERVICE = (
     ("econt", "Еконт"),

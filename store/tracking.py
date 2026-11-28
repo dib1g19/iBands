@@ -16,8 +16,10 @@ SPEEDY_QUIET = {
 
 
 def next_status(current, level):
-    if level == "delivered" and current in ("received", "shipped"):
-        return "delivered"
+    if level == "completed" and current in ("received", "shipped", "ready"):
+        return "completed"
+    if level == "ready" and current in ("received", "shipped"):
+        return "ready"
     if level == "shipped" and current == "received":
         return "shipped"
     return None
@@ -31,7 +33,10 @@ def speedy_level(operation_code, return_shipment_id=None):
     except (TypeError, ValueError):
         return None
     if code == -14:
-        return "delivered"
+        return "completed"
+    # 134 is waiting for the customer. 1134 is the office/locker notice for that same stop.
+    if code in (134, 1134):
+        return "ready"
     if code in SPEEDY_QUIET:
         return None
     return "shipped"
@@ -46,7 +51,10 @@ def econt_level(status):
     if any(word in text for word in ("анулир", "върн", "връща", "cancel", "return")):
         return None
     if status.get("deliveryTime") or bg == "доставена" or en == "delivered":
-        return "delivered"
+        return "completed"
+    # shortcut: only the recipient-office wording, a plain "в офис" is still in transit
+    if any(phrase in text for phrase in ("в офис на получателя", "готова за получаване", "ready for pickup")):
+        return "ready"
     if "подготвена" in bg or en.startswith("prepared"):
         return None
     if status.get("sendTime") or bg or en:
@@ -60,8 +68,10 @@ def pigeon_level(row):
     code = (row.get("status_code") or "").strip()
     if not code or "return" in code or "cancel" in code or code == "shipment_registered":
         return None
+    if code == "shipment_delivered_to_office":
+        return "ready"
     if code == "shipment_delivered_to_recipient" or row.get("delivery_date"):
-        return "delivered"
+        return "completed"
     return "shipped"
 
 
@@ -156,7 +166,7 @@ def sync_open_orders():
     cutoff = timezone.now() - timedelta(days=30)
     orders = list(
         Order.objects.filter(
-            order_status__in=("received", "shipped"),
+            order_status__in=("received", "shipped", "ready"),
             shipping_service__in=("speedy", "econt", "pigeon"),
             date__gte=cutoff,
         )

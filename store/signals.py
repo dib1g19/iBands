@@ -24,11 +24,11 @@ def order_status_signal(sender, instance, **kwargs):
             "iBands: Пратката е изпратена",
             to_email=instance.address.email,
         )
-    if previous.order_status != "delivered" and instance.order_status == "delivered":
+    if previous.order_status != "ready" and instance.order_status == "ready":
         send_order_notification_email(
             instance,
-            f"Поръчка #{instance.order_id} е доставена",
-            "iBands: Пратката е доставена",
+            f"Поръчка #{instance.order_id} е готова за взимане",
+            "iBands: Пратката е готова за взимане",
             to_email=instance.address.email,
         )
 

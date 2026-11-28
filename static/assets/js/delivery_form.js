@@ -125,7 +125,7 @@
             }, 300);
         }
         function save() {
-            if (!window.ownsCheckout || !selected()) return;
+            if (!selected()) return;
             clearTimeout(saveTimer);
             saveTimer = setTimeout(function () {
                 var body = payload(false);
@@ -283,7 +283,7 @@
             }
             changed();
         }
-        function pay(button, paymentType) {
+        function pay(paymentType) {
             var body = payload(true);
             var errorBlock = el(carrier + '-error-block');
             if (errorBlock) errorBlock.innerHTML = '';
@@ -295,7 +295,6 @@
                 setContinueLoading(false);
                 return;
             }
-            button.innerHTML = (paymentType === 'card' ? 'Плащане с карта' : 'Наложен платеж') + ' <i class="fas fa-spinner fa-spin ms-2"></i>';
             fetch(config.saveUrl, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
@@ -306,7 +305,6 @@
                         errorBlock.innerHTML = '<div class="alert alert-danger">Възникна неочаквана грешка при запазване на адреса (' + config.label + '). Моля, опитайте отново.</div>';
                         errorBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
-                    button.innerHTML = paymentType === 'card' ? 'Плащане с карта' : 'Наложен платеж';
                     setContinueLoading(false);
                     return;
                 }
@@ -328,7 +326,6 @@
                             if (result && result.error) {
                                 if (window.Toast) window.Toast.fire({ icon: 'error', title: result.error.message });
                                 else alert(result.error.message);
-                                button.innerHTML = 'Плащане с карта';
                                 setContinueLoading(false);
                             }
                         });
@@ -345,7 +342,6 @@
                     errorBlock.innerHTML = '<div class="alert alert-danger">Поръчката не можа да бъде завършена. Моля, проверете данните и опитайте отново.</div>';
                     errorBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-                button.innerHTML = paymentType === 'card' ? 'Плащане с карта' : 'Наложен платеж';
                 setContinueLoading(false);
             });
         }
@@ -430,20 +426,15 @@
             apply(initial);
             var match = rows.filter(function (dest) { return window.sameDestination(dest, initial); })[0];
             if (match) window.markSavedDestination(saved, match.id);
-        } else if (window.ownsCheckout) {
+        } else {
             window.fillContactFields(carrier + '_', null, false);
         }
 
-        window.deliveryForms[carrier] = { payload: payload, quote: quote, pay: pay };
+        window.deliveryForms[carrier] = { quote: quote, pay: pay };
     };
 
-    window.payDelivery = function (carrier, button, paymentType) {
-        var form = window.deliveryForms[carrier];
-        if (!form) {
-            setContinueLoading(false);
-            return;
-        }
-        form.pay(button, paymentType);
+    window.payDelivery = function (carrier, _button, paymentType) {
+        window.deliveryForms[carrier].pay(paymentType);
     };
 
     function setShippingBlock(block, open) {

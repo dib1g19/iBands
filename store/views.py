@@ -771,60 +771,31 @@ def _destination_payload(address):
 
 @require_POST
 @transaction.atomic
-def save_econt_address(request, order_id):
+def save_checkout_address(request, order_id, carrier, office_methods):
     try:
         order = get_object_or_404(store_models.Order.objects.select_for_update(), order_id=order_id)
         if not _checkout_owned(request, order):
             return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
         data = json.loads(request.body)
-        if _persist_destination(request, order, data, _chosen_method(data, "econt", ("econt_office",))) is None:
-            return JsonResponse({"success": False, "message": "Непълен адрес."})
-        return JsonResponse({"success": True})
-    except (ValueError, TypeError, AttributeError):
-        transaction.set_rollback(True)
-        return JsonResponse({"success": False, "message": "Невалидни данни за доставка."}, status=400)
-
-
-@require_POST
-@transaction.atomic
-def save_speedy_address(request, order_id):
-    try:
-        order = get_object_or_404(store_models.Order.objects.select_for_update(), order_id=order_id)
-        if not _checkout_owned(request, order):
-            return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
-        data = json.loads(request.body)
-        if _persist_destination(request, order, data, _chosen_method(data, "speedy", ("speedy_office",))) is None:
-            return JsonResponse({"success": False, "message": "Непълен адрес."})
-        cache.set(f"speedy_opts_{order.order_id}", {
-            "speedy_contents": data.get("speedy_contents") or None,
-            "parcel_weight": data.get("parcel_weight") or None,
-            "parcel_count": data.get("parcel_count") or None,
-            "site_id": data.get("site_id") or None,
-            "office_id": data.get("office_code") or None,
-        }, timeout=60 * 60)
-        return JsonResponse({"success": True})
-    except (ValueError, TypeError, AttributeError):
-        transaction.set_rollback(True)
-        return JsonResponse({"success": False, "message": "Невалидни данни за доставка."}, status=400)
-
-
-@require_POST
-@transaction.atomic
-def save_pigeon_address(request, order_id):
-    try:
-        order = get_object_or_404(store_models.Order.objects.select_for_update(), order_id=order_id)
-        if not _checkout_owned(request, order):
-            return JsonResponse({"success": False, "message": "Тази поръчка не е ваша."}, status=403)
-        data = json.loads(request.body)
-        method = _chosen_method(data, "pigeon", ("pigeon_office", "pigeon_locker"))
+        method = _chosen_method(data, carrier, office_methods)
         if _persist_destination(request, order, data, method) is None:
             return JsonResponse({"success": False, "message": "Непълен адрес."})
-        cache.set(f"pigeon_opts_{order.order_id}", {
-            "city_id": data.get("city_id") or None,
-            "street_id": data.get("street_id") or None,
-            "street_number": data.get("street_number") or None,
-            "office_id": data.get("office_code") or None,
-        }, timeout=60 * 60 * 24 * 7)
+
+        if carrier == "speedy":
+            cache.set(f"speedy_opts_{order.order_id}", {
+                "speedy_contents": data.get("speedy_contents") or None,
+                "parcel_weight": data.get("parcel_weight") or None,
+                "parcel_count": data.get("parcel_count") or None,
+                "site_id": data.get("site_id") or None,
+                "office_id": data.get("office_code") or None,
+            }, timeout=60 * 60)
+        elif carrier == "pigeon":
+            cache.set(f"pigeon_opts_{order.order_id}", {
+                "city_id": data.get("city_id") or None,
+                "street_id": data.get("street_id") or None,
+                "street_number": data.get("street_number") or None,
+                "office_id": data.get("office_code") or None,
+            }, timeout=60 * 60 * 24 * 7)
         return JsonResponse({"success": True})
     except (ValueError, TypeError, AttributeError):
         transaction.set_rollback(True)
@@ -1016,7 +987,6 @@ def speedy_quote(request, order_id):
         site_id = request.GET.get("site_id")
         office_id = request.GET.get("office_id")
         address_line = request.GET.get("address") or (order.address.address if order.address else "")
-        post_code = request.GET.get("post_code") or (getattr(order.address, "post_code", None) or None)
         phone = request.GET.get("phone") or (order.address.phone if order.address else "")
         name = request.GET.get("name") or (order.address.name if order.address else "")
         email = request.GET.get("email") or (order.address.email if order.address else "")
@@ -1084,7 +1054,6 @@ def speedy_quote(request, order_id):
         calc_response = speedy_v1_calculate(calc_request)
         # Try to extract a single price/total
         quote = None
-        service_id = None
         calcs = (calc_response or {}).get("calculations") or (calc_response or {}).get("services") or []
         if calcs:
             first = calcs[0]
@@ -2501,12 +2470,12 @@ def _order_owned(request, order):
     return str(order.order_id) in owned
 
 
+def _checkout_open(order):
+    return order.order_status == "initiated" and order.payment_status in ("processing", "failed")
+
+
 def _checkout_owned(request, order):
-    return (
-        order.order_status == "initiated"
-        and order.payment_status in ("processing", "failed")
-        and _order_owned(request, order)
-    )
+    return _checkout_open(order) and _order_owned(request, order)
 
 
 def _get_owned_order(request, order_id, queryset=None):
@@ -2523,7 +2492,7 @@ def _get_owned_order(request, order_id, queryset=None):
 
 def _get_checkout(request, order_id):
     order = _get_owned_order(request, order_id)
-    if order.order_status != "initiated" or order.payment_status not in ("processing", "failed"):
+    if not _checkout_open(order):
         raise Http404
     return order
 
@@ -2641,7 +2610,12 @@ def coupon_remove(request, order_id):
 
 @require_GET
 def checkout(request, order_id):
-    qs = store_models.Order.objects.prefetch_related(
+    order = _get_owned_order(request, order_id)
+    if order.order_status != "initiated":
+        return redirect("store:payment_status", order_id)
+
+    models.prefetch_related_objects(
+        [order],
         models.Prefetch(
             "order_items",
             queryset=store_models.OrderItem.objects.select_related(
@@ -2652,10 +2626,6 @@ def checkout(request, order_id):
             ),
         )
     )
-    order = _get_owned_order(request, order_id, qs)
-    if order.order_status != "initiated":
-        return redirect("store:payment_status", order_id)
-
     breadcrumbs = [
         {"label": "Начална Страница", "url": reverse("store:index")},
         {"label": "Магазин", "url": reverse("store:shop")},
@@ -2685,7 +2655,6 @@ def checkout(request, order_id):
         "saved_destinations": saved_destinations,
         "order_destination": order_destination,
         "checkout_contact": contact,
-        "owns_checkout": True,
         "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
         "shipping_prize_minimums": json.dumps(free_shipping_minimums(request.user)),
         "mystery_gift_added": order.order_items.filter(note__startswith="prize:spin:").exists(),
@@ -3040,7 +3009,7 @@ def stripe_payment(request, order_id):
             return JsonResponse({"returnUrl": reverse("store:payment_status", args=[order_id])})
         current_attempt_pk = order.stripe_checkout_attempts.order_by("-pk").values_list("pk", flat=True).first()
         if (
-            not _checkout_owned(request, order)
+            not _checkout_open(order)
             or int(order.total * 100) != amount_minor
             or current_attempt_pk != (latest_attempt.pk if latest_attempt else None)
         ):
@@ -3102,8 +3071,7 @@ def stripe_payment_verify(request, order_id):
                 return redirect("store:payment_status", order_id)
             if (
                 order.pk != attempt.order_id
-                or order.order_status != "initiated"
-                or order.payment_status not in ("processing", "failed")
+                or not _checkout_open(order)
                 or int(order.total * 100) != attempt.amount_minor
                 or not _order_ready_for_payment(order)
                 or store_models.Order.objects.filter(payment_id=payment_intent_id).exclude(pk=order.pk).exists()

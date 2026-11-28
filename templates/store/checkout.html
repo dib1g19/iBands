@@ -185,8 +185,6 @@
                     <div class="p-3 mt-3">
                         <div id="checkout-error-block"></div>
                         <button type="button" id="continue-payment" class="btn btn-primary w-100">Завърши поръчка</button>
-                        <button id="stripe-payment" style="display:none;" type="button"></button>
-                        <button id="cod-payment" style="display:none;" type="button"></button>
                     </div>
 
                     {% if request.session.spin_reward.coupon_code %}
@@ -325,7 +323,6 @@
 <script>
     // Stripe payment logic (address must be saved before payment)
     var stripe = Stripe('{{stripe_public_key}}');
-    var checkoutButton = document.getElementById('stripe-payment');
     
     // Helper: toggle loading state on the visible "Завърши поръчка" button
     function setContinueLoading(isLoading) {
@@ -358,7 +355,8 @@
         return cookieValue
     }
     const csrftoken = getCookie('csrftoken')
-    window.ownsCheckout = {{ owns_checkout|yesno:"true,false" }};
+    // The previously published checkout script reads this flag.
+    window.ownsCheckout = true;
 
     // Persist selected payment method immediately so it survives refresh/failure
     function persistPaymentMethod(method) {
@@ -498,11 +496,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         const paymentCardRadio = document.getElementById('payment-card');
         const paymentCodRadio = document.getElementById('payment-cod');
-        const continueBtn = document.getElementById('continue-payment');
         const shippingEcontRadio = document.getElementById('shipping-econt');
         const shippingSpeedyRadio = document.getElementById('shipping-speedy');
         const shippingPigeonRadio = document.getElementById('shipping-pigeon');
-        const errorBlock = document.getElementById('checkout-error-block');
 
         // Ensure no payment method is preselected
         if (paymentCardRadio) paymentCardRadio.checked = false;
@@ -540,7 +536,6 @@
         updateSummaryForPayment();
     });
 
-    // "Continue" button triggers hidden payment button
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('continue-payment').addEventListener('click', function() {
             setContinueLoading(true);
@@ -568,18 +563,11 @@
                 setContinueLoading(false);
                 return;
             }
-            if (selectedPayment === 'cash_on_delivery') {
-                if (window.deliveryForms[selectedShipping]) {
-                    payDelivery(selectedShipping, document.getElementById('cod-payment'), 'cash_on_delivery');
-                } else {
-                    document.getElementById('cod-payment').click();
-                }
-            } else if (selectedPayment === 'card') {
-                if (window.deliveryForms[selectedShipping]) {
-                    payDelivery(selectedShipping, document.getElementById('stripe-payment'), 'card');
-                } else {
-                    document.getElementById('stripe-payment').click();
-                }
+            if (window.deliveryForms?.[selectedShipping]) {
+                payDelivery(selectedShipping, this, selectedPayment);
+            } else {
+                errorBlock.innerHTML = '<div class="alert alert-danger">Поръчката не може да бъде завършена. Обновете страницата и опитайте отново.</div>';
+                setContinueLoading(false);
             }
         });
     });
@@ -620,8 +608,10 @@
     });
     }
 </script>
-<script src="{% static 'assets/js/delivery_form.js' %}?v=3"></script>
+<script src="{% static 'assets/js/delivery_form.js' %}?v=4"></script>
 <script>
+    const cardUrl = '{% url "store:stripe_payment" order.order_id %}';
+    const codUrl = '{% url "store:cod_payment" order.order_id %}';
     bindDeliveryForm({
         carrier: 'econt',
         label: 'Еконт',
@@ -631,8 +621,8 @@
         street: true,
         price: lastEcontShipping,
         saveUrl: '/save-econt-address/{{ order.order_id }}/',
-        cardUrl: '/stripe-payment/{{ order.order_id }}/',
-        codUrl: '{% url "store:cod_payment" order.order_id %}',
+        cardUrl,
+        codUrl,
         cityText: function (city) {
             return city.name + (city.postal_code ? ' ' + city.postal_code : '');
         },
@@ -686,8 +676,8 @@
         street: false,
         price: lastSpeedyShipping,
         saveUrl: '/save-speedy-address/{{ order.order_id }}/',
-        cardUrl: '/stripe-payment/{{ order.order_id }}/',
-        codUrl: '{% url "store:cod_payment" order.order_id %}',
+        cardUrl,
+        codUrl,
         cities: function (query) {
             if (!query || query.trim().length < 2) return Promise.resolve([]);
             return fetch('/speedy/find-sites/?q=' + encodeURIComponent(query.trim()))
@@ -730,8 +720,8 @@
         street: true,
         price: lastPigeonShipping,
         saveUrl: '/save-pigeon-address/{{ order.order_id }}/',
-        cardUrl: '/stripe-payment/{{ order.order_id }}/',
-        codUrl: '{% url "store:cod_payment" order.order_id %}',
+        cardUrl,
+        codUrl,
         officeText: function (office) {
             return (office.type === 'locker' ? 'Автомат' : 'Офис') + ': ' + (office.name || '');
         },

@@ -982,7 +982,8 @@ class CouponRulesTests(TestCase):
         )
         self.client.force_login(stranger)
 
-        page = self.client.get(reverse("store:checkout", args=[order.order_id]))
+        with CaptureQueriesContext(connection) as checkout_queries:
+            page = self.client.get(reverse("store:checkout", args=[order.order_id]))
         saved = self.client.post(
             reverse("store:save_econt_address", args=[order.order_id]),
             data={
@@ -1000,6 +1001,7 @@ class CouponRulesTests(TestCase):
         )
 
         self.assertNotContains(page, "0888000002", status_code=404)
+        self.assertFalse(any("store_orderitem" in query["sql"] for query in checkout_queries))
         self.assertEqual(saved.status_code, 403)
         order.refresh_from_db()
         self.assertEqual(order.address_id, original.pk)
